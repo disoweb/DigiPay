@@ -125,6 +125,10 @@ Changelog:
 - June 21, 2025. Implemented Binance-style P2P trading with escrow, payment timeouts, and admin approval system
 - June 21, 2025. Added comprehensive admin panel for withdrawal/deposit approvals with transaction tracking
 - June 21, 2025. Enhanced P2P platform with complete user story flow including profile setup, advanced offer creation, and extended schema
+- June 21, 2025. Implemented complete P2P trading flow with payment instructions, proof upload, dispute resolution, and trade timers
+- June 21, 2025. Added role-based authentication redirection (admin to admin dashboard, users to user dashboard)
+- June 21, 2025. Enhanced trade detail page with comprehensive payment workflow and security features
+- June 21, 2025. Implemented robust security measures including payment deadlines, escrow protection, and dispute management
 ```
 
 ## User Preferences

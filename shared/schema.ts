@@ -35,6 +35,7 @@ export const trades = pgTable("trades", {
   sellerId: integer("seller_id").references(() => users.id).notNull(),
   amount: decimal("amount", { precision: 12, scale: 8 }).notNull(),
   rate: decimal("rate", { precision: 10, scale: 2 }).notNull(),
+  fiatAmount: decimal("fiat_amount", { precision: 12, scale: 2 }).notNull(),
   status: text("status").default("pending"), // 'pending', 'accepted', 'payment_pending', 'payment_made', 'completed', 'cancelled', 'disputed', 'expired'
   escrowAddress: text("escrow_address"),
   paymentDeadline: timestamp("payment_deadline"),
@@ -49,6 +50,10 @@ export const trades = pgTable("trades", {
   cancelReason: text("cancel_reason"),
   feedbackFromBuyer: text("feedback_from_buyer"),
   feedbackFromSeller: text("feedback_from_seller"),
+  // Payment details for the trade
+  bankName: text("bank_name"),
+  accountNumber: text("account_number"),
+  accountName: text("account_name"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -65,8 +70,11 @@ export const transactions = pgTable("transactions", {
   userId: integer("user_id").references(() => users.id).notNull(),
   type: text("type").notNull(), // 'deposit', 'withdrawal'
   amount: text("amount").notNull(),
-  status: text("status").default("pending"), // 'pending', 'completed', 'failed'
+  status: text("status").default("pending"), // 'pending', 'completed', 'failed', 'approved', 'rejected'
   paystackRef: text("paystack_ref"),
+  adminNotes: text("admin_notes"),
+  paymentMethod: text("payment_method"),
+  rate: text("rate"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

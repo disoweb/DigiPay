@@ -349,6 +349,191 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Enhanced P2P Trading Flow Endpoints
+  
+  // Mark payment as made (buyer action)
+  app.post("/api/trades/:id/mark-paid", authenticateToken, async (req, res) => {
+    try {
+      const tradeId = parseInt(req.params.id);
+      const trade = await storage.getTrade(tradeId);
+      
+      if (!trade) {
+        return res.status(404).json({ error: "Trade not found" });
+      }
+
+      if (trade.buyerId !== req.user!.id) {
+        return res.status(403).json({ error: "Only the buyer can mark payment as made" });
+      }
+
+      if (trade.status !== "payment_pending") {
+        return res.status(400).json({ error: "Trade is not in payment pending status" });
+      }
+
+      // Check if payment deadline has passed
+      if (trade.paymentDeadline && new Date() > new Date(trade.paymentDeadline)) {
+        await storage.updateTrade(tradeId, { status: "expired" });
+        return res.status(400).json({ error: "Payment deadline has passed" });
+      }
+
+      await storage.updateTrade(tradeId, { 
+        status: "payment_made",
+        paymentMadeAt: new Date()
+      });
+
+      // Notify seller
+      const seller = await storage.getUser(trade.sellerId);
+      if (seller?.email) {
+        await emailService.sendTradeNotification(
+          seller.email,
+          tradeId,
+          "Payment has been made by the buyer. Please confirm receipt to complete the trade."
+        );
+      }
+
+      res.json({ success: true, message: "Payment marked as made" });
+    } catch (error) {
+      console.error("Mark payment error:", error);
+      res.status(500).json({ error: "Failed to mark payment" });
+    }
+  });
+
+  // Submit payment proof
+  app.post("/api/trades/:id/payment-proof", authenticateToken, async (req, res) => {
+    try {
+      const tradeId = parseInt(req.params.id);
+      const { paymentReference, paymentNotes } = req.body;
+      const trade = await storage.getTrade(tradeId);
+      
+      if (!trade) {
+        return res.status(404).json({ error: "Trade not found" });
+      }
+
+      if (trade.buyerId !== req.user!.id) {
+        return res.status(403).json({ error: "Only the buyer can submit payment proof" });
+      }
+
+      if (!["payment_pending", "payment_made"].includes(trade.status)) {
+        return res.status(400).json({ error: "Invalid trade status for payment proof" });
+      }
+
+      await storage.updateTrade(tradeId, { 
+        paymentReference,
+        paymentProof: paymentNotes,
+        status: "payment_made",
+        paymentMadeAt: new Date()
+      });
+
+      // Notify seller
+      const seller = await storage.getUser(trade.sellerId);
+      if (seller?.email) {
+        await emailService.sendTradeNotification(
+          seller.email,
+          tradeId,
+          `Payment proof submitted. Reference: ${paymentReference}`
+        );
+      }
+
+      res.json({ success: true, message: "Payment proof submitted" });
+    } catch (error) {
+      console.error("Payment proof error:", error);
+      res.status(500).json({ error: "Failed to submit payment proof" });
+    }
+  });
+
+  // Raise dispute
+  app.post("/api/trades/:id/dispute", authenticateToken, async (req, res) => {
+    try {
+      const tradeId = parseInt(req.params.id);
+      const { reason, raisedBy } = req.body;
+      const trade = await storage.getTrade(tradeId);
+      
+      if (!trade) {
+        return res.status(404).json({ error: "Trade not found" });
+      }
+
+      if (trade.buyerId !== req.user!.id && trade.sellerId !== req.user!.id) {
+        return res.status(403).json({ error: "Only trade participants can raise disputes" });
+      }
+
+      if (["completed", "cancelled", "disputed"].includes(trade.status)) {
+        return res.status(400).json({ error: "Cannot dispute this trade" });
+      }
+
+      await storage.updateTrade(tradeId, { 
+        status: "disputed",
+        disputeReason: reason
+      });
+
+      // Notify admins
+      const adminUsers = await storage.getUserByEmail("admin@digipay.com");
+      if (adminUsers?.email) {
+        await emailService.sendTradeNotification(
+          adminUsers.email,
+          tradeId,
+          `Dispute raised by ${raisedBy}. Reason: ${reason}`
+        );
+      }
+
+      res.json({ success: true, message: "Dispute raised successfully" });
+    } catch (error) {
+      console.error("Dispute error:", error);
+      res.status(500).json({ error: "Failed to raise dispute" });
+    }
+  });
+
+  // Cancel trade (before payment)
+  app.post("/api/trades/:id/cancel", authenticateToken, async (req, res) => {
+    try {
+      const tradeId = parseInt(req.params.id);
+      const { reason } = req.body;
+      const trade = await storage.getTrade(tradeId);
+      
+      if (!trade) {
+        return res.status(404).json({ error: "Trade not found" });
+      }
+
+      if (trade.buyerId !== req.user!.id && trade.sellerId !== req.user!.id) {
+        return res.status(403).json({ error: "Only trade participants can cancel trades" });
+      }
+
+      if (!["pending", "payment_pending"].includes(trade.status)) {
+        return res.status(400).json({ error: "Cannot cancel this trade" });
+      }
+
+      // Refund any locked amounts
+      const offer = await storage.getOffer(trade.offerId);
+      if (offer && offer.type === "sell") {
+        const seller = await storage.getUser(trade.sellerId);
+        if (seller) {
+          const tradeAmount = parseFloat(trade.amount);
+          await storage.updateUser(seller.id, {
+            usdtBalance: (parseFloat(seller.usdtBalance || "0") + tradeAmount).toString()
+          });
+        }
+      }
+
+      await storage.updateTrade(tradeId, { 
+        status: "cancelled",
+        cancelReason: reason
+      });
+
+      // Restore offer amount
+      if (offer) {
+        const currentAmount = parseFloat(offer.amount || "0");
+        const tradeAmount = parseFloat(trade.amount);
+        await storage.updateOffer(offer.id, {
+          amount: (currentAmount + tradeAmount).toString(),
+          status: "active"
+        });
+      }
+
+      res.json({ success: true, message: "Trade cancelled successfully" });
+    } catch (error) {
+      console.error("Cancel trade error:", error);
+      res.status(500).json({ error: "Failed to cancel trade" });
+    }
+  });
+
   // Admin endpoints for transaction approval
   app.get("/api/admin/transactions", authenticateToken, requireAdmin, async (req, res) => {
     try {

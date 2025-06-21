@@ -50,9 +50,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           localStorage.setItem('digipay_token', token);
         }
         queryClient.setQueryData(["/api/user"], user);
-        // Redirect to dashboard after successful login
+        // Redirect based on user role
         setTimeout(() => {
-          window.location.href = "/dashboard";
+          if (user.isAdmin) {
+            window.location.href = "/admin";
+          } else {
+            window.location.href = "/dashboard";
+          }
         }, 100);
       } catch (error) {
         console.error("Login success handler error:", error);

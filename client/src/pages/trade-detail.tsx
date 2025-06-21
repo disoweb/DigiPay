@@ -4,6 +4,10 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { Navbar } from "@/components/navbar";
 import { RealTimeChat } from "@/components/real-time-chat";
 import { RatingForm } from "@/components/rating-form";
+import { PaymentInstructions } from "@/components/payment-instructions";
+import { PaymentProofUpload } from "@/components/payment-proof-upload";
+import { DisputeResolution } from "@/components/dispute-resolution";
+import { TradeTimer } from "@/components/trade-timer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -309,33 +313,80 @@ export default function TradeDetail() {
               </Card>
             )}
 
-            {/* Trade Actions */}
+            {/* Enhanced P2P Trading Flow Components */}
             {isUserInTrade && (
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="flex gap-3">
-                    {canComplete && (
-                      <Button 
-                        onClick={() => completeTradeMutation.mutate()}
-                        disabled={completeTradeMutation.isPending}
-                        className="flex-1"
-                      >
-                        Complete Trade
-                      </Button>
-                    )}
-                    {canCancel && (
-                      <Button 
-                        variant="outline"
-                        onClick={() => cancelTradeMutation.mutate()}
-                        disabled={cancelTradeMutation.isPending}
-                        className="flex-1"
-                      >
-                        Cancel Trade
-                      </Button>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
+              <>
+                {/* Payment Timer for Active Trades */}
+                <TradeTimer 
+                  paymentDeadline={trade.paymentDeadline} 
+                  status={trade.status} 
+                />
+
+                {/* Payment Instructions */}
+                {["payment_pending", "payment_made"].includes(trade.status) && (
+                  <PaymentInstructions
+                    trade={trade}
+                    userRole={isBuyer ? 'buyer' : 'seller'}
+                    onPaymentMarked={() => {
+                      queryClient.invalidateQueries({ queryKey: [`/api/trades/${trade.id}`] });
+                    }}
+                  />
+                )}
+
+                {/* Payment Proof Upload for Buyers */}
+                {trade.status === "payment_pending" && isBuyer && (
+                  <PaymentProofUpload
+                    tradeId={trade.id}
+                    onProofSubmitted={() => {
+                      queryClient.invalidateQueries({ queryKey: [`/api/trades/${trade.id}`] });
+                      toast({
+                        title: "Payment proof submitted",
+                        description: "The seller will be notified to confirm your payment",
+                      });
+                    }}
+                  />
+                )}
+
+                {/* Dispute Resolution */}
+                {["payment_pending", "payment_made"].includes(trade.status) && (
+                  <DisputeResolution
+                    trade={trade}
+                    userRole={isBuyer ? 'buyer' : 'seller'}
+                    onDisputeRaised={() => {
+                      queryClient.invalidateQueries({ queryKey: [`/api/trades/${trade.id}`] });
+                    }}
+                  />
+                )}
+
+                {/* Trade Actions */}
+                {["pending", "payment_pending"].includes(trade.status) && (
+                  <Card>
+                    <CardContent className="pt-6">
+                      <div className="flex gap-3">
+                        {canComplete && (
+                          <Button 
+                            onClick={() => completeTradeMutation.mutate()}
+                            disabled={completeTradeMutation.isPending}
+                            className="flex-1"
+                          >
+                            Complete Trade
+                          </Button>
+                        )}
+                        {canCancel && (
+                          <Button 
+                            variant="outline"
+                            onClick={() => cancelTradeMutation.mutate({ reason: "User cancelled" })}
+                            disabled={cancelTradeMutation.isPending}
+                            className="flex-1"
+                          >
+                            Cancel Trade
+                          </Button>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </>
             )}
           </div>
 
