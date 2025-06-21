@@ -57,18 +57,7 @@ export default function Wallet() {
             <p className="text-gray-600 mt-1">Manage your deposits and withdrawals</p>
           </div>
 
-          {!user.kycVerified ? (
-            <div className="mb-8">
-              <Alert className="mb-4">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>
-                  Complete KYC verification to access full wallet features and start trading.
-                </AlertDescription>
-              </Alert>
-              <KYCVerification />
-            </div>
-          ) : (
-            <div className="space-y-6">
+          <div className="space-y-6">
               {/* Balance Cards */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Card className="border-0 shadow-sm">
@@ -77,10 +66,10 @@ export default function Wallet() {
                   <div>
                     <h3 className="text-lg font-semibold text-gray-900">USDT Balance</h3>
                     <p className="text-3xl font-bold text-gray-900 mt-2">
-                      {parseFloat(user.usdtBalance).toFixed(2)}
+                      {parseFloat(user.usdtBalance || "0").toFixed(2)}
                     </p>
                     <p className="text-sm text-gray-600 mt-1">
-                      ≈ ₦{(parseFloat(user.usdtBalance) * 1485).toLocaleString()}
+                      ≈ ₦{(parseFloat(user.usdtBalance || "0") * 1485).toLocaleString()}
                     </p>
                   </div>
                   <div className="p-3 bg-green-50 rounded-lg">
@@ -104,7 +93,7 @@ export default function Wallet() {
                   <div>
                     <h3 className="text-lg font-semibold text-gray-900">Naira Balance</h3>
                     <p className="text-3xl font-bold text-gray-900 mt-2">
-                      ₦{parseFloat(user.nairaBalance).toLocaleString()}
+                      ₦{parseFloat(user.nairaBalance || "0").toLocaleString()}
                     </p>
                     <p className="text-sm text-gray-600 mt-1">Available for trading</p>
                   </div>
@@ -160,7 +149,7 @@ export default function Wallet() {
                             {transaction.type}
                           </p>
                           <p className="text-sm text-gray-600">
-                            {transaction.type === "deposit" ? "Paystack" : "Bank Transfer"} • {getTransactionBadge(transaction.status)}
+                            {transaction.type === "deposit" ? "Paystack" : "Bank Transfer"} • {getTransactionBadge(transaction.status || "pending")}
                           </p>
                         </div>
                       </div>
@@ -168,10 +157,10 @@ export default function Wallet() {
                         <p className={`font-semibold ${
                           transaction.type === "deposit" ? "text-green-600" : "text-red-600"
                         }`}>
-                          {transaction.type === "deposit" ? "+" : "-"}₦{parseFloat(transaction.amount).toLocaleString()}
+                          {transaction.type === "deposit" ? "+" : "-"}₦{parseFloat(transaction.amount || "0").toLocaleString()}
                         </p>
                         <p className="text-sm text-gray-500">
-                          {new Date(transaction.createdAt).toLocaleDateString()}
+                          {transaction.createdAt ? new Date(transaction.createdAt).toLocaleDateString() : "N/A"}
                         </p>
                       </div>
                     </div>
@@ -181,12 +170,11 @@ export default function Wallet() {
             </CardContent>
           </Card>
             </div>
-          )}
         </div>
       </main>
 
       <DepositModal open={showDeposit} onOpenChange={setShowDeposit} />
-      <WithdrawModal open={showWithdraw} onOpenChange={setShowWithdraw} />
+      <WithdrawModal open={showWithdraw} onOpenChange={setShowWithdraw} balance={user.nairaBalance || "0"} />
     </div>
   );
 }

@@ -78,20 +78,7 @@ export function TronWallet() {
     sendUSDTMutation.mutate({ amount: sendAmount, to: recipientAddress });
   };
 
-  if (!user?.kycVerified) {
-    return (
-      <Card>
-        <CardContent className="p-6">
-          <Alert>
-            <CheckCircle className="h-4 w-4" />
-            <AlertDescription>
-              Complete KYC verification to access TRON wallet features.
-            </AlertDescription>
-          </Alert>
-        </CardContent>
-      </Card>
-    );
-  }
+  // Remove KYC requirement for wallet access
 
   return (
     <div className="space-y-6">
@@ -120,7 +107,7 @@ export function TronWallet() {
               <div>
                 <p className="text-sm text-gray-600">USDT Balance</p>
                 <p className="text-2xl font-bold">
-                  {balanceLoading ? "Loading..." : tronBalance?.balance || "0.00"} USDT
+                  0.00 USDT
                 </p>
               </div>
               <Badge variant="secondary" className="bg-green-100 text-green-800">
@@ -134,14 +121,14 @@ export function TronWallet() {
             <Label className="text-sm font-medium">Your TRON Address</Label>
             <div className="flex items-center space-x-2 mt-1">
               <Input
-                value={user.tronAddress || ""}
+                value={user?.tronAddress || ""}
                 readOnly
                 className="font-mono text-sm"
               />
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => copyToClipboard(user.tronAddress || "")}
+                onClick={() => copyToClipboard(user?.tronAddress || "")}
               >
                 <Copy className="h-4 w-4" />
               </Button>

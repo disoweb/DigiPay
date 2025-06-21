@@ -51,15 +51,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/offers", authenticateToken, async (req, res) => {
     try {
+      console.log("Creating offer with data:", req.body);
+      console.log("User ID:", req.user!.id);
+      
       const offerData = insertOfferSchema.parse({
         ...req.body,
         userId: req.user!.id,
       });
       
+      console.log("Parsed offer data:", offerData);
+      
       const offer = await storage.createOffer(offerData);
       res.status(201).json(offer);
     } catch (error) {
-      res.status(400).json({ error: "Invalid offer data" });
+      console.error("Offer creation error:", error);
+      res.status(400).json({ error: "Invalid offer data", details: error instanceof Error ? error.message : "Unknown error" });
     }
   });
 
