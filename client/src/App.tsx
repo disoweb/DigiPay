@@ -17,8 +17,8 @@ import LandingPage from "@/pages/landing-page";
 function Router() {
   return (
     <Switch>
-      <Route path="/landing" component={LandingPage} />
-      <ProtectedRoute path="/" component={Dashboard} />
+      <Route path="/" component={LandingPage} />
+      <ProtectedRoute path="/dashboard" component={Dashboard} />
       <ProtectedRoute path="/marketplace" component={Marketplace} />
       <ProtectedRoute path="/trades" component={Trades} />
       <ProtectedRoute path="/wallet" component={Wallet} />

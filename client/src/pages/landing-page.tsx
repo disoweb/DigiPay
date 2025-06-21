@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
@@ -146,7 +145,7 @@ export default function LandingPage() {
       <section className="pt-8 sm:pt-16 pb-12 sm:pb-20 bg-gradient-to-br from-primary via-blue-600 to-purple-600 relative overflow-hidden">
         {/* Background Pattern */}
         <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width=%2260%22%20height=%2260%22%20viewBox=%220%200%2060%2060%22%20xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cg%20fill=%22none%22%20fill-rule=%22evenodd%22%3E%3Cg%20fill=%22%23ffffff%22%20fill-opacity=%220.05%22%3E%3Ccircle%20cx=%227%22%20cy=%227%22%20r=%221%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-20"></div>
-        
+
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
             <div className="text-white text-center lg:text-left">
@@ -155,18 +154,18 @@ export default function LandingPage() {
                 <div className="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></div>
                 <span className="text-xs sm:text-sm font-medium">Live: 847 traders online now</span>
               </div>
-              
+
               <h1 className="text-3xl sm:text-4xl lg:text-6xl font-bold leading-tight mb-4 sm:mb-6">
                 Nigeria's Most
                 <span className="block text-yellow-300">Trusted USDT</span>
                 <span className="block">Trading Platform</span>
               </h1>
-              
+
               <p className="text-lg sm:text-xl text-blue-100 mb-6 sm:mb-8 leading-relaxed max-w-2xl mx-auto lg:mx-0">
                 Join 25,000+ verified traders using bank-grade security, instant settlements, 
                 and smart contract protection. Your funds are mathematically secured.
               </p>
-              
+
               {/* Mobile CTA Buttons */}
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-6 sm:mb-8">
                 <Button 
@@ -208,7 +207,7 @@ export default function LandingPage() {
                 </div>
               </div>
             </div>
-            
+
             {/* Stats Card - Mobile Optimized */}
             <div className="relative mt-8 lg:mt-0">
               <div className="bg-white rounded-2xl shadow-2xl p-4 sm:p-8 border border-gray-100">
@@ -250,7 +249,7 @@ export default function LandingPage() {
               The only platform with military-grade security, instant settlements, and zero fraud guarantee
             </p>
           </div>
-          
+
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-8">
             {features.map((feature, index) => (
               <Card key={index} className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 group">
@@ -281,7 +280,7 @@ export default function LandingPage() {
                 Every trade is protected by smart contracts on the TRON blockchain. 
                 It's mathematically impossible for anyone to steal your funds.
               </p>
-              
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-6 sm:mb-8">
                 {securityFeatures.map((feature, index) => (
                   <div key={index} className="flex items-center p-3 bg-gray-50 rounded-lg">
@@ -300,7 +299,7 @@ export default function LandingPage() {
                 ))}
               </div>
             </div>
-            
+
             <div className="relative order-1 lg:order-2">
               <div className="bg-gradient-to-br from-emerald-500 to-blue-600 rounded-2xl p-6 sm:p-8 text-white shadow-2xl">
                 <h3 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">Security Guarantee</h3>
@@ -349,7 +348,7 @@ export default function LandingPage() {
               Real stories from verified DigiPay users
             </p>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-8">
             {testimonials.map((testimonial, index) => (
               <Card key={index} className="border-0 shadow-lg hover:shadow-xl transition-shadow bg-white">
@@ -367,11 +366,11 @@ export default function LandingPage() {
                       </Badge>
                     )}
                   </div>
-                  
+
                   <p className="text-sm sm:text-base text-gray-700 mb-4 italic leading-relaxed">
                     "{testimonial.content}"
                   </p>
-                  
+
                   <div className="flex items-center justify-between">
                     <div className="flex items-center">
                       <div className="w-10 h-10 bg-primary text-white rounded-full flex items-center justify-center font-semibold mr-3 text-sm">
@@ -396,7 +395,7 @@ export default function LandingPage() {
       {/* CTA Section - Mobile Optimized */}
       <section className="py-12 sm:py-20 bg-gradient-to-r from-primary via-blue-600 to-purple-600 relative overflow-hidden">
         <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width=%2260%22%20height=%2260%22%20viewBox=%220%200%2060%2060%22%20xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cg%20fill=%22none%22%20fill-rule=%22evenodd%22%3E%3Cg%20fill=%22%23ffffff%22%20fill-opacity=%220.1%22%3E%3Ccircle%20cx=%227%22%20cy=%227%22%20r=%221%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')]"></div>
-        
+
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative">
           <Badge className="mb-4 bg-white/20 text-white">Start Trading Today</Badge>
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-4">
@@ -406,7 +405,7 @@ export default function LandingPage() {
             Start with just ₦1,000. Join 25,000+ verified traders who trust DigiPay 
             for secure USDT transactions with guaranteed protection.
           </p>
-          
+
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-6">
             <Button 
               size="lg" 
@@ -451,7 +450,7 @@ export default function LandingPage() {
                 </div>
               </div>
             </div>
-            
+
             <div>
               <h4 className="font-semibold mb-4 text-sm sm:text-base">Platform</h4>
               <ul className="space-y-2 text-gray-400 text-sm">
@@ -461,7 +460,7 @@ export default function LandingPage() {
                 <li>Mobile App</li>
               </ul>
             </div>
-            
+
             <div>
               <h4 className="font-semibold mb-4 text-sm sm:text-base">Support</h4>
               <ul className="space-y-2 text-gray-400 text-sm">
@@ -471,7 +470,7 @@ export default function LandingPage() {
                 <li>Security Report</li>
               </ul>
             </div>
-            
+
             <div>
               <h4 className="font-semibold mb-4 text-sm sm:text-base">Legal</h4>
               <ul className="space-y-2 text-gray-400 text-sm">
@@ -482,7 +481,7 @@ export default function LandingPage() {
               </ul>
             </div>
           </div>
-          
+
           <div className="border-t border-gray-800 mt-8 pt-6 sm:pt-8">
             <div className="flex flex-col sm:flex-row justify-between items-center text-center sm:text-left">
               <p className="text-gray-400 text-sm mb-4 sm:mb-0">
