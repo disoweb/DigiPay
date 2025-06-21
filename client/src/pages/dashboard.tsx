@@ -2,6 +2,7 @@
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
 import { Navbar } from "@/components/navbar";
+import { MyOffers } from "@/components/my-offers";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CreateOfferModal } from "@/components/create-offer-modal";
@@ -308,6 +309,9 @@ export default function Dashboard() {
               </div>
             </CardContent>
           </Card>
+
+          {/* My Offers Section */}
+          <MyOffers />
         </div>
       </main>
 

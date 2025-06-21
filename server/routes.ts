@@ -183,12 +183,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
+      const fiatAmount = (tradeAmount * parseFloat(offer.rate)).toString();
+      
       const tradeData = insertTradeSchema.parse({
         offerId: offer.id,
         buyerId: offer.type === "sell" ? user.id : offer.userId,
         sellerId: offer.type === "sell" ? offer.userId : user.id,
         amount: tradeAmount.toString(),
         rate: offer.rate,
+        fiatAmount: fiatAmount,
       });
 
       const trade = await storage.createTrade(tradeData);
@@ -346,6 +349,94 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Payment confirmation error:", error);
       res.status(500).json({ error: "Failed to confirm payment" });
+    }
+  });
+
+  // Offer CRUD Operations
+  app.get("/api/users/:userId/offers", authenticateToken, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      
+      if (req.user!.id !== userId) {
+        return res.status(403).json({ error: "Can only view your own offers" });
+      }
+
+      const offers = await storage.getUserOffers(userId);
+      
+      // Enrich with user data for consistency
+      const enrichedOffers = offers.map(offer => ({
+        ...offer,
+        user: {
+          id: req.user!.id,
+          email: req.user!.email,
+          averageRating: req.user!.averageRating || "0",
+          ratingCount: req.user!.ratingCount || 0
+        }
+      }));
+
+      res.json(enrichedOffers);
+    } catch (error) {
+      console.error("Get user offers error:", error);
+      res.status(500).json({ error: "Failed to fetch offers" });
+    }
+  });
+
+  app.put("/api/offers/:id", authenticateToken, async (req, res) => {
+    try {
+      const offerId = parseInt(req.params.id);
+      const { amount, rate, status } = req.body;
+      
+      const offer = await storage.getOffer(offerId);
+      if (!offer) {
+        return res.status(404).json({ error: "Offer not found" });
+      }
+
+      if (offer.userId !== req.user!.id) {
+        return res.status(403).json({ error: "Can only edit your own offers" });
+      }
+
+      const updates: any = {};
+      if (amount !== undefined) updates.amount = amount;
+      if (rate !== undefined) updates.rate = rate;
+      if (status !== undefined) updates.status = status;
+
+      const updatedOffer = await storage.updateOffer(offerId, updates);
+      res.json(updatedOffer);
+    } catch (error) {
+      console.error("Update offer error:", error);
+      res.status(500).json({ error: "Failed to update offer" });
+    }
+  });
+
+  app.delete("/api/offers/:id", authenticateToken, async (req, res) => {
+    try {
+      const offerId = parseInt(req.params.id);
+      
+      const offer = await storage.getOffer(offerId);
+      if (!offer) {
+        return res.status(404).json({ error: "Offer not found" });
+      }
+
+      if (offer.userId !== req.user!.id) {
+        return res.status(403).json({ error: "Can only delete your own offers" });
+      }
+
+      // Check if there are active trades for this offer
+      const activeTrades = await storage.getTrades();
+      const hasActiveTrades = activeTrades.some(trade => 
+        trade.offerId === offerId && 
+        !["completed", "cancelled"].includes(trade.status || "")
+      );
+
+      if (hasActiveTrades) {
+        return res.status(400).json({ error: "Cannot delete offer with active trades" });
+      }
+
+      await storage.updateOffer(offerId, { status: "deleted" });
+      res.json({ success: true, message: "Offer deleted successfully" });
+    } catch (error) {
+      console.error("Delete offer error:", error);
+      res.status(500).json({ error: "Failed to delete offer" });
     }
   });
 
