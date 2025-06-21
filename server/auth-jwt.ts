@@ -233,6 +233,11 @@ export function setupJWTAuth(app: Express) {
     }
   });
 
+  // Logout
+  app.post("/api/auth/logout", (req: Request, res: Response) => {
+    res.json({ message: "Logout successful" });
+  });
+
   app.get("/api/auth/user", authenticateToken, (req: Request, res: Response) => {
     if (req.user) {
       const { password: _, ...userWithoutPassword } = req.user;
