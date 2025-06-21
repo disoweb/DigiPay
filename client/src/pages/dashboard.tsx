@@ -130,9 +130,9 @@ export default function Dashboard() {
       <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
         <div className="space-y-6">
           {/* Welcome Header */}
-          <div className="bg-gradient-to-r from-primary to-blue-600 rounded-lg p-6 text-white">
-            <h1 className="text-2xl font-bold">Welcome back, {user.email.split('@')[0]}!</h1>
-            <p className="text-blue-100 mt-2">Manage your trades and monitor your portfolio</p>
+          <div className="bg-gradient-to-r from-primary to-blue-600 rounded-lg p-4 text-white">
+            <h1 className="text-xl font-bold">Welcome back, {user.email.split('@')[0]}!</h1>
+            <p className="text-blue-100 mt-1 text-sm">Manage your trades and monitor your portfolio</p>
           </div>
 
           {/* Stats Overview */}
