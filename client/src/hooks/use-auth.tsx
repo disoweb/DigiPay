@@ -38,6 +38,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     onSuccess: (user: SelectUser) => {
       queryClient.setQueryData(["/api/user"], user);
+      // Redirect to dashboard after successful login
+      setTimeout(() => {
+        window.location.href = "/dashboard";
+      }, 100);
     },
     onError: (error: Error) => {
       toast({
@@ -55,6 +59,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     onSuccess: (user: SelectUser) => {
       queryClient.setQueryData(["/api/user"], user);
+      // Redirect to dashboard after successful registration
+      setTimeout(() => {
+        window.location.href = "/dashboard";
+      }, 100);
     },
     onError: (error: Error) => {
       toast({
@@ -71,6 +79,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     onSuccess: () => {
       queryClient.setQueryData(["/api/user"], null);
+      // Redirect to auth page after logout
+      window.location.href = "/auth";
     },
     onError: (error: Error) => {
       toast({
