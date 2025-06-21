@@ -229,7 +229,7 @@ export default function Dashboard() {
                   <CardTitle className="text-xl font-bold text-gray-900">Quick Actions</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-2 gap-4">
                     {quickActions.map((action, index) => (
                       <Button
                         key={index}

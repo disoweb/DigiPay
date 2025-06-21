@@ -55,19 +55,20 @@ export default function Ratings() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <Navbar />
       
-      <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-        <div className="space-y-6">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Community Ratings</h1>
-              <p className="text-gray-600">See what traders are saying about each other</p>
+      <main className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+        <div className="space-y-8">
+          <div className="text-center space-y-4">
+            <div className="inline-flex items-center bg-yellow-100 text-yellow-800 rounded-full px-3 py-1 text-sm font-medium">
+              <Star className="w-4 h-4 mr-2" />
+              {ratings.length} Community Reviews
             </div>
-            <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
-              {ratings.length} Reviews
-            </Badge>
+            <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">Community Ratings</h1>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              Real feedback from verified traders in our community. Build trust through transparency.
+            </p>
           </div>
 
           {ratings.length === 0 ? (
@@ -83,32 +84,32 @@ export default function Ratings() {
           ) : (
             <div className="grid gap-6">
               {ratings.map((rating) => (
-                <Card key={rating.id} className="border-l-4 border-l-yellow-400">
-                  <CardHeader className="pb-3">
+                <Card key={rating.id} className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-white/90 backdrop-blur-sm border-l-4 border-l-yellow-400">
+                  <CardHeader className="pb-4">
                     <div className="flex items-start justify-between">
-                      <div className="flex items-center space-x-3">
-                        <Avatar>
-                          <AvatarFallback className="bg-gradient-to-r from-blue-400 to-purple-500 text-white">
+                      <div className="flex items-center space-x-4">
+                        <Avatar className="h-12 w-12">
+                          <AvatarFallback className="bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold text-lg">
                             {rating.rater ? getInitials(rating.rater.email) : "??"}
                           </AvatarFallback>
                         </Avatar>
                         <div>
-                          <p className="font-medium text-gray-900">
+                          <p className="font-bold text-gray-900 text-lg">
                             {rating.rater?.email.replace(/(.{2}).*(@.*)/, '$1***$2') || "Anonymous"}
                           </p>
                           <p className="text-sm text-gray-600">
                             rated{" "}
-                            <span className="font-medium">
+                            <span className="font-semibold text-primary">
                               {rating.ratedUser?.email.replace(/(.{2}).*(@.*)/, '$1***$2') || "Unknown"}
                             </span>
                           </p>
                         </div>
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <div className="flex items-center">
+                      <div className="flex flex-col items-end space-y-2">
+                        <div className="flex items-center bg-yellow-50 px-3 py-1 rounded-full">
                           {renderStars(rating.rating)}
                         </div>
-                        <Badge variant="outline">
+                        <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
                           Trade #{rating.tradeId}
                         </Badge>
                       </div>

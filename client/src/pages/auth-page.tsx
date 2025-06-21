@@ -41,13 +41,17 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col lg:flex-row">
+    <div className="min-h-screen flex flex-col lg:flex-row bg-gradient-to-br from-gray-50 to-gray-100">
       {/* Left side - Forms */}
-      <div className="flex-1 flex items-center justify-center p-4 sm:p-8 bg-white">
-        <div className="w-full max-w-md space-y-6 sm:space-y-8">
+      <div className="flex-1 flex items-center justify-center p-4 sm:p-8 lg:bg-white relative">
+        <div className="absolute inset-0 bg-gradient-to-br from-white/50 to-transparent lg:hidden"></div>
+        <div className="w-full max-w-md space-y-6 sm:space-y-8 relative z-10">
           <div className="text-center">
-            <h1 className="text-3xl sm:text-4xl font-bold text-primary mb-2">DigiPay</h1>
-            <p className="text-sm sm:text-base text-gray-600">Secure P2P Cryptocurrency Trading</p>
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-primary rounded-2xl mb-4 shadow-xl">
+              <span className="text-2xl font-bold text-white">D</span>
+            </div>
+            <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">Welcome to DigiPay</h1>
+            <p className="text-sm sm:text-base text-gray-600">Nigeria's Most Trusted P2P Trading Platform</p>
           </div>
 
           <Tabs defaultValue="login" className="w-full">
@@ -57,9 +61,9 @@ export default function AuthPage() {
             </TabsList>
 
             <TabsContent value="login">
-              <Card>
-                <CardContent className="p-6">
-                  <form onSubmit={handleLogin} className="space-y-4">
+              <Card className="border-0 shadow-xl bg-white/95 backdrop-blur-sm">
+                <CardContent className="p-8">
+                  <form onSubmit={handleLogin} className="space-y-6">
                     <div className="space-y-2">
                       <Label htmlFor="login-email">Email address</Label>
                       <Input
@@ -102,9 +106,9 @@ export default function AuthPage() {
             </TabsContent>
 
             <TabsContent value="register">
-              <Card>
-                <CardContent className="p-6">
-                  <form onSubmit={handleRegister} className="space-y-4">
+              <Card className="border-0 shadow-xl bg-white/95 backdrop-blur-sm">
+                <CardContent className="p-8">
+                  <form onSubmit={handleRegister} className="space-y-6">
                     <div className="space-y-2">
                       <Label htmlFor="register-email">Email</Label>
                       <Input

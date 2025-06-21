@@ -42,69 +42,71 @@ export default function Marketplace() {
   });
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <Navbar />
       
-      <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-        <div className="space-y-6">
-          {/* Header */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Marketplace</h1>
-              <p className="text-gray-600 mt-1">Browse and create USDT trading offers</p>
+      <main className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+        <div className="space-y-8">
+          {/* Header - Modernized */}
+          <div className="text-center space-y-4">
+            <div className="inline-flex items-center bg-primary/10 text-primary rounded-full px-3 py-1 text-sm font-medium mb-2">
+              <div className="w-2 h-2 bg-primary rounded-full mr-2 animate-pulse"></div>
+              {offers.length} Active Offers
             </div>
+            <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">USDT Marketplace</h1>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              Trade USDT with verified users at competitive rates. Secure, fast, and transparent.
+            </p>
             <Button 
               onClick={() => setShowCreateOffer(true)}
-              className="mt-4 sm:mt-0"
+              size="lg"
+              className="px-8 py-3 text-lg shadow-lg hover:shadow-xl transition-all duration-300"
             >
-              <Plus className="mr-2 h-4 w-4" />
-              Create Offer
+              <Plus className="mr-2 h-5 w-5" />
+              Create New Offer
             </Button>
           </div>
 
-          {/* Filters */}
-          <Card className="border-0 shadow-sm">
+          {/* Filters - Enhanced */}
+          <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
             <CardContent className="p-6">
-              <div className="flex flex-wrap gap-4 items-end">
-                <div className="space-y-2">
-                  <Label>Type</Label>
+              <div className="flex flex-col sm:flex-row gap-4 items-center">
+                <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                  <span>Filter by:</span>
+                </div>
+                <div className="flex flex-wrap gap-3 flex-1">
                   <Select value={filters.type} onValueChange={(value) => setFilters(prev => ({ ...prev, type: value }))}>
-                    <SelectTrigger className="w-32">
-                      <SelectValue />
+                    <SelectTrigger className="w-40 bg-white border-gray-200">
+                      <SelectValue placeholder="Offer Type" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">All</SelectItem>
-                      <SelectItem value="buy">Buy</SelectItem>
-                      <SelectItem value="sell">Sell</SelectItem>
+                      <SelectItem value="all">All Types</SelectItem>
+                      <SelectItem value="buy">Buy USDT</SelectItem>
+                      <SelectItem value="sell">Sell USDT</SelectItem>
                     </SelectContent>
                   </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Min Amount</Label>
                   <Input
                     type="number"
-                    placeholder="Min"
-                    className="w-24"
+                    placeholder="Min Amount"
+                    className="w-32 bg-white border-gray-200"
                     value={filters.minAmount}
                     onChange={(e) => setFilters(prev => ({ ...prev, minAmount: e.target.value }))}
                   />
-                </div>
-                <div className="space-y-2">
-                  <Label>Max Amount</Label>
                   <Input
                     type="number"
-                    placeholder="Max"
-                    className="w-24"
+                    placeholder="Max Amount"
+                    className="w-32 bg-white border-gray-200"
                     value={filters.maxAmount}
                     onChange={(e) => setFilters(prev => ({ ...prev, maxAmount: e.target.value }))}
                   />
+                  <Button
+                    variant="outline"
+                    onClick={() => setFilters({ type: "all", minAmount: "", maxAmount: "" })}
+                    className="px-6"
+                  >
+                    Clear All
+                  </Button>
                 </div>
-                <Button
-                  variant="outline"
-                  onClick={() => setFilters({ type: "all", minAmount: "", maxAmount: "" })}
-                >
-                  Clear
-                </Button>
               </div>
             </CardContent>
           </Card>

@@ -58,28 +58,38 @@ export default function Trades() {
   };
 
   const TradeCard = ({ trade }: { trade: EnrichedTrade }) => (
-    <Card className="border-0 shadow-sm hover:shadow-md transition-shadow cursor-pointer" onClick={() => setSelectedTrade(trade)}>
-      <CardContent className="p-4">
+    <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer bg-white/90 backdrop-blur-sm hover:bg-white group" onClick={() => setSelectedTrade(trade)}>
+      <CardContent className="p-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <div className="p-2 bg-gray-50 rounded-lg">
+            <div className={`p-3 rounded-xl transition-all duration-300 group-hover:scale-110 ${
+              trade.status === 'pending' ? 'bg-orange-50' :
+              trade.status === 'completed' ? 'bg-green-50' :
+              trade.status === 'cancelled' ? 'bg-red-50' : 'bg-gray-50'
+            }`}>
               {getStatusIcon(trade.status)}
             </div>
             <div>
-              <h3 className="font-semibold text-gray-900">
+              <h3 className="font-bold text-gray-900 text-lg">
                 {trade.offer?.type === "sell" ? "Buy" : "Sell"} {parseFloat(trade.amount).toFixed(2)} USDT
               </h3>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 font-medium">
                 Rate: ₦{parseFloat(trade.rate).toLocaleString()}/USDT
               </p>
-              <p className="text-sm text-gray-500">
-                {new Date(trade.createdAt).toLocaleDateString()}
+              <p className="text-xs text-gray-500">
+                {new Date(trade.createdAt).toLocaleDateString('en-US', {
+                  month: 'short',
+                  day: 'numeric',
+                  year: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })}
               </p>
             </div>
           </div>
           <div className="text-right">
             {getStatusBadge(trade.status)}
-            <p className="text-sm text-gray-600 mt-1">
+            <p className="text-lg font-bold text-gray-900 mt-2">
               ₦{(parseFloat(trade.amount) * parseFloat(trade.rate)).toLocaleString()}
             </p>
           </div>
@@ -89,35 +99,41 @@ export default function Trades() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <Navbar />
       
-      <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-        <div className="space-y-6">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">My Trades</h1>
-            <p className="text-gray-600 mt-1">Track your ongoing and completed trades</p>
+      <main className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+        <div className="space-y-8">
+          <div className="text-center space-y-4">
+            <div className="inline-flex items-center bg-blue-100 text-blue-800 rounded-full px-3 py-1 text-sm font-medium">
+              <Clock className="w-4 h-4 mr-2" />
+              {activeTrades.length} Active Trades
+            </div>
+            <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">Trade Management</h1>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              Monitor your ongoing trades and review completed transactions
+            </p>
           </div>
 
-          <Card className="border-0 shadow-sm">
+          <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
             <Tabs defaultValue="active" className="w-full">
-              <div className="border-b border-gray-200">
-                <TabsList className="h-12 p-0 bg-transparent w-full justify-start rounded-none border-b-0">
+              <div className="border-b border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100">
+                <TabsList className="h-14 p-2 bg-transparent w-full justify-start rounded-none border-b-0 gap-1">
                   <TabsTrigger 
                     value="active" 
-                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                    className="rounded-lg border-b-0 data-[state=active]:bg-white data-[state=active]:shadow-md px-6 py-2 font-medium"
                   >
-                    Active Trades ({activeTrades.length})
+                    Active ({activeTrades.length})
                   </TabsTrigger>
                   <TabsTrigger 
                     value="completed"
-                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                    className="rounded-lg border-b-0 data-[state=active]:bg-white data-[state=active]:shadow-md px-6 py-2 font-medium"
                   >
                     Completed ({completedTrades.length})
                   </TabsTrigger>
                   <TabsTrigger 
                     value="cancelled"
-                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                    className="rounded-lg border-b-0 data-[state=active]:bg-white data-[state=active]:shadow-md px-6 py-2 font-medium"
                   >
                     Cancelled ({cancelledTrades.length})
                   </TabsTrigger>

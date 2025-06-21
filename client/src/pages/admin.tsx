@@ -102,28 +102,34 @@ export default function Admin() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <Navbar />
       
-      <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-        <div className="space-y-6">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
-            <p className="text-gray-600 mt-1">Monitor and manage platform activities</p>
+      <main className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+        <div className="space-y-8">
+          <div className="text-center space-y-4">
+            <div className="inline-flex items-center bg-red-100 text-red-800 rounded-full px-3 py-1 text-sm font-medium">
+              <Shield className="w-4 h-4 mr-2" />
+              Admin Access
+            </div>
+            <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">Platform Management</h1>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              Monitor system health, resolve disputes, and oversee platform operations
+            </p>
           </div>
 
           {/* Admin Stats */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             {stats.map((stat, index) => (
-              <Card key={index} className="border-0 shadow-sm">
+              <Card key={index} className="border-0 shadow-lg bg-white/80 backdrop-blur-sm hover:shadow-xl transition-all duration-300">
                 <CardContent className="p-6">
                   <div className="flex items-center">
-                    <div className={`p-2 ${stat.bgColor} rounded-lg`}>
-                      <stat.icon className={`h-5 w-5 ${stat.color}`} />
+                    <div className={`p-3 ${stat.bgColor} rounded-xl`}>
+                      <stat.icon className={`h-6 w-6 ${stat.color}`} />
                     </div>
                     <div className="ml-4">
-                      <p className="text-sm text-gray-600">{stat.title}</p>
-                      <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
+                      <p className="text-sm font-medium text-gray-600">{stat.title}</p>
+                      <p className="text-3xl font-bold text-gray-900">{stat.value}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -132,9 +138,12 @@ export default function Admin() {
           </div>
 
           {/* Disputes Table */}
-          <Card className="border-0 shadow-sm">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900">Pending Disputes</h3>
+          <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+            <div className="px-6 py-5 border-b border-gray-200 bg-gradient-to-r from-red-50 to-orange-50">
+              <h3 className="text-xl font-bold text-gray-900 flex items-center">
+                <AlertTriangle className="h-5 w-5 mr-2 text-orange-600" />
+                Pending Disputes
+              </h3>
             </div>
             <CardContent className="p-0">
               {disputedTrades.length === 0 ? (
@@ -197,9 +206,12 @@ export default function Admin() {
           </Card>
 
           {/* All Trades Table */}
-          <Card className="border-0 shadow-sm">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900">All Trades</h3>
+          <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+            <div className="px-6 py-5 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
+              <h3 className="text-xl font-bold text-gray-900 flex items-center">
+                <Handshake className="h-5 w-5 mr-2 text-blue-600" />
+                All Trades
+              </h3>
             </div>
             <CardContent className="p-0">
               <Table>
