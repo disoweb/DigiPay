@@ -165,39 +165,106 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Cannot trade with your own offer" });
       }
 
+      const tradeAmount = parseFloat(amount);
+      const offerAmount = parseFloat(offer.amount);
+      
+      if (tradeAmount <= 0 || tradeAmount > offerAmount) {
+        return res.status(400).json({ error: "Invalid trade amount" });
+      }
+
+      // Check user balances for real trades
+      if (offer.type === "sell") {
+        // User is buying USDT, needs Naira
+        const requiredNaira = tradeAmount * parseFloat(offer.rate);
+        const userNairaBalance = parseFloat(user.nairaBalance || "0");
+        
+        if (userNairaBalance < requiredNaira) {
+          return res.status(400).json({ error: "Insufficient Naira balance" });
+        }
+      } else {
+        // User is selling USDT, needs USDT
+        const userUsdtBalance = parseFloat(user.usdtBalance || "0");
+        
+        if (userUsdtBalance < tradeAmount) {
+          return res.status(400).json({ error: "Insufficient USDT balance" });
+        }
+      }
+
       const tradeData = insertTradeSchema.parse({
         offerId: offer.id,
         buyerId: offer.type === "sell" ? user.id : offer.userId,
         sellerId: offer.type === "sell" ? offer.userId : user.id,
-        amount,
+        amount: tradeAmount.toString(),
         rate: offer.rate,
       });
 
       const trade = await storage.createTrade(tradeData);
 
-      // If this is a sell offer, initiate escrow deposit
+      // Update user balances immediately (escrow simulation)
       if (offer.type === "sell") {
-        try {
-          const seller = await storage.getUser(offer.userId);
-          if (seller?.tronAddress) {
-            const escrowTxHash = await tronService.depositToEscrow(
-              seller.tronAddress, // Using address as private key for demo
-              trade.id,
-              parseFloat(amount)
-            );
-
-            if (escrowTxHash) {
-              await storage.updateTrade(trade.id, { 
-                escrowAddress: escrowTxHash,
-                status: "pending"
-              });
-            }
-          }
-        } catch (escrowError) {
-          console.error("Escrow deposit failed:", escrowError);
-          // Continue with trade creation even if escrow fails for demo
+        // User buys USDT - deduct Naira, add USDT
+        const requiredNaira = tradeAmount * parseFloat(offer.rate);
+        await storage.updateUser(user.id, {
+          nairaBalance: (parseFloat(user.nairaBalance || "0") - requiredNaira).toString(),
+          usdtBalance: (parseFloat(user.usdtBalance || "0") + tradeAmount).toString()
+        });
+        
+        // Update seller balances
+        const seller = await storage.getUser(offer.userId);
+        if (seller) {
+          await storage.updateUser(seller.id, {
+            nairaBalance: (parseFloat(seller.nairaBalance || "0") + requiredNaira).toString(),
+            usdtBalance: (parseFloat(seller.usdtBalance || "0") - tradeAmount).toString()
+          });
+        }
+      } else {
+        // User sells USDT - deduct USDT, add Naira
+        const receivedNaira = tradeAmount * parseFloat(offer.rate);
+        await storage.updateUser(user.id, {
+          nairaBalance: (parseFloat(user.nairaBalance || "0") + receivedNaira).toString(),
+          usdtBalance: (parseFloat(user.usdtBalance || "0") - tradeAmount).toString()
+        });
+        
+        // Update buyer balances  
+        const buyer = await storage.getUser(offer.userId);
+        if (buyer) {
+          await storage.updateUser(buyer.id, {
+            nairaBalance: (parseFloat(buyer.nairaBalance || "0") - receivedNaira).toString(),
+            usdtBalance: (parseFloat(buyer.usdtBalance || "0") + tradeAmount).toString()
+          });
         }
       }
+
+      // Update offer amount or mark as completed
+      const remainingAmount = offerAmount - tradeAmount;
+      if (remainingAmount <= 0) {
+        await storage.updateOffer(offer.id, { 
+          status: "completed",
+          amount: "0"
+        });
+      } else {
+        await storage.updateOffer(offer.id, { 
+          amount: remainingAmount.toString()
+        });
+      }
+
+      // Mark trade as completed
+      await storage.updateTrade(trade.id, { status: "completed" });
+
+      // Create transaction records
+      await storage.createTransaction({
+        userId: user.id,
+        amount: (tradeAmount * parseFloat(offer.rate)).toString(),
+        type: offer.type === "sell" ? "purchase" : "sale",
+        status: "completed",
+        description: `${offer.type === "sell" ? "Bought" : "Sold"} ${tradeAmount} USDT at ₦${offer.rate}/USDT`
+      });
+
+      res.json({ 
+        success: true, 
+        trade,
+        message: "Trade completed successfully!"
+      });
 
       // Send notifications to both parties
       const buyer = await storage.getUser(tradeData.buyerId);

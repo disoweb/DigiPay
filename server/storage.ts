@@ -170,36 +170,21 @@ export class DatabaseStorage implements IStorage {
           userId: testUser1.id,
           type: "buy",
           amount: "10.00",
-          minAmount: "5.00",
-          maxAmount: "50.00",
-          rate: "1485.00",
-          paymentMethod: "Bank Transfer",
-          terms: "Payment within 15 minutes. Send proof of payment.",
-          status: "active"
+          rate: "1485.00"
         });
 
         await this.createOffer({
           userId: testUser2.id,
           type: "buy",
           amount: "25.00",
-          minAmount: "10.00",
-          maxAmount: "100.00",
-          rate: "1490.00",
-          paymentMethod: "Bank Transfer",
-          terms: "Quick payment required. Automated release after confirmation.",
-          status: "active"
+          rate: "1490.00"
         });
 
         await this.createOffer({
           userId: testUser1.id,
           type: "buy",
           amount: "5.00",
-          minAmount: "1.00",
-          maxAmount: "20.00",
-          rate: "1480.00",
-          paymentMethod: "Bank Transfer",
-          terms: "Small amounts welcome. Fast processing.",
-          status: "active"
+          rate: "1480.00"
         });
 
         // Sell offers (users want to sell USDT)
@@ -207,36 +192,21 @@ export class DatabaseStorage implements IStorage {
           userId: testUser2.id,
           type: "sell",
           amount: "15.00",
-          minAmount: "5.00",
-          maxAmount: "30.00",
-          rate: "1475.00",
-          paymentMethod: "Bank Transfer",
-          terms: "Instant release after payment confirmation. Available 24/7.",
-          status: "active"
+          rate: "1475.00"
         });
 
         await this.createOffer({
           userId: testUser1.id,
           type: "sell",
           amount: "30.00",
-          minAmount: "10.00",
-          maxAmount: "50.00",
-          rate: "1470.00",
-          paymentMethod: "Bank Transfer",
-          terms: "Competitive rates. Trusted seller with 4.8★ rating.",
-          status: "active"
+          rate: "1470.00"
         });
 
         await this.createOffer({
           userId: testUser2.id,
           type: "sell",
           amount: "8.00",
-          minAmount: "2.00",
-          maxAmount: "15.00",
-          rate: "1478.00",
-          paymentMethod: "Bank Transfer",
-          terms: "Perfect for small trades. Quick and reliable.",
-          status: "active"
+          rate: "1478.00"
         });
 
         console.log("✅ Seeded 6 demo offers (3 buy, 3 sell)");

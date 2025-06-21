@@ -34,6 +34,7 @@ export default function Marketplace() {
     queryKey: ["/api/offers"],
     queryFn: async () => {
       const response = await fetch("/api/offers", {
+        credentials: 'include',
         headers: {
           "Authorization": `Bearer ${localStorage.getItem("auth_token")}`,
         },

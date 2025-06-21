@@ -57,11 +57,14 @@ export function WithdrawModal({ open, onOpenChange, balance }: WithdrawModalProp
   const handleConfirmWithdraw = async () => {
     setIsLoading(true);
     try {
-      // Here you would make the actual API call to process withdrawal
+      // Make the API call to process withdrawal
       const response = await fetch('/api/withdraw', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+        },
         body: JSON.stringify({
           amount: withdrawAmount,
           bankName,
@@ -86,7 +89,7 @@ export function WithdrawModal({ open, onOpenChange, balance }: WithdrawModalProp
   };
 
   const canProceedStep1 = withdrawAmount >= 100 && withdrawAmount <= availableBalance;
-  const canProceedStep2 = bankName && accountNumber.length === 10 && accountName;
+  const canProceedStep2 = bankName && accountNumber.length === 10 && accountName.trim().length >= 3;
 
   const quickAmounts = [
     Math.floor(availableBalance * 0.25),
@@ -307,7 +310,7 @@ export function WithdrawModal({ open, onOpenChange, balance }: WithdrawModalProp
             <Button
               onClick={handleNext}
               disabled={!canProceedStep2}
-              className="w-full h-12 text-base font-medium bg-blue-600 hover:bg-blue-700"
+              className="w-full h-12 text-base font-medium bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
               size="lg"
             >
               Next: Review & Confirm
