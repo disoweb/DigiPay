@@ -1,10 +1,6 @@
-import { createContext, ReactNode, useContext } from "react";
-import {
-  useQuery,
-  useMutation,
-  UseMutationResult,
-} from "@tanstack/react-query";
-import { insertUserSchema, User as SelectUser, InsertUser } from "@shared/schema";
+import React, { createContext, ReactNode, useContext } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { User as SelectUser, InsertUser } from "@shared/schema";
 import { getQueryFn, apiRequest, queryClient } from "../lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
@@ -12,16 +8,16 @@ type AuthContextType = {
   user: SelectUser | null;
   isLoading: boolean;
   error: Error | null;
-  loginMutation: UseMutationResult<SelectUser, Error, LoginData>;
-  logoutMutation: UseMutationResult<void, Error, void>;
-  registerMutation: UseMutationResult<SelectUser, Error, InsertUser>;
+  login: (credentials: { email: string; password: string }) => Promise<void>;
+  logout: () => Promise<void>;
+  register: (userData: InsertUser) => Promise<void>;
 };
 
-type LoginData = Pick<InsertUser, "email" | "password">;
-
 export const AuthContext = createContext<AuthContextType | null>(null);
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
+  
   const {
     data: user,
     error,
@@ -32,78 +28,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   });
 
   const loginMutation = useMutation({
-    mutationFn: async (credentials: LoginData) => {
-      try {
-        const res = await apiRequest("POST", "/api/auth/login", credentials);
-        return await res.json();
-      } catch (error) {
-        if (error instanceof Error) {
-          throw error;
-        }
-        throw new Error("Login failed");
-      }
+    mutationFn: async (credentials: { email: string; password: string }) => {
+      const res = await apiRequest("POST", "/api/auth/login", credentials);
+      return await res.json();
     },
     onSuccess: (response: any) => {
-      try {
-        const { token, ...user } = response;
-        if (token) {
-          localStorage.setItem('digipay_token', token);
-        }
-        queryClient.setQueryData(["/api/user"], user);
-        // Redirect based on user role
-        setTimeout(() => {
-          if (user.isAdmin) {
-            window.location.href = "/admin";
-          } else {
-            window.location.href = "/dashboard";
-          }
-        }, 100);
-      } catch (error) {
-        console.error("Login success handler error:", error);
+      const { token, user: userData } = response;
+      if (token) {
+        localStorage.setItem('digipay_token', token);
       }
-    },
-    onError: (error: Error) => {
-      console.error("Login error:", error);
+      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+      
+      // Role-based redirection
+      if (userData?.isAdmin) {
+        window.location.href = "/admin";
+      } else {
+        window.location.href = "/dashboard";
+      }
+      
       toast({
-        title: "Login failed",
-        description: error.message || "An error occurred during login",
-        variant: "destructive",
+        title: "Login successful",
+        description: "Welcome back to DigiPay!",
       });
     },
-  });
-
-  const registerMutation = useMutation({
-    mutationFn: async (credentials: InsertUser) => {
-      try {
-        const res = await apiRequest("POST", "/api/auth/register", credentials);
-        return await res.json();
-      } catch (error) {
-        if (error instanceof Error) {
-          throw error;
-        }
-        throw new Error("Registration failed");
-      }
-    },
-    onSuccess: (response: any) => {
-      try {
-        const { token, ...user } = response;
-        if (token) {
-          localStorage.setItem('digipay_token', token);
-        }
-        queryClient.setQueryData(["/api/user"], user);
-        // Redirect to dashboard after successful registration
-        setTimeout(() => {
-          window.location.href = "/dashboard";
-        }, 100);
-      } catch (error) {
-        console.error("Registration success handler error:", error);
-      }
-    },
     onError: (error: Error) => {
-      console.error("Registration error:", error);
       toast({
-        title: "Registration failed",
-        description: error.message || "An error occurred during registration",
+        title: "Login failed",
+        description: error.message || "Please check your credentials",
         variant: "destructive",
       });
     },
@@ -111,47 +62,68 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logoutMutation = useMutation({
     mutationFn: async () => {
-      try {
-        await apiRequest("POST", "/api/auth/logout");
-      } catch (error) {
-        // Logout should still clear local state even if API call fails
-        console.warn("Logout API call failed, clearing local state anyway:", error);
-      }
+      await apiRequest("POST", "/api/auth/logout", {});
     },
     onSuccess: () => {
-      try {
-        localStorage.removeItem('digipay_token');
-        queryClient.setQueryData(["/api/user"], null);
-        // Redirect to auth page after logout
-        window.location.href = "/auth";
-      } catch (error) {
-        console.error("Logout success handler error:", error);
+      localStorage.removeItem('digipay_token');
+      queryClient.clear();
+      window.location.href = "/";
+      toast({
+        title: "Logged out",
+        description: "You have been successfully logged out.",
+      });
+    },
+  });
+
+  const registerMutation = useMutation({
+    mutationFn: async (userData: InsertUser) => {
+      const res = await apiRequest("POST", "/api/auth/register", userData);
+      return await res.json();
+    },
+    onSuccess: (response: any) => {
+      const { token } = response;
+      if (token) {
+        localStorage.setItem('digipay_token', token);
       }
+      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+      window.location.href = "/profile-setup";
+      toast({
+        title: "Registration successful",
+        description: "Welcome to DigiPay! Please complete your profile.",
+      });
     },
     onError: (error: Error) => {
-      console.error("Logout error:", error);
-      // Still clear local state on error
-      localStorage.removeItem('digipay_token');
-      queryClient.setQueryData(["/api/user"], null);
       toast({
-        title: "Logout failed",
-        description: error.message || "An error occurred during logout",
+        title: "Registration failed",
+        description: error.message || "Please try again",
         variant: "destructive",
       });
     },
   });
 
+  const login = async (credentials: { email: string; password: string }) => {
+    await loginMutation.mutateAsync(credentials);
+  };
+
+  const logout = async () => {
+    await logoutMutation.mutateAsync();
+  };
+
+  const register = async (userData: InsertUser) => {
+    await registerMutation.mutateAsync(userData);
+  };
+
+  const value: AuthContextType = {
+    user: user || null,
+    isLoading,
+    error,
+    login,
+    logout,
+    register,
+  };
+
   return (
-    <AuthContext.Provider
-      value={{
-        user: user ?? null,
-        isLoading,
-        error,
-        loginMutation,
-        logoutMutation,
-        registerMutation,
-      }}
-    >
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
