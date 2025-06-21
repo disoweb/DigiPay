@@ -1,4 +1,5 @@
 import express, { type Request, Response, NextFunction } from "express";
+import cookieParser from "cookie-parser";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 
@@ -6,6 +7,9 @@ const app = express();
 
 // Trust proxy for Replit environment
 app.set('trust proxy', true);
+
+// Cookie parser middleware
+app.use(cookieParser());
 
 // Security headers and CSP configuration
 app.use((req, res, next) => {

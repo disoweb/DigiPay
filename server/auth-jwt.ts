@@ -59,8 +59,8 @@ function generateToken(user: SelectUser): string {
 }
 
 export function authenticateToken(req: Request, res: Response, next: NextFunction) {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
+  // Try to get token from cookie first, then Authorization header
+  const token = req.cookies?.token || (req.headers['authorization']?.split(' ')[1]);
 
   if (!token) {
     return res.status(401).json({ error: "Access token required" });
@@ -217,6 +217,14 @@ export function setupJWTAuth(app: Express) {
       const token = generateToken(user);
       const { password: _, ...userWithoutPassword } = user;
       
+      // Set JWT token as httpOnly cookie
+      res.cookie('token', token, {
+        httpOnly: true,
+        secure: false, // Set to false for development
+        sameSite: 'lax',
+        maxAge: 24 * 60 * 60 * 1000 // 24 hours
+      });
+      
       res.json(userWithoutPassword);
     } catch (error) {
       console.error("Login error:", error);
@@ -226,6 +234,8 @@ export function setupJWTAuth(app: Express) {
 
   // Logout
   app.post("/api/auth/logout", (req: Request, res: Response) => {
+    // Clear the JWT cookie
+    res.clearCookie('token');
     res.json({ message: "Logout successful" });
   });
 
