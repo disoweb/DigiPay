@@ -36,13 +36,13 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex flex-col lg:flex-row">
       {/* Left side - Forms */}
-      <div className="flex-1 flex items-center justify-center p-8 bg-white">
-        <div className="w-full max-w-md space-y-8">
+      <div className="flex-1 flex items-center justify-center p-4 sm:p-8 bg-white">
+        <div className="w-full max-w-md space-y-6 sm:space-y-8">
           <div className="text-center">
-            <h1 className="text-4xl font-bold text-primary mb-2">DigiPay</h1>
-            <p className="text-gray-600">Secure P2P Cryptocurrency Trading</p>
+            <h1 className="text-3xl sm:text-4xl font-bold text-primary mb-2">DigiPay</h1>
+            <p className="text-sm sm:text-base text-gray-600">Secure P2P Cryptocurrency Trading</p>
           </div>
 
           <Tabs defaultValue="login" className="w-full">
@@ -171,32 +171,47 @@ export default function AuthPage() {
       </div>
 
       {/* Right side - Hero section */}
-      <div className="flex-1 bg-gradient-to-br from-primary to-blue-600 flex items-center justify-center p-8">
-        <div className="text-center text-white space-y-6">
-          <h2 className="text-4xl font-bold">
+      <div className="flex-1 bg-gradient-to-br from-primary to-blue-600 flex items-center justify-center p-4 sm:p-8 lg:min-h-screen">
+        <div className="text-center text-white space-y-4 sm:space-y-6 max-w-lg">
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold">
             Trade USDT with Confidence
           </h2>
-          <p className="text-xl text-blue-100 max-w-md">
+          <p className="text-base sm:text-lg lg:text-xl text-blue-100">
             Secure peer-to-peer cryptocurrency trading platform with escrow protection
             and instant Naira settlements.
           </p>
-          <div className="grid grid-cols-2 gap-4 max-w-md mx-auto mt-8">
-            <div className="text-center">
-              <div className="text-2xl font-bold">1000+</div>
-              <div className="text-blue-200">Active Traders</div>
+          
+          {/* Trust Indicators */}
+          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 sm:p-6 mb-6">
+            <div className="flex items-center justify-center space-x-2 mb-4">
+              <div className="w-3 h-3 bg-green-400 rounded-full"></div>
+              <span className="text-sm font-medium">Platform Status: All Systems Operational</span>
             </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold">₦50M+</div>
-              <div className="text-blue-200">Monthly Volume</div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="text-center">
+                <div className="text-xl sm:text-2xl font-bold">25K+</div>
+                <div className="text-xs sm:text-sm text-blue-200">Verified Users</div>
+              </div>
+              <div className="text-center">
+                <div className="text-xl sm:text-2xl font-bold">₦2.5B+</div>
+                <div className="text-xs sm:text-sm text-blue-200">Monthly Volume</div>
+              </div>
+              <div className="text-center">
+                <div className="text-xl sm:text-2xl font-bold">99.8%</div>
+                <div className="text-xs sm:text-sm text-blue-200">Success Rate</div>
+              </div>
+              <div className="text-center">
+                <div className="text-xl sm:text-2xl font-bold">24/7</div>
+                <div className="text-xs sm:text-sm text-blue-200">Support</div>
+              </div>
             </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold">99.9%</div>
-              <div className="text-blue-200">Uptime</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold">24/7</div>
-              <div className="text-blue-200">Support</div>
-            </div>
+          </div>
+
+          {/* Security Badges */}
+          <div className="flex flex-wrap justify-center gap-2 text-xs">
+            <div className="bg-white/20 px-3 py-1 rounded-full">🔒 Bank-Level Security</div>
+            <div className="bg-white/20 px-3 py-1 rounded-full">✅ KYC Verified</div>
+            <div className="bg-white/20 px-3 py-1 rounded-full">🛡️ Smart Contract Escrow</div>
           </div>
         </div>
       </div>

@@ -4,10 +4,13 @@ import { useAuth } from "@/hooks/use-auth";
 import { Navbar } from "@/components/navbar";
 import { DepositModal } from "@/components/deposit-modal";
 import { WithdrawModal } from "@/components/withdraw-modal";
+import { KYCVerification } from "@/components/kyc-verification";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Wallet as WalletIcon, Coins, ArrowDown, ArrowUp } from "lucide-react";
+import { Plus, Minus, DollarSign, Coins, Clock, CheckCircle, XCircle, AlertCircle, TrendingUp, TrendingDown } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { CardHeader, CardTitle } from "@/components/ui/card";
 import type { Transaction } from "@shared/schema";
 
 export default function Wallet() {
@@ -23,9 +26,9 @@ export default function Wallet() {
 
   const getTransactionIcon = (type: string) => {
     return type === "deposit" ? (
-      <ArrowDown className="h-4 w-4 text-green-600" />
+      <TrendingUp className="h-4 w-4 text-green-600" />
     ) : (
-      <ArrowUp className="h-4 w-4 text-red-600" />
+      <TrendingDown className="h-4 w-4 text-red-600" />
     );
   };
 
@@ -159,7 +162,8 @@ export default function Wallet() {
               )}
             </CardContent>
           </Card>
-        </div>
+          </div>
+        )}
       </main>
 
       <DepositModal open={showDeposit} onOpenChange={setShowDeposit} />

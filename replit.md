@@ -104,6 +104,13 @@ DigiPay is a full-stack peer-to-peer (P2P) cryptocurrency trading platform built
 ```
 Changelog:
 - June 21, 2025. Initial setup
+- June 21, 2025. Upgraded to PostgreSQL database with complete schema
+- June 21, 2025. Implemented external service integrations (YouVerify, Paystack, TRON, Notifications)
+- June 21, 2025. Created smart contract for escrow functionality
+- June 21, 2025. Added modern landing page with trust elements and social proof
+- June 21, 2025. Enhanced auth page for mobile responsiveness
+- June 21, 2025. Implemented real-time WebSocket chat functionality
+- June 21, 2025. Added KYC verification system with BVN integration
 ```
 
 ## User Preferences

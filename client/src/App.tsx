@@ -12,10 +12,12 @@ import Marketplace from "@/pages/marketplace";
 import Trades from "@/pages/trades";
 import Wallet from "@/pages/wallet";
 import Admin from "@/pages/admin";
+import LandingPage from "@/pages/landing-page";
 
 function Router() {
   return (
     <Switch>
+      <Route path="/landing" component={LandingPage} />
       <ProtectedRoute path="/" component={Dashboard} />
       <ProtectedRoute path="/marketplace" component={Marketplace} />
       <ProtectedRoute path="/trades" component={Trades} />

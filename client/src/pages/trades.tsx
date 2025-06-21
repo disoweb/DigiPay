@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Navbar } from "@/components/navbar";
-import { TradeChat } from "@/components/trade-chat";
+import { RealTimeChat } from "@/components/real-time-chat";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -259,7 +259,7 @@ export default function Trades() {
 
                 {/* Chat Section */}
                 <div className="h-96">
-                  <TradeChat tradeId={selectedTrade.id} />
+                  <RealTimeChat tradeId={selectedTrade.id} />
                 </div>
               </div>
             </>

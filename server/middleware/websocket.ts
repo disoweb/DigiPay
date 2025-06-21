@@ -1,0 +1,95 @@
+import { WebSocketServer, WebSocket } from 'ws';
+import { Server } from 'http';
+
+export function setupWebSocket(server: Server) {
+  const wss = new WebSocketServer({ 
+    server, 
+    path: '/ws',
+    perMessageDeflate: false 
+  });
+
+  // Store connections by trade ID
+  const tradeConnections = new Map<number, Set<WebSocket>>();
+
+  wss.on('connection', (ws: WebSocket) => {
+    console.log('New WebSocket connection established');
+    let currentTradeId: number | null = null;
+
+    ws.on('message', (data: Buffer) => {
+      try {
+        const message = JSON.parse(data.toString());
+        
+        switch (message.type) {
+          case 'join_trade':
+            const tradeId = message.tradeId;
+            currentTradeId = tradeId;
+            
+            if (!tradeConnections.has(tradeId)) {
+              tradeConnections.set(tradeId, new Set());
+            }
+            tradeConnections.get(tradeId)?.add(ws);
+            
+            console.log(`Client joined trade ${tradeId}`);
+            break;
+
+          case 'chat_message':
+            if (currentTradeId && tradeConnections.has(currentTradeId)) {
+              const connections = tradeConnections.get(currentTradeId);
+              connections?.forEach((client) => {
+                if (client !== ws && client.readyState === WebSocket.OPEN) {
+                  client.send(JSON.stringify({
+                    type: 'new_message',
+                    data: message.data
+                  }));
+                }
+              });
+            }
+            break;
+
+          case 'trade_update':
+            if (currentTradeId && tradeConnections.has(currentTradeId)) {
+              const connections = tradeConnections.get(currentTradeId);
+              connections?.forEach((client) => {
+                if (client !== ws && client.readyState === WebSocket.OPEN) {
+                  client.send(JSON.stringify({
+                    type: 'trade_status_update',
+                    data: message.data
+                  }));
+                }
+              });
+            }
+            break;
+        }
+      } catch (error) {
+        console.error('WebSocket message error:', error);
+      }
+    });
+
+    ws.on('close', () => {
+      console.log('WebSocket connection closed');
+      
+      // Remove from trade connections
+      if (currentTradeId && tradeConnections.has(currentTradeId)) {
+        const connections = tradeConnections.get(currentTradeId);
+        connections?.delete(ws);
+        
+        if (connections?.size === 0) {
+          tradeConnections.delete(currentTradeId);
+        }
+      }
+    });
+
+    ws.on('error', (error) => {
+      console.error('WebSocket error:', error);
+    });
+
+    // Send welcome message
+    ws.send(JSON.stringify({
+      type: 'connection_established',
+      data: { message: 'Connected to DigiPay WebSocket' }
+    }));
+  });
+
+  console.log('WebSocket server initialized on /ws');
+  return wss;
+}

@@ -1,8 +1,13 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import { WebSocketServer } from "ws";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
-import { insertOfferSchema, insertTradeSchema, insertMessageSchema, insertTransactionSchema } from "@shared/schema";
+import { insertOfferSchema, insertTradeSchema, insertMessageSchema, insertTransactionSchema, insertRatingSchema } from "@shared/schema";
+import { youVerifyService } from "./services/youverify";
+import { paystackService } from "./services/paystack";
+import { tronService } from "./services/tron";
+import { emailService, smsService } from "./services/notifications";
 
 export function registerRoutes(app: Express): Server {
   setupAuth(app);
@@ -349,6 +354,131 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // KYC verification endpoint
+  app.post("/api/kyc/verify", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      const { bvn, firstName, lastName } = req.body;
+      const userId = req.user?.id;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+
+      const result = await youVerifyService.verifyBVN(bvn, firstName, lastName);
+      
+      if (result.success) {
+        await storage.updateUser(userId, { 
+          kycVerified: true,
+          bvn: bvn 
+        });
+        
+        const user = await storage.getUser(userId);
+        if (user?.email) {
+          await emailService.sendKYCNotification(user.email, 'approved');
+        }
+        
+        res.json({ success: true, message: "KYC verification successful" });
+      } else {
+        res.status(400).json({ error: result.message || "KYC verification failed" });
+      }
+    } catch (error) {
+      console.error("KYC verification error:", error);
+      res.status(500).json({ error: "KYC verification failed" });
+    }
+  });
+
+  // Paystack payment initialization
+  app.post("/api/payments/initialize", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      const { amount } = req.body;
+      const user = req.user;
+      
+      if (!user?.email) {
+        return res.status(401).json({ error: "User email required" });
+      }
+
+      const reference = `digipay_${Date.now()}_${user.id}`;
+      const result = await paystackService.initializePayment(user.email, amount, reference);
+      
+      if (result.success) {
+        await storage.createTransaction({
+          userId: user.id,
+          type: "deposit",
+          amount: amount.toString(),
+          paystackRef: reference,
+        });
+        
+        res.json(result);
+      } else {
+        res.status(400).json({ error: result.message || "Payment initialization failed" });
+      }
+    } catch (error) {
+      console.error("Payment initialization error:", error);
+      res.status(500).json({ error: "Payment initialization failed" });
+    }
+  });
+
+  // Paystack payment verification
+  app.post("/api/payments/verify", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      const { reference } = req.body;
+      const result = await paystackService.verifyPayment(reference);
+      
+      if (result.success && result.data) {
+        const transactions = await storage.getUserTransactions(req.user!.id);
+        const pendingTx = transactions.find(tx => tx.paystackRef === reference);
+        
+        if (pendingTx) {
+          await storage.updateTransaction(pendingTx.id, { status: "completed" });
+          
+          const user = await storage.getUser(req.user!.id);
+          if (user) {
+            const newBalance = parseFloat(user.nairaBalance) + (result.data.amount / 100);
+            await storage.updateUser(user.id, { 
+              nairaBalance: newBalance.toString() 
+            });
+          }
+        }
+        
+        res.json(result);
+      } else {
+        res.status(400).json({ error: result.message || "Payment verification failed" });
+      }
+    } catch (error) {
+      console.error("Payment verification error:", error);
+      res.status(500).json({ error: "Payment verification failed" });
+    }
+  });
+
+  // TRON wallet operations
+  app.get("/api/tron/balance", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      const user = req.user;
+      if (!user?.tronAddress) {
+        return res.status(400).json({ error: "No TRON address found" });
+      }
+
+      const balance = await tronService.getUSDTBalance(user.tronAddress);
+      res.json(balance);
+    } catch (error) {
+      console.error("TRON balance error:", error);
+      res.status(500).json({ error: "Failed to get TRON balance" });
+    }
+  });
+
   const httpServer = createServer(app);
+
+  // Setup WebSocket for real-time features
+  const { setupWebSocket } = await import('./middleware/websocket');
+  setupWebSocket(httpServer);
+
   return httpServer;
 }
