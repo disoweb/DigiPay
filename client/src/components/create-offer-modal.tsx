@@ -133,3 +133,132 @@ export function CreateOfferModal({ open, onOpenChange }: CreateOfferModalProps) 
     </Dialog>
   );
 }
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
+import { Plus } from "lucide-react";
+
+interface CreateOfferModalProps {
+  onOfferCreated?: () => void;
+}
+
+export default function CreateOfferModal({ onOfferCreated }: CreateOfferModalProps) {
+  const { toast } = useToast();
+  const [open, setOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    amount: "",
+    rate: "",
+    type: "",
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      const response = await fetch("/api/offers", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          amount: parseFloat(formData.amount),
+          rate: parseFloat(formData.rate),
+          type: formData.type,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        toast({
+          title: "Offer Created",
+          description: "Your offer has been created successfully.",
+        });
+        setOpen(false);
+        setFormData({ amount: "", rate: "", type: "" });
+        onOfferCreated?.();
+      } else {
+        toast({
+          title: "Error",
+          description: data.error || "Failed to create offer.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button>
+          <Plus className="h-4 w-4 mr-2" />
+          Create Offer
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Create New Offer</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <Label htmlFor="type">Type</Label>
+            <Select value={formData.type} onValueChange={(value) => setFormData({ ...formData, type: value })}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select offer type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="buy">Buy USDT</SelectItem>
+                <SelectItem value="sell">Sell USDT</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label htmlFor="amount">Amount (USDT)</Label>
+            <Input
+              id="amount"
+              type="number"
+              step="0.000001"
+              value={formData.amount}
+              onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+              required
+            />
+          </div>
+          <div>
+            <Label htmlFor="rate">Rate (NGN per USDT)</Label>
+            <Input
+              id="rate"
+              type="number"
+              step="0.01"
+              value={formData.rate}
+              onChange={(e) => setFormData({ ...formData, rate: e.target.value })}
+              required
+            />
+          </div>
+          <Button type="submit" className="w-full" disabled={isLoading}>
+            {isLoading ? "Creating..." : "Create Offer"}
+          </Button>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
