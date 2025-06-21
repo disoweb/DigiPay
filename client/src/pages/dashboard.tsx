@@ -136,18 +136,18 @@ export default function Dashboard() {
           </div>
 
           {/* Stats Overview */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             {stats.map((stat, index) => (
-              <Card key={index} className="border-0 shadow-sm">
-                <CardContent className="p-6">
+              <Card key={index} className="border-0 shadow-sm hover:shadow-md transition-shadow">
+                <CardContent className="p-4 sm:p-6">
                   <div className="flex items-center">
-                    <div className={`p-2 ${stat.bgColor} rounded-lg`}>
-                      <stat.icon className={`h-5 w-5 ${stat.color}`} />
+                    <div className={`p-3 ${stat.bgColor} rounded-xl`}>
+                      <stat.icon className={`h-5 w-5 sm:h-6 sm:w-6 ${stat.color}`} />
                     </div>
-                    <div className="ml-4">
-                      <p className="text-sm text-gray-600">{stat.title}</p>
-                      <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
-                      <p className="text-xs text-gray-500">{stat.subtitle}</p>
+                    <div className="ml-3 sm:ml-4 min-w-0 flex-1">
+                      <p className="text-xs sm:text-sm text-gray-600 truncate">{stat.title}</p>
+                      <p className="text-lg sm:text-2xl font-bold text-gray-900 truncate">{stat.value}</p>
+                      <p className="text-xs text-gray-500 truncate">{stat.subtitle}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -157,18 +157,18 @@ export default function Dashboard() {
 
           {/* Quick Actions */}
           <Card className="border-0 shadow-sm">
-            <CardContent className="p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <CardContent className="p-4 sm:p-6">
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4">Quick Actions</h2>
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                 {quickActions.map((action, index) => (
                   <Button
                     key={index}
                     variant="ghost"
-                    className="flex flex-col items-center p-4 h-auto bg-gray-50 hover:bg-gray-100"
+                    className="flex flex-col items-center p-4 sm:p-6 h-auto bg-gray-50 hover:bg-gray-100 hover:shadow-md transition-all duration-200 rounded-xl"
                     onClick={action.action}
                   >
-                    <action.icon className={`h-8 w-8 ${action.color} mb-2`} />
-                    <span className="text-sm font-medium">{action.title}</span>
+                    <action.icon className={`h-6 w-6 sm:h-8 sm:w-8 ${action.color} mb-2`} />
+                    <span className="text-xs sm:text-sm font-medium text-center">{action.title}</span>
                   </Button>
                 ))}
               </div>
@@ -177,21 +177,22 @@ export default function Dashboard() {
 
           {/* Recent Activity */}
           <Card className="border-0 shadow-sm">
-            <CardContent className="p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Recent Activity</h2>
-              <div className="space-y-4">
+            <CardContent className="p-4 sm:p-6">
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4">Recent Activity</h2>
+              <div className="space-y-3 sm:space-y-4">
                 {recentActivities.map((activity, index) => (
-                  <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                    <div className="flex items-center">
-                      <div className={`p-2 ${activity.bgColor} rounded-lg`}>
-                        <activity.icon className={`h-4 w-4 ${activity.color}`} />
+                  <div key={index} className="flex items-start sm:items-center justify-between p-3 sm:p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
+                    <div className="flex items-start sm:items-center flex-1 min-w-0">
+                      <div className={`p-2 sm:p-3 ${activity.bgColor} rounded-lg flex-shrink-0`}>
+                        <activity.icon className={`h-4 w-4 sm:h-5 sm:w-5 ${activity.color}`} />
                       </div>
-                      <div className="ml-4">
-                        <p className="font-medium text-gray-900">{activity.title}</p>
-                        <p className="text-sm text-gray-600">{activity.description}</p>
+                      <div className="ml-3 sm:ml-4 min-w-0 flex-1">
+                        <p className="font-medium text-gray-900 text-sm sm:text-base truncate">{activity.title}</p>
+                        <p className="text-xs sm:text-sm text-gray-600 truncate">{activity.description}</p>
+                        <span className="text-xs text-gray-500 sm:hidden">{activity.time}</span>
                       </div>
                     </div>
-                    <span className="text-sm text-gray-500">{activity.time}</span>
+                    <span className="text-xs sm:text-sm text-gray-500 hidden sm:block flex-shrink-0 ml-2">{activity.time}</span>
                   </div>
                 ))}
               </div>

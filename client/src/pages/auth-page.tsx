@@ -26,6 +26,10 @@ export default function AuthPage() {
     }
   }, [user, setLocation]);
 
+  if (user) {
+    return null; // Prevent rendering while redirecting
+  }
+
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     loginMutation.mutate(loginForm);
@@ -181,7 +185,7 @@ export default function AuthPage() {
             Secure peer-to-peer cryptocurrency trading platform with escrow protection
             and instant Naira settlements.
           </p>
-          
+
           {/* Trust Indicators */}
           <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 sm:p-6 mb-6">
             <div className="flex items-center justify-center space-x-2 mb-4">
