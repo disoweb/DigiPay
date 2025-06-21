@@ -291,6 +291,8 @@ export function EnhancedMarketplace() {
   const { data: offers = [], isLoading, error } = useQuery<EnrichedOffer[]>({
     queryKey: ["/api/offers"],
     refetchInterval: 30000, // Refresh every 30 seconds
+    retry: 3,
+    retryDelay: 1000,
   });
 
   // Filter and sort offers
