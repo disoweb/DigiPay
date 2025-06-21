@@ -1,21 +1,192 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { Navbar } from "@/components/navbar";
 import { DepositModal } from "@/components/deposit-modal";
 import { WithdrawModal } from "@/components/withdraw-modal";
 import { KYCVerification } from "@/components/kyc-verification";
+
+// SendUSDTForm component for handling USDT transfers
+function SendUSDTForm({ onClose, userBalance }: { onClose: () => void; userBalance: number }) {
+  const [recipientAddress, setRecipientAddress] = useState("");
+  const [amount, setAmount] = useState("");
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const sendUSDTMutation = useMutation({
+    mutationFn: async (data: { amount: string; to: string }) => {
+      const response = await fetch("/api/tron/send", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("auth_token")}`,
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to send USDT");
+      }
+
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "USDT Sent Successfully",
+        description: "Your transaction has been broadcast to the TRON network.",
+      });
+      setAmount("");
+      setRecipientAddress("");
+      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+      onClose();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Transaction Failed",
+        description: error.message || "Failed to send USDT",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!recipientAddress || !amount) {
+      toast({
+        title: "Invalid Input",
+        description: "Please enter both recipient address and amount",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const amountNum = parseFloat(amount);
+    if (amountNum <= 0) {
+      toast({
+        title: "Invalid Amount",
+        description: "Amount must be greater than 0",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (amountNum > userBalance) {
+      toast({
+        title: "Insufficient Balance",
+        description: "You don't have enough USDT to send this amount",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!recipientAddress.startsWith("T") || recipientAddress.length !== 34) {
+      toast({
+        title: "Invalid Address",
+        description: "Please enter a valid TRON address (starts with T and 34 characters long)",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    sendUSDTMutation.mutate({ amount, to: recipientAddress });
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <Label htmlFor="recipient">Recipient Address</Label>
+        <Input
+          id="recipient"
+          value={recipientAddress}
+          onChange={(e) => setRecipientAddress(e.target.value)}
+          placeholder="TRON address (starting with T...)"
+          className="font-mono"
+          required
+        />
+        <p className="text-xs text-gray-500 mt-1">
+          Enter the recipient's TRON address (TRC-20)
+        </p>
+      </div>
+
+      <div>
+        <Label htmlFor="amount">Amount (USDT)</Label>
+        <Input
+          id="amount"
+          type="number"
+          value={amount}
+          onChange={(e) => setAmount(e.target.value)}
+          placeholder="0.00"
+          min="0"
+          step="0.000001"
+          max={userBalance}
+          required
+        />
+        <div className="flex justify-between text-xs text-gray-500 mt-1">
+          <span>Available: {userBalance.toFixed(6)} USDT</span>
+          <button
+            type="button"
+            onClick={() => setAmount(userBalance.toString())}
+            className="text-blue-600 hover:text-blue-800"
+          >
+            Use Max
+          </button>
+        </div>
+      </div>
+
+      <Alert>
+        <AlertCircle className="h-4 w-4" />
+        <AlertDescription className="text-sm">
+          <strong>Warning:</strong> TRON transactions are irreversible. 
+          Please verify the recipient address carefully before sending.
+        </AlertDescription>
+      </Alert>
+
+      <div className="flex justify-end space-x-2 pt-4">
+        <Button type="button" variant="outline" onClick={onClose}>
+          Cancel
+        </Button>
+        <Button
+          type="submit"
+          disabled={sendUSDTMutation.isPending || !amount || !recipientAddress}
+          className="bg-red-600 hover:bg-red-700"
+        >
+          {sendUSDTMutation.isPending ? (
+            <>
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+              Sending...
+            </>
+          ) : (
+            <>
+              <Send className="h-4 w-4 mr-2" />
+              Send USDT
+            </>
+          )}
+        </Button>
+      </div>
+    </form>
+  );
+}
+
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Minus, DollarSign, Coins, Clock, CheckCircle, XCircle, AlertCircle, TrendingUp, TrendingDown, Wallet as WalletIcon, Copy } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Plus, Minus, DollarSign, Coins, Clock, CheckCircle, XCircle, AlertCircle, TrendingUp, TrendingDown, Wallet as WalletIcon, Copy, Send } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useToast } from "@/hooks/use-toast";
 import type { Transaction } from "@shared/schema";
 
 export default function Wallet() {
   const { user } = useAuth();
   const [showDeposit, setShowDeposit] = useState(false);
   const [showWithdraw, setShowWithdraw] = useState(false);
+  const [showReceive, setShowReceive] = useState(false);
+  const [showSendUSDT, setShowSendUSDT] = useState(false);
 
   const { data: transactions = [] } = useQuery<Transaction[]>({
     queryKey: ["/api/transactions"],
@@ -159,6 +330,26 @@ export default function Wallet() {
                   </p>
                 </div>
 
+                <div className="grid grid-cols-2 gap-2 mb-4">
+                  <Button 
+                    onClick={() => setShowReceive(true)} 
+                    size="sm" 
+                    className="h-9 bg-green-600 hover:bg-green-700"
+                  >
+                    <Plus className="mr-1 h-3 w-3" />
+                    Receive
+                  </Button>
+                  <Button 
+                    onClick={() => setShowSendUSDT(true)} 
+                    size="sm" 
+                    variant="outline" 
+                    className="h-9 border-green-600 text-green-600 hover:bg-green-50"
+                  >
+                    <Minus className="mr-1 h-3 w-3" />
+                    Send
+                  </Button>
+                </div>
+
                 <div className="space-y-2">
                   <div className="text-xs">
                     <p className="text-gray-500 mb-1">TRON Address:</p>
@@ -260,6 +451,110 @@ export default function Wallet() {
 
       <DepositModal open={showDeposit} onOpenChange={setShowDeposit} />
       <WithdrawModal open={showWithdraw} onOpenChange={setShowWithdraw} balance={user.nairaBalance || "0"} />
+      
+      {/* Receive USDT Modal */}
+      <Dialog open={showReceive} onOpenChange={setShowReceive}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <div className="p-2 bg-green-100 rounded-lg">
+                <Coins className="h-5 w-5 text-green-600" />
+              </div>
+              Receive USDT
+            </DialogTitle>
+            <DialogDescription>
+              Share your TRON address to receive USDT payments
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div className="text-center space-y-3">
+              <div className="bg-white p-4 rounded-lg border-2 border-dashed border-gray-300">
+                <div className="w-32 h-32 mx-auto bg-gray-100 rounded-lg flex items-center justify-center mb-3">
+                  <div className="text-xs text-gray-500 text-center">
+                    QR Code<br />Placeholder
+                  </div>
+                </div>
+                <p className="text-sm text-gray-600">Scan QR code to get address</p>
+              </div>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Your TRON Address (TRC-20)
+              </label>
+              <div className="flex items-center space-x-2">
+                <input
+                  type="text"
+                  value={user?.tronAddress || ""}
+                  readOnly
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md font-mono text-sm bg-gray-50"
+                />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    navigator.clipboard.writeText(user?.tronAddress || "");
+                    alert("Address copied to clipboard!");
+                  }}
+                  className="px-3"
+                >
+                  <Copy className="h-4 w-4" />
+                </Button>
+              </div>
+              <p className="text-xs text-gray-500 mt-2">
+                Only send USDT (TRC-20) to this address. Other tokens may be lost permanently.
+              </p>
+            </div>
+            
+            <Alert>
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription className="text-sm">
+                <strong>Important:</strong> This address only accepts USDT on the TRON network (TRC-20). 
+                Sending other cryptocurrencies or tokens from other networks will result in permanent loss.
+              </AlertDescription>
+            </Alert>
+          </div>
+          
+          <div className="flex justify-end space-x-2 pt-4">
+            <Button variant="outline" onClick={() => setShowReceive(false)}>
+              Close
+            </Button>
+            <Button 
+              onClick={() => {
+                navigator.clipboard.writeText(user?.tronAddress || "");
+                alert("Address copied to clipboard!");
+              }}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              <Copy className="h-4 w-4 mr-2" />
+              Copy Address
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Send USDT Modal */}
+      <Dialog open={showSendUSDT} onOpenChange={setShowSendUSDT}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <div className="p-2 bg-red-100 rounded-lg">
+                <Minus className="h-5 w-5 text-red-600" />
+              </div>
+              Send USDT
+            </DialogTitle>
+            <DialogDescription>
+              Send USDT to another TRON address
+            </DialogDescription>
+          </DialogHeader>
+          
+          <SendUSDTForm 
+            onClose={() => setShowSendUSDT(false)} 
+            userBalance={parseFloat(user?.usdtBalance || "0")} 
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
