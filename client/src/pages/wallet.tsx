@@ -5,11 +5,10 @@ import { Navbar } from "@/components/navbar";
 import { DepositModal } from "@/components/deposit-modal";
 import { WithdrawModal } from "@/components/withdraw-modal";
 import { KYCVerification } from "@/components/kyc-verification";
-import { TronWallet } from "@/components/tron-wallet";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Minus, DollarSign, Coins, Clock, CheckCircle, XCircle, AlertCircle, TrendingUp, TrendingDown, Wallet as WalletIcon } from "lucide-react";
+import { Plus, Minus, DollarSign, Coins, Clock, CheckCircle, XCircle, AlertCircle, TrendingUp, TrendingDown, Wallet as WalletIcon, Copy } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import type { Transaction } from "@shared/schema";
 
@@ -48,7 +47,7 @@ export default function Wallet() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <Navbar />
-      
+
       <main className="max-w-4xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
         <div className="space-y-6">
           {/* Header */}
@@ -85,7 +84,7 @@ export default function Wallet() {
             </Card>
 
             {/* Individual Balance Cards */}
-            <div className="grid grid-cols-1 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Naira Card */}
               <Card className="border-0 shadow-md hover:shadow-lg transition-shadow">
                 <CardContent className="p-5">
@@ -103,7 +102,7 @@ export default function Wallet() {
                       Active
                     </Badge>
                   </div>
-                  
+
                   <div className="space-y-2 mb-4">
                     <p className="text-2xl font-bold text-gray-900">
                       ₦{parseFloat(user.nairaBalance || "0").toLocaleString()}
@@ -132,13 +131,58 @@ export default function Wallet() {
                   </div>
                 </CardContent>
               </Card>
-            </div>
-          </div>
 
-          {/* TRON Wallet Section */}
-          <div className="mt-8">
-            <TronWallet />
+            {/* USDT Card */}
+            <Card className="border-0 shadow-md hover:shadow-lg transition-shadow">
+              <CardContent className="p-5">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-green-50 rounded-lg">
+                      <Coins className="h-6 w-6 text-green-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-900">USDT</h3>
+                      <p className="text-xs text-gray-500">Tether (TRC-20)</p>
+                    </div>
+                  </div>
+                  <Badge variant="secondary" className="bg-green-100 text-green-800 text-xs">
+                    TRC-20
+                  </Badge>
+                </div>
+
+                <div className="space-y-2 mb-4">
+                  <p className="text-2xl font-bold text-gray-900">
+                    {parseFloat(user.usdtBalance || "0").toFixed(2)} USDT
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    ≈ ₦{(parseFloat(user.usdtBalance || "0") * 1485).toLocaleString()}
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="text-xs">
+                    <p className="text-gray-500 mb-1">TRON Address:</p>
+                    <div className="flex items-center gap-2">
+                      <p className="font-mono text-xs bg-gray-100 p-2 rounded flex-1 truncate">
+                        {user.tronAddress}
+                      </p>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          navigator.clipboard.writeText(user.tronAddress || "");
+                        }}
+                        className="h-8 w-8 p-0"
+                      >
+                        <Copy className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
+        </div>
 
           {/* Transaction History */}
           <Card className="border-0 shadow-md">

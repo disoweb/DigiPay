@@ -64,10 +64,10 @@ export class DatabaseStorage implements IStorage {
 
   private async seedInitialData() {
     try {
-      const existingUser = await this.getUser(1);
-      if (!existingUser) {
-        // Create default user
-        await this.createUser({
+      // Always ensure users exist
+      let user1 = await this.getUser(1);
+      if (!user1) {
+        user1 = await this.createUser({
           email: "cyfer33@gmail.com",
           phone: "08000000000",
           password: "password123",
@@ -81,9 +81,9 @@ export class DatabaseStorage implements IStorage {
       }
 
       // Create admin user
-      const existingAdmin = await this.getUser(2);
-      if (!existingAdmin) {
-        await this.createUser({
+      let adminUser = await this.getUserByEmail("admin@digipay.com");
+      if (!adminUser) {
+        adminUser = await this.createUser({
           email: "admin@digipay.com",
           phone: "08099999999",
           password: "admin123",
@@ -94,13 +94,13 @@ export class DatabaseStorage implements IStorage {
           bvn: "98765432109",
           tronAddress: "TRXAdmin987654321"
         });
-        console.log("Seeded admin user - Email: admin@digipay.com, Password: admin123");
+        console.log("✅ Seeded admin user - Email: admin@digipay.com, Password: admin123");
       }
 
       // Create additional test users for offers
-      const testUser1 = await this.getUser(3);
+      let testUser1 = await this.getUserByEmail("trader1@example.com");
       if (!testUser1) {
-        await this.createUser({
+        testUser1 = await this.createUser({
           email: "trader1@example.com",
           phone: "08011111111",
           password: "trader123",
@@ -112,11 +112,12 @@ export class DatabaseStorage implements IStorage {
           averageRating: "4.8",
           ratingCount: 25
         });
+        console.log("✅ Seeded trader1 user");
       }
 
-      const testUser2 = await this.getUser(4);
+      let testUser2 = await this.getUserByEmail("trader2@example.com");
       if (!testUser2) {
-        await this.createUser({
+        testUser2 = await this.createUser({
           email: "trader2@example.com",
           phone: "08022222222",
           password: "trader123",
@@ -128,14 +129,20 @@ export class DatabaseStorage implements IStorage {
           averageRating: "4.9",
           ratingCount: 42
         });
+        console.log("✅ Seeded trader2 user");
       }
 
-      // Seed offers
+      // Always refresh offers to ensure they exist
       const existingOffers = await this.getOffers();
-      if (existingOffers.length === 0) {
+      console.log(`📊 Found ${existingOffers.length} existing offers`);
+      
+      if (existingOffers.length < 6) {
+        // Clear existing offers and recreate
+        await db.delete(offers);
+        
         // Buy offers (users want to buy USDT)
         await this.createOffer({
-          userId: 3,
+          userId: testUser1.id,
           type: "buy",
           amount: "10.00",
           minAmount: "5.00",
@@ -147,7 +154,7 @@ export class DatabaseStorage implements IStorage {
         });
 
         await this.createOffer({
-          userId: 4,
+          userId: testUser2.id,
           type: "buy",
           amount: "25.00",
           minAmount: "10.00",
@@ -159,7 +166,7 @@ export class DatabaseStorage implements IStorage {
         });
 
         await this.createOffer({
-          userId: 3,
+          userId: testUser1.id,
           type: "buy",
           amount: "5.00",
           minAmount: "1.00",
@@ -172,7 +179,7 @@ export class DatabaseStorage implements IStorage {
 
         // Sell offers (users want to sell USDT)
         await this.createOffer({
-          userId: 4,
+          userId: testUser2.id,
           type: "sell",
           amount: "15.00",
           minAmount: "5.00",
@@ -184,7 +191,7 @@ export class DatabaseStorage implements IStorage {
         });
 
         await this.createOffer({
-          userId: 3,
+          userId: testUser1.id,
           type: "sell",
           amount: "30.00",
           minAmount: "10.00",
@@ -196,7 +203,7 @@ export class DatabaseStorage implements IStorage {
         });
 
         await this.createOffer({
-          userId: 4,
+          userId: testUser2.id,
           type: "sell",
           amount: "8.00",
           minAmount: "2.00",
@@ -207,7 +214,9 @@ export class DatabaseStorage implements IStorage {
           status: "active"
         });
 
-        console.log("Seeded 6 demo offers (3 buy, 3 sell)");
+        console.log("✅ Seeded 6 demo offers (3 buy, 3 sell)");
+      } else {
+        console.log("📊 Offers already exist, skipping seed");
       }
     } catch (error) {
       console.error("Failed to seed initial data:", error);
