@@ -357,7 +357,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = parseInt(req.params.userId);
       
-      if (req.user!.id !== userId) {
+      if (req.user!.id !== userId && !req.user!.isAdmin) {
         return res.status(403).json({ error: "Can only view your own offers" });
       }
 

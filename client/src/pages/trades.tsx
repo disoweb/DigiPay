@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/hooks/use-auth";
 import { Navbar } from "@/components/navbar";
 import { RealTimeChat } from "@/components/real-time-chat";
 import { Card, CardContent } from "@/components/ui/card";
@@ -17,15 +18,23 @@ type EnrichedTrade = Trade & {
 };
 
 export default function Trades() {
+  const { user } = useAuth();
   const [selectedTrade, setSelectedTrade] = useState<EnrichedTrade | null>(null);
 
   const { data: trades = [], isLoading } = useQuery<EnrichedTrade[]>({
     queryKey: ["/api/trades"],
   });
 
+  const { data: myOffers = [], isLoading: offersLoading } = useQuery({
+    queryKey: [`/api/users/${user?.id}/offers`],
+    enabled: !!user?.id,
+  });
+
   const activeTrades = trades.filter(trade => trade.status === "pending");
   const completedTrades = trades.filter(trade => trade.status === "completed");
   const cancelledTrades = trades.filter(trade => trade.status === "cancelled");
+  const activeOffers = myOffers.filter((offer: any) => offer.status === "active");
+  const inactiveOffers = myOffers.filter((offer: any) => offer.status !== "active");
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -123,7 +132,13 @@ export default function Trades() {
                     value="active" 
                     className="rounded-lg border-b-0 data-[state=active]:bg-white data-[state=active]:shadow-md px-6 py-2 font-medium"
                   >
-                    Active ({activeTrades.length})
+                    Active Trades ({activeTrades.length})
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="my-offers"
+                    className="rounded-lg border-b-0 data-[state=active]:bg-white data-[state=active]:shadow-md px-6 py-2 font-medium"
+                  >
+                    My Offers ({activeOffers.length})
                   </TabsTrigger>
                   <TabsTrigger 
                     value="completed"
@@ -158,6 +173,69 @@ export default function Trades() {
                   <div className="space-y-4">
                     {activeTrades.map((trade) => (
                       <TradeCard key={trade.id} trade={trade} />
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
+
+              <TabsContent value="my-offers" className="p-6 mt-0">
+                {offersLoading ? (
+                  <div className="space-y-4">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="animate-pulse">
+                        <div className="h-24 bg-gray-200 rounded-lg"></div>
+                      </div>
+                    ))}
+                  </div>
+                ) : activeOffers.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Shield className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                    <p className="text-gray-500">No active offers</p>
+                    <p className="text-sm text-gray-400 mt-2">Your buy/sell orders will appear here</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {activeOffers.map((offer: any) => (
+                      <Card key={offer.id} className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-white/90 backdrop-blur-sm hover:bg-white">
+                        <CardContent className="p-6">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-4">
+                              <div className={`p-3 rounded-xl ${
+                                offer.type === 'buy' ? 'bg-green-50' : 'bg-red-50'
+                              }`}>
+                                <Shield className={`h-4 w-4 ${
+                                  offer.type === 'buy' ? 'text-green-600' : 'text-red-600'
+                                }`} />
+                              </div>
+                              <div>
+                                <h3 className="font-bold text-gray-900 text-lg">
+                                  {offer.type === "buy" ? "Buy" : "Sell"} {parseFloat(offer.amount).toFixed(2)} USDT
+                                </h3>
+                                <p className="text-sm text-gray-600 font-medium">
+                                  Rate: ₦{parseFloat(offer.rate).toLocaleString()}/USDT
+                                </p>
+                                <p className="text-xs text-gray-500">
+                                  Created: {new Date(offer.createdAt).toLocaleDateString('en-US', {
+                                    month: 'short',
+                                    day: 'numeric',
+                                    year: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                  })}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                                Active Offer
+                              </Badge>
+                              <p className="text-lg font-bold text-gray-900 mt-2">
+                                ₦{(parseFloat(offer.amount) * parseFloat(offer.rate)).toLocaleString()}
+                              </p>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
                     ))}
                   </div>
                 )}
