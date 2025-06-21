@@ -319,76 +319,160 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Confirm payment received (seller action)
   app.post("/api/trades/:id/confirm-payment", authenticateToken, async (req, res) => {
     try {
       const tradeId = parseInt(req.params.id);
+      const userId = req.user!.id;
+
       const trade = await storage.getTrade(tradeId);
-      
       if (!trade) {
         return res.status(404).json({ error: "Trade not found" });
       }
 
-      if (trade.sellerId !== req.user!.id) {
-        return res.status(403).json({ error: "Only the seller can confirm payment received" });
+      if (trade.sellerId !== userId) {
+        return res.status(403).json({ error: "Only seller can confirm payment" });
       }
 
       if (trade.status !== "payment_made") {
-        return res.status(400).json({ error: "Payment must be marked as made first" });
+        return res.status(400).json({ error: "Payment has not been marked as made" });
       }
 
-      const offer = await storage.getOffer(trade.offerId);
-      if (!offer) {
-        return res.status(404).json({ error: "Offer not found" });
-      }
-
-      const tradeAmount = parseFloat(trade.amount);
-      const buyer = await storage.getUser(trade.buyerId);
-      const seller = await storage.getUser(trade.sellerId);
-
-      if (!buyer || !seller) {
-        return res.status(404).json({ error: "User not found" });
-      }
-
-      // Complete the trade - release escrow and update balances
-      if (offer.type === "sell") {
-        // Release USDT to buyer
-        await storage.updateUser(buyer.id, {
-          usdtBalance: (parseFloat(buyer.usdtBalance || "0") + tradeAmount).toString()
-        });
-        
-        // Give Naira to seller
-        const nairaAmount = tradeAmount * parseFloat(trade.rate);
-        await storage.updateUser(seller.id, {
-          nairaBalance: (parseFloat(seller.nairaBalance || "0") + nairaAmount).toString()
-        });
-      }
-
-      await storage.updateTrade(tradeId, {
+      // Complete the trade
+      const updatedTrade = await storage.updateTrade(tradeId, {
         status: "completed",
         sellerConfirmedAt: new Date()
       });
 
-      // Create transaction records
-      await storage.createTransaction({
-        userId: buyer.id,
-        amount: (tradeAmount * parseFloat(trade.rate)).toString(),
-        type: "purchase",
-        status: "completed",
-        description: `Bought ${tradeAmount} USDT at ₦${trade.rate}/USDT`
-      });
+      // Release funds and update balances
+      const buyer = await storage.getUser(trade.buyerId);
+      const seller = await storage.getUser(trade.sellerId);
 
-      await storage.createTransaction({
-        userId: seller.id,
-        amount: (tradeAmount * parseFloat(trade.rate)).toString(),
-        type: "sale",
-        status: "completed",
-        description: `Sold ${tradeAmount} USDT at ₦${trade.rate}/USDT`
-      });
+      if (buyer && seller) {
+        const tradeAmount = parseFloat(trade.amount);
+        const fiatAmount = parseFloat(trade.fiatAmount);
 
-      res.json({ success: true, message: "Trade completed successfully!" });
+        // Buyer gets USDT, Seller gets Naira
+        await storage.updateUser(buyer.id, {
+          usdtBalance: (parseFloat(buyer.usdtBalance || "0") + tradeAmount).toString()
+        });
+
+        await storage.updateUser(seller.id, {
+          nairaBalance: (parseFloat(seller.nairaBalance || "0") + fiatAmount).toString()
+        });
+
+        // Send completion notifications
+        await emailService.sendTradeNotification(
+          buyer.email,
+          trade.id,
+          `Trade completed! You received ${tradeAmount} USDT.`
+        );
+
+        await emailService.sendTradeNotification(
+          seller.email,
+          trade.id,
+          `Trade completed! You received ₦${fiatAmount.toLocaleString()}.`
+        );
+      }
+
+      res.json(updatedTrade);
     } catch (error) {
-      console.error("Payment confirmation error:", error);
+      console.error("Confirm payment error:", error);
       res.status(500).json({ error: "Failed to confirm payment" });
+    }
+  });
+
+  // Mark payment as made (buyer action)
+  app.post("/api/trades/:id/payment-made", authenticateToken, async (req, res) => {
+    try {
+      const tradeId = parseInt(req.params.id);
+      const { paymentReference, paymentProof } = req.body;
+      const userId = req.user!.id;
+
+      const trade = await storage.getTrade(tradeId);
+      if (!trade) {
+        return res.status(404).json({ error: "Trade not found" });
+      }
+
+      if (trade.buyerId !== userId) {
+        return res.status(403).json({ error: "Only buyer can mark payment as made" });
+      }
+
+      if (trade.status !== "payment_pending") {
+        return res.status(400).json({ error: "Trade is not in payment pending status" });
+      }
+
+      const updatedTrade = await storage.updateTrade(tradeId, {
+        status: "payment_made",
+        paymentMadeAt: new Date(),
+        paymentReference,
+        paymentProof
+      });
+
+      res.json(updatedTrade);
+    } catch (error) {
+      console.error("Payment made error:", error);
+      res.status(500).json({ error: "Failed to mark payment" });
+    }
+  });
+
+  // Raise dispute
+  app.post("/api/trades/:id/dispute", authenticateToken, async (req, res) => {
+    try {
+      const tradeId = parseInt(req.params.id);
+      const { reason } = req.body;
+      const userId = req.user!.id;
+
+      const trade = await storage.getTrade(tradeId);
+      if (!trade) {
+        return res.status(404).json({ error: "Trade not found" });
+      }
+
+      if (trade.buyerId !== userId && trade.sellerId !== userId) {
+        return res.status(403).json({ error: "Only trade participants can raise disputes" });
+      }
+
+      const updatedTrade = await storage.updateTrade(tradeId, {
+        status: "disputed",
+        disputeReason: reason
+      });
+
+      res.json(updatedTrade);
+    } catch (error) {
+      console.error("Dispute error:", error);
+      res.status(500).json({ error: "Failed to raise dispute" });
+    }
+  });
+
+  // Cancel trade
+  app.post("/api/trades/:id/cancel", authenticateToken, async (req, res) => {
+    try {
+      const tradeId = parseInt(req.params.id);
+      const { reason } = req.body;
+      const userId = req.user!.id;
+
+      const trade = await storage.getTrade(tradeId);
+      if (!trade) {
+        return res.status(404).json({ error: "Trade not found" });
+      }
+
+      if (trade.buyerId !== userId && trade.sellerId !== userId) {
+        return res.status(403).json({ error: "Only trade participants can cancel trades" });
+      }
+
+      if (trade.status !== "payment_pending") {
+        return res.status(400).json({ error: "Cannot cancel trade in current status" });
+      }
+
+      const updatedTrade = await storage.updateTrade(tradeId, {
+        status: "cancelled",
+        disputeReason: reason
+      });
+
+      res.json(updatedTrade);
+    } catch (error) {
+      console.error("Cancel trade error:", error);
+      res.status(500).json({ error: "Failed to cancel trade" });
     }
   });
 
