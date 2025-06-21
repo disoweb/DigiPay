@@ -102,19 +102,21 @@ export function requireAdmin(req: Request, res: Response, next: NextFunction) {
 }
 
 export function setupJWTAuth(app: Express) {
-  // Security middleware
+  // Security middleware - disable CSP in development for Vite compatibility
   app.use(helmet({
     crossOriginEmbedderPolicy: false,
-    contentSecurityPolicy: {
+    contentSecurityPolicy: process.env.NODE_ENV === 'production' ? {
       directives: {
         defaultSrc: ["'self'"],
         styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
         fontSrc: ["'self'", "https://fonts.gstatic.com"],
-        scriptSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
         imgSrc: ["'self'", "data:", "https:"],
         connectSrc: ["'self'", "wss:", "ws:", "https:"],
+        objectSrc: ["'none'"],
+        baseUri: ["'self'"],
       },
-    },
+    } : false, // Disable CSP in development
   }));
 
   app.use(cors({
