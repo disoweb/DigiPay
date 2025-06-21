@@ -20,13 +20,14 @@ declare global {
 const JWT_SECRET = process.env.JWT_SECRET || "digipay-production-secret-key-2024";
 const JWT_EXPIRES_IN = "1d";
 
-// Production rate limiting
+// Production rate limiting configuration
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100,
   message: { error: "Too many authentication attempts, please try again later." },
   standardHeaders: true,
   legacyHeaders: false,
+  skip: () => process.env.NODE_ENV === 'development', // Skip in development
 });
 
 const strictAuthLimiter = rateLimit({
@@ -35,6 +36,7 @@ const strictAuthLimiter = rateLimit({
   message: { error: "Too many login attempts, please try again later." },
   standardHeaders: true,
   legacyHeaders: false,
+  skip: () => process.env.NODE_ENV === 'development', // Skip in development
 });
 
 async function hashPassword(password: string): Promise<string> {

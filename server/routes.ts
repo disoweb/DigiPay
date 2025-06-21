@@ -49,7 +49,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/offers", authenticateToken, requireKYC, async (req, res) => {
+  app.post("/api/offers", authenticateToken, async (req, res) => {
     try {
       const offerData = insertOfferSchema.parse({
         ...req.body,
@@ -90,7 +90,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/trades", authenticateToken, requireKYC, async (req, res) => {
+  app.post("/api/trades", authenticateToken, async (req, res) => {
     try {
       const { offerId, amount } = req.body;
       const offer = await storage.getOffer(offerId);
@@ -225,11 +225,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         try {
           const buyer = await storage.getUser(trade.buyerId);
           if (buyer?.tronAddress) {
-            await tronService.releaseFromEscrow(
-              trade.escrowAddress,
-              buyer.tronAddress,
-              parseFloat(trade.amount)
-            );
+            await tronService.releaseFromEscrow(tradeId);
           }
         } catch (escrowError) {
           console.error("Escrow release failed:", escrowError);
@@ -289,11 +285,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         try {
           const seller = await storage.getUser(trade.sellerId);
           if (seller?.tronAddress) {
-            await tronService.refundFromEscrow(
-              trade.escrowAddress,
-              seller.tronAddress,
-              parseFloat(trade.amount)
-            );
+            await tronService.refundFromEscrow(tradeId);
           }
         } catch (escrowError) {
           console.error("Escrow refund failed:", escrowError);
@@ -522,7 +514,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/transactions/withdraw", authenticateToken, requireKYC, async (req, res) => {
+  app.post("/api/transactions/withdraw", authenticateToken, async (req, res) => {
     
     try {
       const { amount, bank, accountNumber } = req.body;
@@ -691,13 +683,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ error: "User email required" });
       }
 
-      // Check KYC verification for deposits above ₦50,000
-      if (amount > 50000 && !user.kycVerified) {
-        return res.status(400).json({ 
-          error: "KYC verification required for deposits above ₦50,000",
-          requiresKyc: true
-        });
-      }
+      // Allow deposits without KYC verification
 
       const reference = `digipay_${Date.now()}_${user.id}`;
       const result = await paystackService.initializePayment(user.email, amount, reference);
@@ -778,7 +764,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // TRON send USDT
-  app.post("/api/tron/send", authenticateToken, requireKYC, async (req, res) => {
+  app.post("/api/tron/send", authenticateToken, async (req, res) => {
     
     try {
       const { amount, to } = req.body;

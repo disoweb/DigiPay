@@ -225,6 +225,15 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(ratings).where(eq(ratings.ratedUserId, userId));
   }
 
+  async getAllRatings(): Promise<Rating[]> {
+    return await db.select().from(ratings);
+  }
+
+  async getTradeRating(tradeId: number, raterId: number): Promise<Rating | null> {
+    const [rating] = await db.select().from(ratings).where(and(eq(ratings.tradeId, tradeId), eq(ratings.raterId, raterId)));
+    return rating || null;
+  }
+
 }
 
 export const storage = new DatabaseStorage();
