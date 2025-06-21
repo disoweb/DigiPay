@@ -36,14 +36,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const res = await apiRequest("POST", "/api/auth/login", credentials);
       return await res.json();
     },
-    onSuccess: (user: SelectUser) => {
+    onSuccess: (response: any) => {
+      const { token, ...user } = response;
+      if (token) {
+        localStorage.setItem('digipay_token', token);
+      }
       queryClient.setQueryData(["/api/user"], user);
-      // Force a refresh of user data to ensure auth state is updated
-      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
       // Redirect to dashboard after successful login
       setTimeout(() => {
         window.location.href = "/dashboard";
-      }, 500);
+      }, 100);
     },
     onError: (error: Error) => {
       toast({
@@ -59,14 +61,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const res = await apiRequest("POST", "/api/auth/register", credentials);
       return await res.json();
     },
-    onSuccess: (user: SelectUser) => {
+    onSuccess: (response: any) => {
+      const { token, ...user } = response;
+      if (token) {
+        localStorage.setItem('digipay_token', token);
+      }
       queryClient.setQueryData(["/api/user"], user);
-      // Force a refresh of user data to ensure auth state is updated
-      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
       // Redirect to dashboard after successful registration
       setTimeout(() => {
         window.location.href = "/dashboard";
-      }, 500);
+      }, 100);
     },
     onError: (error: Error) => {
       toast({
@@ -82,6 +86,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await apiRequest("POST", "/api/auth/logout");
     },
     onSuccess: () => {
+      localStorage.removeItem('digipay_token');
       queryClient.setQueryData(["/api/user"], null);
       // Redirect to auth page after logout
       window.location.href = "/auth";

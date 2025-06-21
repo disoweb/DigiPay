@@ -219,18 +219,11 @@ export function setupJWTAuth(app: Express) {
       const token = generateToken(user);
       const { password: _, ...userWithoutPassword } = user;
       
-      // Set JWT token as httpOnly cookie
-      res.cookie('token', token, {
-        httpOnly: true,
-        secure: false, // Set to false for development
-        sameSite: 'lax',
-        path: '/',
-        maxAge: 24 * 60 * 60 * 1000 // 24 hours
+      // Return token in response for client-side storage (development approach)
+      res.json({ 
+        ...userWithoutPassword, 
+        token 
       });
-      
-
-      
-      res.json(userWithoutPassword);
     } catch (error) {
       console.error("Login error:", error);
       res.status(500).json({ error: "Login failed" });
@@ -239,8 +232,6 @@ export function setupJWTAuth(app: Express) {
 
   // Logout
   app.post("/api/auth/logout", (req: Request, res: Response) => {
-    // Clear the JWT cookie
-    res.clearCookie('token');
     res.json({ message: "Logout successful" });
   });
 

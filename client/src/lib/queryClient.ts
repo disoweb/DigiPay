@@ -12,17 +12,31 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
+  const token = localStorage.getItem('digipay_token');
+  
   const headers: Record<string, string> = {};
   if (data) {
     headers["Content-Type"] = "application/json";
+  }
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
   }
 
   const res = await fetch(url, {
     method,
     headers,
     body: data ? JSON.stringify(data) : undefined,
-    credentials: "include", // This sends cookies automatically
+    credentials: "include",
   });
+
+  // Handle 401 responses by clearing token
+  if (res.status === 401) {
+    localStorage.removeItem('digipay_token');
+    // Redirect to auth page if not already there
+    if (!window.location.pathname.includes('/auth')) {
+      window.location.href = '/auth';
+    }
+  }
 
   await throwIfResNotOk(res);
   return res;
@@ -34,7 +48,14 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
+    const token = localStorage.getItem('digipay_token');
+    const headers: Record<string, string> = {};
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+
     const res = await fetch(queryKey[0] as string, {
+      headers,
       credentials: "include",
     });
 
