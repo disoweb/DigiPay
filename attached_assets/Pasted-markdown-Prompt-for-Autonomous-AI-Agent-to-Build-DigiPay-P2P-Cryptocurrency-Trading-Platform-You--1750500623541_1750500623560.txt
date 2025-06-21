@@ -1,0 +1,320 @@
+markdown
+# Prompt for Autonomous AI Agent to Build DigiPay P2P Cryptocurrency Trading Platform
+
+You are an advanced AI agent capable of autonomously building a full-stack web application from scratch, including project setup, coding, testing, deployment, and monitoring. Your task is to develop **DigiPay**, a secure, modern, and highly responsive peer-to-peer (P2P) cryptocurrency trading platform for trading USDT in Nigeria, using the MVC architecture. The application must integrate external services, a smart contract for escrow, real-time chat, and robust monitoring. The frontend will be deployed on Vercel, the backend on OnRender, and the database on Neon (PostgreSQL). Below is a detailed blueprint of requirements and instructions for you to execute autonomously. Follow the steps precisely, making logical decisions where specifics are not provided, and ensure the application is production-ready with security, scalability, and performance optimizations.
+
+---
+
+## Objective
+Build **DigiPay**, a P2P platform that enables Nigerian users to trade USDT securely with features including user registration, KYC (BVN verification), TRON wallet generation, offer creation, trade management with escrow, Naira deposits/withdrawals, real-time chat, user ratings, notifications, and an admin dashboard for dispute resolution. The application must be secure, responsive, and optimized, with deployments on Vercel (frontend), OnRender (backend), and Neon (PostgreSQL).
+
+---
+
+## Requirements
+
+### General
+- **Architecture**: Monolithic MVC with layered design (Presentation, Controller, Service, Business Logic, Repository, Data, External Integration, Middleware).
+- **Tech Stack**:
+  - **Frontend**: React, Tailwind CSS, Socket.IO-client, Axios.
+  - **Backend**: Node.js, Express.js, PostgreSQL, Socket.IO, TronWeb.
+  - **Smart Contract**: Solidity (TRC-20 Escrow).
+  - **External Services**:
+    - **YouVerify**: BVN verification for KYC.
+    - **Paystack**: Naira deposits/withdrawals.
+    - **Nodemailer**: Email notifications.
+    - **Twilio**: SMS notifications.
+    - **Winston**: Logging.
+    - **New Relic**: Performance monitoring.
+- **Deployment**:
+  - Frontend: Vercel.
+  - Backend: OnRender.
+  - Database: Neon (PostgreSQL).
+- **Timeline**: Complete within 15-24 days, including setup, development, testing, and deployment.
+
+### Features
+1. **User Management**:
+   - Register with email, password, BVN, and phone; generate TRON wallet; verify BVN via YouVerify.
+   - Login with email/password; JWT-based authentication.
+   - View user profile (email, TRON address, balances, ratings).
+   - KYC verification required before trading.
+2. **Marketplace**:
+   - Create buy/sell USDT offers with amount and rate (NGN/USDT).
+   - List open offers with user ratings (average rating, number of ratings).
+3. **Trades**:
+   - Initiate trade from an offer, locking funds in a TRC-20 escrow smart contract (for sell offers).
+   - Manage trade lifecycle (pending, completed, refunded).
+   - Escrow holds USDT for sell trades; buyer pays Naira directly to seller’s bank for buy trades.
+4. **Payments**:
+   - Deposit Naira via Paystack (initialize and verify transactions).
+   - Withdraw Naira to bank accounts via Paystack.
+5. **Real-Time Chat**:
+   - Trade-specific chat rooms using Socket.IO.
+   - Persist messages in PostgreSQL.
+6. **Ratings**:
+   - Submit 1-5 star ratings with comments after trade completion.
+   - Update user’s average rating and rating count.
+7. **Notifications**:
+   - Send email (Nodemailer) and SMS (Twilio) for trade updates, deposits, and withdrawals.
+8. **Admin Dashboard**:
+   - View all trades; resolve disputes by releasing or refunding escrow funds.
+   - Restricted to admin user (user ID 1 for simplicity).
+9. **Monitoring**:
+   - Log all actions and errors with Winston.
+   - Monitor API performance with New Relic.
+
+### Technical Specifications
+- **Frontend**:
+  - React single-page application (SPA) with React Router for navigation.
+  - Tailwind CSS for responsive, mobile-first design.
+  - Context API for authentication state management.
+  - Socket.IO-client for real-time chat.
+  - Axios for API requests.
+- **Backend**:
+  - Node.js with Express.js, structured in MVC.
+  - PostgreSQL database with tables for users, offers, trades, transactions, ratings, and messages.
+  - Indexes on frequently queried fields (e.g., users.email, offers.status).
+  - JWT authentication with 1-day token expiry.
+  - Rate limiting (100 requests per 15 minutes per IP).
+  - Helmet for secure HTTP headers.
+  - CORS restricted to frontend URL.
+  - Socket.IO for real-time chat.
+- **Smart Contract**:
+  - Solidity contract (`Escrow.sol`) for TRC-20 USDT escrow.
+  - Functions: `deposit`, `release`, `refund` (restricted to admin).
+  - Deploy on TRON mainnet using Remix and TronLink wallet.
+- **Database Schema**:
+  - **users**: id, email, password, bvn, tron_address, phone, kyc_verified, naira_balance, usdt_balance, average_rating, rating_count, created_at.
+  - **offers**: id, user_id, amount, rate, type (buy/sell), status, created_at.
+  - **trades**: id, offer_id, buyer_id, seller_id, amount, status, escrow_address, created_at.
+  - **transactions**: id, user_id, type (deposit/withdrawal), amount, status, paystack_ref, created_at.
+  - **ratings**: id, trade_id, rater_id, rated_user_id, rating, comment, created_at.
+  - **messages**: id, trade_id, sender_id, message, created_at.
+- **Environment Variables**:
+  - Backend: PORT, DATABASE_URL, JWT_SECRET, YOUVERIFY_API_KEY, PAYSTACK_SECRET_KEY, EMAIL_HOST, EMAIL_PORT, EMAIL_USER, EMAIL_PASS, TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER, TRON_PRIVATE_KEY, TRONGRID_API_KEY, ESCROW_ADDRESS, USDT_CONTRACT_ADDRESS, FRONTEND_URL, NEW_RELIC_LICENSE_KEY, NEW_RELIC_APP_NAME.
+  - Frontend: REACT_APP_API_URL.
+- **Security**:
+  - Hash passwords with bcrypt (10 rounds).
+  - Sanitize inputs to prevent injection attacks.
+  - Use HTTPS for all requests (handled by Vercel/OnRender).
+  - Restrict escrow actions to admin via `onlyOwner` modifier.
+
+---
+
+## Instructions for Autonomous Execution
+
+### Step 1: Project Setup
+1. Create a new Git repository named `digipay` and initialize with `git init`.
+2. Set up directory structure:
+digipay/ ├── backend/ │ ├── src/ │ │ ├── config/ │ │ ├── controllers/ │ │ ├── services/ │ │ ├── repositories/ │ │ ├── models/ │ │ ├── middleware/ │ │ ├── routes/ │ │ ├── index.js │ │ └── socket.js │ ├── database/ │ │ └── schema.sql │ ├── .env │ ├── Dockerfile │ └── package.json ├── frontend/ │ ├── public/ │ ├── src/ │ │ ├── components/ │ │ ├── pages/ │ │ ├── context/ │ │ ├── App.js │ │ ├── App.css │ │ ├── index.js │ │ └── socket.js │ ├── .env │ ├── tailwind.config.js │ ├── Dockerfile │ └── package.json ├── smart-contracts/ │ └── Escrow.sol ├── docker-compose.yml └── README.md
+3. Install prerequisites:
+- Node.js (v18+), PostgreSQL (v15+), Docker, Git, Vercel CLI, Remix IDE.
+- Set up accounts for YouVerify, Paystack, Gmail, Twilio, TronGrid, New Relic, Vercel, OnRender, Neon.
+- Store API keys securely and populate `.env` files.
+
+### Step 2: Backend Development
+1. **Initialize Backend**:
+- Run `npm init -y` in `backend/`.
+- Install dependencies: `express`, `pg`, `bcrypt`, `jsonwebtoken`, `axios`, `nodemailer`, `twilio`, `paystack`, `tronweb`, `socket.io`, `winston`, `newrelic`, `cors`, `helmet`, `express-rate-limit`, `dotenv`.
+2. **Database**:
+- Set up PostgreSQL on Neon or locally.
+- Create database `digipay` and apply schema from `database/schema.sql` with tables and indexes as specified.
+3. **Configuration**:
+- Create configuration files in `src/config/` for database, YouVerify, Paystack, Nodemailer, Twilio, TronWeb, Winston, New Relic.
+- Load environment variables using `dotenv`.
+4. **Models**:
+- Implement data access logic for users, offers, trades, transactions, ratings, and messages in `src/models/`.
+- Use parameterized queries to prevent SQL injection.
+5. **Repositories**:
+- Create repository classes in `src/repositories/` to abstract database operations for each model.
+6. **Services**:
+- Implement business logic in `src/services/` for auth, offers, trades, payments, ratings, chat, and notifications.
+- Handle external integrations (YouVerify, Paystack, TronWeb, Nodemailer, Twilio).
+- Include error handling and logging with Winston.
+7. **Controllers**:
+- Create RESTful API endpoints in `src/controllers/` for auth, offers, trades, payments, ratings, chat, and admin.
+- Validate inputs and handle responses.
+8. **Routes**:
+- Define routes in `src/routes/` for each controller, applying authentication middleware where needed.
+9. **Middleware**:
+- Implement authentication (`jwt`), rate limiting, and error handling in `src/middleware/`.
+- Use Helmet for secure headers and CORS for frontend access.
+10. **Socket.IO**:
+ - Set up Socket.IO in `src/socket.js` for real-time chat with trade-specific rooms.
+ - Persist messages in the database.
+11. **Main Application**:
+ - Create `src/index.js` to initialize Express, Socket.IO, and middleware.
+ - Configure New Relic for monitoring.
+12. **Docker**:
+ - Create `Dockerfile` for backend containerization.
+ - Optionally, set up `docker-compose.yml` for local testing with PostgreSQL.
+
+### Step 3: Frontend Development
+1. **Initialize Frontend**:
+- Run `npx create-react-app frontend` in `digipay/`.
+- Install dependencies: `react-router-dom`, `axios`, `socket.io-client`, `tailwindcss`, `react-icons`.
+- Configure Tailwind CSS with custom colors (primary: #1D4ED8, error: #B91C1C).
+2. **Context**:
+- Create `src/context/AuthContext.js` for managing authentication state (token, address, user ID).
+3. **Components**:
+- Build reusable components in `src/components/`:
+  - `Navbar`: Navigation with links (Home, Register, Login, Dashboard, Marketplace, Deposit, Admin).
+  - `OfferCard`: Display offer details with user rating and trade button.
+  - `TradeChat`: Real-time chat for trades using Socket.IO.
+  - `RatingForm`: Submit ratings/comments post-trade.
+4. **Pages**:
+- Implement pages in `src/pages/`:
+  - `Home`: Welcome page with marketplace link.
+  - `Register`: Form for email, password, BVN, phone.
+  - `Login`: Form for email/password.
+  - `Dashboard`: Display user profile (email, TRON address, balances, ratings).
+  - `Marketplace`: List offers, create new offers.
+  - `Trade`: View offer, start trade, manage trade (complete/refund), chat, and rate.
+  - `Deposit`: Initialize/verify Paystack deposits.
+  - `AdminDashboard`: View trades, resolve disputes (complete/refund).
+5. **Socket.IO**:
+- Set up `src/socket.js` for client-side Socket.IO connection with WebSocket/polling fallback.
+6. **Routing**:
+- Configure `react-router-dom` in `src/App.js` for SPA navigation.
+7. **Docker**:
+- Create `Dockerfile` for frontend containerization.
+
+### Step 4: Smart Contract Development
+1. **Escrow Contract**:
+- Write `Escrow.sol` in `smart-contracts/` for TRC-20 USDT escrow with `deposit`, `release`, and `refund` functions.
+- Restrict `release` and `refund` to contract owner (admin).
+- Interface with USDT contract (`TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t`).
+2. **Testing**:
+- Write unit tests using Truffle or Hardhat to verify deposit, release, and refund functionality.
+- Test on TRON Shasta testnet before mainnet.
+3. **Deployment**:
+- Deploy to TRON mainnet using Remix with TronLink wallet.
+- Store contract address in `ESCROW_ADDRESS` environment variable.
+
+### Step 5: Testing
+1. **Backend**:
+- Write unit tests for services and repositories using Jest.
+- Write integration tests for API endpoints using Supertest.
+- Mock external services (YouVerify, Paystack, TronWeb, etc.).
+- Ensure 80%+ code coverage.
+2. **Frontend**:
+- Write unit tests for components using React Testing Library.
+- Write end-to-end tests using Cypress for critical flows (login, register, trade, deposit).
+3. **Smart Contract**:
+- Test all functions with edge cases (e.g., unauthorized access, insufficient funds).
+4. **Manual Testing**:
+- Test all features locally: registration, login, KYC, offer creation, trading, escrow, chat, payments, ratings, admin actions.
+- Verify notifications (email, SMS) and monitoring (New Relic, Winston).
+
+### Step 6: Deployment
+1. **Backend (OnRender)**:
+- Push code to GitHub (`digipay/backend`).
+- Create `render.yaml` specifying Node.js environment, build/start commands, and environment variables.
+- Set up PostgreSQL on Neon and update `DATABASE_URL`.
+- Deploy via OnRender dashboard, linking to GitHub.
+- Configure Paystack webhook to `https://digipay-backend.onrender.com/api/payments/verify-deposit`.
+- Handle Socket.IO polling fallback for OnRender free tier.
+2. **Frontend (Vercel)**:
+- Run `vercel` in `frontend/` to deploy.
+- Add `vercel.json` for SPA routing.
+- Set `REACT_APP_API_URL` to OnRender backend URL.
+- Deploy to production with `vercel --prod`.
+3. **Post-Deployment**:
+- Update `FRONTEND_URL` in backend `.env` to Vercel URL and redeploy.
+- Test all features in production: login, trading, chat, payments, admin actions.
+- Verify New Relic monitoring and Winston logs.
+
+### Step 7: Optimizations
+1. **Performance**:
+- Ensure database indexes are applied.
+- Use code splitting (`React.lazy`) for frontend.
+- Consider Redis for caching (optional, requires OnRender paid plan).
+2. **Security**:
+- Validate all inputs to prevent injection.
+- Use HTTPS (handled by Vercel/OnRender).
+- Secure smart contract with `onlyOwner` modifier.
+3. **Responsiveness**:
+- Ensure Tailwind CSS classes support mobile-first design.
+- Test on multiple devices (desktop, tablet, mobile).
+
+### Step 8: Monitoring and Maintenance
+1. **Monitoring**:
+- Configure New Relic for API performance metrics.
+- Set up Winston to log to `backend/logs/` (error.log, app.log).
+- Monitor logs for errors and performance issues.
+2. **Maintenance**:
+- Schedule Neon database backups.
+- Update dependencies regularly (`npm update`).
+- Monitor TRON network for USDT contract changes.
+3. **Scaling**:
+- Upgrade OnRender plan for more resources if needed.
+- Leverage Neon’s auto-scaling for database.
+- Use Vercel’s automatic scaling for frontend.
+
+### Step 9: Documentation
+1. Create `README.md` with:
+- Project overview.
+- Setup instructions.
+- Deployment steps.
+- Feature list.
+2. Optionally, generate API documentation using Swagger.
+
+---
+
+## Constraints and Guidelines
+- **Security**: Prioritize secure coding practices (e.g., input sanitization, secure headers, JWT validation).
+- **Error Handling**: Implement robust error handling in all layers; log errors with Winston.
+- **Testing**: Achieve 80%+ code coverage; test all edge cases.
+- **Dependencies**: Use latest stable versions of all libraries.
+- **Environment Variables**: Securely manage API keys; never hardcode.
+- **Logging**: Log all significant actions (user actions, errors, API calls) with Winston.
+- **Monitoring**: Ensure New Relic is configured for production monitoring.
+- **Fallbacks**: Implement Socket.IO polling fallback for OnRender free tier.
+- **Admin Access**: Restrict admin routes to user ID 1 (hardcoded for simplicity).
+- **Smart Contract**: Test thoroughly on testnet before mainnet deployment.
+- **Responsive Design**: Ensure UI is mobile-friendly with Tailwind CSS.
+- **Time Zone**: Use Nigeria time (WAT, UTC+1) for timestamps.
+
+---
+
+## Deliverables
+- Fully functional DigiPay application deployed on Vercel (frontend), OnRender (backend), and Neon (database).
+- Deployed TRC-20 escrow smart contract on TRON mainnet.
+- Comprehensive test suite (unit, integration, E2E).
+- Documentation (`README.md`, optional API docs).
+- Monitoring setup with New Relic and Winston logs.
+- GitHub repository with clean, organized code and commit history.
+
+---
+
+## Execution Plan
+1. **Day 1-2**: Set up project structure, Git, dependencies, and environment variables.
+2. **Day 3-9**: Develop backend (config, models, repositories, services, controllers, routes, Socket.IO).
+3. **Day 10-15**: Develop frontend (components, pages, context, Socket.IO).
+4. **Day 16-18**: Develop and deploy smart contract.
+5. **Day 19-22**: Write and run tests (unit, integration, E2E).
+6. **Day 23-24**: Deploy to Vercel, OnRender, Neon; configure webhooks and monitoring.
+7. **Ongoing**: Monitor performance, handle bugs, and document.
+
+---
+
+## Decision-Making Guidelines
+- If an external service (e.g., YouVerify, Paystack) requires additional configuration, consult official documentation.
+- For ambiguous UI designs, prioritize simplicity and usability with Tailwind CSS.
+- If performance issues arise, implement caching or optimize queries.
+- If OnRender free tier limitations (e.g., WebSocket) cause issues, configure polling fallback or note paid plan requirement.
+- If test coverage is below 80%, add more tests for critical paths.
+- Use best practices for security (e.g., sanitize inputs, secure headers) even if not explicitly mentioned.
+
+---
+
+## Final Notes
+- Commit code frequently with descriptive messages (e.g., “Add user registration endpoint”).
+- Test locally before deploying to ensure functionality.
+- Verify all external integrations (YouVerify, Paystack, TronWeb, Nodemailer, Twilio) in a staging environment if possible.
+- Ensure the application is user-friendly, secure, and scalable.
+- Report progress daily, including any blockers or decisions made.
+- Upon completion, provide a summary of the deployed application, including URLs, test results, and monitoring setup.
+
+**Start building DigiPay now. Proceed autonomously, making logical decisions based on the provided requirements and industry best practices. If clarification is needed, assume reasonable defaults and document decisions in the README.**
+
+---
