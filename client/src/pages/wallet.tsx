@@ -536,16 +536,16 @@ export default function Wallet() {
 
       {/* Send USDT Modal */}
       <Dialog open={showSendUSDT} onOpenChange={setShowSendUSDT}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
+        <DialogContent className="w-[95vw] max-w-md mx-auto max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="space-y-3">
+            <DialogTitle className="flex items-center gap-2 text-lg">
               <div className="p-2 bg-red-100 rounded-lg">
-                <Minus className="h-5 w-5 text-red-600" />
+                <Send className="h-5 w-5 text-red-600" />
               </div>
-              Send USDT
+              Send USDT (TRC-20)
             </DialogTitle>
-            <DialogDescription>
-              Send USDT to another TRON address
+            <DialogDescription className="text-sm text-gray-600">
+              Transfer USDT to another TRON wallet address
             </DialogDescription>
           </DialogHeader>
           

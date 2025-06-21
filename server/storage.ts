@@ -135,11 +135,11 @@ export class DatabaseStorage implements IStorage {
       // Always refresh offers to ensure they exist
       const existingOffers = await this.getOffers();
       console.log(`📊 Found ${existingOffers.length} existing offers`);
-      
+
       if (existingOffers.length < 6) {
         // Clear existing offers and recreate
         await db.delete(offers);
-        
+
         // Buy offers (users want to buy USDT)
         await this.createOffer({
           userId: testUser1.id,

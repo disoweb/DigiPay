@@ -916,7 +916,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             rater: rater ? { 
               id: rater.id, 
               email: rater.email.replace(/(.{2}).*(@.*)/, '$1***$2') // Mask email
-            } : null,
+            }/ : null,
           };
         })
       );

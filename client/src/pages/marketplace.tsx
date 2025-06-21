@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Navbar } from "@/components/navbar";
 import { OfferCard } from "@/components/offer-card";
@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus } from "lucide-react";
+import { Plus, Loader2 } from "lucide-react";
 import type { Offer } from "@shared/schema";
 
 type EnrichedOffer = Offer & {
@@ -30,16 +30,20 @@ export default function Marketplace() {
     maxAmount: "",
   });
 
-  const { data: offers = [], isLoading } = useQuery<EnrichedOffer[]>({
+  const { data: offers = [], isLoading, error } = useQuery<EnrichedOffer[]>({
     queryKey: ["/api/offers"],
+    staleTime: 30000, // Cache for 30 seconds
+    gcTime: 300000, // Keep in cache for 5 minutes
   });
 
-  const filteredOffers = offers.filter((offer) => {
-    if (filters.type !== "all" && offer.type !== filters.type) return false;
-    if (filters.minAmount && parseFloat(offer.amount) < parseFloat(filters.minAmount)) return false;
-    if (filters.maxAmount && parseFloat(offer.amount) > parseFloat(filters.maxAmount)) return false;
-    return true;
-  });
+  const filteredOffers = useMemo(() => {
+    return offers.filter((offer) => {
+      if (filters.type !== "all" && offer.type !== filters.type) return false;
+      if (filters.minAmount && parseFloat(offer.amount) < parseFloat(filters.minAmount)) return false;
+      if (filters.maxAmount && parseFloat(offer.amount) > parseFloat(filters.maxAmount)) return false;
+      return true;
+    });
+  }, [offers, filters]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
@@ -113,32 +117,49 @@ export default function Marketplace() {
 
           {/* Offers Grid */}
           {isLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[1, 2, 3, 4, 5, 6].map((i) => (
-                <Card key={i} className="border-0 shadow-sm">
-                  <CardContent className="p-6">
-                    <div className="animate-pulse space-y-4">
-                      <div className="h-4 bg-gray-200 rounded w-1/4"></div>
-                      <div className="space-y-2">
-                        <div className="h-4 bg-gray-200 rounded"></div>
-                        <div className="h-4 bg-gray-200 rounded"></div>
-                        <div className="h-4 bg-gray-200 rounded"></div>
+            <div className="space-y-4">
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <span className="ml-2 text-gray-600">Loading offers...</span>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[1, 2, 3, 4, 5, 6].map((i) => (
+                  <Card key={i} className="border-0 shadow-sm">
+                    <CardContent className="p-6">
+                      <div className="animate-pulse space-y-4">
+                        <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+                        <div className="space-y-2">
+                          <div className="h-4 bg-gray-200 rounded"></div>
+                          <div className="h-4 bg-gray-200 rounded"></div>
+                          <div className="h-4 bg-gray-200 rounded"></div>
+                        </div>
+                        <div className="h-10 bg-gray-200 rounded"></div>
                       </div>
-                      <div className="h-10 bg-gray-200 rounded"></div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
             </div>
+          ) : error ? (
+            <Card className="border-0 shadow-sm">
+              <CardContent className="p-12 text-center">
+                <p className="text-red-500 text-lg mb-4">Failed to load offers</p>
+                <Button onClick={() => window.location.reload()}>
+                  Try Again
+                </Button>
+              </CardContent>
+            </Card>
           ) : filteredOffers.length === 0 ? (
             <Card className="border-0 shadow-sm">
               <CardContent className="p-12 text-center">
-                <p className="text-gray-500 text-lg">No offers found matching your criteria</p>
+                <p className="text-gray-500 text-lg mb-4">
+                  {offers.length === 0 ? "No offers available" : "No offers found matching your criteria"}
+                </p>
                 <Button 
                   onClick={() => setShowCreateOffer(true)}
-                  className="mt-4"
+                  className="mt-2"
                 >
-                  Create First Offer
+                  {offers.length === 0 ? "Create First Offer" : "Create New Offer"}
                 </Button>
               </CardContent>
             </Card>
