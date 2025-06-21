@@ -53,6 +53,11 @@ export function OfferCard({ offer, onTrade }: OfferCardProps) {
             <span className="font-semibold">₦{total.toLocaleString()}</span>
           </div>
           
+          <div className="flex justify-between">
+            <span className="text-gray-600">Payment:</span>
+            <span className="text-sm font-medium text-blue-600">{offer.paymentMethod}</span>
+          </div>
+          
           {offer.user && (
             <div className="flex items-center justify-between pt-2 border-t border-gray-100">
               <div className="flex items-center">

@@ -20,6 +20,7 @@ export function CreateOfferModal({ open, onOpenChange }: CreateOfferModalProps) 
     type: "",
     amount: "",
     rate: "",
+    paymentMethod: ""
   });
 
   const createOfferMutation = useMutation({
@@ -28,6 +29,7 @@ export function CreateOfferModal({ open, onOpenChange }: CreateOfferModalProps) 
         type: data.type,
         amount: parseFloat(data.amount),
         rate: parseFloat(data.rate),
+        paymentMethod: data.paymentMethod
       });
     },
     onSuccess: () => {
@@ -37,7 +39,7 @@ export function CreateOfferModal({ open, onOpenChange }: CreateOfferModalProps) 
         description: "Offer created successfully!",
       });
       onOpenChange(false);
-      setFormData({ type: "", amount: "", rate: "" });
+      setFormData({ type: "", amount: "", rate: "", paymentMethod: "" });
     },
     onError: () => {
       toast({
@@ -50,7 +52,7 @@ export function CreateOfferModal({ open, onOpenChange }: CreateOfferModalProps) 
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.type || !formData.amount || !formData.rate) {
+    if (!formData.type || !formData.amount || !formData.rate || !formData.paymentMethod) {
       toast({
         title: "Error",
         description: "Please fill in all fields",
@@ -67,7 +69,7 @@ export function CreateOfferModal({ open, onOpenChange }: CreateOfferModalProps) 
         <DialogHeader>
           <DialogTitle>Create New Offer</DialogTitle>
         </DialogHeader>
-        
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="type">Type</Label>
@@ -81,7 +83,7 @@ export function CreateOfferModal({ open, onOpenChange }: CreateOfferModalProps) 
               </SelectContent>
             </Select>
           </div>
-          
+
           <div className="space-y-2">
             <Label htmlFor="amount">Amount (USDT)</Label>
             <Input
@@ -94,20 +96,42 @@ export function CreateOfferModal({ open, onOpenChange }: CreateOfferModalProps) 
               required
             />
           </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="rate">Rate (NGN/USDT)</Label>
-            <Input
-              id="rate"
-              type="number"
-              step="0.01"
-              placeholder="Enter rate"
-              value={formData.rate}
-              onChange={(e) => setFormData(prev => ({ ...prev, rate: e.target.value }))}
-              required
-            />
-          </div>
-          
+
+          <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="rate">Rate (₦/USDT)</Label>
+                <Input
+                  id="rate"
+                  type="number"
+                  step="0.01"
+                  value={formData.rate}
+                  onChange={(e) => setFormData(prev => ({ ...prev, rate: e.target.value }))}
+                  placeholder="1500.00"
+                  required
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="paymentMethod">Payment Method</Label>
+                <Select 
+                  value={formData.paymentMethod} 
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, paymentMethod: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select payment method" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
+                    <SelectItem value="Mobile Money (MTN)">Mobile Money (MTN)</SelectItem>
+                    <SelectItem value="Mobile Money (Airtel)">Mobile Money (Airtel)</SelectItem>
+                    <SelectItem value="Opay">Opay</SelectItem>
+                    <SelectItem value="PalmPay">PalmPay</SelectItem>
+                    <SelectItem value="Kuda">Kuda</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
           <div className="flex space-x-3 pt-4">
             <Button 
               type="submit" 

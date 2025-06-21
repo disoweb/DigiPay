@@ -280,7 +280,11 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUserOffers(userId: number): Promise<Offer[]> {
-    return await db.select().from(offers).where(eq(offers.userId, userId));
+    return await db
+      .select()
+      .from(offers)
+      .where(eq(offers.userId, userId))
+      .orderBy(desc(offers.createdAt));
   }
 
   async createOffer(insertOffer: InsertOffer): Promise<Offer> {

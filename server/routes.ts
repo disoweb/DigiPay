@@ -102,15 +102,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Creating offer with data:", req.body);
       console.log("User ID:", req.user!.id);
 
-      const offerData = insertOfferSchema.parse({
-        ...req.body,
-        userId: req.user!.id,
-      });
+      const user = req.user!;
+      const { type, amount, rate, paymentMethod, terms, minAmount, maxAmount } = req.body;
+
+      // Validate required fields
+      if (!type || !amount || !rate || !paymentMethod) {
+        return res.status(400).json({ error: "Missing required fields: type, amount, rate, paymentMethod" });
+      }
+
+      // For sell offers, check USDT balance
+      if (type === "sell") {
+        const userBalance = parseFloat(user.usdtBalance || "0");
+        const offerAmount = parseFloat(amount);
+        
+        if (userBalance < offerAmount) {
+          return res.status(400).json({ error: "Insufficient USDT balance" });
+        }
+      }
+
+      const offerData = {
+        userId: user.id,
+        type,
+        amount: parseFloat(amount).toFixed(8),
+        rate: parseFloat(rate).toFixed(2),
+        paymentMethod,
+        terms: terms || "",
+        minAmount: minAmount ? parseFloat(minAmount).toFixed(8) : parseFloat(amount).toFixed(8),
+        maxAmount: maxAmount ? parseFloat(maxAmount).toFixed(8) : parseFloat(amount).toFixed(8),
+        status: "active"
+      };
 
       console.log("Parsed offer data:", offerData);
 
       const offer = await storage.createOffer(offerData);
-      res.status(201).json(offer);
+      console.log("Created offer:", offer);
+      
+      res.status(201).json({ success: true, offer });
     } catch (error) {
       console.error("Offer creation error:", error);
       res.status(400).json({ error: "Invalid offer data", details: error instanceof Error ? error.message : "Unknown error" });

@@ -27,7 +27,28 @@ export default function Trades() {
 
   const { data: myOffers = [], isLoading: offersLoading } = useQuery({
     queryKey: [`/api/users/${user?.id}/offers`],
+    queryFn: async () => {
+      if (!user?.id) return [];
+
+      const response = await fetch(`/api/users/${user.id}/offers`, {
+        credentials: 'include',
+        headers: {
+          "Authorization": `Bearer ${localStorage.getItem("auth_token")}`,
+        },
+      });
+
+      if (!response.ok) {
+        console.error(`Failed to load offers: ${response.status}`);
+        throw new Error(`Failed to load offers: ${response.status}`);
+      }
+
+      const data = response.json();
+      console.log("User offers loaded:", data);
+      return data;
+    },
     enabled: !!user?.id,
+    staleTime: 10000, // Shorter cache time
+    refetchOnWindowFocus: true,
   });
 
   const activeTrades = trades.filter(trade => trade.status === "pending");
@@ -110,7 +131,7 @@ export default function Trades() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <Navbar />
-      
+
       <main className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
         <div className="space-y-8">
           <div className="text-center space-y-4">
@@ -285,7 +306,7 @@ export default function Trades() {
                   Trade Details - T{selectedTrade.id.toString().padStart(3, '0')}
                 </DialogTitle>
               </DialogHeader>
-              
+
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Trade Information */}
                 <div className="space-y-6">
