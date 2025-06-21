@@ -45,7 +45,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const { data: user, isLoading } = useQuery({
     queryKey: ["/api/user"],
     queryFn: async () => {
-      const token = localStorage.getItem("auth_token");
+      const token = localStorage.getItem("digipay_token");
       if (!token) return null;
 
       const response = await fetch("/api/user", {
@@ -56,7 +56,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (!response.ok) {
         if (response.status === 401) {
-          localStorage.removeItem("auth_token");
+          localStorage.removeItem("digipay_token");
           throw new Error("Unauthorized");
         }
         throw new Error("Failed to fetch user");
@@ -73,7 +73,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return response;
     },
     onSuccess: (data) => {
-      localStorage.setItem("auth_token", data.token);
+      localStorage.setItem("digipay_token", data.token);
       queryClient.invalidateQueries({ queryKey: ["/api/user"] });
       toast({
         title: "Success",
@@ -97,7 +97,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return response;
     },
     onSuccess: (data) => {
-      localStorage.setItem("auth_token", data.token);
+      localStorage.setItem("digipay_token", data.token);
       queryClient.invalidateQueries({ queryKey: ["/api/user"] });
       toast({
         title: "Success",
@@ -115,7 +115,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   });
 
   const logout = () => {
-    localStorage.removeItem("auth_token");
+    localStorage.removeItem("digipay_token");
     queryClient.clear();
     setLocation("/auth");
   };
