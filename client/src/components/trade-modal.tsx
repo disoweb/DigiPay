@@ -184,6 +184,8 @@ export function TradeModal({ offer, open, onOpenChange }: TradeModalProps) {
                     </div>
                   </div>
                 )}
+</div>
+              </div>
 
           <div className="flex space-x-3 pt-4">
             <Button 
