@@ -22,6 +22,8 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string) => Promise<void>;
   logout: () => void;
+  loginMutation: any;
+  registerMutation: any;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -33,7 +35,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { data: user, isLoading, error } = useQuery({
     queryKey: ["/api/user"],
     queryFn: async () => {
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem("auth_token");
       if (!token) {
         throw new Error("No token");
       }
@@ -118,7 +120,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const logout = () => {
-    localStorage.removeItem("token");
+    localStorage.removeItem("auth_token");
     queryClient.clear();
     setLocation("/");
   };
@@ -126,7 +128,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Handle auth errors
   useEffect(() => {
     if (error && error.message === "Unauthorized") {
-      localStorage.removeItem("token");
+      localStorage.removeItem("auth_token");
       setLocation("/auth");
     }
   }, [error, setLocation]);
@@ -137,6 +139,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     login,
     register,
     logout,
+    loginMutation,
+    registerMutation,
   };
 
   return (
