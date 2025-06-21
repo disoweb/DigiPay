@@ -1,7 +1,6 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
-import { WebSocketServer } from "ws";
-import { setupAuth } from "./auth";
+import { setupJWTAuth, authenticateToken, requireKYC, requireAdmin } from "./auth-jwt";
 import { storage } from "./storage";
 import { insertOfferSchema, insertTradeSchema, insertMessageSchema, insertTransactionSchema, insertRatingSchema } from "@shared/schema";
 import { youVerifyService } from "./services/youverify";
@@ -10,7 +9,7 @@ import { tronService } from "./services/tron";
 import { emailService, smsService } from "./services/notifications";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  setupAuth(app);
+  setupJWTAuth(app);
 
   // Offer routes
   app.get("/api/offers", async (req, res) => {
@@ -35,13 +34,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json(enrichedOffers);
     } catch (error) {
-      res.status(500).json({ message: "Failed to fetch offers" });
+      res.status(500).json({ error: "Failed to fetch offers" });
     }
   });
 
-  app.post("/api/offers", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    
+  app.post("/api/offers", authenticateToken, requireKYC, async (req, res) => {
     try {
       const offerData = insertOfferSchema.parse({
         ...req.body,
@@ -51,14 +48,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const offer = await storage.createOffer(offerData);
       res.status(201).json(offer);
     } catch (error) {
-      res.status(400).json({ message: "Invalid offer data" });
+      res.status(400).json({ error: "Invalid offer data" });
     }
   });
 
   // Trade routes
-  app.get("/api/trades", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    
+  app.get("/api/trades", authenticateToken, async (req, res) => {
     try {
       const trades = await storage.getUserTrades(req.user!.id);
       
@@ -80,32 +75,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json(enrichedTrades);
     } catch (error) {
-      res.status(500).json({ message: "Failed to fetch trades" });
+      res.status(500).json({ error: "Failed to fetch trades" });
     }
   });
 
-  app.post("/api/trades", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    
+  app.post("/api/trades", authenticateToken, requireKYC, async (req, res) => {
     try {
       const { offerId, amount } = req.body;
       const offer = await storage.getOffer(offerId);
       const user = req.user!;
       
       if (!offer || offer.status !== "active") {
-        return res.status(404).json({ message: "Offer not found or inactive" });
+        return res.status(404).json({ error: "Offer not found or inactive" });
       }
       
       if (offer.userId === user.id) {
-        return res.status(400).json({ message: "Cannot trade with your own offer" });
-      }
-
-      // Check KYC verification for trading
-      if (!user.kycVerified) {
-        return res.status(400).json({ 
-          message: "KYC verification required before trading",
-          requiresKyc: true
-        });
+        return res.status(400).json({ error: "Cannot trade with your own offer" });
       }
       
       const tradeData = insertTradeSchema.parse({
@@ -169,8 +154,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/trades/:id", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
+  app.patch("/api/trades/:id", authenticateToken, async (req, res) => {
     
     try {
       const tradeId = parseInt(req.params.id);
@@ -276,8 +260,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Message routes
-  app.get("/api/trades/:id/messages", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
+  app.get("/api/trades/:id/messages", authenticateToken, async (req, res) => {
     
     try {
       const tradeId = parseInt(req.params.id);
@@ -311,8 +294,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/trades/:id/messages", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
+  app.post("/api/trades/:id/messages", authenticateToken, async (req, res) => {
     
     try {
       const tradeId = parseInt(req.params.id);
@@ -341,8 +323,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Transaction routes
-  app.get("/api/transactions", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
+  app.get("/api/transactions", authenticateToken, async (req, res) => {
     
     try {
       const transactions = await storage.getUserTransactions(req.user!.id);
@@ -352,8 +333,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/transactions/deposit", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
+  app.post("/api/transactions/deposit", authenticateToken, async (req, res) => {
     
     try {
       const { amount } = req.body;
@@ -390,8 +370,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/transactions/withdraw", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
+  app.post("/api/transactions/withdraw", authenticateToken, requireKYC, async (req, res) => {
     
     try {
       const { amount, bank, accountNumber } = req.body;
@@ -436,10 +415,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin routes
-  app.get("/api/admin/trades", async (req, res) => {
-    if (!req.isAuthenticated() || !req.user!.isAdmin) {
-      return res.status(403).json({ message: "Admin access required" });
-    }
+  app.get("/api/admin/trades", authenticateToken, requireAdmin, async (req, res) => {
     
     try {
       const trades = await storage.getTrades();
@@ -466,10 +442,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/admin/trades/:id/resolve", async (req, res) => {
-    if (!req.isAuthenticated() || !req.user!.isAdmin) {
-      return res.status(403).json({ message: "Admin access required" });
-    }
+  app.patch("/api/admin/trades/:id/resolve", authenticateToken, requireAdmin, async (req, res) => {
     
     try {
       const tradeId = parseInt(req.params.id);
@@ -493,8 +466,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // KYC verification endpoint
-  app.post("/api/kyc/verify", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
+  app.post("/api/kyc/verify", authenticateToken, async (req, res) => {
     
     try {
       const { bvn, firstName, lastName, phone } = req.body;
@@ -557,8 +529,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Paystack payment initialization
-  app.post("/api/payments/initialize", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
+  app.post("/api/payments/initialize", authenticateToken, async (req, res) => {
     
     try {
       const { amount } = req.body;
@@ -605,8 +576,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Paystack payment verification
-  app.post("/api/payments/verify", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
+  app.post("/api/payments/verify", authenticateToken, async (req, res) => {
     
     try {
       const { reference } = req.body;
@@ -639,8 +609,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // TRON wallet operations
-  app.get("/api/tron/balance", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
+  app.get("/api/tron/balance", authenticateToken, async (req, res) => {
     
     try {
       const user = req.user;
@@ -657,8 +626,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // TRON send USDT
-  app.post("/api/tron/send", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
+  app.post("/api/tron/send", authenticateToken, requireKYC, async (req, res) => {
     
     try {
       const { amount, to } = req.body;
@@ -693,8 +661,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   setupWebSocket(httpServer);
 
   // Rating routes
-  app.post("/api/ratings", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
+  app.post("/api/ratings", authenticateToken, async (req, res) => {
     
     try {
       const { tradeId, ratedUserId, rating, comment } = req.body;

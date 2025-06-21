@@ -1,4 +1,11 @@
-import TronWeb from 'tronweb';
+// Dynamic import to handle TronWeb initialization issues
+let TronWeb: any = null;
+
+try {
+  TronWeb = require('tronweb');
+} catch (error) {
+  console.warn('TronWeb module not available, using demo mode');
+}
 
 export interface TronWallet {
   address: string;
@@ -17,10 +24,14 @@ export class TronService {
 
   constructor() {
     try {
-      this.tronWeb = new (TronWeb as any)({
+      if (!TronWeb || typeof TronWeb !== 'function') {
+        throw new Error('TronWeb constructor not available');
+      }
+
+      this.tronWeb = new TronWeb({
         fullHost: 'https://api.trongrid.io',
         headers: { 'TRON-PRO-API-KEY': process.env.TRONGRID_API_KEY || 'demo-key' },
-        privateKey: process.env.TRON_PRIVATE_KEY || 'demo-private-key'
+        privateKey: process.env.TRON_PRIVATE_KEY || '01'.repeat(32)
       });
 
       // USDT TRC-20 contract address

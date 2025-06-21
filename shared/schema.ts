@@ -72,13 +72,14 @@ export const ratings = pgTable("ratings", {
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
   createdAt: true,
-  tronAddress: true,
-  kycVerified: true,
-  nairaBalance: true,
-  usdtBalance: true,
-  averageRating: true,
-  ratingCount: true,
-  isAdmin: true,
+}).extend({
+  tronAddress: z.string().optional(),
+  kycVerified: z.boolean().optional(),
+  nairaBalance: z.string().optional(),
+  usdtBalance: z.string().optional(),
+  averageRating: z.string().optional(),
+  ratingCount: z.number().optional(),
+  isAdmin: z.boolean().optional(),
 });
 
 export const insertOfferSchema = createInsertSchema(offers).omit({
