@@ -4,6 +4,9 @@ import { setupVite, serveStatic, log } from "./vite";
 
 const app = express();
 
+// Trust proxy for Replit environment
+app.set('trust proxy', true);
+
 // Security headers and CSP configuration
 app.use((req, res, next) => {
   // Only apply CSP in production, disable in development for Vite

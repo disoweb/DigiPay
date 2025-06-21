@@ -34,15 +34,15 @@ export default function Dashboard() {
   const stats = [
     {
       title: "USDT Balance",
-      value: parseFloat(user.usdtBalance).toFixed(2),
-      subtitle: `≈ ₦${(parseFloat(user.usdtBalance) * 1485).toLocaleString()}`,
+      value: parseFloat(user.usdtBalance || "0").toFixed(2),
+      subtitle: `≈ ₦${(parseFloat(user.usdtBalance || "0") * 1485).toLocaleString()}`,
       icon: Wallet,
       color: "text-green-600",
       bgColor: "bg-green-50",
     },
     {
       title: "Naira Balance",
-      value: `₦${parseFloat(user.nairaBalance).toLocaleString()}`,
+      value: `₦${parseFloat(user.nairaBalance || "0").toLocaleString()}`,
       subtitle: "Available for trading",
       icon: Coins,
       color: "text-blue-600",
@@ -58,8 +58,8 @@ export default function Dashboard() {
     },
     {
       title: "Rating",
-      value: `${user.averageRating}/5`,
-      subtitle: `${user.ratingCount} reviews`,
+      value: `${parseFloat(user.averageRating || "0").toFixed(1)}/5`,
+      subtitle: `${user.ratingCount || 0} reviews`,
       icon: Star,
       color: "text-yellow-600",
       bgColor: "bg-yellow-50",

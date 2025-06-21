@@ -188,12 +188,7 @@ export function setupJWTAuth(app: Express) {
       const token = generateToken(user);
       const { password: _, ...userWithoutPassword } = user;
       
-      res.status(201).json({
-        message: "Registration successful",
-        user: userWithoutPassword,
-        token,
-        wallet: { address: wallet.address }
-      });
+      res.status(201).json(userWithoutPassword);
     } catch (error) {
       console.error("Registration error:", error);
       res.status(500).json({ error: "Registration failed" });
@@ -222,11 +217,7 @@ export function setupJWTAuth(app: Express) {
       const token = generateToken(user);
       const { password: _, ...userWithoutPassword } = user;
       
-      res.json({
-        message: "Login successful",
-        user: userWithoutPassword,
-        token
-      });
+      res.json(userWithoutPassword);
     } catch (error) {
       console.error("Login error:", error);
       res.status(500).json({ error: "Login failed" });
