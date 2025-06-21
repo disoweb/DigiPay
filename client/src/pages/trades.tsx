@@ -298,48 +298,57 @@ export default function Trades() {
 
       {/* Trade Details Modal */}
       <Dialog open={!!selectedTrade} onOpenChange={(open) => !open && setSelectedTrade(null)}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto w-[95vw] sm:w-full">
           {selectedTrade && (
             <>
               <DialogHeader>
-                <DialogTitle>
+                <DialogTitle className="text-lg sm:text-xl">
                   Trade Details - T{selectedTrade.id.toString().padStart(3, '0')}
                 </DialogTitle>
               </DialogHeader>
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Trade Information */}
-                <div className="space-y-6">
-                  <Card className="bg-gray-50">
-                    <CardContent className="p-4">
-                      <h4 className="font-medium text-gray-900 mb-3">Trade Information</h4>
-                      <div className="space-y-2 text-sm">
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Type:</span>
-                          <span className="font-medium">
-                            {selectedTrade.offer?.type === "sell" ? "Buy" : "Sell"} USDT
-                          </span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Amount:</span>
-                          <span className="font-medium">{parseFloat(selectedTrade.amount).toFixed(2)} USDT</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Rate:</span>
-                          <span className="font-medium">₦{parseFloat(selectedTrade.rate).toLocaleString()}/USDT</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Total:</span>
-                          <span className="font-medium">
-                            ₦{(parseFloat(selectedTrade.amount) * parseFloat(selectedTrade.rate)).toLocaleString()}
-                          </span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Status:</span>
-                          {getStatusBadge(selectedTrade.status)}
-                        </div>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+                {/* Trade Info */}
+                <div className="space-y-3 sm:space-y-4">
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-base sm:text-lg">Trade Information</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-2 sm:space-y-3 text-sm">
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600">Status:</span>
+                        {getStatusBadge(selectedTrade.status)}
                       </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Amount:</span>
+                        <span className="font-medium">{parseFloat(selectedTrade.amount).toFixed(2)} USDT</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Rate:</span>
+                        <span className="font-medium">₦{parseFloat(selectedTrade.rate).toLocaleString()}/USDT</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Total:</span>
+                        <span className="font-bold">₦{(parseFloat(selectedTrade.amount) * parseFloat(selectedTrade.rate)).toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Created:</span>
+                        <span className="text-right">{new Date(selectedTrade.createdAt).toLocaleDateString()}</span>
+                      </div>
+                      {selectedTrade.buyer && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Buyer:</span>
+                          <span className="text-right truncate max-w-[150px]">{selectedTrade.buyer.email}</span>
+                        </div>
+                      )}
+                      {selectedTrade.seller && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Seller:</span>
+                          <span className="text-right truncate max-w-[150px]">{selectedTrade.seller.email}</span>
+                        </div>
+                      )}
                     </CardContent>
+
                   </Card>
 
                   {selectedTrade.status === "pending" && (
@@ -373,7 +382,7 @@ export default function Trades() {
                 </div>
 
                 {/* Chat Section */}
-                <div className="h-96">
+                <div className="h-64 sm:h-96">
                   <RealTimeChat tradeId={selectedTrade.id} />
                 </div>
               </div>
