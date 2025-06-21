@@ -67,10 +67,12 @@ export class DatabaseStorage implements IStorage {
       // Always ensure users exist
       let user1 = await this.getUser(1);
       if (!user1) {
+        const bcrypt = require('bcrypt');
+        const hashedPass = await bcrypt.hash("password123", 12);
         user1 = await this.createUser({
           email: "cyfer33@gmail.com",
           phone: "08000000000",
-          password: "password123",
+          password: hashedPass,
           kycVerified: true,
           nairaBalance: "50000",
           usdtBalance: "25.50",
@@ -83,10 +85,12 @@ export class DatabaseStorage implements IStorage {
       // Create admin user
       let adminUser = await this.getUserByEmail("admin@digipay.com");
       if (!adminUser) {
+        const bcrypt = require('bcrypt');
+        const hashedAdminPass = await bcrypt.hash("admin123", 12);
         adminUser = await this.createUser({
           email: "admin@digipay.com",
           phone: "08099999999",
-          password: "admin123",
+          password: hashedAdminPass,
           kycVerified: true,
           isAdmin: true,
           nairaBalance: "100000",

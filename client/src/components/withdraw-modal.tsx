@@ -27,41 +27,66 @@ export function WithdrawModal({ open, onOpenChange, balance }: WithdrawModalProp
   const fee = withdrawAmount * 0.01; // 1% fee
   const finalAmount = withdrawAmount - fee;
 
-  const handleWithdraw = async () => {
-    setIsLoading(true);
-    // Simulate withdrawal processing
-    setTimeout(() => {
-      setIsLoading(false);
-      onOpenChange(false);
-      setAmount("");
-      setBankName("");
-      setAccountNumber("");
-      setAccountName("");
-    }, 2000);
-  };
-
-  const handleConfirmWithdraw = async () => {
-    setIsLoading(true);
-    // Simulate withdrawal processing
-    setTimeout(() => {
-      setIsLoading(false);
-      onOpenChange(false);
-      setAmount("");
-      setBankName("");
-      setAccountNumber("");
-      setAccountName("");
-      setStep(1);
-    }, 2000);
-  };
-
-  const handleNext = () => {
-    setStep(2);
+  const resetForm = () => {
+    setAmount("");
+    setBankName("");
+    setAccountNumber("");
+    setAccountName("");
+    setStep(1);
   };
 
   const handleClose = () => {
     onOpenChange(false);
-    setStep(1);
+    resetForm();
   };
+
+  const handleNext = () => {
+    if (step === 1 && withdrawAmount >= 100 && withdrawAmount <= availableBalance) {
+      setStep(2);
+    } else if (step === 2 && bankName && accountNumber.length === 10 && accountName) {
+      setStep(3);
+    }
+  };
+
+  const handleBack = () => {
+    if (step > 1) {
+      setStep(step - 1);
+    }
+  };
+
+  const handleConfirmWithdraw = async () => {
+    setIsLoading(true);
+    try {
+      // Here you would make the actual API call to process withdrawal
+      const response = await fetch('/api/withdraw', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          amount: withdrawAmount,
+          bankName,
+          accountNumber,
+          accountName
+        })
+      });
+
+      if (response.ok) {
+        setTimeout(() => {
+          setIsLoading(false);
+          handleClose();
+        }, 2000);
+      } else {
+        setIsLoading(false);
+        // Handle error
+      }
+    } catch (error) {
+      setIsLoading(false);
+      // Handle error
+    }
+  };
+
+  const canProceedStep1 = withdrawAmount >= 100 && withdrawAmount <= availableBalance;
+  const canProceedStep2 = bankName && accountNumber.length === 10 && accountName;
 
   const quickAmounts = [
     Math.floor(availableBalance * 0.25),
@@ -79,27 +104,33 @@ export function WithdrawModal({ open, onOpenChange, balance }: WithdrawModalProp
             <div className="p-2 bg-blue-100 rounded-lg">
               <Building className="h-5 w-5 text-blue-600" />
             </div>
-            {step === 1 ? "Withdraw to Bank" : "Confirm Withdrawal"}
+{step === 1 ? "Enter Amount" : step === 2 ? "Account Details" : "Confirm Withdrawal"}
           </DialogTitle>
           <DialogDescription className="text-sm text-gray-600">
-            {step === 1 ? "Enter withdrawal details" : "Review and confirm your withdrawal"}
+{step === 1 ? "Enter withdrawal amount" : step === 2 ? "Enter your bank account details" : "Review and confirm your withdrawal"}
           </DialogDescription>
         </DialogHeader>
 
         
         <div className="space-y-6 py-2">
           {/* Step Indicator */}
-          <div className="flex items-center justify-center space-x-4 mb-6">
+          <div className="flex items-center justify-center space-x-2 mb-6">
             <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
               step === 1 ? 'bg-blue-600 text-white' : 'bg-blue-100 text-blue-600'
             }`}>
               1
             </div>
-            <div className={`w-16 h-0.5 ${step === 2 ? 'bg-blue-600' : 'bg-gray-200'}`}></div>
+            <div className={`w-8 h-0.5 ${step >= 2 ? 'bg-blue-600' : 'bg-gray-200'}`}></div>
             <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-              step === 2 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-400'
+              step === 2 ? 'bg-blue-600 text-white' : step > 2 ? 'bg-blue-100 text-blue-600' : 'bg-gray-200 text-gray-400'
             }`}>
               2
+            </div>
+            <div className={`w-8 h-0.5 ${step >= 3 ? 'bg-blue-600' : 'bg-gray-200'}`}></div>
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+              step === 3 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-400'
+            }`}>
+              3
             </div>
           </div>
 
@@ -113,8 +144,8 @@ export function WithdrawModal({ open, onOpenChange, balance }: WithdrawModalProp
             </CardContent>
           </Card>
 
-          {step === 1 ? (
-            // Step 1: Form
+          {step === 1 && (
+            // Step 1: Enter Amount
             <>
           {/* Quick Amount Selection */}
           {quickAmounts.length > 0 && (
@@ -189,6 +220,30 @@ export function WithdrawModal({ open, onOpenChange, balance }: WithdrawModalProp
             </Card>
           )}
 
+          {/* Action Buttons */}
+          <div className="flex flex-col gap-3 pt-2">
+            <Button
+              onClick={handleNext}
+              disabled={!canProceedStep1}
+              className="w-full h-12 text-base font-medium bg-blue-600 hover:bg-blue-700"
+              size="lg"
+            >
+              Next: Account Details
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={handleClose}
+              className="w-full h-11 text-base"
+            >
+              Cancel
+            </Button>
+          </div>
+          </>
+          )}
+
+          {step === 2 && (
+            // Step 2: Account Details
+            <>
           {/* Bank Details */}
           <div className="space-y-4">
             <div>
@@ -251,23 +306,25 @@ export function WithdrawModal({ open, onOpenChange, balance }: WithdrawModalProp
           <div className="flex flex-col gap-3 pt-2">
             <Button
               onClick={handleNext}
-              disabled={!amount || !bankName || !accountNumber || !accountName || withdrawAmount > availableBalance || withdrawAmount < 100}
+              disabled={!canProceedStep2}
               className="w-full h-12 text-base font-medium bg-blue-600 hover:bg-blue-700"
               size="lg"
             >
-              Continue to Review
+              Next: Review & Confirm
             </Button>
             <Button 
               variant="outline" 
-              onClick={handleClose}
+              onClick={handleBack}
               className="w-full h-11 text-base"
             >
-              Cancel
+              Back
             </Button>
           </div>
           </>
-          ) : (
-            // Step 2: Confirmation
+          )}
+
+          {step === 3 && (
+            // Step 3: Confirmation
             <>
             {/* Withdrawal Summary */}
             <Card className="border-blue-200">
@@ -333,11 +390,11 @@ export function WithdrawModal({ open, onOpenChange, balance }: WithdrawModalProp
               </Button>
               <Button 
                 variant="outline" 
-                onClick={() => setStep(1)}
+                onClick={handleBack}
                 disabled={isLoading}
                 className="w-full h-11 text-base"
               >
-                Back to Edit
+                Back
               </Button>
             </div>
             </>

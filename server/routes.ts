@@ -22,6 +22,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Withdrawal endpoint
+  app.post("/api/withdraw", authenticateToken, async (req, res) => {
+    try {
+      const { amount, bankName, accountNumber, accountName } = req.body;
+      const userId = req.user!.id;
+      
+      if (!amount || !bankName || !accountNumber || !accountName) {
+        return res.status(400).json({ error: "All fields are required" });
+      }
+
+      const withdrawAmount = parseFloat(amount);
+      if (withdrawAmount < 100) {
+        return res.status(400).json({ error: "Minimum withdrawal amount is ₦100" });
+      }
+
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      const availableBalance = parseFloat(user.nairaBalance || "0");
+      if (withdrawAmount > availableBalance) {
+        return res.status(400).json({ error: "Insufficient balance" });
+      }
+
+      const fee = withdrawAmount * 0.01;
+      const finalAmount = withdrawAmount - fee;
+      const newBalance = availableBalance - withdrawAmount;
+
+      // Update user balance
+      await storage.updateUser(userId, {
+        nairaBalance: newBalance.toString()
+      });
+
+      // Create transaction record
+      await storage.createTransaction({
+        userId,
+        amount: withdrawAmount.toString(),
+        type: "withdrawal",
+        status: "pending",
+        description: `Withdrawal to ${bankName} - ${accountNumber}`
+      });
+
+      res.json({ 
+        success: true, 
+        message: "Withdrawal request submitted successfully",
+        finalAmount: finalAmount.toFixed(2),
+        newBalance: newBalance.toFixed(2)
+      });
+    } catch (error) {
+      console.error("Withdrawal error:", error);
+      res.status(500).json({ error: "Withdrawal failed" });
+    }
+  });
+
   // Offer routes
   app.get("/api/offers", async (req, res) => {
     try {
