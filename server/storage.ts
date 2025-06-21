@@ -8,6 +8,7 @@ import session from "express-session";
 import connectPg from "connect-pg-simple";
 import { db, pool } from "./db";
 import { eq, desc, or, and } from "drizzle-orm";
+import bcrypt from "bcrypt";
 
 const PostgresSessionStore = connectPg(session);
 
@@ -76,7 +77,6 @@ export class DatabaseStorage implements IStorage {
       // Always ensure users exist
       let user1 = await this.getUser(1);
       if (!user1) {
-        const bcrypt = require('bcrypt');
         const hashedPass = await bcrypt.hash("password123", 12);
         user1 = await this.createUser({
           email: "cyfer33@gmail.com",
@@ -94,7 +94,6 @@ export class DatabaseStorage implements IStorage {
       // Create admin user
       let adminUser = await this.getUserByEmail("admin@digipay.com");
       if (!adminUser) {
-        const bcrypt = require('bcrypt');
         const hashedAdminPass = await bcrypt.hash("admin123", 12);
         adminUser = await this.createUser({
           email: "admin@digipay.com",
@@ -307,7 +306,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUserTrades(userId: number): Promise<Trade[]> {
-    return await db.select().from(trades).where(or(eq(trades.buyerId, userId), eq(trades.sellerId, userId)));
+    return await db
+      .select()
+      .from(trades)
+      .where(or(eq(trades.buyerId, userId), eq(trades.sellerId, userId)))
+      .orderBy(desc(trades.createdAt))
+      .limit(20);
   }
 
   async createTrade(insertTrade: InsertTrade): Promise<Trade> {
@@ -416,16 +420,7 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
-  async getUserTrades(id: number): Promise<Trade[]> {
-    return await db
-      .select()
-      .from(trades)
-      .where(or(eq(trades.buyerId, id), eq(trades.sellerId, id)))
-      .orderBy(desc(trades.createdAt))
-      .limit(20);
-  }
-
-  async getUserRatings(id: number): Promise<Rating[]> {
+  async getUserPublicRatings(id: number): Promise<any[]> {
     return await db
       .select({
         id: ratings.id,
