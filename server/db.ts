@@ -2,7 +2,8 @@ import { Pool, neonConfig } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-serverless';
 import ws from "ws";
 import * as schema from "@shared/schema";
-import { integer, numeric, pgTable, serial, text, timestamp, varchar, sql } from "drizzle-orm/pg-core";
+import { integer, numeric, pgTable, serial, text, timestamp, varchar } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 
 neonConfig.webSocketConstructor = ws;
 
