@@ -209,7 +209,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       await storage.updateTrade(trade.id, { 
         status: "payment_pending",
-        paymentDeadline: paymentDeadline.toISOString()
+        paymentDeadline: paymentDeadline
       });
 
       // Update offer amount
@@ -229,10 +229,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         success: true, 
         trade: {
           ...trade,
-          paymentDeadline: paymentDeadline.toISOString()
+          paymentDeadline: paymentDeadline
         },
         message: "Trade initiated! Payment must be made within 15 minutes.",
-        paymentDeadline: paymentDeadline.toISOString()
+        paymentDeadline: paymentDeadline
       });
     } catch (error) {
       console.error("Trade creation error:", error);
@@ -266,7 +266,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       await storage.updateTrade(tradeId, {
         status: "payment_made",
-        paymentMadeAt: new Date().toISOString()
+        paymentMadeAt: new Date()
       });
 
       res.json({ success: true, message: "Payment marked as made. Waiting for seller confirmation." });
@@ -322,7 +322,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       await storage.updateTrade(tradeId, {
         status: "completed",
-        sellerConfirmedAt: new Date().toISOString()
+        sellerConfirmedAt: new Date()
       });
 
       // Create transaction records
@@ -424,7 +424,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         status: "approved",
         adminNotes: notes,
         approvedBy: adminId,
-        approvedAt: new Date().toISOString()
+        approvedAt: new Date()
       });
 
       res.json({ success: true, message: "Transaction approved successfully" });
@@ -453,7 +453,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         status: "rejected",
         adminNotes: notes,
         approvedBy: adminId,
-        approvedAt: new Date().toISOString()
+        approvedAt: new Date()
       });
 
       res.json({ success: true, message: "Transaction rejected successfully" });
