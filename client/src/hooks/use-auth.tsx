@@ -73,6 +73,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return response.json();
     },
     onSuccess: (data) => {
+      console.log("Login success data:", data);
       if (data.token) {
         localStorage.setItem("digipay_token", data.token);
         queryClient.invalidateQueries({ queryKey: ["/api/user"] });
@@ -80,12 +81,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           title: "Success",
           description: "Logged in successfully!",
         });
-        // Check if user is admin and redirect accordingly
-        if (data.user?.isAdmin) {
-          setLocation("/admin");
-        } else {
-          setLocation("/dashboard");
-        }
+        // Force page reload to reset auth state
+        window.location.href = data.isAdmin ? "/admin" : "/dashboard";
       }
     },
     onError: (error: any) => {
@@ -104,6 +101,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return response.json();
     },
     onSuccess: (data) => {
+      console.log("Register success data:", data);
       if (data.token) {
         localStorage.setItem("digipay_token", data.token);
         queryClient.invalidateQueries({ queryKey: ["/api/user"] });
@@ -111,7 +109,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           title: "Success",
           description: "Account created successfully!",
         });
-        setLocation("/profile-setup");
+        // Force page reload to reset auth state
+        window.location.href = "/profile-setup";
       }
     },
     onError: (error: any) => {
