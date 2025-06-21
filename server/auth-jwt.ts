@@ -62,6 +62,8 @@ export function authenticateToken(req: Request, res: Response, next: NextFunctio
   // Try to get token from cookie first, then Authorization header
   const token = req.cookies?.token || (req.headers['authorization']?.split(' ')[1]);
 
+
+
   if (!token) {
     return res.status(401).json({ error: "Access token required" });
   }
@@ -222,8 +224,11 @@ export function setupJWTAuth(app: Express) {
         httpOnly: true,
         secure: false, // Set to false for development
         sameSite: 'lax',
+        path: '/',
         maxAge: 24 * 60 * 60 * 1000 // 24 hours
       });
+      
+
       
       res.json(userWithoutPassword);
     } catch (error) {

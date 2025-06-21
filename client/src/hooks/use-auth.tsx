@@ -38,10 +38,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     onSuccess: (user: SelectUser) => {
       queryClient.setQueryData(["/api/user"], user);
+      // Force a refresh of user data to ensure auth state is updated
+      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
       // Redirect to dashboard after successful login
       setTimeout(() => {
         window.location.href = "/dashboard";
-      }, 100);
+      }, 500);
     },
     onError: (error: Error) => {
       toast({
@@ -59,10 +61,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     onSuccess: (user: SelectUser) => {
       queryClient.setQueryData(["/api/user"], user);
+      // Force a refresh of user data to ensure auth state is updated
+      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
       // Redirect to dashboard after successful registration
       setTimeout(() => {
         window.location.href = "/dashboard";
-      }, 100);
+      }, 500);
     },
     onError: (error: Error) => {
       toast({

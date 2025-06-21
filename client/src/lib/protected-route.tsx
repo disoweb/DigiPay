@@ -17,11 +17,16 @@ export function ProtectedRoute({
   const [, setLocation] = useLocation();
 
   useEffect(() => {
-    if (!isLoading && !user) {
-      setLocation("/auth");
-    } else if (!isLoading && user && adminOnly && !user.isAdmin) {
-      setLocation("/dashboard");
-    }
+    // Add a small delay to prevent redirect loops during initial load
+    const timer = setTimeout(() => {
+      if (!isLoading && !user) {
+        setLocation("/auth");
+      } else if (!isLoading && user && adminOnly && !user.isAdmin) {
+        setLocation("/dashboard");
+      }
+    }, 100);
+
+    return () => clearTimeout(timer);
   }, [user, isLoading, adminOnly, setLocation]);
 
   if (isLoading) {
