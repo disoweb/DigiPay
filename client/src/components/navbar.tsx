@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -26,7 +25,12 @@ import {
 } from "lucide-react";
 
 export function Navbar() {
-  const { user, logout, isLoading } = useAuth();
+  const { user, isLoading, logout } = useAuth();
+
+  // Early return if auth context is not available
+  if (!user && !isLoading) {
+    return null;
+  }
   const [, setLocation] = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 

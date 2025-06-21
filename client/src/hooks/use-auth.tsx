@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
@@ -77,7 +76,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return response.json();
     },
     onSuccess: (data) => {
-      localStorage.setItem("token", data.token);
+      localStorage.setItem("auth_token", data.token);
       queryClient.invalidateQueries({ queryKey: ["/api/user"] });
       setLocation("/dashboard");
     },
@@ -104,7 +103,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return response.json();
     },
     onSuccess: (data) => {
-      localStorage.setItem("token", data.token);
+      localStorage.setItem("auth_token", data.token);
       queryClient.invalidateQueries({ queryKey: ["/api/user"] });
       setLocation("/dashboard");
     },
