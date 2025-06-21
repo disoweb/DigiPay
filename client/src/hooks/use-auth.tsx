@@ -33,24 +33,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loginMutation = useMutation({
     mutationFn: async (credentials: LoginData) => {
-      const res = await apiRequest("POST", "/api/auth/login", credentials);
-      return await res.json();
+      try {
+        const res = await apiRequest("POST", "/api/auth/login", credentials);
+        return await res.json();
+      } catch (error) {
+        if (error instanceof Error) {
+          throw error;
+        }
+        throw new Error("Login failed");
+      }
     },
     onSuccess: (response: any) => {
-      const { token, ...user } = response;
-      if (token) {
-        localStorage.setItem('digipay_token', token);
+      try {
+        const { token, ...user } = response;
+        if (token) {
+          localStorage.setItem('digipay_token', token);
+        }
+        queryClient.setQueryData(["/api/user"], user);
+        // Redirect to dashboard after successful login
+        setTimeout(() => {
+          window.location.href = "/dashboard";
+        }, 100);
+      } catch (error) {
+        console.error("Login success handler error:", error);
       }
-      queryClient.setQueryData(["/api/user"], user);
-      // Redirect to dashboard after successful login
-      setTimeout(() => {
-        window.location.href = "/dashboard";
-      }, 100);
     },
     onError: (error: Error) => {
+      console.error("Login error:", error);
       toast({
         title: "Login failed",
-        description: error.message,
+        description: error.message || "An error occurred during login",
         variant: "destructive",
       });
     },
@@ -58,24 +70,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const registerMutation = useMutation({
     mutationFn: async (credentials: InsertUser) => {
-      const res = await apiRequest("POST", "/api/auth/register", credentials);
-      return await res.json();
+      try {
+        const res = await apiRequest("POST", "/api/auth/register", credentials);
+        return await res.json();
+      } catch (error) {
+        if (error instanceof Error) {
+          throw error;
+        }
+        throw new Error("Registration failed");
+      }
     },
     onSuccess: (response: any) => {
-      const { token, ...user } = response;
-      if (token) {
-        localStorage.setItem('digipay_token', token);
+      try {
+        const { token, ...user } = response;
+        if (token) {
+          localStorage.setItem('digipay_token', token);
+        }
+        queryClient.setQueryData(["/api/user"], user);
+        // Redirect to dashboard after successful registration
+        setTimeout(() => {
+          window.location.href = "/dashboard";
+        }, 100);
+      } catch (error) {
+        console.error("Registration success handler error:", error);
       }
-      queryClient.setQueryData(["/api/user"], user);
-      // Redirect to dashboard after successful registration
-      setTimeout(() => {
-        window.location.href = "/dashboard";
-      }, 100);
     },
     onError: (error: Error) => {
+      console.error("Registration error:", error);
       toast({
         title: "Registration failed",
-        description: error.message,
+        description: error.message || "An error occurred during registration",
         variant: "destructive",
       });
     },
@@ -83,18 +107,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logoutMutation = useMutation({
     mutationFn: async () => {
-      await apiRequest("POST", "/api/auth/logout");
+      try {
+        await apiRequest("POST", "/api/auth/logout");
+      } catch (error) {
+        // Logout should still clear local state even if API call fails
+        console.warn("Logout API call failed, clearing local state anyway:", error);
+      }
     },
     onSuccess: () => {
-      localStorage.removeItem('digipay_token');
-      queryClient.setQueryData(["/api/user"], null);
-      // Redirect to auth page after logout
-      window.location.href = "/auth";
+      try {
+        localStorage.removeItem('digipay_token');
+        queryClient.setQueryData(["/api/user"], null);
+        // Redirect to auth page after logout
+        window.location.href = "/auth";
+      } catch (error) {
+        console.error("Logout success handler error:", error);
+      }
     },
     onError: (error: Error) => {
+      console.error("Logout error:", error);
+      // Still clear local state on error
+      localStorage.removeItem('digipay_token');
+      queryClient.setQueryData(["/api/user"], null);
       toast({
         title: "Logout failed",
-        description: error.message,
+        description: error.message || "An error occurred during logout",
         variant: "destructive",
       });
     },

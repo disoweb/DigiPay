@@ -190,7 +190,10 @@ export function setupJWTAuth(app: Express) {
       const token = generateToken(user);
       const { password: _, ...userWithoutPassword } = user;
       
-      res.status(201).json(userWithoutPassword);
+      res.status(201).json({ 
+        ...userWithoutPassword, 
+        token 
+      });
     } catch (error) {
       console.error("Registration error:", error);
       res.status(500).json({ error: "Registration failed" });
