@@ -11,6 +11,17 @@ import { emailService, smsService } from "./services/notifications";
 export async function registerRoutes(app: Express): Promise<Server> {
   setupJWTAuth(app);
 
+  // User routes - MUST be first to avoid frontend route conflict
+  app.get("/api/user", authenticateToken, async (req, res) => {
+    try {
+      const { password: _, ...userWithoutPassword } = req.user!;
+      res.json(userWithoutPassword);
+    } catch (error) {
+      console.error("Get user error:", error);
+      res.status(500).json({ error: "Failed to get user" });
+    }
+  });
+
   // Offer routes
   app.get("/api/offers", async (req, res) => {
     try {
