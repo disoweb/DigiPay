@@ -12,7 +12,7 @@ export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navigation = [
-    { name: "Dashboard", href: "/", icon: Home },
+    { name: "Dashboard", href: "/dashboard", icon: Home },
     { name: "Marketplace", href: "/marketplace", icon: Store },
     { name: "My Trades", href: "/trades", icon: ArrowLeftRight },
     { name: "Wallet", href: "/wallet", icon: Wallet },
@@ -39,7 +39,7 @@ export function Navbar() {
           <div className="flex items-center">
             <div 
               className="flex-shrink-0 cursor-pointer flex items-center"
-              onClick={() => handleNavigation("/")}
+              onClick={() => handleNavigation("/dashboard")}
             >
               <h1 className="text-xl sm:text-2xl font-bold text-primary">DigiPay</h1>
               <Badge variant="secondary" className="ml-2 bg-emerald-100 text-emerald-800 text-xs hidden sm:inline-flex">
