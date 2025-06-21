@@ -94,24 +94,40 @@ function SendUSDTForm({ onClose, userBalance }: { onClose: () => void; userBalan
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <Label htmlFor="recipient">Recipient Address</Label>
+    <form onSubmit={handleSubmit} className="space-y-6 py-2">
+      {/* Available Balance */}
+      <Card className="bg-gradient-to-r from-red-50 to-red-100 border-red-200">
+        <CardContent className="p-4">
+          <div className="text-center space-y-1">
+            <p className="text-sm text-gray-600">Available Balance</p>
+            <p className="text-2xl font-bold text-red-700">{userBalance.toFixed(6)} USDT</p>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Recipient Address */}
+      <div className="space-y-3">
+        <Label htmlFor="recipient" className="text-sm font-medium text-gray-700">
+          Recipient Address
+        </Label>
         <Input
           id="recipient"
           value={recipientAddress}
           onChange={(e) => setRecipientAddress(e.target.value)}
           placeholder="TRON address (starting with T...)"
-          className="font-mono"
+          className="h-12 font-mono text-sm"
           required
         />
-        <p className="text-xs text-gray-500 mt-1">
+        <p className="text-xs text-gray-500">
           Enter the recipient's TRON address (TRC-20)
         </p>
       </div>
 
-      <div>
-        <Label htmlFor="amount">Amount (USDT)</Label>
+      {/* Amount */}
+      <div className="space-y-3">
+        <Label htmlFor="amount" className="text-sm font-medium text-gray-700">
+          Amount (USDT)
+        </Label>
         <Input
           id="amount"
           type="number"
@@ -121,48 +137,80 @@ function SendUSDTForm({ onClose, userBalance }: { onClose: () => void; userBalan
           min="0"
           step="0.000001"
           max={userBalance}
+          className="h-12 text-lg text-center"
+          inputMode="numeric"
           required
         />
-        <div className="flex justify-between text-xs text-gray-500 mt-1">
+        <div className="flex justify-between text-xs text-gray-500">
           <span>Available: {userBalance.toFixed(6)} USDT</span>
           <button
             type="button"
             onClick={() => setAmount(userBalance.toString())}
-            className="text-blue-600 hover:text-blue-800"
+            className="text-red-600 hover:text-red-800 font-medium"
           >
             Use Max
           </button>
         </div>
       </div>
 
-      <Alert>
-        <AlertCircle className="h-4 w-4" />
-        <AlertDescription className="text-sm">
-          <strong>Warning:</strong> TRON transactions are irreversible. 
-          Please verify the recipient address carefully before sending.
-        </AlertDescription>
-      </Alert>
+      {/* Preview */}
+      {amount && parseFloat(amount) > 0 && (
+        <Card className="bg-gradient-to-r from-gray-50 to-gray-100 border-gray-200">
+          <CardContent className="p-4">
+            <div className="text-center space-y-2">
+              <p className="text-sm text-gray-600">You're sending</p>
+              <p className="text-2xl font-bold text-gray-700">{parseFloat(amount).toFixed(6)} USDT</p>
+              <p className="text-xs text-gray-500">≈ ₦{(parseFloat(amount) * 1485).toLocaleString()}</p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
-      <div className="flex justify-end space-x-2 pt-4">
-        <Button type="button" variant="outline" onClick={onClose}>
-          Cancel
-        </Button>
+      {/* Warning */}
+      <Card className="bg-red-50 border-red-200">
+        <CardContent className="p-4">
+          <div className="flex items-start gap-3">
+            <div className="p-2 bg-red-100 rounded-lg flex-shrink-0">
+              <AlertCircle className="h-4 w-4 text-red-600" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <h4 className="font-medium text-red-900 text-sm mb-1">Important Warning</h4>
+              <p className="text-xs text-red-700 leading-relaxed">
+                TRON transactions are irreversible. Please verify the recipient 
+                address carefully before sending.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Action Buttons */}
+      <div className="flex flex-col gap-3 pt-2">
         <Button
           type="submit"
           disabled={sendUSDTMutation.isPending || !amount || !recipientAddress}
-          className="bg-red-600 hover:bg-red-700"
+          className="w-full h-12 text-base font-medium bg-red-600 hover:bg-red-700"
+          size="lg"
         >
           {sendUSDTMutation.isPending ? (
-            <>
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+            <div className="flex items-center gap-2">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
               Sending...
-            </>
+            </div>
           ) : (
             <>
               <Send className="h-4 w-4 mr-2" />
-              Send USDT
+              Send {amount ? `${parseFloat(amount).toFixed(6)} USDT` : "USDT"}
             </>
           )}
+        </Button>
+        <Button 
+          type="button" 
+          variant="outline" 
+          onClick={onClose}
+          className="w-full h-11 text-base"
+        >
+          Cancel
         </Button>
       </div>
     </form>
@@ -454,41 +502,44 @@ export default function Wallet() {
       
       {/* Receive USDT Modal */}
       <Dialog open={showReceive} onOpenChange={setShowReceive}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
+        <DialogContent className="w-[95vw] max-w-md mx-auto max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="space-y-3">
+            <DialogTitle className="flex items-center gap-2 text-lg">
               <div className="p-2 bg-green-100 rounded-lg">
                 <Coins className="h-5 w-5 text-green-600" />
               </div>
-              Receive USDT
+              Receive USDT (TRC-20)
             </DialogTitle>
-            <DialogDescription>
+            <DialogDescription className="text-sm text-gray-600">
               Share your TRON address to receive USDT payments
             </DialogDescription>
           </DialogHeader>
           
-          <div className="space-y-4">
-            <div className="text-center space-y-3">
-              <div className="bg-white p-4 rounded-lg border-2 border-dashed border-gray-300">
-                <div className="w-32 h-32 mx-auto bg-gray-100 rounded-lg flex items-center justify-center mb-3">
-                  <div className="text-xs text-gray-500 text-center">
-                    QR Code<br />Placeholder
+          <div className="space-y-6 py-2">
+            {/* QR Code Section */}
+            <Card className="bg-gradient-to-r from-green-50 to-green-100 border-green-200">
+              <CardContent className="p-4">
+                <div className="text-center space-y-3">
+                  <div className="w-32 h-32 mx-auto bg-white rounded-lg flex items-center justify-center border-2 border-dashed border-green-300">
+                    <div className="text-xs text-green-600 text-center font-medium">
+                      QR Code<br />Placeholder
+                    </div>
                   </div>
+                  <p className="text-sm text-green-700 font-medium">Scan QR code to get address</p>
                 </div>
-                <p className="text-sm text-gray-600">Scan QR code to get address</p>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
             
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+            {/* Address Section */}
+            <div className="space-y-3">
+              <Label className="text-sm font-medium text-gray-700">
                 Your TRON Address (TRC-20)
-              </label>
+              </Label>
               <div className="flex items-center space-x-2">
-                <input
-                  type="text"
+                <Input
                   value={user?.tronAddress || ""}
                   readOnly
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md font-mono text-sm bg-gray-50"
+                  className="flex-1 h-12 font-mono text-sm bg-gray-50 text-center"
                 />
                 <Button
                   variant="outline"
@@ -497,39 +548,55 @@ export default function Wallet() {
                     navigator.clipboard.writeText(user?.tronAddress || "");
                     alert("Address copied to clipboard!");
                   }}
-                  className="px-3"
+                  className="h-12 w-12 p-0"
                 >
                   <Copy className="h-4 w-4" />
                 </Button>
               </div>
-              <p className="text-xs text-gray-500 mt-2">
+              <p className="text-xs text-gray-500">
                 Only send USDT (TRC-20) to this address. Other tokens may be lost permanently.
               </p>
             </div>
+
+            {/* Warning Info */}
+            <Card className="bg-amber-50 border-amber-200">
+              <CardContent className="p-4">
+                <div className="flex items-start gap-3">
+                  <div className="p-2 bg-amber-100 rounded-lg flex-shrink-0">
+                    <AlertCircle className="h-4 w-4 text-amber-600" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h4 className="font-medium text-amber-900 text-sm mb-1">Important Notice</h4>
+                    <p className="text-xs text-amber-700 leading-relaxed">
+                      This address only accepts USDT on the TRON network (TRC-20). 
+                      Sending other cryptocurrencies will result in permanent loss.
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
             
-            <Alert>
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription className="text-sm">
-                <strong>Important:</strong> This address only accepts USDT on the TRON network (TRC-20). 
-                Sending other cryptocurrencies or tokens from other networks will result in permanent loss.
-              </AlertDescription>
-            </Alert>
-          </div>
-          
-          <div className="flex justify-end space-x-2 pt-4">
-            <Button variant="outline" onClick={() => setShowReceive(false)}>
-              Close
-            </Button>
-            <Button 
-              onClick={() => {
-                navigator.clipboard.writeText(user?.tronAddress || "");
-                alert("Address copied to clipboard!");
-              }}
-              className="bg-green-600 hover:bg-green-700"
-            >
-              <Copy className="h-4 w-4 mr-2" />
-              Copy Address
-            </Button>
+            {/* Action Buttons */}
+            <div className="flex flex-col gap-3 pt-2">
+              <Button 
+                onClick={() => {
+                  navigator.clipboard.writeText(user?.tronAddress || "");
+                  alert("Address copied to clipboard!");
+                }}
+                className="w-full h-12 text-base font-medium bg-green-600 hover:bg-green-700"
+                size="lg"
+              >
+                <Copy className="h-4 w-4 mr-2" />
+                Copy Address
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => setShowReceive(false)}
+                className="w-full h-11 text-base"
+              >
+                Close
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>

@@ -32,8 +32,22 @@ export default function Marketplace() {
 
   const { data: offers = [], isLoading, error } = useQuery<EnrichedOffer[]>({
     queryKey: ["/api/offers"],
+    queryFn: async () => {
+      const response = await fetch("/api/offers", {
+        headers: {
+          "Authorization": `Bearer ${localStorage.getItem("auth_token")}`,
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to load offers: ${response.status}`);
+      }
+      
+      return response.json();
+    },
     staleTime: 30000, // Cache for 30 seconds
     gcTime: 300000, // Keep in cache for 5 minutes
+    retry: 2,
   });
 
   const filteredOffers = useMemo(() => {
