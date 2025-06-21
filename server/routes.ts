@@ -9,7 +9,7 @@ import { paystackService } from "./services/paystack";
 import { tronService } from "./services/tron";
 import { emailService, smsService } from "./services/notifications";
 
-export function registerRoutes(app: Express): Server {
+export async function registerRoutes(app: Express): Promise<Server> {
   setupAuth(app);
 
   // Offer routes
@@ -237,7 +237,7 @@ export function registerRoutes(app: Express): Server {
         await storage.updateTransaction(transaction.id, { status: "completed" });
         const user = await storage.getUser(req.user!.id);
         if (user) {
-          const newBalance = parseFloat(user.nairaBalance) + amount;
+          const newBalance = parseFloat(user.nairaBalance || "0") + amount;
           await storage.updateUser(req.user!.id, { nairaBalance: newBalance.toString() });
         }
       }, 2000);
@@ -267,7 +267,7 @@ export function registerRoutes(app: Express): Server {
         return res.status(400).json({ message: "Minimum withdrawal is ₦1,000" });
       }
       
-      if (parseFloat(user.nairaBalance) < amount) {
+      if (parseFloat(user.nairaBalance || "0") < amount) {
         return res.status(400).json({ message: "Insufficient balance" });
       }
       
@@ -280,7 +280,7 @@ export function registerRoutes(app: Express): Server {
       const transaction = await storage.createTransaction(transactionData);
       
       // Deduct from user balance immediately
-      const newBalance = parseFloat(user.nairaBalance) - amount;
+      const newBalance = parseFloat(user.nairaBalance || "0") - amount;
       await storage.updateUser(req.user!.id, { nairaBalance: newBalance.toString() });
       
       // Mock withdrawal processing - complete after 5 seconds
@@ -439,7 +439,7 @@ export function registerRoutes(app: Express): Server {
           
           const user = await storage.getUser(req.user!.id);
           if (user) {
-            const newBalance = parseFloat(user.nairaBalance) + (result.data.amount / 100);
+            const newBalance = parseFloat(user.nairaBalance || "0") + (result.data.amount / 100);
             await storage.updateUser(user.id, { 
               nairaBalance: newBalance.toString() 
             });
@@ -471,6 +471,36 @@ export function registerRoutes(app: Express): Server {
     } catch (error) {
       console.error("TRON balance error:", error);
       res.status(500).json({ error: "Failed to get TRON balance" });
+    }
+  });
+
+  // TRON send USDT
+  app.post("/api/tron/send", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      const { amount, to } = req.body;
+      const user = req.user;
+      
+      if (!user?.tronAddress) {
+        return res.status(400).json({ error: "No TRON address found" });
+      }
+
+      // For demo purposes, simulate successful transfer
+      const txHash = await tronService.transferUSDT(
+        user.tronAddress, // Using address as private key for demo
+        to,
+        parseFloat(amount)
+      );
+
+      if (txHash) {
+        res.json({ success: true, txHash });
+      } else {
+        res.status(400).json({ error: "Transfer failed" });
+      }
+    } catch (error) {
+      console.error("TRON send error:", error);
+      res.status(500).json({ error: "Failed to send USDT" });
     }
   });
 

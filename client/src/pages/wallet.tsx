@@ -5,10 +5,11 @@ import { Navbar } from "@/components/navbar";
 import { DepositModal } from "@/components/deposit-modal";
 import { WithdrawModal } from "@/components/withdraw-modal";
 import { KYCVerification } from "@/components/kyc-verification";
+import { TronWallet } from "@/components/tron-wallet";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Minus, DollarSign, Coins, Clock, CheckCircle, XCircle, AlertCircle, TrendingUp, TrendingDown } from "lucide-react";
+import { Plus, Minus, DollarSign, Coins, Clock, CheckCircle, XCircle, AlertCircle, TrendingUp, TrendingDown, Wallet as WalletIcon } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CardHeader, CardTitle } from "@/components/ui/card";
 import type { Transaction } from "@shared/schema";
@@ -56,8 +57,20 @@ export default function Wallet() {
             <p className="text-gray-600 mt-1">Manage your deposits and withdrawals</p>
           </div>
 
-          {/* Balance Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {!user.kycVerified ? (
+            <div className="mb-8">
+              <Alert className="mb-4">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  Complete KYC verification to access full wallet features and start trading.
+                </AlertDescription>
+              </Alert>
+              <KYCVerification />
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {/* Balance Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Card className="border-0 shadow-sm">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
@@ -118,6 +131,11 @@ export default function Wallet() {
             </Card>
           </div>
 
+          {/* TRON Wallet Section */}
+          <div className="mt-8">
+            <TronWallet />
+          </div>
+
           {/* Transaction History */}
           <Card className="border-0 shadow-sm">
             <div className="px-6 py-4 border-b border-gray-200">
@@ -162,8 +180,9 @@ export default function Wallet() {
               )}
             </CardContent>
           </Card>
-          </div>
-        )}
+            </div>
+          )}
+        </div>
       </main>
 
       <DepositModal open={showDeposit} onOpenChange={setShowDeposit} />

@@ -52,7 +52,7 @@ export const transactions = pgTable("transactions", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").references(() => users.id).notNull(),
   type: text("type").notNull(), // 'deposit', 'withdrawal'
-  amount: decimal("amount", { precision: 12, scale: 2 }).notNull(),
+  amount: text("amount").notNull(),
   status: text("status").default("pending"), // 'pending', 'completed', 'failed'
   paystackRef: text("paystack_ref"),
   createdAt: timestamp("created_at").defaultNow(),
@@ -103,7 +103,8 @@ export const insertTransactionSchema = createInsertSchema(transactions).omit({
   id: true,
   createdAt: true,
   status: true,
-  paystackRef: true,
+}).extend({
+  paystackRef: z.string().optional(),
 });
 
 export const insertRatingSchema = createInsertSchema(ratings).omit({
