@@ -80,18 +80,18 @@ export function TradeModal({ offer, open, onOpenChange }: TradeModalProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[95vw] max-w-md mx-auto">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-lg sm:text-xl">Initiate Trade</DialogTitle>
+          <DialogTitle>Initiate Trade</DialogTitle>
         </DialogHeader>
 
         {/* Offer Details */}
         <Card className="bg-gray-50">
-          <CardContent className="p-3 sm:p-4">
-            <h4 className="font-medium mb-2 text-sm sm:text-base">
+          <CardContent className="p-4">
+            <h4 className="font-medium mb-2">
               {offer.type === "sell" ? "Buy" : "Sell"} USDT from {offer.user?.email}
             </h4>
-            <div className="space-y-2 text-xs sm:text-sm">
+            <div className="space-y-2 text-sm">
               <div className="flex justify-between">
                 <span>Available:</span>
                 <span>{parseFloat(offer.amount).toFixed(2)} USDT</span>
@@ -127,14 +127,14 @@ export function TradeModal({ offer, open, onOpenChange }: TradeModalProps) {
               required
             />
             {tradeAmount > 0 && (
-              <p className="text-xs sm:text-sm text-gray-600">
+              <p className="text-sm text-gray-600">
                 Total: ₦{total.toLocaleString()}
               </p>
             )}
           </div>
 
-          <div className="space-y-3 sm:space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-xs sm:text-sm">
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
                 <span className="text-gray-600">Rate:</span>
                 <p className="font-medium">₦{parseFloat(offer.rate).toLocaleString()}/USDT</p>
@@ -151,16 +151,16 @@ export function TradeModal({ offer, open, onOpenChange }: TradeModalProps) {
                 <span className="text-gray-600">Time Limit:</span>
                 <p className="font-medium">15 minutes</p>
               </div>
-              <div className="sm:col-span-2">
+              <div className="col-span-2">
                 <span className="text-gray-600">Total:</span>
-                <p className="font-bold text-base sm:text-lg">₦{(parseFloat(amount || "0") * parseFloat(offer.rate)).toLocaleString()}</p>
+                <p className="font-bold text-lg">₦{(parseFloat(amount || "0") * parseFloat(offer.rate)).toLocaleString()}</p>
               </div>
             </div>
 
             {offer.type === "sell" && (
-              <div className="p-2 sm:p-3 bg-blue-50 rounded-lg border border-blue-200">
+              <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
                 <div className="flex items-start space-x-2">
-                  <Shield className="h-3 w-3 sm:h-4 sm:w-4 text-blue-500 mt-0.5 flex-shrink-0" />
+                  <Shield className="h-4 w-4 text-blue-500 mt-0.5" />
                   <div className="text-xs text-blue-700">
                     <p className="font-medium">Buyer Protection:</p>
                     <p>• Seller's USDT is locked in escrow</p>
@@ -172,9 +172,9 @@ export function TradeModal({ offer, open, onOpenChange }: TradeModalProps) {
             )}
 
             {offer.type === "buy" && (
-              <div className="p-2 sm:p-3 bg-green-50 rounded-lg border border-green-200">
+              <div className="p-3 bg-green-50 rounded-lg border border-green-200">
                 <div className="flex items-start space-x-2">
-                  <Shield className="h-3 w-3 sm:h-4 sm:w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                  <Shield className="h-4 w-4 text-green-500 mt-0.5" />
                   <div className="text-xs text-green-700">
                     <p className="font-medium">Seller Protection:</p>
                     <p>• Receive payment before releasing USDT</p>
@@ -186,11 +186,10 @@ export function TradeModal({ offer, open, onOpenChange }: TradeModalProps) {
             )}
           </div>
 
-          <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3 pt-3 sm:pt-4">
+          <div className="flex space-x-3 pt-4">
             <Button 
               type="submit" 
-              className="w-full sm:flex-1 text-sm"
-              size="sm"
+              className="flex-1"
               disabled={createTradeMutation.isPending}
             >
               {createTradeMutation.isPending && (
@@ -201,8 +200,7 @@ export function TradeModal({ offer, open, onOpenChange }: TradeModalProps) {
             <Button 
               type="button" 
               variant="outline" 
-              className="w-full sm:flex-1 text-sm"
-              size="sm"
+              className="flex-1"
               onClick={() => onOpenChange(false)}
             >
               Cancel
