@@ -69,17 +69,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loginMutation = useMutation({
     mutationFn: async (data: { email: string; password: string }) => {
-      const response = await apiRequest("POST", "/api/login", data);
-      return response;
+      const response = await apiRequest("POST", "/api/auth/login", data);
+      return response.json();
     },
     onSuccess: (data) => {
-      localStorage.setItem("digipay_token", data.token);
-      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
-      toast({
-        title: "Success",
-        description: "Logged in successfully!",
-      });
-      setLocation("/dashboard");
+      if (data.token) {
+        localStorage.setItem("digipay_token", data.token);
+        queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+        toast({
+          title: "Success",
+          description: "Logged in successfully!",
+        });
+        // Check if user is admin and redirect accordingly
+        if (data.user?.isAdmin) {
+          setLocation("/admin");
+        } else {
+          setLocation("/dashboard");
+        }
+      }
     },
     onError: (error: any) => {
       console.log("Login error:", error);
@@ -93,17 +100,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const registerMutation = useMutation({
     mutationFn: async (data: { email: string; password: string }) => {
-      const response = await apiRequest("POST", "/api/register", data);
-      return response;
+      const response = await apiRequest("POST", "/api/auth/register", data);
+      return response.json();
     },
     onSuccess: (data) => {
-      localStorage.setItem("digipay_token", data.token);
-      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
-      toast({
-        title: "Success",
-        description: "Account created successfully!",
-      });
-      setLocation("/profile-setup");
+      if (data.token) {
+        localStorage.setItem("digipay_token", data.token);
+        queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+        toast({
+          title: "Success",
+          description: "Account created successfully!",
+        });
+        setLocation("/profile-setup");
+      }
     },
     onError: (error: any) => {
       toast({
