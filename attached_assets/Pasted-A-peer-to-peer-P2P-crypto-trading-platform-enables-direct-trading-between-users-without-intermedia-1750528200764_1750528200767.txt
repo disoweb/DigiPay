@@ -1,0 +1,35 @@
+A peer-to-peer (P2P) crypto trading platform enables direct trading between users without intermediaries. Here's the complete user story flow:
+
+## User Registration and Onboarding
+
+New users create accounts by providing email verification and completing KYC (Know Your Customer) requirements. They set up two-factor authentication for security and link their preferred payment methods like bank accounts, digital wallets, or payment apps. Users also configure their trading preferences including supported cryptocurrencies, payment methods, and geographic regions.
+
+## Creating Trade Offers
+
+Sellers create advertisements specifying the cryptocurrency they want to sell, the amount available, their preferred fiat currency, exchange rate (often based on market price with a margin), and accepted payment methods. They set minimum and maximum trade amounts and include any special terms or requirements. The platform displays these offers in a marketplace where buyers can browse and filter based on their needs.
+
+## Initiating Trades
+
+Buyers browse available offers and select one that matches their requirements. They initiate a trade by specifying the amount they want to purchase, which creates a trade request. The seller receives notification and can accept or decline the request. Once accepted, the platform creates an escrow service that temporarily holds the seller's cryptocurrency.
+
+## Escrow and Payment Process
+
+The cryptocurrency gets locked in escrow, protecting both parties during the transaction. The buyer receives payment instructions from the seller, including bank details or digital wallet information. The buyer then makes the fiat payment through their chosen method outside the platform. After completing payment, the buyer marks the transaction as paid and may provide payment proof like screenshots or transaction references.
+
+## Verification and Release
+
+The seller monitors their payment method for the incoming funds. Once they confirm receipt of payment, they release the cryptocurrency from escrow to the buyer's wallet. If there are disputes about payment, both parties can access the platform's dispute resolution system where mediators review evidence and make decisions.
+
+## Communication and Support
+
+Throughout the process, users communicate through the platform's built-in chat system, which maintains records for dispute resolution. The platform provides customer support for technical issues and dispute mediation. Users can rate and review each other after successful trades, building reputation scores that help future trading partners assess trustworthiness.
+
+## Post-Trade Activities
+
+After successful completion, both parties can leave feedback about their experience. The cryptocurrency appears in the buyer's wallet, and the trade history gets recorded in both users' profiles. Users can then withdraw their cryptocurrency to external wallets or keep it on the platform for future trading.
+
+## Security and Risk Management
+
+The platform implements various security measures including identity verification, transaction monitoring for suspicious activity, and fraud detection systems. Users can report problematic behavior, and the platform maintains blacklists of problematic accounts. Advanced features might include reputation-based trading limits and automated price matching.
+
+This P2P model gives users more control over their trades, often better rates than traditional exchanges, and access to various local payment methods, while the escrow system and dispute resolution provide security and trust in the trading process.

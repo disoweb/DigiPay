@@ -51,6 +51,11 @@ export interface IStorage {
   getAllTransactions(): Promise<Transaction[]>;
   getTransaction(id: number): Promise<Transaction | undefined>;
 
+  // Enhanced user profile methods
+  getUserProfile(id: number): Promise<User | undefined>;
+  getUserTrades(id: number): Promise<Trade[]>;
+  getUserPublicRatings(id: number): Promise<any[]>;
+
   sessionStore: any;
 }
 
@@ -404,6 +409,37 @@ export class DatabaseStorage implements IStorage {
   async getTransaction(id: number): Promise<Transaction | undefined> {
     const [transaction] = await db.select().from(transactions).where(eq(transactions.id, id));
     return transaction;
+  }
+
+  async getUserProfile(id: number): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
+  }
+
+  async getUserTrades(id: number): Promise<Trade[]> {
+    return await db
+      .select()
+      .from(trades)
+      .where(or(eq(trades.buyerId, id), eq(trades.sellerId, id)))
+      .orderBy(desc(trades.createdAt))
+      .limit(20);
+  }
+
+  async getUserRatings(id: number): Promise<Rating[]> {
+    return await db
+      .select({
+        id: ratings.id,
+        rating: ratings.rating,
+        comment: ratings.comment,
+        createdAt: ratings.createdAt,
+        rater: {
+          email: users.email,
+        },
+      })
+      .from(ratings)
+      .leftJoin(users, eq(ratings.raterId, users.id))
+      .where(eq(ratings.ratedUserId, id))
+      .orderBy(desc(ratings.createdAt));
   }
 
 }

@@ -463,6 +463,140 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Profile setup endpoint
+  app.post("/api/user/profile-setup", authenticateToken, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      const { fullName, location, bio, preferredPaymentMethods, tradingHours } = req.body;
+
+      await storage.updateUser(userId, {
+        fullName,
+        location,
+        bio,
+        preferredPaymentMethods: JSON.stringify(preferredPaymentMethods),
+        tradingHours: JSON.stringify(tradingHours)
+      });
+
+      res.json({ success: true, message: "Profile setup completed successfully" });
+    } catch (error) {
+      console.error("Profile setup error:", error);
+      res.status(500).json({ error: "Failed to setup profile" });
+    }
+  });
+
+  // Enhanced offer creation endpoint
+  app.post("/api/offers", authenticateToken, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      const { 
+        type, 
+        amount, 
+        rate, 
+        minAmount, 
+        maxAmount, 
+        paymentMethod, 
+        terms, 
+        priceMargin, 
+        requiresVerification, 
+        timeLimit, 
+        autoReply, 
+        location 
+      } = req.body;
+
+      if (!type || !amount || !rate || !paymentMethod) {
+        return res.status(400).json({ error: "Missing required fields" });
+      }
+
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      // For sell offers, check if user has enough USDT balance
+      if (type === "sell") {
+        const userBalance = parseFloat(user.usdtBalance || "0");
+        const offerAmount = parseFloat(amount);
+        
+        if (userBalance < offerAmount) {
+          return res.status(400).json({ error: "Insufficient USDT balance" });
+        }
+      }
+
+      const offer = await storage.createOffer({
+        userId,
+        type,
+        amount,
+        rate,
+        paymentMethod,
+        terms,
+        minAmount: minAmount || amount,
+        maxAmount: maxAmount || amount,
+        priceMargin: priceMargin || "0",
+        requiresVerification: requiresVerification || false,
+        timeLimit: parseInt(timeLimit) || 15,
+        autoReply,
+        location
+      });
+
+      res.json({ success: true, offer });
+    } catch (error) {
+      console.error("Offer creation error:", error);
+      res.status(500).json({ error: "Failed to create offer" });
+    }
+  });
+
+  // User profile endpoints
+  app.get("/api/users/:id/profile", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const user = await storage.getUserProfile(userId);
+      
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      // Remove sensitive information
+      const { password, ...publicProfile } = user;
+      res.json(publicProfile);
+    } catch (error) {
+      console.error("Profile fetch error:", error);
+      res.status(500).json({ error: "Failed to fetch profile" });
+    }
+  });
+
+  app.get("/api/users/:id/trades", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const trades = await storage.getUserTrades(userId);
+      
+      // Only return basic trade info for privacy
+      const publicTrades = trades.map(trade => ({
+        id: trade.id,
+        amount: trade.amount,
+        rate: trade.rate,
+        status: trade.status,
+        type: trade.buyerId === userId ? "buy" : "sell",
+        createdAt: trade.createdAt,
+      }));
+      
+      res.json(publicTrades);
+    } catch (error) {
+      console.error("User trades fetch error:", error);
+      res.status(500).json({ error: "Failed to fetch trades" });
+    }
+  });
+
+  app.get("/api/users/:id/ratings", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const ratings = await storage.getUserPublicRatings(userId);
+      res.json(ratings);
+    } catch (error) {
+      console.error("User ratings fetch error:", error);
+      res.status(500).json({ error: "Failed to fetch ratings" });
+    }
+  });
+
   // Get specific trade
   app.get("/api/trades/:id", authenticateToken, async (req, res) => {
     try {

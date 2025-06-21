@@ -14,6 +14,8 @@ import TradeDetail from "@/pages/trade-detail";
 import Wallet from "@/pages/wallet";
 import Admin from "@/pages/admin";
 import AdminApprovals from "@/pages/admin-approvals";
+import ProfileSetup from "@/pages/profile-setup";
+import OfferCreation from "@/pages/offer-creation";
 import Ratings from "@/pages/ratings";
 import NotFound from "@/pages/not-found";
 
@@ -36,6 +38,8 @@ function App() {
             <ProtectedRoute path="/ratings" component={Ratings} />
             <ProtectedRoute path="/admin" component={Admin} adminOnly />
             <ProtectedRoute path="/admin/approvals" component={AdminApprovals} adminOnly />
+            <ProtectedRoute path="/profile-setup" component={ProfileSetup} />
+            <ProtectedRoute path="/create-offer" component={OfferCreation} />
             
             <Route component={NotFound} />
           </Switch>

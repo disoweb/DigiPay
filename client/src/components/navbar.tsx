@@ -14,6 +14,7 @@ export function Navbar() {
   const navigation = [
     { name: "Dashboard", href: "/dashboard", icon: Home },
     { name: "Marketplace", href: "/marketplace", icon: Store },
+    { name: "Create Offer", href: "/create-offer", icon: Store },
     { name: "My Trades", href: "/trades", icon: ArrowLeftRight },
     { name: "Wallet", href: "/wallet", icon: Wallet },
   ];

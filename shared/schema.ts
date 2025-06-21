@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, decimal } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, serial, integer, boolean, timestamp, decimal, jsonb, index } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -35,11 +35,20 @@ export const trades = pgTable("trades", {
   sellerId: integer("seller_id").references(() => users.id).notNull(),
   amount: decimal("amount", { precision: 12, scale: 8 }).notNull(),
   rate: decimal("rate", { precision: 10, scale: 2 }).notNull(),
-  status: text("status").default("pending"), // 'pending', 'payment_pending', 'payment_made', 'completed', 'cancelled', 'disputed', 'expired'
+  status: text("status").default("pending"), // 'pending', 'accepted', 'payment_pending', 'payment_made', 'completed', 'cancelled', 'disputed', 'expired'
   escrowAddress: text("escrow_address"),
   paymentDeadline: timestamp("payment_deadline"),
   paymentMadeAt: timestamp("payment_made_at"),
   sellerConfirmedAt: timestamp("seller_confirmed_at"),
+  disputeReason: text("dispute_reason"),
+  disputeResolvedAt: timestamp("dispute_resolved_at"),
+  paymentReference: text("payment_reference"),
+  paymentProof: text("payment_proof"), // File path or URL
+  buyerInstructions: text("buyer_instructions"),
+  sellerInstructions: text("seller_instructions"),
+  cancelReason: text("cancel_reason"),
+  feedbackFromBuyer: text("feedback_from_buyer"),
+  feedbackFromSeller: text("feedback_from_seller"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -68,6 +77,48 @@ export const ratings = pgTable("ratings", {
   ratedUserId: integer("rated_user_id").references(() => users.id).notNull(),
   rating: integer("rating").notNull(),
   comment: text("comment"),
+  categories: text("categories"), // JSON: {communication, speed, trustworthiness}
+  isRecommended: boolean("is_recommended").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// User reports and disputes
+export const reports = pgTable("reports", {
+  id: serial("id").primaryKey(),
+  reporterId: integer("reporter_id").references(() => users.id).notNull(),
+  reportedUserId: integer("reported_user_id").references(() => users.id).notNull(),
+  tradeId: integer("trade_id").references(() => trades.id),
+  type: text("type").notNull(), // 'fraud', 'harassment', 'fake_payment', 'other'
+  description: text("description").notNull(),
+  evidence: text("evidence"), // JSON array of file paths/URLs
+  status: text("status").default("pending"), // 'pending', 'investigating', 'resolved', 'dismissed'
+  adminNotes: text("admin_notes"),
+  resolvedBy: integer("resolved_by").references(() => users.id),
+  resolvedAt: timestamp("resolved_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// User payment methods
+export const paymentMethods = pgTable("payment_methods", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  type: text("type").notNull(), // 'bank_transfer', 'mobile_money', 'digital_wallet'
+  name: text("name").notNull(),
+  details: text("details"), // JSON object with account details
+  isVerified: boolean("is_verified").default(false),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Notifications
+export const notifications = pgTable("notifications", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  type: text("type").notNull(), // 'trade_request', 'payment_received', 'dispute_opened', etc.
+  title: text("title").notNull(),
+  message: text("message").notNull(),
+  data: text("data"), // JSON object with additional data
+  isRead: boolean("is_read").default(false),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
