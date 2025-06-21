@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
@@ -88,6 +88,9 @@ function TradeModal({ offer, isOpen, onClose }: TradeModalProps) {
             )}
             {offer.type === "sell" ? "Buy" : "Sell"} USDT
           </DialogTitle>
+          <DialogDescription>
+            Create a trade for {offer.type === "sell" ? "buying" : "selling"} USDT with escrow protection
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
@@ -202,65 +205,70 @@ function EnhancedOfferCard({ offer, onTrade }: EnhancedOfferCardProps) {
   return (
     <Card className="border-0 shadow-sm hover:shadow-md transition-all duration-200 hover:-translate-y-1">
       <CardContent className="p-4">
+        {/* Header - Mobile Optimized */}
         <div className="flex items-center justify-between mb-3">
           <Badge 
             variant="secondary"
             className={
               offer.type === "sell" 
-                ? "bg-red-100 text-red-800 border-red-200" 
-                : "bg-green-100 text-green-800 border-green-200"
+                ? "bg-red-100 text-red-800 border-red-200 text-xs px-2 py-1" 
+                : "bg-green-100 text-green-800 border-green-200 text-xs px-2 py-1"
             }
           >
-            {offer.type === "sell" ? "SELL" : "BUY"} USDT
+            {offer.type === "sell" ? "SELL" : "BUY"}
           </Badge>
           <div className="flex items-center gap-1 text-xs text-gray-500">
             <Clock className="h-3 w-3" />
-            {timeAgo}
+            <span className="hidden sm:inline">{timeAgo}</span>
+            <span className="sm:hidden">{new Date(offer.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
           </div>
         </div>
         
+        {/* Amount Details - Compact for Mobile */}
         <div className="space-y-2 mb-4">
           <div className="flex justify-between items-center">
             <span className="text-sm text-gray-600">Amount:</span>
-            <span className="font-semibold text-lg">{parseFloat(offer.amount).toFixed(2)} USDT</span>
+            <span className="font-semibold text-base md:text-lg">{parseFloat(offer.amount).toFixed(2)} USDT</span>
           </div>
           <div className="flex justify-between items-center">
             <span className="text-sm text-gray-600">Rate:</span>
-            <span className="font-semibold text-green-600">₦{parseFloat(offer.rate).toLocaleString()}</span>
+            <span className="font-semibold text-green-600 text-sm md:text-base">₦{parseFloat(offer.rate).toLocaleString()}</span>
           </div>
           <div className="flex justify-between items-center">
             <span className="text-sm text-gray-600">Total:</span>
-            <span className="font-semibold text-blue-600">₦{total.toLocaleString()}</span>
+            <span className="font-semibold text-blue-600 text-sm md:text-base">₦{total.toLocaleString()}</span>
           </div>
         </div>
 
-        {/* Seller Info */}
+        {/* Seller Info - Mobile Optimized */}
         <div className="flex items-center justify-between mb-4 p-2 bg-gray-50 rounded-lg">
-          <div>
-            <p className="text-sm font-medium">{offer.user?.email.split('@')[0] || 'Anonymous'}</p>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-medium truncate">{offer.user?.email.split('@')[0] || 'Anonymous'}</p>
             <div className="flex items-center gap-1">
-              <Star className="h-3 w-3 text-yellow-500" />
-              <span className="text-xs text-gray-600">
+              <Star className="h-3 w-3 text-yellow-500 flex-shrink-0" />
+              <span className="text-xs text-gray-600 truncate">
                 {parseFloat(offer.user?.averageRating || "0").toFixed(1)} ({offer.user?.ratingCount || 0})
               </span>
             </div>
           </div>
-          <div className="flex items-center gap-1 text-green-600">
+          <div className="flex items-center gap-1 text-green-600 flex-shrink-0 ml-2">
             <CheckCircle className="h-3 w-3" />
-            <span className="text-xs">Verified</span>
+            <span className="text-xs hidden sm:inline">Verified</span>
           </div>
         </div>
 
+        {/* Action Button */}
         <Button
           onClick={onTrade}
           disabled={isOwnOffer}
-          className="w-full"
+          className="w-full text-sm md:text-base"
           variant={isOwnOffer ? "outline" : "default"}
+          size="sm"
         >
           {isOwnOffer ? "Your Offer" : (
             <>
               {offer.type === "sell" ? "Buy Now" : "Sell Now"}
-              <Zap className="h-4 w-4 ml-2" />
+              <Zap className="h-3 w-3 md:h-4 md:w-4 ml-2" />
             </>
           )}
         </Button>
@@ -345,52 +353,52 @@ export function EnhancedMarketplace() {
 
   return (
     <div className="space-y-6">
-      {/* Market Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-4">
+      {/* Market Stats - Mobile Friendly */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+        <Card className="border-0 shadow-sm">
+          <CardContent className="p-3 md:p-4">
             <div className="flex items-center gap-2">
-              <TrendingUp className="h-4 w-4 text-green-600" />
-              <div>
-                <p className="text-xs text-gray-500">Active Offers</p>
-                <p className="font-semibold">{offers.length}</p>
+              <TrendingUp className="h-4 w-4 text-green-600 flex-shrink-0" />
+              <div className="min-w-0">
+                <p className="text-xs text-gray-500 truncate">Active Offers</p>
+                <p className="font-semibold text-sm md:text-base">{offers.length}</p>
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="p-4">
+        <Card className="border-0 shadow-sm">
+          <CardContent className="p-3 md:p-4">
             <div className="flex items-center gap-2">
-              <TrendingDown className="h-4 w-4 text-red-600" />
-              <div>
-                <p className="text-xs text-gray-500">Best Buy Rate</p>
-                <p className="font-semibold">
+              <TrendingDown className="h-4 w-4 text-red-600 flex-shrink-0" />
+              <div className="min-w-0">
+                <p className="text-xs text-gray-500 truncate">Best Buy</p>
+                <p className="font-semibold text-sm md:text-base">
                   ₦{Math.max(...offers.filter(o => o.type === "buy").map(o => parseFloat(o.rate)), 0).toLocaleString()}
                 </p>
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="p-4">
+        <Card className="border-0 shadow-sm">
+          <CardContent className="p-3 md:p-4">
             <div className="flex items-center gap-2">
-              <TrendingUp className="h-4 w-4 text-green-600" />
-              <div>
-                <p className="text-xs text-gray-500">Best Sell Rate</p>
-                <p className="font-semibold">
+              <TrendingUp className="h-4 w-4 text-green-600 flex-shrink-0" />
+              <div className="min-w-0">
+                <p className="text-xs text-gray-500 truncate">Best Sell</p>
+                <p className="font-semibold text-sm md:text-base">
                   ₦{Math.min(...offers.filter(o => o.type === "sell").map(o => parseFloat(o.rate)), Infinity).toLocaleString()}
                 </p>
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="p-4">
+        <Card className="border-0 shadow-sm">
+          <CardContent className="p-3 md:p-4">
             <div className="flex items-center gap-2">
-              <Shield className="h-4 w-4 text-blue-600" />
-              <div>
-                <p className="text-xs text-gray-500">Total Volume</p>
-                <p className="font-semibold">
+              <Shield className="h-4 w-4 text-blue-600 flex-shrink-0" />
+              <div className="min-w-0">
+                <p className="text-xs text-gray-500 truncate">Volume</p>
+                <p className="font-semibold text-sm md:text-base">
                   {offers.reduce((sum, offer) => sum + parseFloat(offer.amount), 0).toFixed(0)} USDT
                 </p>
               </div>
@@ -399,20 +407,21 @@ export function EnhancedMarketplace() {
         </Card>
       </div>
 
-      {/* Filters */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Filter className="h-5 w-5" />
+      {/* Mobile-Friendly Filters */}
+      <Card className="border-0 shadow-sm">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Filter className="h-4 w-4" />
             Filters
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            <div>
-              <Label htmlFor="type">Type</Label>
+          {/* Primary Filters Row */}
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex-1">
+              <Label htmlFor="type" className="text-sm">Type</Label>
               <Select value={filters.type} onValueChange={(value) => setFilters(prev => ({ ...prev, type: value }))}>
-                <SelectTrigger>
+                <SelectTrigger className="mt-1">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -423,9 +432,9 @@ export function EnhancedMarketplace() {
               </Select>
             </div>
             
-            <div>
-              <Label htmlFor="search">Search User</Label>
-              <div className="relative">
+            <div className="flex-1">
+              <Label htmlFor="search" className="text-sm">Search User</Label>
+              <div className="relative mt-1">
                 <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
                 <Input
                   id="search"
@@ -436,48 +445,55 @@ export function EnhancedMarketplace() {
                 />
               </div>
             </div>
+          </div>
 
+          {/* Amount and Rate Filters */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <div>
-              <Label htmlFor="minAmount">Min Amount</Label>
+              <Label htmlFor="minAmount" className="text-sm">Min Amount</Label>
               <Input
                 id="minAmount"
                 type="number"
                 placeholder="0"
                 value={filters.minAmount}
                 onChange={(e) => setFilters(prev => ({ ...prev, minAmount: e.target.value }))}
+                className="mt-1"
               />
             </div>
 
             <div>
-              <Label htmlFor="maxAmount">Max Amount</Label>
+              <Label htmlFor="maxAmount" className="text-sm">Max Amount</Label>
               <Input
                 id="maxAmount"
                 type="number"
                 placeholder="1000"
                 value={filters.maxAmount}
                 onChange={(e) => setFilters(prev => ({ ...prev, maxAmount: e.target.value }))}
+                className="mt-1"
               />
             </div>
 
             <div>
-              <Label htmlFor="minRate">Min Rate</Label>
+              <Label htmlFor="minRate" className="text-sm">Min Rate</Label>
               <Input
                 id="minRate"
                 type="number"
                 placeholder="1400"
                 value={filters.minRate}
                 onChange={(e) => setFilters(prev => ({ ...prev, minRate: e.target.value }))}
+                className="mt-1"
               />
             </div>
 
             <div>
-              <Label htmlFor="maxRate">Max Rate</Label>
+              <Label htmlFor="maxRate" className="text-sm">Max Rate</Label>
               <Input
                 id="maxRate"
                 type="number"
                 placeholder="1600"
                 value={filters.maxRate}
                 onChange={(e) => setFilters(prev => ({ ...prev, maxRate: e.target.value }))}
+                className="mt-1"
               />
             </div>
           </div>
@@ -492,19 +508,24 @@ export function EnhancedMarketplace() {
               maxRate: "",
               search: ""
             })}
+            className="w-full sm:w-auto"
           >
             Clear Filters
           </Button>
         </CardContent>
       </Card>
 
-      {/* Offers Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {/* Mobile-Optimized Offers Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredOffers.length === 0 ? (
           <div className="col-span-full">
-            <Card>
-              <CardContent className="p-8 text-center">
-                <p className="text-gray-500">No offers match your criteria</p>
+            <Card className="border-0 shadow-sm">
+              <CardContent className="p-6 md:p-8 text-center">
+                <div className="mx-auto w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                  <Search className="h-5 w-5 text-gray-400" />
+                </div>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No offers found</h3>
+                <p className="text-gray-500 text-sm">No offers match your criteria. Try adjusting your filters.</p>
               </CardContent>
             </Card>
           </div>

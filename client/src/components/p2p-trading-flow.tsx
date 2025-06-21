@@ -226,34 +226,34 @@ export function P2PTradingFlow({ tradeId, userRole }: P2PTradingFlowProps) {
   const progress = ((steps.filter(step => step.completed).length - 1) / (steps.length - 1)) * 100;
 
   return (
-    <div className="space-y-6">
-      {/* Trade Overview */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <span>Trade #{trade.id}</span>
+    <div className="space-y-4 md:space-y-6">
+      {/* Mobile-Optimized Trade Overview */}
+      <Card className="border-0 shadow-sm">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <span className="text-lg">Trade #{trade.id}</span>
             <Badge className={getStatusColor(trade.status)}>
               {trade.status.replace('_', ' ').toUpperCase()}
             </Badge>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div>
-              <Label className="text-sm text-gray-500">Amount</Label>
-              <p className="font-semibold">{parseFloat(trade.amount).toFixed(2)} USDT</p>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+            <div className="p-3 bg-gray-50 rounded-lg">
+              <Label className="text-xs text-gray-500">Amount</Label>
+              <p className="font-semibold text-sm md:text-base">{parseFloat(trade.amount).toFixed(2)} USDT</p>
             </div>
-            <div>
-              <Label className="text-sm text-gray-500">Rate</Label>
-              <p className="font-semibold">₦{parseFloat(trade.rate).toLocaleString()}</p>
+            <div className="p-3 bg-gray-50 rounded-lg">
+              <Label className="text-xs text-gray-500">Rate</Label>
+              <p className="font-semibold text-sm md:text-base">₦{parseFloat(trade.rate).toLocaleString()}</p>
             </div>
-            <div>
-              <Label className="text-sm text-gray-500">Total</Label>
-              <p className="font-semibold">₦{parseFloat(trade.fiatAmount).toLocaleString()}</p>
+            <div className="p-3 bg-gray-50 rounded-lg">
+              <Label className="text-xs text-gray-500">Total</Label>
+              <p className="font-semibold text-sm md:text-base">₦{parseFloat(trade.fiatAmount).toLocaleString()}</p>
             </div>
-            <div>
-              <Label className="text-sm text-gray-500">Your Role</Label>
-              <p className="font-semibold capitalize">{userRole}</p>
+            <div className="p-3 bg-gray-50 rounded-lg">
+              <Label className="text-xs text-gray-500">Your Role</Label>
+              <p className="font-semibold capitalize text-sm md:text-base">{userRole}</p>
             </div>
           </div>
 
