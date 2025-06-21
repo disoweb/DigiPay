@@ -115,9 +115,10 @@ export class PaystackService {
   }
 
   async initiateTransfer(
+    amount: number,
     accountNumber: string,
     bankCode: string,
-    amount: number,
+    accountName: string,
     reason: string
   ): Promise<TransferResponse> {
     if (!this.secretKey) {
@@ -130,7 +131,7 @@ export class PaystackService {
         `${this.baseUrl}/transferrecipient`,
         {
           type: 'nuban',
-          name: 'DigiPay User',
+          name: accountName,
           account_number: accountNumber,
           bank_code: bankCode,
           currency: 'NGN'
