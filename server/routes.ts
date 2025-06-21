@@ -154,6 +154,147 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get specific trade
+  app.get("/api/trades/:id", authenticateToken, async (req, res) => {
+    try {
+      const tradeId = parseInt(req.params.id);
+      const trade = await storage.getTrade(tradeId);
+      
+      if (!trade) {
+        return res.status(404).json({ error: "Trade not found" });
+      }
+
+      // Check if user is part of this trade
+      if (trade.buyerId !== req.user!.id && trade.sellerId !== req.user!.id) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+
+      // Enrich with offer and user data
+      const offer = await storage.getOffer(trade.offerId);
+      const buyer = await storage.getUser(trade.buyerId);
+      const seller = await storage.getUser(trade.sellerId);
+      
+      const enrichedTrade = {
+        ...trade,
+        offer,
+        buyer: buyer ? { id: buyer.id, email: buyer.email } : null,
+        seller: seller ? { id: seller.id, email: seller.email } : null,
+      };
+      
+      res.json(enrichedTrade);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch trade" });
+    }
+  });
+
+  // Complete trade
+  app.post("/api/trades/:id/complete", authenticateToken, async (req, res) => {
+    try {
+      const tradeId = parseInt(req.params.id);
+      const trade = await storage.getTrade(tradeId);
+      
+      if (!trade) {
+        return res.status(404).json({ error: "Trade not found" });
+      }
+
+      if (trade.status !== "pending") {
+        return res.status(400).json({ error: "Trade is not in pending status" });
+      }
+
+      // Check if user is part of this trade
+      if (trade.buyerId !== req.user!.id && trade.sellerId !== req.user!.id) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+
+      // Update trade status
+      const updatedTrade = await storage.updateTrade(tradeId, { status: "completed" });
+
+      // If escrow exists, release funds
+      if (trade.escrowAddress) {
+        try {
+          const buyer = await storage.getUser(trade.buyerId);
+          if (buyer?.tronAddress) {
+            await tronService.releaseFromEscrow(
+              trade.escrowAddress,
+              buyer.tronAddress,
+              parseFloat(trade.amount)
+            );
+          }
+        } catch (escrowError) {
+          console.error("Escrow release failed:", escrowError);
+        }
+      }
+
+      // Send completion notifications
+      const buyer = await storage.getUser(trade.buyerId);
+      const seller = await storage.getUser(trade.sellerId);
+      
+      if (buyer?.email) {
+        await emailService.sendTradeNotification(
+          buyer.email,
+          trade.id,
+          `Trade completed successfully! You received ${trade.amount} USDT.`
+        );
+      }
+      
+      if (seller?.email) {
+        await emailService.sendTradeNotification(
+          seller.email,
+          trade.id,
+          `Trade completed successfully! You sold ${trade.amount} USDT.`
+        );
+      }
+
+      res.json(updatedTrade);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to complete trade" });
+    }
+  });
+
+  // Cancel trade
+  app.post("/api/trades/:id/cancel", authenticateToken, async (req, res) => {
+    try {
+      const tradeId = parseInt(req.params.id);
+      const trade = await storage.getTrade(tradeId);
+      
+      if (!trade) {
+        return res.status(404).json({ error: "Trade not found" });
+      }
+
+      if (trade.status !== "pending") {
+        return res.status(400).json({ error: "Trade is not in pending status" });
+      }
+
+      // Check if user is part of this trade
+      if (trade.buyerId !== req.user!.id && trade.sellerId !== req.user!.id) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+
+      // Update trade status
+      const updatedTrade = await storage.updateTrade(tradeId, { status: "cancelled" });
+
+      // If escrow exists, refund to seller
+      if (trade.escrowAddress) {
+        try {
+          const seller = await storage.getUser(trade.sellerId);
+          if (seller?.tronAddress) {
+            await tronService.refundFromEscrow(
+              trade.escrowAddress,
+              seller.tronAddress,
+              parseFloat(trade.amount)
+            );
+          }
+        } catch (escrowError) {
+          console.error("Escrow refund failed:", escrowError);
+        }
+      }
+
+      res.json(updatedTrade);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to cancel trade" });
+    }
+  });
+
   app.patch("/api/trades/:id", authenticateToken, async (req, res) => {
     
     try {
@@ -661,10 +802,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
   setupWebSocket(httpServer);
 
   // Rating routes
-  app.post("/api/ratings", authenticateToken, async (req, res) => {
-    
+  app.get("/api/ratings", async (req, res) => {
     try {
-      const { tradeId, ratedUserId, rating, comment } = req.body;
+      const ratings = await storage.getAllRatings();
+      
+      // Enrich with user data
+      const enrichedRatings = await Promise.all(
+        ratings.map(async (rating) => {
+          const rater = await storage.getUser(rating.raterId);
+          const ratedUser = await storage.getUser(rating.ratedUserId);
+          const trade = await storage.getTrade(rating.tradeId);
+          
+          return {
+            ...rating,
+            rater: rater ? { id: rater.id, email: rater.email } : null,
+            ratedUser: ratedUser ? { id: ratedUser.id, email: ratedUser.email } : null,
+            trade,
+          };
+        })
+      );
+      
+      res.json(enrichedRatings);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch ratings" });
+    }
+  });
+  app.post("/api/ratings", authenticateToken, async (req, res) => {
+    try {
+      const { tradeId, rating, comment } = req.body;
       const user = req.user!;
       
       // Validate rating
@@ -687,15 +852,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Can only rate completed trades" });
       }
       
-      // Check if user is trying to rate the correct person
-      const expectedRatedUserId = trade.buyerId === user.id ? trade.sellerId : trade.buyerId;
-      if (ratedUserId !== expectedRatedUserId) {
-        return res.status(400).json({ message: "Invalid user to rate" });
-      }
+      // Determine who is being rated
+      const ratedUserId = trade.buyerId === user.id ? trade.sellerId : trade.buyerId;
       
       // Check if rating already exists
-      const existingRatings = await storage.getUserRatings(ratedUserId);
-      const existingRating = existingRatings.find(r => r.tradeId === tradeId && r.raterId === user.id);
+      const existingRating = await storage.getTradeRating(tradeId, user.id);
       if (existingRating) {
         return res.status(400).json({ message: "You have already rated this trade" });
       }

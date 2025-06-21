@@ -1,43 +1,50 @@
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { useAuth } from "@/hooks/use-auth";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertCircle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface WithdrawModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  balance: string;
 }
 
-export function WithdrawModal({ open, onOpenChange }: WithdrawModalProps) {
-  const { user } = useAuth();
+export function WithdrawModal({ open, onOpenChange, balance }: WithdrawModalProps) {
   const { toast } = useToast();
-  const [formData, setFormData] = useState({
-    amount: "",
-    bank: "",
-    accountNumber: "",
-  });
+  const [amount, setAmount] = useState("");
+  const [accountNumber, setAccountNumber] = useState("");
+  const [bankCode, setBankCode] = useState("");
+  const [accountName, setAccountName] = useState("");
 
   const withdrawMutation = useMutation({
-    mutationFn: async (data: any) => {
-      const response = await apiRequest("POST", "/api/transactions/withdraw", data);
-      return response.json();
+    mutationFn: async () => {
+      const res = await apiRequest("POST", "/api/withdraw", {
+        amount: parseFloat(amount),
+        accountNumber,
+        bankCode,
+        accountName,
+      });
+      return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
       queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
       toast({
         title: "Success",
         description: "Withdrawal request submitted successfully!",
       });
       onOpenChange(false);
-      setFormData({ amount: "", bank: "", accountNumber: "" });
+      setAmount("");
+      setAccountNumber("");
+      setBankCode("");
+      setAccountName("");
     },
     onError: (error: any) => {
       toast({
@@ -50,36 +57,8 @@ export function WithdrawModal({ open, onOpenChange }: WithdrawModalProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const withdrawAmount = parseFloat(formData.amount);
     
-    if (!withdrawAmount || withdrawAmount < 1000) {
-      toast({
-        title: "Error",
-        description: "Minimum withdrawal is ₦1,000",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!user) {
-      toast({
-        title: "Error",
-        description: "User not found",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (withdrawAmount > parseFloat(user.nairaBalance)) {
-      toast({
-        title: "Error",
-        description: "Insufficient balance",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!formData.bank || !formData.accountNumber) {
+    if (!amount || !accountNumber || !bankCode || !accountName) {
       toast({
         title: "Error",
         description: "Please fill in all fields",
@@ -88,93 +67,142 @@ export function WithdrawModal({ open, onOpenChange }: WithdrawModalProps) {
       return;
     }
 
-    withdrawMutation.mutate({
-      amount: withdrawAmount,
-      bank: formData.bank,
-      accountNumber: formData.accountNumber,
-    });
-  };
+    const withdrawAmount = parseFloat(amount);
+    const availableBalance = parseFloat(balance);
 
-  if (!user) return null;
+    if (withdrawAmount <= 0) {
+      toast({
+        title: "Error",
+        description: "Amount must be greater than 0",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (withdrawAmount > availableBalance) {
+      toast({
+        title: "Error",
+        description: "Insufficient balance",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (withdrawAmount < 1000) {
+      toast({
+        title: "Error",
+        description: "Minimum withdrawal amount is ₦1,000",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    withdrawMutation.mutate();
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Withdraw Naira</DialogTitle>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-4">
+          <Alert>
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              Available balance: ₦{parseFloat(balance).toLocaleString()}
+            </AlertDescription>
+          </Alert>
+
           <div className="space-y-2">
-            <Label htmlFor="withdraw-amount">Amount (NGN)</Label>
+            <Label htmlFor="amount">Amount (NGN)</Label>
             <Input
-              id="withdraw-amount"
+              id="amount"
               type="number"
+              placeholder="Enter amount to withdraw"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
               min="1000"
-              max={parseFloat(user.nairaBalance)}
-              step="100"
-              placeholder="Enter amount"
-              value={formData.amount}
-              onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
+              max={balance}
               required
             />
-            <p className="text-xs text-gray-500">
-              Available: ₦{parseFloat(user.nairaBalance).toLocaleString()}
-            </p>
+            <p className="text-sm text-gray-600">Minimum: ₦1,000</p>
           </div>
-          
+
           <div className="space-y-2">
-            <Label htmlFor="bank">Bank</Label>
-            <Select value={formData.bank} onValueChange={(value) => setFormData(prev => ({ ...prev, bank: value }))}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select Bank" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="access">Access Bank</SelectItem>
-                <SelectItem value="gtbank">GTBank</SelectItem>
-                <SelectItem value="zenith">Zenith Bank</SelectItem>
-                <SelectItem value="uba">UBA</SelectItem>
-                <SelectItem value="firstbank">First Bank</SelectItem>
-                <SelectItem value="fidelity">Fidelity Bank</SelectItem>
-                <SelectItem value="sterling">Sterling Bank</SelectItem>
-                <SelectItem value="fcmb">FCMB</SelectItem>
-                <SelectItem value="union">Union Bank</SelectItem>
-                <SelectItem value="wema">Wema Bank</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="account-number">Account Number</Label>
+            <Label htmlFor="accountNumber">Account Number</Label>
             <Input
-              id="account-number"
+              id="accountNumber"
               type="text"
               placeholder="Enter account number"
-              value={formData.accountNumber}
-              onChange={(e) => setFormData(prev => ({ ...prev, accountNumber: e.target.value }))}
+              value={accountNumber}
+              onChange={(e) => setAccountNumber(e.target.value)}
               required
             />
           </div>
-          
-          <div className="flex space-x-3 pt-4">
-            <Button 
-              type="submit" 
-              variant="destructive"
+
+          <div className="space-y-2">
+            <Label htmlFor="bankCode">Bank Code</Label>
+            <Input
+              id="bankCode"
+              type="text"
+              placeholder="Enter bank code (e.g., 058 for GTBank)"
+              value={bankCode}
+              onChange={(e) => setBankCode(e.target.value)}
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="accountName">Account Name</Label>
+            <Input
+              id="accountName"
+              type="text"
+              placeholder="Enter account name"
+              value={accountName}
+              onChange={(e) => setAccountName(e.target.value)}
+              required
+            />
+          </div>
+
+          <Card>
+            <CardContent className="p-4">
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span>Amount:</span>
+                  <span>₦{amount ? parseFloat(amount).toLocaleString() : "0"}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Processing Fee:</span>
+                  <span>₦{amount ? (parseFloat(amount) * 0.01).toLocaleString() : "0"}</span>
+                </div>
+                <div className="flex justify-between font-semibold border-t pt-2">
+                  <span>Total Deducted:</span>
+                  <span>₦{amount ? (parseFloat(amount) * 1.01).toLocaleString() : "0"}</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <div className="flex gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
               className="flex-1"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
               disabled={withdrawMutation.isPending}
+              className="flex-1"
             >
               {withdrawMutation.isPending && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}
               Withdraw
-            </Button>
-            <Button 
-              type="button" 
-              variant="outline" 
-              className="flex-1"
-              onClick={() => onOpenChange(false)}
-            >
-              Cancel
             </Button>
           </div>
         </form>

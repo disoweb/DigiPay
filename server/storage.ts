@@ -7,7 +7,7 @@ import {
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 import { db, pool } from "./db";
-import { eq, desc, or } from "drizzle-orm";
+import { eq, desc, or, and } from "drizzle-orm";
 
 const PostgresSessionStore = connectPg(session);
 
@@ -44,6 +44,8 @@ export interface IStorage {
   // Rating methods
   createRating(rating: InsertRating): Promise<Rating>;
   getUserRatings(userId: number): Promise<Rating[]>;
+  getAllRatings(): Promise<Rating[]>;
+  getTradeRating(tradeId: number, raterId: number): Promise<Rating | null>;
 
   sessionStore: any;
 }

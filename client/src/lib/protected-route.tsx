@@ -1,56 +1,47 @@
 import { useAuth } from "@/hooks/use-auth";
-import { Loader2 } from "lucide-react";
-import { Redirect, Route } from "wouter";
-import React from "react";
+import { useLocation } from "wouter";
+import { useEffect } from "react";
 
-export function ProtectedRoute({
-  path,
-  component: Component,
-}: {
-  path: string;
-  component: () => React.JSX.Element | null;
-}) {
-  const { user, isLoading } = useAuth();
-
-  if (isLoading) {
-    return (
-      <Route path={path}>
-        <div className="flex items-center justify-center min-h-screen">
-          <Loader2 className="h-8 w-8 animate-spin text-border" />
-        </div>
-      </Route>
-    );
-  }
-
-  if (!user) {
-    return (
-      <Route path={path}>
-        <Redirect to="/auth" />
-      </Route>
-    );
-  }
-
-  return (
-    <Route path={path}>
-      <Component />
-    </Route>
-  );
+interface ProtectedRouteProps {
+  component: React.ComponentType<any>;
+  adminOnly?: boolean;
+  path?: string;
 }
 
-export function AuthenticatedRootRedirect() {
+export function ProtectedRoute({ 
+  component: Component, 
+  adminOnly = false,
+  ...props 
+}: ProtectedRouteProps) {
   const { user, isLoading } = useAuth();
+  const [, setLocation] = useLocation();
+
+  useEffect(() => {
+    if (!isLoading && !user) {
+      setLocation("/auth");
+    } else if (!isLoading && user && adminOnly && !user.isAdmin) {
+      setLocation("/dashboard");
+    }
+  }, [user, isLoading, adminOnly, setLocation]);
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin text-border" />
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
       </div>
     );
   }
 
-  if (user) {
-    return <Redirect to="/dashboard" />;
+  if (!user) {
+    return null;
   }
 
-  return null;
+  if (adminOnly && !user.isAdmin) {
+    return null;
+  }
+
+  return <Component {...props} />;
 }
