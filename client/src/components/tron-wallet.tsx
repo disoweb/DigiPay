@@ -107,7 +107,10 @@ export function TronWallet() {
               <div>
                 <p className="text-sm text-gray-600">USDT Balance</p>
                 <p className="text-2xl font-bold">
-                  0.00 USDT
+                  {parseFloat(user?.usdtBalance || "0").toFixed(2)} USDT
+                </p>
+                <p className="text-xs text-gray-500 mt-1">
+                  ≈ ₦{(parseFloat(user?.usdtBalance || "0") * 1485).toLocaleString()}
                 </p>
               </div>
               <Badge variant="secondary" className="bg-green-100 text-green-800">

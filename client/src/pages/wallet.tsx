@@ -68,16 +68,16 @@ export default function Wallet() {
                 <div className="text-center space-y-3">
                   <p className="text-blue-100 text-sm">Total Portfolio Value</p>
                   <p className="text-4xl font-bold">
-                    ₦{(parseFloat(user.nairaBalance || "0") + (parseFloat(user.usdtBalance || "0") * 1485)).toLocaleString()}
+                    ₦{(parseFloat(user.nairaBalance || "0")).toLocaleString()}
                   </p>
                   <div className="flex justify-center space-x-6 text-sm">
                     <div className="text-center">
-                      <p className="text-blue-100">USDT</p>
-                      <p className="font-semibold">{parseFloat(user.usdtBalance || "0").toFixed(2)}</p>
-                    </div>
-                    <div className="text-center">
                       <p className="text-blue-100">NGN</p>
                       <p className="font-semibold">₦{parseFloat(user.nairaBalance || "0").toLocaleString()}</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-blue-100">USDT (TRON)</p>
+                      <p className="font-semibold">Available in TRON Wallet below</p>
                     </div>
                   </div>
                 </div>
@@ -85,45 +85,7 @@ export default function Wallet() {
             </Card>
 
             {/* Individual Balance Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* USDT Card */}
-              <Card className="border-0 shadow-md hover:shadow-lg transition-shadow">
-                <CardContent className="p-5">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-green-50 rounded-lg">
-                        <Coins className="h-6 w-6 text-green-600" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-gray-900">USDT</h3>
-                        <p className="text-xs text-gray-500">Tether USD</p>
-                      </div>
-                    </div>
-                    <Badge variant="secondary" className="bg-green-100 text-green-800 text-xs">
-                      Active
-                    </Badge>
-                  </div>
-                  
-                  <div className="space-y-2 mb-4">
-                    <p className="text-2xl font-bold text-gray-900">
-                      {parseFloat(user.usdtBalance || "0").toFixed(2)} USDT
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      ≈ ₦{(parseFloat(user.usdtBalance || "0") * 1485).toLocaleString()}
-                    </p>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2">
-                    <Button size="sm" className="bg-green-600 hover:bg-green-700 h-9">
-                      Receive
-                    </Button>
-                    <Button size="sm" variant="outline" className="h-9">
-                      Send
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-
+            <div className="grid grid-cols-1 gap-4">
               {/* Naira Card */}
               <Card className="border-0 shadow-md hover:shadow-lg transition-shadow">
                 <CardContent className="p-5">

@@ -58,6 +58,160 @@ export class DatabaseStorage implements IStorage {
       pool, 
       createTableIfMissing: true 
     });
+    // Seed initial data for demo
+    this.seedInitialData();
+  }
+
+  private async seedInitialData() {
+    try {
+      const existingUser = await this.getUser(1);
+      if (!existingUser) {
+        // Create default user
+        await this.createUser({
+          email: "cyfer33@gmail.com",
+          phone: "08000000000",
+          password: "password123",
+          kycVerified: true,
+          nairaBalance: "50000",
+          usdtBalance: "25.50",
+          bvn: "12345678901",
+          tronAddress: "TRX123456789"
+        });
+        console.log("Seeded initial user data");
+      }
+
+      // Create admin user
+      const existingAdmin = await this.getUser(2);
+      if (!existingAdmin) {
+        await this.createUser({
+          email: "admin@digipay.com",
+          phone: "08099999999",
+          password: "admin123",
+          kycVerified: true,
+          isAdmin: true,
+          nairaBalance: "100000",
+          usdtBalance: "50.00",
+          bvn: "98765432109",
+          tronAddress: "TRXAdmin987654321"
+        });
+        console.log("Seeded admin user - Email: admin@digipay.com, Password: admin123");
+      }
+
+      // Create additional test users for offers
+      const testUser1 = await this.getUser(3);
+      if (!testUser1) {
+        await this.createUser({
+          email: "trader1@example.com",
+          phone: "08011111111",
+          password: "trader123",
+          kycVerified: true,
+          nairaBalance: "75000",
+          usdtBalance: "40.00",
+          bvn: "11111111111",
+          tronAddress: "TRXTrader1111",
+          averageRating: "4.8",
+          ratingCount: 25
+        });
+      }
+
+      const testUser2 = await this.getUser(4);
+      if (!testUser2) {
+        await this.createUser({
+          email: "trader2@example.com",
+          phone: "08022222222",
+          password: "trader123",
+          kycVerified: true,
+          nairaBalance: "120000",
+          usdtBalance: "80.00",
+          bvn: "22222222222",
+          tronAddress: "TRXTrader2222",
+          averageRating: "4.9",
+          ratingCount: 42
+        });
+      }
+
+      // Seed offers
+      const existingOffers = await this.getOffers();
+      if (existingOffers.length === 0) {
+        // Buy offers (users want to buy USDT)
+        await this.createOffer({
+          userId: 3,
+          type: "buy",
+          amount: "10.00",
+          minAmount: "5.00",
+          maxAmount: "50.00",
+          rate: "1485.00",
+          paymentMethod: "Bank Transfer",
+          terms: "Payment within 15 minutes. Send proof of payment.",
+          status: "active"
+        });
+
+        await this.createOffer({
+          userId: 4,
+          type: "buy",
+          amount: "25.00",
+          minAmount: "10.00",
+          maxAmount: "100.00",
+          rate: "1490.00",
+          paymentMethod: "Bank Transfer",
+          terms: "Quick payment required. Automated release after confirmation.",
+          status: "active"
+        });
+
+        await this.createOffer({
+          userId: 3,
+          type: "buy",
+          amount: "5.00",
+          minAmount: "1.00",
+          maxAmount: "20.00",
+          rate: "1480.00",
+          paymentMethod: "Bank Transfer",
+          terms: "Small amounts welcome. Fast processing.",
+          status: "active"
+        });
+
+        // Sell offers (users want to sell USDT)
+        await this.createOffer({
+          userId: 4,
+          type: "sell",
+          amount: "15.00",
+          minAmount: "5.00",
+          maxAmount: "30.00",
+          rate: "1475.00",
+          paymentMethod: "Bank Transfer",
+          terms: "Instant release after payment confirmation. Available 24/7.",
+          status: "active"
+        });
+
+        await this.createOffer({
+          userId: 3,
+          type: "sell",
+          amount: "30.00",
+          minAmount: "10.00",
+          maxAmount: "50.00",
+          rate: "1470.00",
+          paymentMethod: "Bank Transfer",
+          terms: "Competitive rates. Trusted seller with 4.8★ rating.",
+          status: "active"
+        });
+
+        await this.createOffer({
+          userId: 4,
+          type: "sell",
+          amount: "8.00",
+          minAmount: "2.00",
+          maxAmount: "15.00",
+          rate: "1478.00",
+          paymentMethod: "Bank Transfer",
+          terms: "Perfect for small trades. Quick and reliable.",
+          status: "active"
+        });
+
+        console.log("Seeded 6 demo offers (3 buy, 3 sell)");
+      }
+    } catch (error) {
+      console.error("Failed to seed initial data:", error);
+    }
   }
 
   // User methods
@@ -212,7 +366,7 @@ export class DatabaseStorage implements IStorage {
     // Update user's average rating
     const userRatings = await db.select().from(ratings).where(eq(ratings.ratedUserId, insertRating.ratedUserId));
     const avgRating = userRatings.reduce((sum, r) => sum + r.rating, 0) / userRatings.length;
-    
+
     await this.updateUser(insertRating.ratedUserId, {
       averageRating: avgRating.toFixed(2),
       ratingCount: userRatings.length,
