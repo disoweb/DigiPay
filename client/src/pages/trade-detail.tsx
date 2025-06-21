@@ -1,13 +1,8 @@
-import { useState } from "react";
-import { useParams, useLocation } from "wouter";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useParams } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 import { Navbar } from "@/components/navbar";
-import { RealTimeChat } from "@/components/real-time-chat";
-import { RatingForm } from "@/components/rating-form";
-import { PaymentInstructions } from "@/components/payment-instructions";
-import { PaymentProofUpload } from "@/components/payment-proof-upload";
-import { DisputeResolution } from "@/components/dispute-resolution";
-import { TradeTimer } from "@/components/trade-timer";
+import { TradeChat } from "@/components/trade-chat";
+import { P2PTradingFlow } from "@/components/p2p-trading-flow";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
