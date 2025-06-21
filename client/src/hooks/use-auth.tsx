@@ -1,125 +1,143 @@
-import React, { createContext, ReactNode, useContext } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { User as SelectUser, InsertUser } from "@shared/schema";
-import { getQueryFn, apiRequest, queryClient } from "../lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
 
-type AuthContextType = {
-  user: SelectUser | null;
+import React, { createContext, useContext, useEffect, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useLocation } from "wouter";
+
+interface User {
+  id: number;
+  email: string;
+  fullName?: string;
+  phone?: string;
+  usdtBalance?: string;
+  nairaBalance?: string;
+  averageRating?: string;
+  ratingCount?: number;
+  kycVerified?: boolean;
+  isAdmin?: boolean;
+  tronAddress?: string;
+}
+
+interface AuthContextType {
+  user: User | null;
   isLoading: boolean;
-  error: Error | null;
-  login: (credentials: { email: string; password: string }) => Promise<void>;
-  logout: () => Promise<void>;
-  register: (userData: InsertUser) => Promise<void>;
-};
+  login: (email: string, password: string) => Promise<void>;
+  register: (email: string, password: string) => Promise<void>;
+  logout: () => void;
+}
 
-export const AuthContext = createContext<AuthContextType | null>(null);
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const { toast } = useToast();
-  
-  const {
-    data: user,
-    error,
-    isLoading,
-  } = useQuery<SelectUser | undefined, Error>({
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [, setLocation] = useLocation();
+  const queryClient = useQueryClient();
+
+  const { data: user, isLoading, error } = useQuery({
     queryKey: ["/api/user"],
-    queryFn: getQueryFn({ on401: "returnNull" }),
+    queryFn: async () => {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        throw new Error("No token");
+      }
+
+      const response = await fetch("/api/user", {
+        headers: {
+          "Authorization": `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          localStorage.removeItem("token");
+          throw new Error("Unauthorized");
+        }
+        throw new Error("Failed to fetch user");
+      }
+
+      return response.json();
+    },
+    retry: false,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
   const loginMutation = useMutation({
-    mutationFn: async (credentials: { email: string; password: string }) => {
-      const res = await apiRequest("POST", "/api/auth/login", credentials);
-      return await res.json();
-    },
-    onSuccess: (response: any) => {
-      const { token, user: userData } = response;
-      if (token) {
-        localStorage.setItem('digipay_token', token);
-      }
-      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
-      
-      // Role-based redirection
-      if (userData?.isAdmin) {
-        window.location.href = "/admin";
-      } else {
-        window.location.href = "/dashboard";
-      }
-      
-      toast({
-        title: "Login successful",
-        description: "Welcome back to DigiPay!",
+    mutationFn: async ({ email, password }: { email: string; password: string }) => {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
       });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Login failed",
-        description: error.message || "Please check your credentials",
-        variant: "destructive",
-      });
-    },
-  });
 
-  const logoutMutation = useMutation({
-    mutationFn: async () => {
-      await apiRequest("POST", "/api/auth/logout", {});
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Login failed");
+      }
+
+      return response.json();
     },
-    onSuccess: () => {
-      localStorage.removeItem('digipay_token');
-      queryClient.clear();
-      window.location.href = "/";
-      toast({
-        title: "Logged out",
-        description: "You have been successfully logged out.",
-      });
+    onSuccess: (data) => {
+      localStorage.setItem("token", data.token);
+      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+      setLocation("/dashboard");
+    },
+    onError: (error) => {
+      console.error("Login error:", error);
     },
   });
 
   const registerMutation = useMutation({
-    mutationFn: async (userData: InsertUser) => {
-      const res = await apiRequest("POST", "/api/auth/register", userData);
-      return await res.json();
-    },
-    onSuccess: (response: any) => {
-      const { token } = response;
-      if (token) {
-        localStorage.setItem('digipay_token', token);
+    mutationFn: async ({ email, password }: { email: string; password: string }) => {
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Registration failed");
       }
-      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
-      window.location.href = "/profile-setup";
-      toast({
-        title: "Registration successful",
-        description: "Welcome to DigiPay! Please complete your profile.",
-      });
+
+      return response.json();
     },
-    onError: (error: Error) => {
-      toast({
-        title: "Registration failed",
-        description: error.message || "Please try again",
-        variant: "destructive",
-      });
+    onSuccess: (data) => {
+      localStorage.setItem("token", data.token);
+      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+      setLocation("/dashboard");
     },
   });
 
-  const login = async (credentials: { email: string; password: string }) => {
-    await loginMutation.mutateAsync(credentials);
+  const login = async (email: string, password: string) => {
+    await loginMutation.mutateAsync({ email, password });
   };
 
-  const logout = async () => {
-    await logoutMutation.mutateAsync();
+  const register = async (email: string, password: string) => {
+    await registerMutation.mutateAsync({ email, password });
   };
 
-  const register = async (userData: InsertUser) => {
-    await registerMutation.mutateAsync(userData);
+  const logout = () => {
+    localStorage.removeItem("token");
+    queryClient.clear();
+    setLocation("/");
   };
+
+  // Handle auth errors
+  useEffect(() => {
+    if (error && error.message === "Unauthorized") {
+      localStorage.removeItem("token");
+      setLocation("/auth");
+    }
+  }, [error, setLocation]);
 
   const value: AuthContextType = {
     user: user || null,
-    isLoading,
-    error,
+    isLoading: isLoading || loginMutation.isPending || registerMutation.isPending,
     login,
-    logout,
     register,
+    logout,
   };
 
   return (
@@ -131,7 +149,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 export function useAuth() {
   const context = useContext(AuthContext);
-  if (!context) {
+  if (context === undefined) {
     throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
