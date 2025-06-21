@@ -17,10 +17,14 @@ interface CreateOfferModalProps {
 export function CreateOfferModal({ open, onOpenChange }: CreateOfferModalProps) {
   const { toast } = useToast();
   const [formData, setFormData] = useState({
-    type: "",
+    type: "buy" as "buy" | "sell",
     amount: "",
     rate: "",
-    paymentMethod: ""
+    minAmount: "",
+    maxAmount: "",
+    terms: "",
+    paymentMethod: "",
+    timeLimit: "15",
   });
 
   const createOfferMutation = useMutation({
@@ -39,7 +43,7 @@ export function CreateOfferModal({ open, onOpenChange }: CreateOfferModalProps) 
         description: "Offer created successfully!",
       });
       onOpenChange(false);
-      setFormData({ type: "", amount: "", rate: "", paymentMethod: "" });
+      setFormData({ type: "", amount: "", rate: "", minAmount: "", maxAmount: "", terms: "", paymentMethod: "", timeLimit: "15" });
     },
     onError: () => {
       toast({
@@ -52,10 +56,10 @@ export function CreateOfferModal({ open, onOpenChange }: CreateOfferModalProps) 
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.type || !formData.amount || !formData.rate || !formData.paymentMethod) {
+    if (!formData.amount || !formData.rate || !formData.paymentMethod) {
       toast({
         title: "Error",
-        description: "Please fill in all fields",
+        description: "Please fill in all required fields including payment method",
         variant: "destructive",
       });
       return;
@@ -110,27 +114,62 @@ export function CreateOfferModal({ open, onOpenChange }: CreateOfferModalProps) 
                   required
                 />
               </div>
+              <div>
+                  <Label htmlFor="minAmount">Min Amount (USDT)</Label>
+                  <Input
+                    id="minAmount"
+                    type="number"
+                    step="0.01"
+                    value={formData.minAmount}
+                    onChange={(e) => setFormData({ ...formData, minAmount: e.target.value })}
+                    placeholder="e.g., 10"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="maxAmount">Max Amount (USDT)</Label>
+                  <Input
+                    id="maxAmount"
+                    type="number"
+                    step="0.01"
+                    value={formData.maxAmount}
+                    onChange={(e) => setFormData({ ...formData, maxAmount: e.target.value })}
+                    placeholder="e.g., 1000"
+                  />
+                </div>
+              </div>
 
               <div>
-                <Label htmlFor="paymentMethod">Payment Method</Label>
-                <Select 
-                  value={formData.paymentMethod} 
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, paymentMethod: value }))}
-                >
+                <Label htmlFor="paymentMethod">Payment Method *</Label>
+                <Select value={formData.paymentMethod} onValueChange={(value) => setFormData({ ...formData, paymentMethod: value })}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select payment method" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
-                    <SelectItem value="Mobile Money (MTN)">Mobile Money (MTN)</SelectItem>
-                    <SelectItem value="Mobile Money (Airtel)">Mobile Money (Airtel)</SelectItem>
-                    <SelectItem value="Opay">Opay</SelectItem>
-                    <SelectItem value="PalmPay">PalmPay</SelectItem>
-                    <SelectItem value="Kuda">Kuda</SelectItem>
+                    <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
+                    <SelectItem value="opay">Opay</SelectItem>
+                    <SelectItem value="palmpay">PalmPay</SelectItem>
+                    <SelectItem value="kuda">Kuda Bank</SelectItem>
+                    <SelectItem value="mtn_mobile">MTN Mobile Money</SelectItem>
+                    <SelectItem value="airtel_mobile">Airtel Money</SelectItem>
+                    <SelectItem value="moniepoint">Moniepoint</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-            </div>
+
+              <div>
+                <Label htmlFor="timeLimit">Payment Time Limit (minutes)</Label>
+                <Select value={formData.timeLimit} onValueChange={(value) => setFormData({ ...formData, timeLimit: value })}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select time limit" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="15">15 minutes</SelectItem>
+                    <SelectItem value="30">30 minutes</SelectItem>
+                    <SelectItem value="45">45 minutes</SelectItem>
+                    <SelectItem value="60">1 hour</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
           <div className="flex space-x-3 pt-4">
             <Button 

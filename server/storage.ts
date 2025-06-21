@@ -257,9 +257,22 @@ export class DatabaseStorage implements IStorage {
 
   async updateUser(id: number, updates: Partial<User>): Promise<User | undefined> {
     try {
+      // Filter out undefined values to prevent SQL issues
+      const cleanUpdates = Object.entries(updates).reduce((acc, [key, value]) => {
+        if (value !== undefined) {
+          acc[key] = value;
+        }
+        return acc;
+      }, {} as any);
+
+      if (Object.keys(cleanUpdates).length === 0) {
+        // No valid updates, return current user
+        return await this.getUser(id);
+      }
+
       const [user] = await db
         .update(users)
-        .set(updates)
+        .set(cleanUpdates)
         .where(eq(users.id, id))
         .returning();
       return user || undefined;

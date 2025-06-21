@@ -103,12 +103,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("User ID:", req.user!.id);
 
       const user = req.user!;
-      const { type, amount, rate, paymentMethod, terms, minAmount, maxAmount } = req.body;
+      const { type, amount, rate, paymentMethod, terms, minAmount, maxAmount, timeLimit } = req.body;
 
       // Validate required fields
-      if (!type || !amount || !rate || !paymentMethod) {
-        return res.status(400).json({ error: "Missing required fields: type, amount, rate, paymentMethod" });
+      if (!type || !amount || !rate) {
+        return res.status(400).json({ error: "Missing required fields: type, amount, rate" });
       }
+
+      // Default payment method if not provided
+      const finalPaymentMethod = paymentMethod || "bank_transfer";
 
       // For sell offers, check USDT balance
       if (type === "sell") {
@@ -125,7 +128,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         type,
         amount: parseFloat(amount).toFixed(8),
         rate: parseFloat(rate).toFixed(2),
-        paymentMethod,
+        paymentMethod: finalPaymentMethod,
         terms: terms || "",
         minAmount: minAmount ? parseFloat(minAmount).toFixed(8) : parseFloat(amount).toFixed(8),
         maxAmount: maxAmount ? parseFloat(maxAmount).toFixed(8) : parseFloat(amount).toFixed(8),
@@ -772,13 +775,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user!.id;
       const { fullName, location, bio, preferredPaymentMethods, tradingHours } = req.body;
 
-      await storage.updateUser(userId, {
-        fullName,
-        location,
-        bio,
-        preferredPaymentMethods: JSON.stringify(preferredPaymentMethods),
-        tradingHours: JSON.stringify(tradingHours)
-      });
+      console.log("Profile setup request:", { fullName, location, bio, preferredPaymentMethods, tradingHours });
+
+      const updates: any = {};
+      if (fullName) updates.fullName = fullName;
+      if (location) updates.location = location;
+      if (bio) updates.bio = bio;
+      if (preferredPaymentMethods && Array.isArray(preferredPaymentMethods)) {
+        updates.preferredPaymentMethods = JSON.stringify(preferredPaymentMethods);
+      }
+      if (tradingHours) {
+        updates.tradingHours = JSON.stringify(tradingHours);
+      }
+
+      const updatedUser = await storage.updateUser(userId, updates);
+      console.log("Profile updated successfully:", updatedUser?.id);
 
       res.json({ success: true, message: "Profile setup completed successfully" });
     } catch (error) {

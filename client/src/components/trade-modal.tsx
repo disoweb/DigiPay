@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Star, Loader2 } from "lucide-react";
+import { Star, Loader2, Shield } from "lucide-react";
 import type { Offer } from "@shared/schema";
 
 type EnrichedOffer = Offer & {
@@ -84,7 +84,7 @@ export function TradeModal({ offer, open, onOpenChange }: TradeModalProps) {
         <DialogHeader>
           <DialogTitle>Initiate Trade</DialogTitle>
         </DialogHeader>
-        
+
         {/* Offer Details */}
         <Card className="bg-gray-50">
           <CardContent className="p-4">
@@ -112,7 +112,7 @@ export function TradeModal({ offer, open, onOpenChange }: TradeModalProps) {
             </div>
           </CardContent>
         </Card>
-        
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="trade-amount">Amount to Trade (USDT)</Label>
@@ -132,7 +132,59 @@ export function TradeModal({ offer, open, onOpenChange }: TradeModalProps) {
               </p>
             )}
           </div>
-          
+
+          <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="text-gray-600">Rate:</span>
+                    <p className="font-medium">₦{parseFloat(offer.rate).toLocaleString()}/USDT</p>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Available:</span>
+                    <p className="font-medium">{parseFloat(offer.amount).toFixed(2)} USDT</p>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Payment Method:</span>
+                    <p className="font-medium">{offer.paymentMethod || "Bank Transfer"}</p>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Time Limit:</span>
+                    <p className="font-medium">15 minutes</p>
+                  </div>
+                  <div className="col-span-2">
+                    <span className="text-gray-600">Total:</span>
+                    <p className="font-bold text-lg">₦{(parseFloat(amount || "0") * parseFloat(offer.rate)).toLocaleString()}</p>
+                  </div>
+                </div>
+
+                {offer.type === "sell" && (
+                  <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                    <div className="flex items-start space-x-2">
+                      <Shield className="h-4 w-4 text-blue-500 mt-0.5" />
+                      <div className="text-xs text-blue-700">
+                        <p className="font-medium">Buyer Protection:</p>
+                        <p>• Seller's USDT is locked in escrow</p>
+                        <p>• Pay only after USDT is secured</p>
+                        <p>• Get full refund if seller doesn't deliver</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {offer.type === "buy" && (
+                  <div className="p-3 bg-green-50 rounded-lg border border-green-200">
+                    <div className="flex items-start space-x-2">
+                      <Shield className="h-4 w-4 text-green-500 mt-0.5" />
+                      <div className="text-xs text-green-700">
+                        <p className="font-medium">Seller Protection:</p>
+                        <p>• Receive payment before releasing USDT</p>
+                        <p>• Buyer's funds are verified before trade</p>
+                        <p>• Dispute resolution available</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
           <div className="flex space-x-3 pt-4">
             <Button 
               type="submit" 
