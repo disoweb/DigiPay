@@ -22,7 +22,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Withdrawal endpoint
+  // Withdrawal endpoint - now requires admin approval
   app.post("/api/withdraw", authenticateToken, async (req, res) => {
     try {
       const { amount, bankName, accountNumber, accountName } = req.body;
@@ -47,29 +47,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Insufficient balance" });
       }
 
-      const fee = withdrawAmount * 0.01;
-      const finalAmount = withdrawAmount - fee;
-      const newBalance = availableBalance - withdrawAmount;
-
-      // Update user balance
-      await storage.updateUser(userId, {
-        nairaBalance: newBalance.toString()
-      });
-
-      // Create transaction record
+      // Create withdrawal request (pending admin approval)
       await storage.createTransaction({
         userId,
         amount: withdrawAmount.toString(),
         type: "withdrawal",
         status: "pending",
-        description: `Withdrawal to ${bankName} - ${accountNumber}`
+        description: `Withdrawal request to ${bankName}`,
+        bankName,
+        accountNumber,
+        accountName
       });
 
       res.json({ 
         success: true, 
-        message: "Withdrawal request submitted successfully",
-        finalAmount: finalAmount.toFixed(2),
-        newBalance: newBalance.toFixed(2)
+        message: "Withdrawal request submitted. Awaiting admin approval.",
+        amount: withdrawAmount.toFixed(2)
       });
     } catch (error) {
       console.error("Withdrawal error:", error);
@@ -200,42 +193,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const trade = await storage.createTrade(tradeData);
 
-      // Update user balances immediately (escrow simulation)
+      // Lock USDT in escrow for sell offers (seller has USDT, buyer needs to pay)
       if (offer.type === "sell") {
-        // User buys USDT - deduct Naira, add USDT
-        const requiredNaira = tradeAmount * parseFloat(offer.rate);
-        await storage.updateUser(user.id, {
-          nairaBalance: (parseFloat(user.nairaBalance || "0") - requiredNaira).toString(),
-          usdtBalance: (parseFloat(user.usdtBalance || "0") + tradeAmount).toString()
-        });
-        
-        // Update seller balances
         const seller = await storage.getUser(offer.userId);
         if (seller) {
+          // Lock seller's USDT in escrow
           await storage.updateUser(seller.id, {
-            nairaBalance: (parseFloat(seller.nairaBalance || "0") + requiredNaira).toString(),
             usdtBalance: (parseFloat(seller.usdtBalance || "0") - tradeAmount).toString()
-          });
-        }
-      } else {
-        // User sells USDT - deduct USDT, add Naira
-        const receivedNaira = tradeAmount * parseFloat(offer.rate);
-        await storage.updateUser(user.id, {
-          nairaBalance: (parseFloat(user.nairaBalance || "0") + receivedNaira).toString(),
-          usdtBalance: (parseFloat(user.usdtBalance || "0") - tradeAmount).toString()
-        });
-        
-        // Update buyer balances  
-        const buyer = await storage.getUser(offer.userId);
-        if (buyer) {
-          await storage.updateUser(buyer.id, {
-            nairaBalance: (parseFloat(buyer.nairaBalance || "0") - receivedNaira).toString(),
-            usdtBalance: (parseFloat(buyer.usdtBalance || "0") + tradeAmount).toString()
           });
         }
       }
 
-      // Update offer amount or mark as completed
+      // Set payment deadline (15 minutes from now)
+      const paymentDeadline = new Date(Date.now() + 15 * 60 * 1000);
+      
+      await storage.updateTrade(trade.id, { 
+        status: "payment_pending",
+        paymentDeadline: paymentDeadline.toISOString()
+      });
+
+      // Update offer amount
       const remainingAmount = offerAmount - tradeAmount;
       if (remainingAmount <= 0) {
         await storage.updateOffer(offer.id, { 
@@ -248,48 +225,241 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Mark trade as completed
-      await storage.updateTrade(trade.id, { status: "completed" });
+      res.json({ 
+        success: true, 
+        trade: {
+          ...trade,
+          paymentDeadline: paymentDeadline.toISOString()
+        },
+        message: "Trade initiated! Payment must be made within 15 minutes.",
+        paymentDeadline: paymentDeadline.toISOString()
+      });
+    } catch (error) {
+      console.error("Trade creation error:", error);
+      res.status(400).json({ error: "Trade creation failed", details: error instanceof Error ? error.message : "Unknown error" });
+    }
+  });
+
+  // Payment confirmation endpoints
+  app.post("/api/trades/:id/payment-made", authenticateToken, async (req, res) => {
+    try {
+      const tradeId = parseInt(req.params.id);
+      const trade = await storage.getTrade(tradeId);
+      
+      if (!trade) {
+        return res.status(404).json({ error: "Trade not found" });
+      }
+
+      if (trade.buyerId !== req.user!.id) {
+        return res.status(403).json({ error: "Only the buyer can mark payment as made" });
+      }
+
+      if (trade.status !== "payment_pending") {
+        return res.status(400).json({ error: "Trade is not in payment pending status" });
+      }
+
+      // Check if payment deadline has passed
+      if (trade.paymentDeadline && new Date() > new Date(trade.paymentDeadline)) {
+        await storage.updateTrade(tradeId, { status: "expired" });
+        return res.status(400).json({ error: "Payment deadline has passed" });
+      }
+
+      await storage.updateTrade(tradeId, {
+        status: "payment_made",
+        paymentMadeAt: new Date().toISOString()
+      });
+
+      res.json({ success: true, message: "Payment marked as made. Waiting for seller confirmation." });
+    } catch (error) {
+      console.error("Payment confirmation error:", error);
+      res.status(500).json({ error: "Failed to confirm payment" });
+    }
+  });
+
+  app.post("/api/trades/:id/confirm-payment", authenticateToken, async (req, res) => {
+    try {
+      const tradeId = parseInt(req.params.id);
+      const trade = await storage.getTrade(tradeId);
+      
+      if (!trade) {
+        return res.status(404).json({ error: "Trade not found" });
+      }
+
+      if (trade.sellerId !== req.user!.id) {
+        return res.status(403).json({ error: "Only the seller can confirm payment received" });
+      }
+
+      if (trade.status !== "payment_made") {
+        return res.status(400).json({ error: "Payment must be marked as made first" });
+      }
+
+      const offer = await storage.getOffer(trade.offerId);
+      if (!offer) {
+        return res.status(404).json({ error: "Offer not found" });
+      }
+
+      const tradeAmount = parseFloat(trade.amount);
+      const buyer = await storage.getUser(trade.buyerId);
+      const seller = await storage.getUser(trade.sellerId);
+
+      if (!buyer || !seller) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      // Complete the trade - release escrow and update balances
+      if (offer.type === "sell") {
+        // Release USDT to buyer
+        await storage.updateUser(buyer.id, {
+          usdtBalance: (parseFloat(buyer.usdtBalance || "0") + tradeAmount).toString()
+        });
+        
+        // Give Naira to seller
+        const nairaAmount = tradeAmount * parseFloat(trade.rate);
+        await storage.updateUser(seller.id, {
+          nairaBalance: (parseFloat(seller.nairaBalance || "0") + nairaAmount).toString()
+        });
+      }
+
+      await storage.updateTrade(tradeId, {
+        status: "completed",
+        sellerConfirmedAt: new Date().toISOString()
+      });
 
       // Create transaction records
       await storage.createTransaction({
-        userId: user.id,
-        amount: (tradeAmount * parseFloat(offer.rate)).toString(),
-        type: offer.type === "sell" ? "purchase" : "sale",
+        userId: buyer.id,
+        amount: (tradeAmount * parseFloat(trade.rate)).toString(),
+        type: "purchase",
         status: "completed",
-        description: `${offer.type === "sell" ? "Bought" : "Sold"} ${tradeAmount} USDT at ₦${offer.rate}/USDT`
+        description: `Bought ${tradeAmount} USDT at ₦${trade.rate}/USDT`
       });
 
-      res.json({ 
-        success: true, 
-        trade,
-        message: "Trade completed successfully!"
+      await storage.createTransaction({
+        userId: seller.id,
+        amount: (tradeAmount * parseFloat(trade.rate)).toString(),
+        type: "sale",
+        status: "completed",
+        description: `Sold ${tradeAmount} USDT at ₦${trade.rate}/USDT`
       });
 
-      // Send notifications to both parties
-      const buyer = await storage.getUser(tradeData.buyerId);
-      const seller = await storage.getUser(tradeData.sellerId);
-
-      if (buyer?.email) {
-        await emailService.sendTradeNotification(
-          buyer.email,
-          trade.id,
-          `New trade initiated: ${offer.type === "sell" ? "Buy" : "Sell"} ${amount} USDT at ₦${offer.rate} per USDT`
-        );
-      }
-
-      if (seller?.email) {
-        await emailService.sendTradeNotification(
-          seller.email,
-          trade.id,
-          `New trade initiated: ${offer.type === "sell" ? "Sell" : "Buy"} ${amount} USDT at ₦${offer.rate} per USDT`
-        );
-      }
-
-      res.status(201).json(trade);
+      res.json({ success: true, message: "Trade completed successfully!" });
     } catch (error) {
-      console.error("Trade creation error:", error);
-      res.status(400).json({ message: "Failed to create trade" });
+      console.error("Payment confirmation error:", error);
+      res.status(500).json({ error: "Failed to confirm payment" });
+    }
+  });
+
+  // Admin endpoints for transaction approval
+  app.get("/api/admin/transactions", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      const allTransactions = await storage.getAllTransactions();
+      
+      // Enrich with user data
+      const enrichedTransactions = await Promise.all(
+        allTransactions.map(async (transaction) => {
+          const user = await storage.getUser(transaction.userId);
+          return {
+            ...transaction,
+            user: user ? { id: user.id, email: user.email } : null,
+          };
+        })
+      );
+
+      res.json(enrichedTransactions);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch transactions" });
+    }
+  });
+
+  app.post("/api/admin/transactions/:id/approve", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      const transactionId = parseInt(req.params.id);
+      const { notes } = req.body;
+      const adminId = req.user!.id;
+
+      const transaction = await storage.getTransaction(transactionId);
+      if (!transaction) {
+        return res.status(404).json({ error: "Transaction not found" });
+      }
+
+      if (transaction.status !== "pending") {
+        return res.status(400).json({ error: "Transaction is not pending" });
+      }
+
+      // For withdrawals, deduct from user balance
+      if (transaction.type === "withdrawal") {
+        const user = await storage.getUser(transaction.userId);
+        if (!user) {
+          return res.status(404).json({ error: "User not found" });
+        }
+
+        const availableBalance = parseFloat(user.nairaBalance || "0");
+        const withdrawAmount = parseFloat(transaction.amount);
+
+        if (availableBalance < withdrawAmount) {
+          return res.status(400).json({ error: "Insufficient user balance" });
+        }
+
+        await storage.updateUser(transaction.userId, {
+          nairaBalance: (availableBalance - withdrawAmount).toString()
+        });
+      }
+
+      // For deposits, add to user balance
+      if (transaction.type === "deposit") {
+        const user = await storage.getUser(transaction.userId);
+        if (!user) {
+          return res.status(404).json({ error: "User not found" });
+        }
+
+        const currentBalance = parseFloat(user.nairaBalance || "0");
+        const depositAmount = parseFloat(transaction.amount);
+
+        await storage.updateUser(transaction.userId, {
+          nairaBalance: (currentBalance + depositAmount).toString()
+        });
+      }
+
+      await storage.updateTransaction(transactionId, {
+        status: "approved",
+        adminNotes: notes,
+        approvedBy: adminId,
+        approvedAt: new Date().toISOString()
+      });
+
+      res.json({ success: true, message: "Transaction approved successfully" });
+    } catch (error) {
+      console.error("Transaction approval error:", error);
+      res.status(500).json({ error: "Failed to approve transaction" });
+    }
+  });
+
+  app.post("/api/admin/transactions/:id/reject", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      const transactionId = parseInt(req.params.id);
+      const { notes } = req.body;
+      const adminId = req.user!.id;
+
+      const transaction = await storage.getTransaction(transactionId);
+      if (!transaction) {
+        return res.status(404).json({ error: "Transaction not found" });
+      }
+
+      if (transaction.status !== "pending") {
+        return res.status(400).json({ error: "Transaction is not pending" });
+      }
+
+      await storage.updateTransaction(transactionId, {
+        status: "rejected",
+        adminNotes: notes,
+        approvedBy: adminId,
+        approvedAt: new Date().toISOString()
+      });
+
+      res.json({ success: true, message: "Transaction rejected successfully" });
+    } catch (error) {
+      console.error("Transaction rejection error:", error);
+      res.status(500).json({ error: "Failed to reject transaction" });
     }
   });
 

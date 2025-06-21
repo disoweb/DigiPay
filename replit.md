@@ -35,9 +35,11 @@ DigiPay is a full-stack peer-to-peer (P2P) cryptocurrency trading platform built
 - Protected routes with authentication middleware
 - User roles (regular users and administrators)
 
-### Trading System
+### P2P Trading System (Binance-style)
 - Offer creation and management (buy/sell USDT)
-- Trade execution with escrow functionality
+- Escrow-based trade execution with USDT locking
+- 15-minute payment windows with automatic expiration
+- Multi-step trade flow: pending → payment_pending → payment_made → completed
 - Real-time trade messaging system
 - Rating and reputation system for users
 
@@ -50,6 +52,9 @@ DigiPay is a full-stack peer-to-peer (P2P) cryptocurrency trading platform built
 ### Admin Panel
 - Trade dispute resolution
 - User management and verification
+- Withdrawal/deposit approval system with admin notes
+- Transaction tracking and audit trail
+- Real-time approval dashboard with notifications
 - System-wide monitoring and controls
 
 ## Data Flow
@@ -117,6 +122,8 @@ Changelog:
 - June 21, 2025. Fixed authentication system with JWT cookies and proper API routing separation
 - June 21, 2025. Enhanced UI/UX with mobile-first responsive design, modern gradients, and compact layouts
 - June 21, 2025. Completed project migration to Replit with fixed authentication and 3-step withdrawal process
+- June 21, 2025. Implemented Binance-style P2P trading with escrow, payment timeouts, and admin approval system
+- June 21, 2025. Added comprehensive admin panel for withdrawal/deposit approvals with transaction tracking
 ```
 
 ## User Preferences

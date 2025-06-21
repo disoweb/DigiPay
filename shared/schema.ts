@@ -35,8 +35,11 @@ export const trades = pgTable("trades", {
   sellerId: integer("seller_id").references(() => users.id).notNull(),
   amount: decimal("amount", { precision: 12, scale: 8 }).notNull(),
   rate: decimal("rate", { precision: 10, scale: 2 }).notNull(),
-  status: text("status").default("pending"), // 'pending', 'completed', 'cancelled', 'disputed'
+  status: text("status").default("pending"), // 'pending', 'payment_pending', 'payment_made', 'completed', 'cancelled', 'disputed', 'expired'
   escrowAddress: text("escrow_address"),
+  paymentDeadline: timestamp("payment_deadline"),
+  paymentMadeAt: timestamp("payment_made_at"),
+  sellerConfirmedAt: timestamp("seller_confirmed_at"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

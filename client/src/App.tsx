@@ -13,6 +13,7 @@ import Trades from "@/pages/trades";
 import TradeDetail from "@/pages/trade-detail";
 import Wallet from "@/pages/wallet";
 import Admin from "@/pages/admin";
+import AdminApprovals from "@/pages/admin-approvals";
 import Ratings from "@/pages/ratings";
 import NotFound from "@/pages/not-found";
 
@@ -34,6 +35,7 @@ function App() {
             <ProtectedRoute path="/wallet" component={Wallet} />
             <ProtectedRoute path="/ratings" component={Ratings} />
             <ProtectedRoute path="/admin" component={Admin} adminOnly />
+            <ProtectedRoute path="/admin/approvals" component={AdminApprovals} adminOnly />
             
             <Route component={NotFound} />
           </Switch>

@@ -47,6 +47,10 @@ export interface IStorage {
   getAllRatings(): Promise<Rating[]>;
   getTradeRating(tradeId: number, raterId: number): Promise<Rating | null>;
 
+  // Additional transaction methods
+  getAllTransactions(): Promise<Transaction[]>;
+  getTransaction(id: number): Promise<Transaction | undefined>;
+
   sessionStore: any;
 }
 
@@ -162,7 +166,8 @@ export class DatabaseStorage implements IStorage {
       console.log(`📊 Found ${existingOffers.length} existing offers`);
 
       if (existingOffers.length < 6) {
-        // Clear existing offers and recreate
+        // Clear existing trades first, then offers to avoid foreign key constraint
+        await db.delete(trades);
         await db.delete(offers);
 
         // Buy offers (users want to buy USDT)
@@ -390,6 +395,15 @@ export class DatabaseStorage implements IStorage {
   async getTradeRating(tradeId: number, raterId: number): Promise<Rating | null> {
     const [rating] = await db.select().from(ratings).where(and(eq(ratings.tradeId, tradeId), eq(ratings.raterId, raterId)));
     return rating || null;
+  }
+
+  async getAllTransactions(): Promise<Transaction[]> {
+    return await db.select().from(transactions).orderBy(desc(transactions.createdAt));
+  }
+
+  async getTransaction(id: number): Promise<Transaction | undefined> {
+    const [transaction] = await db.select().from(transactions).where(eq(transactions.id, id));
+    return transaction;
   }
 
 }
