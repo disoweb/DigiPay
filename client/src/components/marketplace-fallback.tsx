@@ -113,6 +113,24 @@ export function MarketplaceFallback() {
 
   const { data: offers = [], isLoading, error, refetch } = useQuery<EnrichedOffer[]>({
     queryKey: ["/api/offers"],
+    queryFn: async () => {
+      const token = localStorage.getItem('digipay_token');
+      const headers: Record<string, string> = {};
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+
+      const res = await fetch("/api/offers", {
+        headers,
+        credentials: "include",
+      });
+
+      if (!res.ok) {
+        throw new Error(`Failed to load offers: ${res.status}`);
+      }
+
+      return res.json();
+    },
     retry: 3,
     retryDelay: 1000,
     refetchInterval: 30000,
