@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
-import { CreditCard, AlertCircle, Building } from "lucide-react";
+import { CreditCard, AlertCircle, Building, CheckCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface WithdrawModalProps {
@@ -20,6 +20,7 @@ export function WithdrawModal({ open, onOpenChange, balance }: WithdrawModalProp
   const [accountNumber, setAccountNumber] = useState("");
   const [accountName, setAccountName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [step, setStep] = useState(1);
 
   const availableBalance = parseFloat(balance);
   const withdrawAmount = parseFloat(amount || "0");
@@ -39,6 +40,29 @@ export function WithdrawModal({ open, onOpenChange, balance }: WithdrawModalProp
     }, 2000);
   };
 
+  const handleConfirmWithdraw = async () => {
+    setIsLoading(true);
+    // Simulate withdrawal processing
+    setTimeout(() => {
+      setIsLoading(false);
+      onOpenChange(false);
+      setAmount("");
+      setBankName("");
+      setAccountNumber("");
+      setAccountName("");
+      setStep(1);
+    }, 2000);
+  };
+
+  const handleNext = () => {
+    setStep(2);
+  };
+
+  const handleClose = () => {
+    onOpenChange(false);
+    setStep(1);
+  };
+
   const quickAmounts = [
     Math.floor(availableBalance * 0.25),
     Math.floor(availableBalance * 0.5),
@@ -48,20 +72,37 @@ export function WithdrawModal({ open, onOpenChange, balance }: WithdrawModalProp
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[95vw] max-w-md mx-auto max-h-[90vh] overflow-y-auto">
+      
+        <DialogContent className="w-[95vw] max-w-md mx-auto max-h-[90vh] overflow-y-auto">
         <DialogHeader className="space-y-3">
           <DialogTitle className="flex items-center gap-2 text-lg">
             <div className="p-2 bg-blue-100 rounded-lg">
               <Building className="h-5 w-5 text-blue-600" />
             </div>
-            Withdraw to Bank
+            {step === 1 ? "Withdraw to Bank" : "Confirm Withdrawal"}
           </DialogTitle>
           <DialogDescription className="text-sm text-gray-600">
-            Transfer funds from your wallet to your bank account
+            {step === 1 ? "Enter withdrawal details" : "Review and confirm your withdrawal"}
           </DialogDescription>
         </DialogHeader>
 
+        
         <div className="space-y-6 py-2">
+          {/* Step Indicator */}
+          <div className="flex items-center justify-center space-x-4 mb-6">
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+              step === 1 ? 'bg-blue-600 text-white' : 'bg-blue-100 text-blue-600'
+            }`}>
+              1
+            </div>
+            <div className={`w-16 h-0.5 ${step === 2 ? 'bg-blue-600' : 'bg-gray-200'}`}></div>
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+              step === 2 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-400'
+            }`}>
+              2
+            </div>
+          </div>
+
           {/* Available Balance */}
           <Card className="bg-gradient-to-r from-blue-50 to-blue-100 border-blue-200">
             <CardContent className="p-4">
@@ -72,6 +113,9 @@ export function WithdrawModal({ open, onOpenChange, balance }: WithdrawModalProp
             </CardContent>
           </Card>
 
+          {step === 1 ? (
+            // Step 1: Form
+            <>
           {/* Quick Amount Selection */}
           {quickAmounts.length > 0 && (
             <div>
@@ -205,29 +249,99 @@ export function WithdrawModal({ open, onOpenChange, balance }: WithdrawModalProp
 
           {/* Action Buttons */}
           <div className="flex flex-col gap-3 pt-2">
-            <Button 
-              onClick={handleWithdraw} 
-              disabled={!amount || !bankName || !accountNumber || !accountName || withdrawAmount > availableBalance || withdrawAmount < 100 || isLoading}
+            <Button
+              onClick={handleNext}
+              disabled={!amount || !bankName || !accountNumber || !accountName || withdrawAmount > availableBalance || withdrawAmount < 100}
               className="w-full h-12 text-base font-medium bg-blue-600 hover:bg-blue-700"
               size="lg"
             >
-              {isLoading ? (
-                <div className="flex items-center gap-2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  Processing...
-                </div>
-              ) : (
-                `Withdraw ₦${finalAmount.toFixed(2)}`
-              )}
+              Continue to Review
             </Button>
             <Button 
               variant="outline" 
-              onClick={() => onOpenChange(false)}
+              onClick={handleClose}
               className="w-full h-11 text-base"
             >
               Cancel
             </Button>
           </div>
+          </>
+          ) : (
+            // Step 2: Confirmation
+            <>
+            {/* Withdrawal Summary */}
+            <Card className="border-blue-200">
+              <CardContent className="p-4 space-y-3">
+                <h4 className="font-medium text-gray-900 mb-3">Withdrawal Summary</h4>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Amount:</span>
+                    <span className="font-medium">₦{withdrawAmount.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Processing Fee (1%):</span>
+                    <span className="font-medium">₦{fee.toLocaleString()}</span>
+                  </div>
+                  <div className="border-t pt-2 flex justify-between">
+                    <span className="text-gray-900 font-medium">You'll receive:</span>
+                    <span className="font-bold text-blue-600">₦{finalAmount.toLocaleString()}</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Bank Details Summary */}
+            <Card className="border-blue-200">
+              <CardContent className="p-4 space-y-3">
+                <h4 className="font-medium text-gray-900 mb-3">Bank Details</h4>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Bank:</span>
+                    <span className="font-medium">{bankName}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Account Number:</span>
+                    <span className="font-medium">{accountNumber}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Account Name:</span>
+                    <span className="font-medium">{accountName}</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Action Buttons */}
+            <div className="flex flex-col gap-3 pt-2">
+              <Button
+                onClick={handleConfirmWithdraw}
+                disabled={isLoading}
+                className="w-full h-12 text-base font-medium bg-blue-600 hover:bg-blue-700"
+                size="lg"
+              >
+                {isLoading ? (
+                  <div className="flex items-center gap-2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    Processing...
+                  </div>
+                ) : (
+                  <>
+                    <CheckCircle className="h-4 w-4 mr-2" />
+                    Confirm Withdrawal
+                  </>
+                )}
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => setStep(1)}
+                disabled={isLoading}
+                className="w-full h-11 text-base"
+              >
+                Back to Edit
+              </Button>
+            </div>
+            </>
+          )}
         </div>
       </DialogContent>
     </Dialog>

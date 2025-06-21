@@ -86,6 +86,9 @@ export const insertOfferSchema = createInsertSchema(offers).omit({
   id: true,
   createdAt: true,
   status: true,
+}).extend({
+  amount: z.coerce.string(),
+  rate: z.coerce.string(),
 });
 
 export const insertTradeSchema = createInsertSchema(trades).omit({
@@ -93,6 +96,9 @@ export const insertTradeSchema = createInsertSchema(trades).omit({
   createdAt: true,
   status: true,
   escrowAddress: true,
+}).extend({
+  amount: z.coerce.string(),
+  rate: z.coerce.string(),
 });
 
 export const insertMessageSchema = createInsertSchema(messages).omit({

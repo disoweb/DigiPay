@@ -286,7 +286,7 @@ export default function Wallet() {
                 <div className="text-center space-y-3">
                   <p className="text-blue-100 text-sm">Total Portfolio Value</p>
                   <p className="text-4xl font-bold">
-                    ₦{(parseFloat(user.nairaBalance || "0")).toLocaleString()}
+                    ₦{(parseFloat(user.nairaBalance || "0") + (parseFloat(user.usdtBalance || "0") * 1485)).toLocaleString()}
                   </p>
                   <div className="flex justify-center space-x-6 text-sm">
                     <div className="text-center">
@@ -295,7 +295,7 @@ export default function Wallet() {
                     </div>
                     <div className="text-center">
                       <p className="text-blue-100">USDT (TRON)</p>
-                      <p className="font-semibold">Available in TRON Wallet below</p>
+                      <p className="font-semibold">{parseFloat(user.usdtBalance || "0").toFixed(6)} USDT</p>
                     </div>
                   </div>
                 </div>
@@ -371,7 +371,7 @@ export default function Wallet() {
 
                 <div className="space-y-2 mb-4">
                   <p className="text-2xl font-bold text-gray-900">
-                    {parseFloat(user.usdtBalance || "0").toFixed(2)} USDT
+                    {parseFloat(user.usdtBalance || "0").toFixed(6)} USDT
                   </p>
                   <p className="text-sm text-gray-600">
                     ≈ ₦{(parseFloat(user.usdtBalance || "0") * 1485).toLocaleString()}

@@ -90,11 +90,32 @@ export class DatabaseStorage implements IStorage {
           kycVerified: true,
           isAdmin: true,
           nairaBalance: "100000",
-          usdtBalance: "50.00",
+          usdtBalance: "100.00",
           bvn: "98765432109",
           tronAddress: "TRXAdmin987654321"
         });
         console.log("✅ Seeded admin user - Email: admin@digipay.com, Password: admin123");
+      } else {
+        // Update existing admin with new balances
+        await this.updateUser(adminUser.id, {
+          nairaBalance: "100000",
+          usdtBalance: "100.00"
+        });
+      }
+
+      // Update any existing users to have minimum balances
+      const allUsers = await db.select().from(users);
+      for (const user of allUsers) {
+        const currentNaira = parseFloat(user.nairaBalance || "0");
+        const currentUsdt = parseFloat(user.usdtBalance || "0");
+
+        if (currentNaira < 10000 || currentUsdt < 100) {
+          await this.updateUser(user.id, {
+            nairaBalance: Math.max(currentNaira, 10000).toString(),
+            usdtBalance: Math.max(currentUsdt, 100).toFixed(2)
+          });
+          console.log(`✅ Updated ${user.email} with minimum balances`);
+        }
       }
 
       // Create additional test users for offers
