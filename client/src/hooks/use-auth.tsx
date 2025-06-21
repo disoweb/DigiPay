@@ -122,10 +122,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
   });
 
-  const logout = () => {
+  const logout = async () => {
+    try {
+      // Call logout endpoint to invalidate token on server if needed
+      await apiRequest("POST", "/api/logout", {});
+    } catch (error) {
+      console.log("Server logout error:", error);
+    }
+    
+    // Clear client-side data
     localStorage.removeItem("digipay_token");
     queryClient.clear();
-    setLocation("/auth");
+    
+    // Force page reload to completely reset auth state
+    window.location.href = "/auth";
   };
 
   const value: AuthContextType = {

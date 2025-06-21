@@ -22,6 +22,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Add logout endpoint
+  app.post("/api/logout", authenticateToken, async (req, res) => {
+    try {
+      res.json({ message: "Logged out successfully" });
+    } catch (error) {
+      console.error("Logout error:", error);
+      res.status(500).json({ error: "Logout failed" });
+    }
+  });
+
   // Withdrawal endpoint - now requires admin approval
   app.post("/api/withdraw", authenticateToken, async (req, res) => {
     try {

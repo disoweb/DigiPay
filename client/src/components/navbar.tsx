@@ -48,8 +48,8 @@ export function Navbar() {
   ];
 
   const handleLogout = () => {
-    logout();
     setIsMobileMenuOpen(false);
+    logout();
   };
 
   const getInitials = (email: string) => {
