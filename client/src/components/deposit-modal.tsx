@@ -1,11 +1,25 @@
 import { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
-import { CreditCard, AlertCircle } from "lucide-react";
+import { CreditCard, AlertCircle, Loader2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useToast } from "@/hooks/use-toast";
+import { initializePaystack, PAYSTACK_PUBLIC_KEY } from "@/lib/paystack";
+import { useAuth } from "@/hooks/use-auth";
+
+function apiRequest(method: string, url: string, data?: any) {
+  return fetch(url, {
+    method,
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: data ? JSON.stringify(data) : undefined,
+  });
+}
 
 interface DepositModalProps {
   open: boolean;
@@ -14,16 +28,141 @@ interface DepositModalProps {
 
 export function DepositModal({ open, onOpenChange }: DepositModalProps) {
   const [amount, setAmount] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+
+  const initializePaymentMutation = useMutation({
+    mutationFn: async (amount: number) => {
+      const res = await apiRequest("POST", "/api/payments/initialize", { amount });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || "Failed to initialize payment");
+      }
+      return res.json();
+    },
+    onSuccess: (data) => {
+      if (data.success && data.data) {
+        handlePaystackPayment(data.data);
+      } else {
+        throw new Error(data.message || "Payment initialization failed");
+      }
+    },
+    onError: (error: Error) => {
+      setIsProcessing(false);
+      toast({
+        title: "Payment Initialization Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const verifyPaymentMutation = useMutation({
+    mutationFn: async (reference: string) => {
+      const res = await apiRequest("POST", "/api/payments/verify", { reference });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || "Failed to verify payment");
+      }
+      return res.json();
+    },
+    onSuccess: (data) => {
+      setIsProcessing(false);
+      if (data.success) {
+        toast({
+          title: "Payment Successful",
+          description: "Your account has been credited successfully.",
+        });
+        queryClient.invalidateQueries({ queryKey: ["user"] });
+        setAmount("");
+        onOpenChange(false);
+      } else {
+        toast({
+          title: "Payment Verification Failed",
+          description: data.message || "Please contact support",
+          variant: "destructive",
+        });
+      }
+    },
+    onError: (error: Error) => {
+      setIsProcessing(false);
+      toast({
+        title: "Payment Verification Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handlePaystackPayment = async (paymentData: any) => {
+    if (!PAYSTACK_PUBLIC_KEY) {
+      toast({
+        title: "Configuration Error",
+        description: "Paystack public key not configured",
+        variant: "destructive",
+      });
+      setIsProcessing(false);
+      return;
+    }
+
+    if (!user?.email) {
+      toast({
+        title: "Authentication Error",
+        description: "User email not found",
+        variant: "destructive",
+      });
+      setIsProcessing(false);
+      return;
+    }
+
+    try {
+      await initializePaystack({
+        key: PAYSTACK_PUBLIC_KEY,
+        email: user.email,
+        amount: parseFloat(amount) * 100, // Convert to kobo
+        currency: 'NGN',
+        reference: paymentData.reference,
+        callback: (response) => {
+          if (response.status === 'success') {
+            verifyPaymentMutation.mutate(response.reference);
+          } else {
+            setIsProcessing(false);
+            toast({
+              title: "Payment Cancelled",
+              description: "Payment was not completed",
+              variant: "destructive",
+            });
+          }
+        },
+        onClose: () => {
+          setIsProcessing(false);
+        },
+      });
+    } catch (error) {
+      setIsProcessing(false);
+      toast({
+        title: "Payment Error",
+        description: "Failed to initialize payment",
+        variant: "destructive",
+      });
+    }
+  };
 
   const handleDeposit = async () => {
-    setIsLoading(true);
-    // Simulate payment processing
-    setTimeout(() => {
-      setIsLoading(false);
-      onOpenChange(false);
-      setAmount("");
-    }, 2000);
+    const depositAmount = parseFloat(amount);
+    if (depositAmount < 100) {
+      toast({
+        title: "Invalid Amount",
+        description: "Minimum deposit amount is ₦100",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsProcessing(true);
+    initializePaymentMutation.mutate(depositAmount);
   };
 
   const quickAmounts = [1000, 5000, 10000, 20000];
@@ -125,14 +264,14 @@ export function DepositModal({ open, onOpenChange }: DepositModalProps) {
           <div className="flex flex-col gap-3 pt-2">
             <Button 
               onClick={handleDeposit} 
-              disabled={!amount || parseFloat(amount) < 100 || isLoading}
+              disabled={!amount || parseFloat(amount) < 100 || isProcessing || initializePaymentMutation.isPending}
               className="w-full h-12 text-base font-medium bg-green-600 hover:bg-green-700"
               size="lg"
             >
-              {isLoading ? (
+              {isProcessing || initializePaymentMutation.isPending ? (
                 <div className="flex items-center gap-2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  Processing...
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  {initializePaymentMutation.isPending ? "Initializing..." : "Processing..."}
                 </div>
               ) : (
                 `Continue with ₦${amount ? parseFloat(amount).toLocaleString() : "0"}`
