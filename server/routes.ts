@@ -1410,14 +1410,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/messages", authenticateToken, async (req, res) => {
     try {
-      const { recipientId, messageText, offerId } = req.body;
-      const message = await storage.createDirectMessage({
+      const { recipientId, messageText, message, offerId, tradeId } = req.body;
+      
+      // Use messageText or message, whichever is provided
+      const messageContent = messageText || message || "";
+      
+      if (!messageContent.trim()) {
+        return res.status(400).json({ error: "Message content is required" });
+      }
+      
+      const messageData = {
         senderId: req.user!.id,
         recipientId,
-        messageText,
-        offerId
-      });
-      res.json(message);
+        messageText: messageContent,
+        offerId,
+        tradeId: tradeId || null // Default to null if no tradeId provided
+      };
+      
+      const newMessage = await storage.createDirectMessage(messageData);
+      res.json(newMessage);
     } catch (error) {
       console.error("Error creating message:", error);
       res.status(500).json({ error: "Failed to send message" });

@@ -451,8 +451,15 @@ export class DatabaseStorage implements IStorage {
 
     async createDirectMessage(message: any): Promise<Message> {
         // Implementation for creating a direct message
-        // Example:
-        const [newMessage] = await db.insert(messages).values(message).returning();
+        // Map messageText to message field and ensure required fields
+        const messageData = {
+            senderId: message.senderId,
+            message: message.messageText || message.message || "", // Handle both field names
+            tradeId: message.tradeId || null, // Set to null if not provided
+            receiverId: message.receiverId || null // Optional field
+        };
+        
+        const [newMessage] = await db.insert(messages).values(messageData).returning();
         return newMessage;
     }
 

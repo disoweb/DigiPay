@@ -96,6 +96,7 @@ export function MessagingSystem() {
         const response = await apiRequest("POST", "/api/messages", {
           recipientId,
           messageText,
+          message: messageText, // Send both field names for compatibility
           offerId
         });
         if (!response.ok) {
