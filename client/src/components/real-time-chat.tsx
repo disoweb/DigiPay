@@ -1,22 +1,24 @@
 import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Send, Circle } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { Send } from "lucide-react";
 
-type EnrichedMessage = {
+interface EnrichedMessage {
   id: number;
   tradeId: number;
   senderId: number;
   message: string;
   createdAt: string;
-  sender: { id: number; email: string } | null;
-};
+  sender?: {
+    id: number;
+    email: string;
+  };
+}
 
 interface RealTimeChatProps {
   tradeId: number;
@@ -31,6 +33,14 @@ export function RealTimeChat({ tradeId }: RealTimeChatProps) {
 
   const { data: messages = [], isLoading } = useQuery<EnrichedMessage[]>({
     queryKey: ["/api/trades", tradeId, "messages"],
+    queryFn: async () => {
+      const response = await apiRequest("GET", `/api/trades/${tradeId}/messages`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch messages");
+      }
+      return response.json();
+    },
+    refetchInterval: 5000,
   });
 
   const sendMessageMutation = useMutation({
@@ -50,7 +60,7 @@ export function RealTimeChat({ tradeId }: RealTimeChatProps) {
   useEffect(() => {
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
     const wsUrl = `${protocol}//${window.location.host}/ws`;
-    
+
     wsRef.current = new WebSocket(wsUrl);
 
     wsRef.current.onopen = () => {
@@ -58,26 +68,26 @@ export function RealTimeChat({ tradeId }: RealTimeChatProps) {
       console.log("WebSocket connected");
     };
 
-    wsRef.current.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      if (data.type === "new_message" && data.data.tradeId === tradeId) {
-        // Invalidate queries to refresh messages
-        queryClient.invalidateQueries({ queryKey: ["/api/trades", tradeId, "messages"] });
-      }
-    };
-
     wsRef.current.onclose = () => {
       setIsConnected(false);
       console.log("WebSocket disconnected");
     };
 
-    wsRef.current.onerror = (error) => {
-      console.error("WebSocket error:", error);
-      setIsConnected(false);
+    wsRef.current.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.type === "new_message" && data.tradeId === tradeId) {
+          queryClient.invalidateQueries({ queryKey: ["/api/trades", tradeId, "messages"] });
+        }
+      } catch (error) {
+        console.error("Error parsing WebSocket message:", error);
+      }
     };
 
     return () => {
-      wsRef.current?.close();
+      if (wsRef.current) {
+        wsRef.current.close();
+      }
     };
   }, [tradeId]);
 
@@ -88,26 +98,9 @@ export function RealTimeChat({ tradeId }: RealTimeChatProps) {
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!message.trim() || !user) return;
-
-    // Send via API
-    sendMessageMutation.mutate(message);
-
-    // Send via WebSocket for real-time updates
-    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-      wsRef.current.send(JSON.stringify({
-        type: "chat_message",
-        data: {
-          tradeId,
-          senderId: user.id,
-          message: message.trim(),
-        }
-      }));
+    if (message.trim()) {
+      sendMessageMutation.mutate(message.trim());
     }
-  };
-
-  const getInitials = (email: string) => {
-    return email.split('@')[0].substring(0, 2).toUpperCase();
   };
 
   const formatTime = (timestamp: string) => {
@@ -133,58 +126,49 @@ export function RealTimeChat({ tradeId }: RealTimeChatProps) {
   }
 
   return (
-    <Card className="h-[500px] flex flex-col">
+    <Card className="h-full flex flex-col">
       <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <CardTitle>Trade Chat</CardTitle>
-          <div className="flex items-center space-x-2">
-            <Circle 
-              className={`h-3 w-3 ${isConnected ? 'text-green-500 fill-green-500' : 'text-red-500'}`} 
-            />
-            <span className="text-sm text-gray-500">
-              {isConnected ? 'Connected' : 'Disconnected'}
-            </span>
-          </div>
-        </div>
+        <CardTitle className="flex items-center justify-between">
+          <span>Trade Chat</span>
+          <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`} />
+        </CardTitle>
       </CardHeader>
-      
       <CardContent className="flex-1 flex flex-col p-0">
-        <ScrollArea className="flex-1 px-4">
-          <div className="space-y-4 py-4">
-            {messages.map((msg) => (
-              <div
-                key={msg.id}
-                className={`flex ${msg.senderId === user?.id ? 'justify-end' : 'justify-start'}`}
-              >
-                <div
-                  className={`flex items-start space-x-2 max-w-[70%] ${
-                    msg.senderId === user?.id ? 'flex-row-reverse space-x-reverse' : ''
-                  }`}
-                >
-                  <Avatar className="h-8 w-8">
-                    <AvatarFallback className="text-xs">
-                      {msg.sender ? getInitials(msg.sender.email) : 'U'}
-                    </AvatarFallback>
-                  </Avatar>
+        <ScrollArea className="flex-1 p-4">
+          <div className="space-y-3">
+            {messages.length === 0 ? (
+              <p className="text-gray-500 text-center py-4">No messages yet. Start the conversation!</p>
+            ) : (
+              messages.map((msg) => {
+                const isOwnMessage = msg.senderId === user?.id;
+                return (
                   <div
-                    className={`rounded-lg p-3 ${
-                      msg.senderId === user?.id
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-gray-100 text-gray-900'
+                    key={msg.id}
+                    className={`flex items-start space-x-2 ${
+                      isOwnMessage ? "flex-row-reverse space-x-reverse" : ""
                     }`}
                   >
-                    <p className="text-sm">{msg.message}</p>
-                    <p className={`text-xs mt-1 ${
-                      msg.senderId === user?.id 
-                        ? 'text-primary-foreground/70' 
-                        : 'text-gray-500'
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-medium ${
+                      isOwnMessage ? "bg-blue-500" : "bg-gray-400"
                     }`}>
-                      {formatTime(msg.createdAt)}
-                    </p>
+                      {msg.sender?.email.charAt(0).toUpperCase() || "U"}
+                    </div>
+                    <div className={`flex-1 ${isOwnMessage ? "text-right" : ""}`}>
+                      <div className={`inline-block rounded-lg p-3 shadow-sm max-w-xs ${
+                        isOwnMessage 
+                          ? "bg-blue-500 text-white" 
+                          : "bg-gray-100 text-gray-900"
+                      }`}>
+                        <p className="text-sm">{msg.message}</p>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {formatTime(msg.createdAt)}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              </div>
-            ))}
+                );
+              })
+            )}
             <div ref={messagesEndRef} />
           </div>
         </ScrollArea>
@@ -215,13 +199,4 @@ export function RealTimeChat({ tradeId }: RealTimeChatProps) {
       </CardContent>
     </Card>
   );
-}
-import { TradeChat } from "./trade-chat";
-
-interface RealTimeChatProps {
-  tradeId: number;
-}
-
-export function RealTimeChat({ tradeId }: RealTimeChatProps) {
-  return <TradeChat tradeId={tradeId} />;
 }
