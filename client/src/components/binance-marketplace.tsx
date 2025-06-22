@@ -101,15 +101,15 @@ export function BinanceMarketplace() {
   const getUserInitial = (email: string) => email.charAt(0).toUpperCase();
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
+    <div className="min-h-screen bg-gray-50">
       {/* Buy/Sell Tabs and Currency */}
-      <div className="bg-gray-900 px-4 py-4 border-b border-gray-700">
+      <div className="bg-white px-4 py-4 border-b border-gray-200 shadow-sm">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-6">
             <button 
               onClick={() => setActiveTab('buy')}
               className={`text-lg font-medium ${
-                activeTab === 'buy' ? 'text-white' : 'text-gray-400'
+                activeTab === 'buy' ? 'text-blue-600' : 'text-gray-500'
               }`}
             >
               Buy
@@ -117,7 +117,7 @@ export function BinanceMarketplace() {
             <button 
               onClick={() => setActiveTab('sell')}
               className={`text-lg font-medium ${
-                activeTab === 'sell' ? 'text-white' : 'text-gray-400'
+                activeTab === 'sell' ? 'text-blue-600' : 'text-gray-500'
               }`}
             >
               Sell
@@ -126,7 +126,7 @@ export function BinanceMarketplace() {
           
           <Button 
             variant="outline" 
-            className="bg-gray-800 border-gray-600 text-white hover:bg-gray-700"
+            className="bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
             onClick={() => setCurrency(currency === 'NGN' ? 'USD' : 'NGN')}
           >
             {currency} <ChevronDown className="h-4 w-4 ml-1" />
@@ -135,32 +135,32 @@ export function BinanceMarketplace() {
       </div>
 
       {/* Token Selection and Filters */}
-      <div className="bg-gray-900 px-4 py-3 border-b border-gray-700">
+      <div className="bg-white px-4 py-3 border-b border-gray-200">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Button 
               variant="outline" 
-              className="bg-gray-800 border-gray-600 text-white hover:bg-gray-700"
+              className="bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
               onClick={() => setSelectedToken(selectedToken === 'USDT' ? 'BTC' : 'USDT')}
             >
               <span className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center text-xs mr-2 text-white">₮</span>
               {selectedToken} <ChevronDown className="h-4 w-4 ml-1" />
             </Button>
-            <Button variant="ghost" className="text-gray-400 hover:text-white">
+            <Button variant="ghost" className="text-gray-600 hover:text-gray-900">
               Amount <ChevronDown className="h-4 w-4 ml-1" />
             </Button>
-            <Button variant="ghost" className="text-gray-400 hover:text-white">
+            <Button variant="ghost" className="text-gray-600 hover:text-gray-900">
               Bank Transfer <ChevronDown className="h-4 w-4 ml-1" />
             </Button>
           </div>
           <Button 
             variant="ghost" 
-            className="text-gray-400 hover:text-white"
+            className="text-gray-600 hover:text-gray-900"
             onClick={() => setShowFilters(!showFilters)}
           >
             <Filter className="h-4 w-4 mr-1" />
             Filter
-            <span className="ml-1 bg-orange-500 text-black rounded-full w-5 h-5 flex items-center justify-center text-xs">
+            <span className="ml-1 bg-blue-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
               1
             </span>
           </Button>
@@ -168,71 +168,71 @@ export function BinanceMarketplace() {
       </div>
 
       {/* Offers List */}
-      <div className="flex-1 overflow-y-auto bg-gray-900">
+      <div className="flex-1 overflow-y-auto bg-gray-50">
         {isLoading ? (
           <div className="flex items-center justify-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
           </div>
         ) : filteredOffers.length === 0 ? (
-          <div className="text-center py-8 text-gray-400">
+          <div className="text-center py-8 text-gray-500">
             No offers available for {activeTab === 'buy' ? 'buying' : 'selling'} {selectedToken}
           </div>
         ) : (
           <div className="space-y-0">
             {filteredOffers.map((offer, index) => (
-              <div key={offer.id} className="px-4 py-4 border-b border-gray-800 bg-gray-900">
+              <div key={offer.id} className="px-4 py-4 border-b border-gray-200 bg-white hover:bg-gray-50 transition-colors">
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">
                     {/* User Avatar */}
-                    <div className="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center text-sm font-bold text-white">
+                    <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-sm font-bold text-white">
                       {getUserInitial(offer.user.email)}
                     </div>
                     
                     <div className="flex flex-col">
                       <div className="flex items-center gap-2">
-                        <span className="font-medium text-white">
+                        <span className="font-medium text-gray-900">
                           {offer.user.email.split('@')[0]}
                         </span>
                         <div className="flex items-center gap-1">
-                          <Clock className="h-3 w-3 text-gray-400" />
-                          <span className="text-xs text-gray-400">
+                          <Clock className="h-3 w-3 text-gray-500" />
+                          <span className="text-xs text-gray-500">
                             {formatTime(offer.timeLimit || 30)}
                           </span>
                         </div>
                       </div>
                       
-                      <div className="flex items-center gap-2 text-xs text-gray-400 mt-1">
-                        <span>{Math.floor(Math.random() * 500) + 14} Orders</span>
+                      <div className="flex items-center gap-2 text-xs text-gray-500 mt-1">
+                        <span>{offer.user.completedTrades || Math.floor(Math.random() * 500) + 14} Orders</span>
                         <span>|</span>
-                        <span>{Math.floor(Math.random() * 10) + 90}%</span>
+                        <span>{Math.round(parseFloat(offer.user.averageRating) * 20) || Math.floor(Math.random() * 10) + 90}%</span>
                       </div>
                     </div>
                   </div>
 
                   <Button 
-                    className="bg-red-500 hover:bg-red-600 text-white font-medium px-6 py-1.5 text-sm"
+                    className="bg-green-500 hover:bg-green-600 text-white font-medium px-6 py-1.5 text-sm"
                     onClick={() => handleTrade(offer)}
                   >
-                    {activeTab === 'buy' ? 'Sell' : 'Sell'}
+                    {activeTab === 'buy' ? 'Buy' : 'Sell'}
                   </Button>
                 </div>
 
                 {/* Offer Details */}
                 <div className="mt-3">
-                  <div className="text-2xl font-bold text-white mb-2">
+                  <div className="text-2xl font-bold text-gray-900 mb-2">
                     ₦ {parseFloat(offer.rate).toLocaleString('en-NG', { minimumFractionDigits: 2 })}
                   </div>
                   
-                  <div className="text-sm text-gray-400 space-y-1">
+                  <div className="text-sm text-gray-600 space-y-1">
                     <div>
-                      Quantity {(Math.random() * 50000 + 1000).toLocaleString()} {selectedToken}
+                      Quantity {parseFloat(offer.amount || '0').toFixed(0)} {selectedToken}
                     </div>
                     <div>
-                      Limits {(Math.random() * 20 + 4).toFixed(1)}M - {(Math.random() * 15 + 15).toFixed(2)}M NGN
+                      Limits {((parseFloat(offer.minAmount || '150000') / 1000000).toFixed(1))}M - {((parseFloat(offer.maxAmount || '23000000') / 1000000).toFixed(2))}M NGN
                     </div>
                     <div className="flex items-center gap-2 mt-2">
-                      <span className="w-1 h-4 bg-orange-400 rounded-sm"></span>
-                      <span className="text-gray-300">Bank Transfer</span>
+                      <span className="w-1 h-4 bg-blue-500 rounded-sm"></span>
+                      <span className="text-gray-700">Bank Transfer</span>
                     </div>
                   </div>
                 </div>
@@ -240,6 +240,37 @@ export function BinanceMarketplace() {
             ))}
           </div>
         )}
+      </div>
+
+      {/* Bottom Navigation */}
+      <div className="bg-white border-t border-gray-200 px-4 py-3 shadow-lg">
+        <div className="flex justify-around items-center">
+          {[
+            { label: 'P2P', icon: '💼', active: true },
+            { label: 'Orders', icon: '📋', active: false },
+            { label: 'Ads', icon: '📢', active: false },
+            { label: 'Profile', icon: '👤', active: false },
+          ].map((item, index) => (
+            <div 
+              key={index}
+              className={`flex flex-col items-center gap-1 py-1 ${
+                item.active ? 'text-blue-600' : 'text-gray-500'
+              }`}
+            >
+              <span className="text-lg">{item.icon}</span>
+              <span className="text-xs">{item.label}</span>
+            </div>
+          ))}
+          
+          {/* Create Offer Button */}
+          <Button
+            onClick={() => setShowCreateOffer(true)}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-full text-sm font-medium"
+          >
+            <Plus className="h-4 w-4 mr-1" />
+            Create
+          </Button>
+        </div>
       </div>
 
       {/* Trade Modal */}
