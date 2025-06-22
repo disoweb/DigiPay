@@ -14,7 +14,17 @@ import {
   TrendingDown,
   DollarSign,
   Lock,
-  Globe
+  Globe,
+  UserCheck,
+  MessageCircle,
+  BarChart3,
+  Wallet,
+  Eye,
+  Clock,
+  Building2,
+  Award,
+  Smartphone,
+  Phone
 } from "lucide-react";
 
 export default function LandingPage() {
