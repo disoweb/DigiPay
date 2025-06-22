@@ -476,39 +476,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Mark payment as made (buyer action)
-  app.post("/api/trades/:id/payment-made", authenticateToken, async (req, res) => {
-    try {
-      const tradeId = parseInt(req.params.id);
-      const { paymentReference, paymentProof } = req.body;
-      const userId = req.user!.id;
-
-      const trade = await storage.getTrade(tradeId);
-      if (!trade) {
-        return res.status(404).json({ error: "Trade not found" });
-      }
-
-      if (trade.buyerId !== userId) {
-        return res.status(403).json({ error: "Only buyer can mark payment as made" });
-      }
-
-      if (trade.status !== "payment_pending") {
-        return res.status(400).json({ error: "Trade is not in payment pending status" });
-      }
-
-      const updatedTrade = await storage.updateTrade(tradeId, {
-        status: "payment_made",
-        paymentMadeAt: new Date(),
-        paymentReference,
-        paymentProof
-      });
-
-      res.json(updatedTrade);
-    } catch (error) {
-      console.error("Payment made error:", error);
-      res.status(500).json({ error: "Failed to mark payment" });
-    }
-  });
+  
 
   // Raise dispute
   app.post("/api/trades/:id/dispute", authenticateToken, async (req, res) => {

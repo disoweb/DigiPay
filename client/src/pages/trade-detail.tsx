@@ -1,4 +1,3 @@
-
 import { useParams, useLocation } from "wouter";
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -61,7 +60,7 @@ export default function TradeDetail() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [showRating, setShowRating] = useState(false);
-  
+
   const tradeId = parseInt(params.id || "0");
   console.log("Trade Detail - tradeId:", tradeId, "params:", params, "raw id:", params.id);
 
@@ -218,7 +217,7 @@ export default function TradeDetail() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
-      
+
       <main className="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
         {/* Mobile Back Button */}
         <div className="mb-4">
@@ -232,7 +231,7 @@ export default function TradeDetail() {
             <span className="sm:hidden">Back</span>
           </Button>
         </div>
-        
+
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-3">
           <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
@@ -418,7 +417,7 @@ export default function TradeDetail() {
           </div>
         </div>
 
-        
+
 
         {/* Rating Form */}
         {isCompleted && isUserInTrade && showRating && (

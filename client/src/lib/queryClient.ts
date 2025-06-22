@@ -7,39 +7,50 @@ async function throwIfResNotOk(res: Response) {
   }
 }
 
-export async function apiRequest(
-  method: string,
-  url: string,
-  data?: unknown | undefined,
-): Promise<Response> {
-  const token = localStorage.getItem('digipay_token');
-  
-  const headers: Record<string, string> = {};
-  if (data) {
-    headers["Content-Type"] = "application/json";
-  }
-  if (token) {
-    headers["Authorization"] = `Bearer ${token}`;
-  }
+export async function apiRequest(method: string, url: string, data?: any) {
+  const token = localStorage.getItem("digipay_token");
 
-  const res = await fetch(url, {
+  const config: RequestInit = {
     method,
-    headers,
-    body: data ? JSON.stringify(data) : undefined,
-    credentials: "include",
-  });
+    headers: {
+      "Content-Type": "application/json",
+    },
+  };
 
-  // Handle 401 responses by clearing token
-  if (res.status === 401) {
-    localStorage.removeItem('digipay_token');
-    // Redirect to auth page if not already there
-    if (!window.location.pathname.includes('/auth')) {
-      window.location.href = '/auth';
-    }
+  // Add Authorization header if token exists
+  if (token) {
+    config.headers = {
+      ...config.headers,
+      "Authorization": `Bearer ${token}`,
+    };
   }
 
-  await throwIfResNotOk(res);
-  return res;
+  if (data) {
+    config.body = JSON.stringify(data);
+  }
+
+  const response = await fetch(url, config);
+
+  if (!response.ok) {
+    if (response.status === 401) {
+      // Clear invalid token and redirect to login
+      localStorage.removeItem("digipay_token");
+      window.location.href = "/auth";
+      throw new Error("Unauthorized");
+    }
+
+    let errorMessage = "Request failed";
+    try {
+      const errorData = await response.json();
+      errorMessage = errorData.error || errorData.message || errorMessage;
+    } catch {
+      errorMessage = response.statusText || errorMessage;
+    }
+
+    throw new Error(errorMessage);
+  }
+
+  return response;
 }
 
 type UnauthorizedBehavior = "returnNull" | "throw";
