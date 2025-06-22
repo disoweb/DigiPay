@@ -100,6 +100,13 @@ export function DepositModal({ open, onOpenChange }: DepositModalProps) {
       return;
     }
 
+    console.log("Initializing Paystack payment with:", {
+      key: PAYSTACK_PUBLIC_KEY,
+      email: user.email,
+      amount: parseFloat(amount) * 100,
+      reference: paymentData.reference
+    });
+
     try {
       await initializePaystack({
         key: PAYSTACK_PUBLIC_KEY,
@@ -108,6 +115,7 @@ export function DepositModal({ open, onOpenChange }: DepositModalProps) {
         currency: 'NGN',
         reference: paymentData.reference,
         callback: (response) => {
+          console.log("Paystack callback:", response);
           if (response.status === 'success') {
             verifyPaymentMutation.mutate(response.reference);
           } else {
@@ -120,14 +128,16 @@ export function DepositModal({ open, onOpenChange }: DepositModalProps) {
           }
         },
         onClose: () => {
+          console.log("Paystack modal closed");
           setIsProcessing(false);
         },
       });
     } catch (error) {
+      console.error("Paystack initialization error:", error);
       setIsProcessing(false);
       toast({
         title: "Payment Error",
-        description: "Failed to initialize payment",
+        description: "Failed to initialize payment: " + (error as Error).message,
         variant: "destructive",
       });
     }

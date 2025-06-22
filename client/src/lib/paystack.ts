@@ -28,24 +28,59 @@ export const loadPaystackScript = (): Promise<void> => {
       return;
     }
 
-    // Script is already loaded in HTML, just wait a bit for it to be available
-    let attempts = 0;
-    const checkPaystack = () => {
-      if (window.PaystackPop) {
-        resolve();
-      } else if (attempts < 10) {
-        attempts++;
-        setTimeout(checkPaystack, 100);
-      } else {
-        reject(new Error('Paystack script not available'));
-      }
-    };
-    checkPaystack();
+    // Create and load the script dynamically if not already loaded
+    const existingScript = document.querySelector('script[src*="paystack"]');
+    if (!existingScript) {
+      const script = document.createElement('script');
+      script.src = 'https://js.paystack.co/v1/inline.js';
+      script.onload = () => {
+        // Wait a bit for the script to initialize
+        setTimeout(() => {
+          if (window.PaystackPop) {
+            resolve();
+          } else {
+            reject(new Error('Paystack script loaded but PaystackPop not available'));
+          }
+        }, 100);
+      };
+      script.onerror = () => reject(new Error('Failed to load Paystack script'));
+      document.head.appendChild(script);
+    } else {
+      // Script exists, wait for it to be available
+      let attempts = 0;
+      const checkPaystack = () => {
+        if (window.PaystackPop) {
+          resolve();
+        } else if (attempts < 20) {
+          attempts++;
+          setTimeout(checkPaystack, 100);
+        } else {
+          reject(new Error('Paystack script not available after waiting'));
+        }
+      };
+      checkPaystack();
+    }
   });
 };
 
 export const initializePaystack = async (config: PaystackConfig) => {
+  console.log("Loading Paystack script...");
   await loadPaystackScript();
+  
+  console.log("Paystack script loaded, setting up payment...");
+  console.log("Config:", config);
+  
+  if (!window.PaystackPop) {
+    throw new Error("PaystackPop is not available after script load");
+  }
+  
   const handler = window.PaystackPop.setup(config);
+  console.log("Payment handler created:", handler);
+  
+  if (!handler || !handler.openIframe) {
+    throw new Error("Payment handler setup failed");
+  }
+  
   handler.openIframe();
+  console.log("Payment iframe opened");
 };
