@@ -418,33 +418,7 @@ export default function TradeDetail() {
           </div>
         </div>
 
-        {/* Completely Separate Chat Section */}
-        {isUserInTrade && (
-          <div className="mt-12">
-            <Separator className="mb-8" />
-            
-            <div className="flex items-center gap-2 mb-6">
-              <MessageCircle className="h-6 w-6 text-blue-600" />
-              <h2 className="text-xl font-semibold text-gray-900">Trade Communication</h2>
-            </div>
-
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg">
-                  Chat with {isBuyer ? 'Seller' : 'Buyer'}
-                </CardTitle>
-                <CardDescription>
-                  Communicate securely about this trade. All messages are logged for dispute resolution.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="p-0">
-                <div className="h-[400px] p-4">
-                  <TradeChat tradeId={trade.id} />
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
+        
 
         {/* Rating Form */}
         {isCompleted && isUserInTrade && showRating && (
