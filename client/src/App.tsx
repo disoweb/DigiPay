@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from "@/hooks/use-auth";
 import { ProtectedRoute } from "@/lib/protected-route";
+import { lazy } from "react";
 
 // Pages
 import LandingPage from "@/pages/landing-page";
@@ -29,7 +30,7 @@ function App() {
           <Switch>
             <Route path="/" component={LandingPage} />
             <Route path="/auth" component={AuthPage} />
-            
+
             <ProtectedRoute path="/dashboard" component={Dashboard} />
             <ProtectedRoute path="/marketplace" component={Marketplace} />
             <ProtectedRoute path="/trades" component={Trades} />
@@ -44,10 +45,11 @@ function App() {
             <ProtectedRoute path="/admin/approvals" component={AdminApprovals} adminOnly />
             <ProtectedRoute path="/profile-setup" component={ProfileSetup} />
             <ProtectedRoute path="/create-offer" component={OfferCreation} />
-            
+            <Route path="/chat/:tradeId" component={lazy(() => import("./pages/chat"))} />
+
             <Route component={NotFound} />
           </Switch>
-          
+
           <Toaster />
         </div>
       </AuthProvider>

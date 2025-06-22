@@ -405,7 +405,7 @@ export function TradeManagement() {
                               className="flex-1 sm:flex-none"
                               onClick={() => {
                                 console.log("Navigating to trade chat:", trade.id);
-                                setLocation(`/trades/${trade.id}`);
+                                setLocation(`/chat/${trade.id}`);
                               }}
                             >
                               <MessageCircle className="h-3 w-3 mr-1" />
