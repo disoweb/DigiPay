@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { apiRequest } from "@/lib/queryClient";
@@ -8,6 +8,7 @@ import { WithdrawModal } from "@/components/withdraw-modal";
 import { TransactionDetailModal } from "@/components/transaction-detail-modal";
 import { SendFundsModal } from "@/components/send-funds-modal";
 import { SwapModal } from "@/components/swap-modal";
+import { ProfileCompletionModal } from "@/components/profile-completion-modal";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -157,7 +158,18 @@ export default function Wallet() {
   const [showSwap, setShowSwap] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
   const [showTransactionModal, setShowTransactionModal] = useState(false);
+  const [showProfileCompletion, setShowProfileCompletion] = useState(false);
   const { toast } = useToast();
+
+  // Check if profile is incomplete and show modal
+  useEffect(() => {
+    if (user && (!user.firstName || !user.lastName)) {
+      const timer = setTimeout(() => {
+        setShowProfileCompletion(true);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [user]);
 
   const { data: transactions = [], error: transactionsError, isLoading: transactionsLoading } = useQuery<Transaction[]>({
     queryKey: ["/api/transactions"],
@@ -440,11 +452,17 @@ export default function Wallet() {
                           </div>
                           <div className="min-w-0 flex-1">
                             <p className="font-medium text-gray-900 capitalize">
-                              {transaction.type}
+                              {transaction.type === 'transfer_in' ? 'Transfer Received' : 
+                               transaction.type === 'transfer_out' ? 'Transfer Sent' :
+                               transaction.type === 'swap' ? 'Currency Swap' :
+                               transaction.type}
                             </p>
                             <div className="flex items-center space-x-2 mt-1">
                               <p className="text-xs text-gray-500">
-                                {transaction.type === "deposit" ? "Paystack" : "Bank Transfer"}
+                                {transaction.type === "deposit" ? "Paystack" : 
+                                 transaction.type === "swap" ? "Instant Exchange" :
+                                 transaction.type.includes("transfer") ? "P2P Transfer" :
+                                 "Bank Transfer"}
                               </p>
                               {getTransactionBadge(transaction.status || "completed")}
                             </div>
@@ -581,6 +599,12 @@ export default function Wallet() {
           </DialogContent>
         </Dialog>
       )}
+
+      <ProfileCompletionModal
+        open={showProfileCompletion}
+        onClose={() => setShowProfileCompletion(false)}
+        user={user}
+      />
     </div>
   );
 }

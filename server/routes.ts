@@ -232,6 +232,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             user: user ? {
               id: user.id,
               email: user.email.replace(/(.{2}).*(@.*)/, '$1***$2'), // Mask email
+              firstName: user.firstName,
+              lastName: user.lastName,
               averageRating: user.averageRating || "0.00",
               ratingCount: user.ratingCount || 0,
               kycVerified: user.kycVerified || false,
@@ -267,6 +269,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         user: user ? {
           id: user.id,
           email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
           averageRating: user.averageRating || "0.00",
           ratingCount: user.ratingCount || 0,
           kycVerified: user.kycVerified || false,
@@ -1922,15 +1926,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/users/lookup", authenticateToken, async (req, res) => {
     try {
       const { query } = req.body;
-      let user = await storage.getUserByEmail(query.toLowerCase());
-      
-      // Also try username lookup if email fails
-      if (!user) {
-        const usersByUsername = await db.select().from(users).where(eq(users.username, query.toLowerCase()));
-        if (usersByUsername.length > 0) {
-          user = usersByUsername[0];
-        }
-      }
+      const user = await storage.getUserByEmail(query.toLowerCase());
       
       if (!user) {
         return res.status(404).json({ error: "User not found" });
@@ -1940,12 +1936,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({
         id: user.id,
         email: user.email,
-        username: user.username,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        username: user.firstName && user.lastName 
+          ? `${user.firstName} ${user.lastName}` 
+          : user.email.split('@')[0],
         kycVerified: user.kycVerified
       });
     } catch (error) {
       console.error("User lookup error:", error);
       res.status(500).json({ error: "Lookup failed" });
+    }
+  });
+
+  // Update user profile
+  app.put("/api/user/profile", authenticateToken, async (req, res) => {
+    try {
+      const { firstName, lastName, phone } = req.body;
+      const userId = req.user!.id;
+
+      const updatedUser = await storage.updateUser(userId, {
+        firstName,
+        lastName,
+        phone
+      });
+
+      if (!updatedUser) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      res.json({
+        id: updatedUser.id,
+        email: updatedUser.email,
+        firstName: updatedUser.firstName,
+        lastName: updatedUser.lastName,
+        phone: updatedUser.phone,
+        kycVerified: updatedUser.kycVerified,
+        kycStatus: updatedUser.kycStatus,
+        nairaBalance: updatedUser.nairaBalance,
+        usdtBalance: updatedUser.usdtBalance,
+        tronAddress: updatedUser.tronAddress,
+        averageRating: updatedUser.averageRating,
+        ratingCount: updatedUser.ratingCount,
+        isOnline: updatedUser.isOnline,
+        isAdmin: updatedUser.isAdmin
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update profile" });
     }
   });
 

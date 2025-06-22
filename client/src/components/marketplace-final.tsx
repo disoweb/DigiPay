@@ -242,7 +242,7 @@ export function MarketplaceFinal() {
                           <div className={`w-3 h-3 rounded-full ${offer.user?.isOnline ? 'bg-green-400' : 'bg-gray-400'}`} />
                           <div>
                             <div className="flex items-center gap-2">
-                              <span className="font-medium">{offer.user?.email || 'Unknown'}</span>
+                              <span className="font-medium">{offer.user?.email?.split('@')[0] || 'Unknown'}</span>
                               {offer.user?.isOnline ? (
                                 <Badge variant="outline" className="text-green-600 border-green-600 text-xs">
                                   Online
@@ -337,7 +337,7 @@ export function MarketplaceFinal() {
                           <div className={`w-3 h-3 rounded-full ${offer.user?.isOnline ? 'bg-green-400' : 'bg-gray-400'}`} />
                           <div>
                             <div className="flex items-center gap-2">
-                              <span className="font-medium">{offer.user?.email || 'Unknown'}</span>
+                              <span className="font-medium">{offer.user?.email?.split('@')[0] || 'Unknown'}</span>
                               {offer.user?.isOnline ? (
                                 <Badge variant="outline" className="text-green-600 border-green-600 text-xs">
                                   Online

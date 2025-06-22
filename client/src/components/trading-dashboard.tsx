@@ -568,7 +568,7 @@ export function TradingDashboard() {
                               <div className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full flex-shrink-0 ${offer.user?.isOnline ? 'bg-green-400' : 'bg-gray-400'}`} />
                               <div className="min-w-0 flex-1">
                                 <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
-                                  <span className="font-medium text-sm sm:text-base truncate">{offer.user?.email || 'Unknown'}</span>
+                                  <span className="font-medium text-sm sm:text-base truncate">{offer.user?.email?.split('@')[0] || 'Unknown'}</span>
                                   {offer.user?.isOnline ? (
                                     <Badge variant="outline" className="text-green-600 border-green-600 text-xs h-5 px-1">
                                       Online
@@ -685,7 +685,7 @@ export function TradingDashboard() {
                               <div className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full flex-shrink-0 ${offer.user?.isOnline ? 'bg-green-400' : 'bg-gray-400'}`} />
                               <div className="min-w-0 flex-1">
                                 <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
-                                  <span className="font-medium text-sm sm:text-base truncate">{offer.user?.email || 'Unknown'}</span>
+                                  <span className="font-medium text-sm sm:text-base truncate">{offer.user?.email?.split('@')[0] || 'Unknown'}</span>
                                   {offer.user?.isOnline ? (
                                     <Badge variant="outline" className="text-green-600 border-green-600 text-xs h-5 px-1">
                                       Online
