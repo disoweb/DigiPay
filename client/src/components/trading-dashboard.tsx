@@ -27,20 +27,31 @@ export function TradingDashboard() {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
 
-  const { data: trades = [], error: tradesError, refetch: refetchTrades } = useQuery({
+  const { data: trades = [], error: tradesError, refetch: refetchTrades, isLoading: tradesLoading } = useQuery({
     queryKey: ['/api/trades'],
+    queryFn: async () => {
+      const response = await apiRequest("GET", "/api/trades");
+      if (!response.ok) {
+        throw new Error(`Failed to fetch trades: ${response.status}`);
+      }
+      return response.json();
+    },
+    enabled: !!user?.id, // Only fetch when user is available
     refetchInterval: 5000,
     refetchOnWindowFocus: true,
     refetchOnMount: true,
     staleTime: 0,
     gcTime: 0, // Don't cache data
-    enabled: !!user?.id, // Only fetch when user is available
+    retry: 1,
   });
 
   // Force refetch when component mounts and user is available
   useEffect(() => {
     if (user?.id && refetchTrades) {
-      refetchTrades();
+      const timer = setTimeout(() => {
+        refetchTrades();
+      }, 100);
+      return () => clearTimeout(timer);
     }
   }, [user?.id, refetchTrades]);
 
@@ -90,6 +101,18 @@ export function TradingDashboard() {
   // Handle any API errors
   if (tradesError || offersError || statsError) {
     console.error('Dashboard API errors:', { tradesError, offersError, statsError });
+  }
+
+  // Show loading state
+  if (tradesLoading && trades.length === 0) {
+    return (
+      <div className="space-y-6">
+        <div className="text-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-500">Loading your trading data...</p>
+        </div>
+      </div>
+    );
   }
 
   // Calculate user statistics
