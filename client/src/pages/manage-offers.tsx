@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
-import { useLocation } from "wouter";
+import { useLocation, Redirect } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { apiRequest } from "@/lib/queryClient";
 import { Navbar } from "@/components/navbar";
@@ -47,7 +47,7 @@ type Offer = {
 };
 
 export default function ManageOffers() {
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
@@ -65,7 +65,9 @@ export default function ManageOffers() {
   // Fetch user's offers
   const { data: offers = [], isLoading, error } = useQuery<Offer[]>({
     queryKey: [`/api/users/${user?.id}/offers`],
-    enabled: !!user?.id,
+    enabled: !!user?.id && !authLoading,
+    retry: 3,
+    retryDelay: 1000,
   });
 
   // Update offer mutation
@@ -180,7 +182,7 @@ export default function ManageOffers() {
     }
   };
 
-  if (isLoading) {
+  if (authLoading || isLoading) {
     return (
       <div className="min-h-screen bg-gray-50">
         <Navbar />
@@ -194,6 +196,11 @@ export default function ManageOffers() {
         </div>
       </div>
     );
+  }
+
+  // Redirect to auth if not authenticated after loading
+  if (!authLoading && !user) {
+    return <Redirect to="/auth" />;
   }
 
   return (
