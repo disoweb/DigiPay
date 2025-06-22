@@ -37,9 +37,31 @@ export function TradingDashboard() {
     enabled: !!user?.id,
   });
 
-  const { data: marketStats, error: statsError } = useQuery({
+  const { data: marketStats, error: statsError, isLoading: statsLoading } = useQuery({
     queryKey: ['/api/market/stats'],
+    queryFn: async () => {
+      try {
+        const response = await apiRequest("GET", "/api/market/stats");
+        if (!response.ok) {
+          throw new Error(`Failed to fetch market stats: ${response.status}`);
+        }
+        return response.json();
+      } catch (error) {
+        console.error("Market stats error:", error);
+        // Return default stats instead of throwing
+        return {
+          totalOffers: 0,
+          bestBuyRate: null,
+          bestSellRate: null,
+          last24hVolume: 0
+        };
+      }
+    },
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
     refetchInterval: 10000,
+    refetchOnWindowFocus: false,
+    staleTime: 5000,
   });
 
   // Handle any API errors
@@ -313,42 +335,51 @@ export function TradingDashboard() {
       </Card>
 
       {/* Market Overview */}
-      {marketStats && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <BarChart3 className="h-5 w-5" />
-              Market Overview
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <BarChart3 className="h-5 w-5" />
+            Market Overview
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {statsLoading ? (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="text-center p-3 bg-gray-50 rounded-lg animate-pulse">
+                  <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                  <div className="h-6 bg-gray-200 rounded"></div>
+                </div>
+              ))}
+            </div>
+          ) : (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="text-center p-3 bg-blue-50 rounded-lg">
                 <p className="text-sm text-gray-600">Total Offers</p>
-                <p className="font-bold text-blue-600">{marketStats.totalOffers}</p>
+                <p className="font-bold text-blue-600">{marketStats?.totalOffers || 0}</p>
               </div>
               <div className="text-center p-3 bg-green-50 rounded-lg">
                 <p className="text-sm text-gray-600">Best Buy Rate</p>
                 <p className="font-bold text-green-600">
-                  ₦{marketStats.bestBuyRate?.toLocaleString() || 'N/A'}
+                  ₦{marketStats?.bestBuyRate?.toLocaleString() || 'N/A'}
                 </p>
               </div>
               <div className="text-center p-3 bg-red-50 rounded-lg">
                 <p className="text-sm text-gray-600">Best Sell Rate</p>
                 <p className="font-bold text-red-600">
-                  ₦{marketStats.bestSellRate?.toLocaleString() || 'N/A'}
+                  ₦{marketStats?.bestSellRate?.toLocaleString() || 'N/A'}
                 </p>
               </div>
               <div className="text-center p-3 bg-purple-50 rounded-lg">
                 <p className="text-sm text-gray-600">24h Volume</p>
                 <p className="font-bold text-purple-600">
-                  ₦{marketStats.last24hVolume?.toLocaleString() || '0'}
+                  ₦{marketStats?.last24hVolume?.toLocaleString() || '0'}
                 </p>
               </div>
             </div>
-          </CardContent>
-        </Card>
-      )}
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
