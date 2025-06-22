@@ -26,20 +26,25 @@ export function TradingDashboard() {
   const { user } = useAuth();
   const setLocation = useLocation()[1];
 
-  const { data: trades = [] } = useQuery({
+  const { data: trades = [], error: tradesError } = useQuery({
     queryKey: ['/api/trades'],
     refetchInterval: 5000,
   });
 
-  const { data: offers = [] } = useQuery({
+  const { data: offers = [], error: offersError } = useQuery({
     queryKey: [`/api/users/${user?.id}/offers`],
     enabled: !!user?.id,
   });
 
-  const { data: marketStats } = useQuery({
+  const { data: marketStats, error: statsError } = useQuery({
     queryKey: ['/api/market/stats'],
     refetchInterval: 10000,
   });
+
+  // Handle any API errors
+  if (tradesError || offersError || statsError) {
+    console.error('Dashboard API errors:', { tradesError, offersError, statsError });
+  }
 
   // Calculate user statistics
   const completedTrades = trades.filter((t: any) => t.status === 'completed');
@@ -77,9 +82,10 @@ export function TradingDashboard() {
     }
   };
 
-  return (
-    <div className="space-y-6">
-      {/* KYC Verification Alert */}
+  try {
+    return (
+      <div className="space-y-6">
+        {/* KYC Verification Alert */}
         {!user?.kycVerified && (
           <Alert className="border-blue-200 bg-blue-50 mb-6">
             <Shield className="h-4 w-4 text-blue-600" />
@@ -353,4 +359,23 @@ export function TradingDashboard() {
       )}
     </div>
   );
+  } catch (error) {
+    console.error('TradingDashboard render error:', error);
+    return (
+      <div className="space-y-6">
+        <Card className="border-red-200 bg-red-50">
+          <CardContent className="p-6 text-center">
+            <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Dashboard Error</h3>
+            <p className="text-gray-600 mb-4">
+              There was an error loading the dashboard. Please refresh the page.
+            </p>
+            <Button onClick={() => window.location.reload()} variant="outline">
+              Refresh Page
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 }

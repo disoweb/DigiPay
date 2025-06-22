@@ -3,6 +3,7 @@ import { TradingDashboard } from "@/components/trading-dashboard";
 import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from "@/hooks/use-auth";
 import { Redirect } from "wouter";
+import { ErrorBoundary } from "@/components/error-boundary";
 
 export default function Dashboard() {
   const { user, isLoading } = useAuth();
@@ -52,7 +53,9 @@ export default function Dashboard() {
           </Card>
         )}
 
-        <TradingDashboard />
+        <ErrorBoundary>
+          <TradingDashboard />
+        </ErrorBoundary>
       </div>
     </div>
   );
