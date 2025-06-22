@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -28,7 +29,9 @@ import {
   Wallet,
   CreditCard,
   Building,
-  Smartphone
+  Smartphone,
+  RefreshCw,
+  Loader2
 } from "lucide-react";
 
 interface Offer {
@@ -89,62 +92,119 @@ export function EnhancedMarketplace() {
   });
   const [searchTerm, setSearchTerm] = useState('');
 
-  const { data: offers = [], isLoading, refetch } = useQuery<Offer[]>({
+  const { data: offers = [], isLoading, error, refetch } = useQuery<Offer[]>({
     queryKey: ['/api/offers'],
-    refetchInterval: 5000, // Real-time updates every 5 seconds
+    queryFn: async () => {
+      try {
+        const response = await apiRequest("GET", "/api/offers");
+        if (!response.ok) {
+          throw new Error(`Failed to fetch offers: ${response.status}`);
+        }
+        const data = await response.json();
+        return Array.isArray(data) ? data : [];
+      } catch (error) {
+        console.error("Offers fetch error:", error);
+        throw error;
+      }
+    },
+    retry: 2,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    refetchInterval: 10000, // Reduce frequency to prevent overwhelming
+    refetchOnWindowFocus: false,
+    staleTime: 5000,
   });
 
   const { data: marketStats } = useQuery({
     queryKey: ['/api/market/stats'],
-    refetchInterval: 10000,
+    queryFn: async () => {
+      try {
+        const response = await apiRequest("GET", "/api/market/stats");
+        if (!response.ok) {
+          throw new Error(`Failed to fetch market stats: ${response.status}`);
+        }
+        return response.json();
+      } catch (error) {
+        console.error("Market stats error:", error);
+        return null;
+      }
+    },
+    retry: 1,
+    refetchInterval: 30000,
+    refetchOnWindowFocus: false,
   });
 
-  // Filter and sort offers
+  // Filter and sort offers with better error handling
   const filteredOffers = offers.filter(offer => {
-    if (offer.type !== activeTab) return false;
-    if (offer.status !== 'active') return false;
-    if (offer.userId === user?.id) return false; // Hide own offers
+    try {
+      if (!offer || typeof offer !== 'object') return false;
+      if (offer.type !== activeTab) return false;
+      if (offer.status !== 'active') return false;
+      if (offer.userId === user?.id) return false; // Hide own offers
 
-    // Payment method filter
-    if (filters.paymentMethod !== 'all' && offer.paymentMethod !== filters.paymentMethod) {
+      // Payment method filter
+      if (filters.paymentMethod !== 'all' && offer.paymentMethod !== filters.paymentMethod) {
+        return false;
+      }
+
+      // Amount filters - with safe parsing
+      const offerAmount = parseFloat(offer.amount || "0");
+      if (filters.minAmount && !isNaN(parseFloat(filters.minAmount))) {
+        if (offerAmount < parseFloat(filters.minAmount)) return false;
+      }
+      if (filters.maxAmount && !isNaN(parseFloat(filters.maxAmount))) {
+        if (offerAmount > parseFloat(filters.maxAmount)) return false;
+      }
+
+      // Rate filters - with safe parsing
+      const offerRate = parseFloat(offer.rate || "0");
+      if (filters.minRate && !isNaN(parseFloat(filters.minRate))) {
+        if (offerRate < parseFloat(filters.minRate)) return false;
+      }
+      if (filters.maxRate && !isNaN(parseFloat(filters.maxRate))) {
+        if (offerRate > parseFloat(filters.maxRate)) return false;
+      }
+
+      // Verification filter
+      if (filters.verifiedOnly && !offer.user?.kycVerified) return false;
+
+      // Search filter
+      if (searchTerm && offer.user?.email) {
+        if (!offer.user.email.toLowerCase().includes(searchTerm.toLowerCase())) {
+          return false;
+        }
+      }
+
+      return true;
+    } catch (filterError) {
+      console.error("Filter error:", filterError);
       return false;
     }
-
-    // Amount filters
-    const offerAmount = parseFloat(offer.amount);
-    if (filters.minAmount && offerAmount < parseFloat(filters.minAmount)) return false;
-    if (filters.maxAmount && offerAmount > parseFloat(filters.maxAmount)) return false;
-
-    // Rate filters
-    const offerRate = parseFloat(offer.rate);
-    if (filters.minRate && offerRate < parseFloat(filters.minRate)) return false;
-    if (filters.maxRate && offerRate > parseFloat(filters.maxRate)) return false;
-
-    // Verification filter
-    if (filters.verifiedOnly && !offer.user.kycVerified) return false;
-
-    // Search filter
-    if (searchTerm && !offer.user.email.toLowerCase().includes(searchTerm.toLowerCase())) {
-      return false;
-    }
-
-    return true;
   }).sort((a, b) => {
-    const aValue = filters.sortBy === 'rate' ? parseFloat(a.rate) : parseFloat(a.amount);
-    const bValue = filters.sortBy === 'rate' ? parseFloat(b.rate) : parseFloat(b.amount);
+    try {
+      const aValue = filters.sortBy === 'rate' ? parseFloat(a.rate || "0") : parseFloat(a.amount || "0");
+      const bValue = filters.sortBy === 'rate' ? parseFloat(b.rate || "0") : parseFloat(b.amount || "0");
 
-    return filters.sortOrder === 'asc' ? aValue - bValue : bValue - aValue;
+      if (isNaN(aValue) || isNaN(bValue)) return 0;
+      return filters.sortOrder === 'asc' ? aValue - bValue : bValue - aValue;
+    } catch (sortError) {
+      console.error("Sort error:", sortError);
+      return 0;
+    }
   });
 
   const initiateTradeMutation = useMutation({
     mutationFn: async ({ offerId, amount }: { offerId: number; amount: string }) => {
       const response = await apiRequest("POST", "/api/trades", { offerId, amount });
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Trade failed' }));
+        throw new Error(errorData.error || 'Failed to initiate trade');
+      }
       return response.json();
     },
     onSuccess: (data) => {
       toast({
         title: "Trade Initiated",
-        description: `Trade #${data.trade.id} has been created successfully!`,
+        description: `Trade #${data.trade?.id || 'N/A'} has been created successfully!`,
       });
       setShowTradeModal(false);
       queryClient.invalidateQueries({ queryKey: ['/api/offers'] });
@@ -183,15 +243,20 @@ export function EnhancedMarketplace() {
   };
 
   const getBestRate = (type: 'buy' | 'sell') => {
-    const relevantOffers = offers.filter(o => o.type === type && o.status === 'active');
-    if (relevantOffers.length === 0) return null;
+    try {
+      const relevantOffers = offers.filter(o => o && o.type === type && o.status === 'active');
+      if (relevantOffers.length === 0) return null;
 
-    const rates = relevantOffers
-      .map(o => parseFloat(o.rate))
-      .filter(rate => !isNaN(rate) && rate > 0);
+      const rates = relevantOffers
+        .map(o => parseFloat(o.rate || "0"))
+        .filter(rate => !isNaN(rate) && rate > 0);
 
-    if (rates.length === 0) return null;
-    return type === 'buy' ? Math.min(...rates) : Math.max(...rates);
+      if (rates.length === 0) return null;
+      return type === 'buy' ? Math.min(...rates) : Math.max(...rates);
+    } catch (error) {
+      console.error("Best rate calculation error:", error);
+      return null;
+    }
   };
 
   const getPaymentMethodIcon = (method: string) => {
@@ -199,10 +264,40 @@ export function EnhancedMarketplace() {
     return <IconComponent className="h-4 w-4" />;
   };
 
+  const safeParseFloat = (value: string | undefined, fallback: number = 0) => {
+    const parsed = parseFloat(value || "0");
+    return isNaN(parsed) ? fallback : parsed;
+  };
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <Card className="border-red-200 bg-red-50">
+          <CardContent className="p-6 text-center">
+            <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Failed to load marketplace</h3>
+            <p className="text-gray-600 mb-4">
+              {error instanceof Error ? error.message : "Unable to connect to the server"}
+            </p>
+            <Button onClick={() => refetch()} variant="outline">
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Try Again
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center p-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      <div className="space-y-6">
+        <Card>
+          <CardContent className="p-8 text-center">
+            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+            <p className="text-gray-600">Loading marketplace...</p>
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -399,8 +494,8 @@ export function EnhancedMarketplace() {
                       <div className="flex-1 space-y-3">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
-                            <span className="font-medium">{offer.user.email}</span>
-                            {offer.user.kycVerified && (
+                            <span className="font-medium">{offer.user?.email || 'Unknown'}</span>
+                            {offer.user?.kycVerified && (
                               <Badge variant="outline" className="text-green-600 border-green-600">
                                 <Shield className="h-3 w-3 mr-1" />
                                 Verified
@@ -409,17 +504,14 @@ export function EnhancedMarketplace() {
                             <div className="flex items-center gap-1">
                               <Star className="h-3 w-3 text-yellow-400 fill-current" />
                               <span className="text-xs">
-                                {(() => {
-                                  const rating = parseFloat(offer.user?.averageRating || "0");
-                                  return !isNaN(rating) ? rating.toFixed(1) : '0.0';
-                                })()} ({offer.user?.ratingCount || 0})
+                                {safeParseFloat(offer.user?.averageRating).toFixed(1)} ({offer.user?.ratingCount || 0})
                               </span>
                             </div>
                           </div>
-                          <Badge className={getPaymentMethodIcon(offer.paymentMethod)}>
+                          <Badge variant="outline" className="flex items-center gap-1">
                             {getPaymentMethodIcon(offer.paymentMethod)}
                             <span className="ml-1">
-                              {paymentMethodLabels[offer.paymentMethod as keyof typeof paymentMethodLabels]}
+                              {paymentMethodLabels[offer.paymentMethod as keyof typeof paymentMethodLabels] || offer.paymentMethod}
                             </span>
                           </Badge>
                         </div>
@@ -428,21 +520,21 @@ export function EnhancedMarketplace() {
                           <div>
                             <p className="text-gray-600">Available</p>
                             <p className="font-semibold">
-                              {!isNaN(parseFloat(offer.amount)) ? parseFloat(offer.amount).toFixed(2) : '0.00'} USDT
+                              {safeParseFloat(offer.amount).toFixed(2)} USDT
                             </p>
                           </div>
                           <div>
                             <p className="text-gray-600">Rate</p>
                             <p className="font-semibold text-green-600">
-                              ₦{!isNaN(parseFloat(offer.rate)) ? parseFloat(offer.rate).toLocaleString() : '0'}
+                              ₦{safeParseFloat(offer.rate).toLocaleString()}
                             </p>
                           </div>
                           <div>
                             <p className="text-gray-600">Limits</p>
                             <p className="font-semibold">
                               {offer.minAmount && offer.maxAmount 
-                                ? `${!isNaN(parseFloat(offer.minAmount)) ? parseFloat(offer.minAmount).toFixed(2) : '0.00'} - ${!isNaN(parseFloat(offer.maxAmount)) ? parseFloat(offer.maxAmount).toFixed(2) : '0.00'} USDT`
-                                : `${!isNaN(parseFloat(offer.amount)) ? parseFloat(offer.amount).toFixed(2) : '0.00'} USDT`}
+                                ? `${safeParseFloat(offer.minAmount).toFixed(2)} - ${safeParseFloat(offer.maxAmount).toFixed(2)} USDT`
+                                : `${safeParseFloat(offer.amount).toFixed(2)} USDT`}
                             </p>
                           </div>
                         </div>
@@ -462,7 +554,7 @@ export function EnhancedMarketplace() {
                           )}
                           <div className="flex items-center gap-1">
                             <Users className="h-3 w-3" />
-                            {offer.user.completedTrades || 0} completed trades
+                            {offer.user?.completedTrades || 0} completed trades
                           </div>
                         </div>
                       </div>
@@ -501,8 +593,8 @@ export function EnhancedMarketplace() {
                       <div className="flex-1 space-y-3">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
-                            <span className="font-medium">{offer.user.email}</span>
-                            {offer.user.kycVerified && (
+                            <span className="font-medium">{offer.user?.email || 'Unknown'}</span>
+                            {offer.user?.kycVerified && (
                               <Badge variant="outline" className="text-green-600 border-green-600">
                                 <Shield className="h-3 w-3 mr-1" />
                                 Verified
@@ -511,17 +603,14 @@ export function EnhancedMarketplace() {
                             <div className="flex items-center gap-1">
                               <Star className="h-3 w-3 text-yellow-400 fill-current" />
                               <span className="text-xs">
-                                {(() => {
-                                  const rating = parseFloat(offer.user?.averageRating || "0");
-                                  return !isNaN(rating) ? rating.toFixed(1) : '0.0';
-                                })()} ({offer.user?.ratingCount || 0})
+                                {safeParseFloat(offer.user?.averageRating).toFixed(1)} ({offer.user?.ratingCount || 0})
                               </span>
                             </div>
                           </div>
-                          <Badge className={getPaymentMethodIcon(offer.paymentMethod)}>
+                          <Badge variant="outline" className="flex items-center gap-1">
                             {getPaymentMethodIcon(offer.paymentMethod)}
                             <span className="ml-1">
-                              {paymentMethodLabels[offer.paymentMethod as keyof typeof paymentMethodLabels]}
+                              {paymentMethodLabels[offer.paymentMethod as keyof typeof paymentMethodLabels] || offer.paymentMethod}
                             </span>
                           </Badge>
                         </div>
@@ -529,18 +618,18 @@ export function EnhancedMarketplace() {
                         <div className="grid grid-cols-3 gap-4 text-sm">
                           <div>
                             <p className="text-gray-600">Buying</p>
-                            <p className="font-semibold">{parseFloat(offer.amount).toFixed(2)} USDT</p>
+                            <p className="font-semibold">{safeParseFloat(offer.amount).toFixed(2)} USDT</p>
                           </div>
                           <div>
                             <p className="text-gray-600">Rate</p>
-                            <p className="font-semibold text-red-600">₦{parseFloat(offer.rate).toLocaleString()}</p>
+                            <p className="font-semibold text-red-600">₦{safeParseFloat(offer.rate).toLocaleString()}</p>
                           </div>
                           <div>
                             <p className="text-gray-600">Limits</p>
                             <p className="font-semibold">
                               {offer.minAmount && offer.maxAmount 
-                                ? `${parseFloat(offer.minAmount).toFixed(2)} - ${parseFloat(offer.maxAmount).toFixed(2)} USDT`
-                                : `${parseFloat(offer.amount).toFixed(2)} USDT`}
+                                ? `${safeParseFloat(offer.minAmount).toFixed(2)} - ${safeParseFloat(offer.maxAmount).toFixed(2)} USDT`
+                                : `${safeParseFloat(offer.amount).toFixed(2)} USDT`}
                             </p>
                           </div>
                         </div>
@@ -560,7 +649,7 @@ export function EnhancedMarketplace() {
                           )}
                           <div className="flex items-center gap-1">
                             <Users className="h-3 w-3" />
-                            {offer.user.completedTrades || 0} completed trades
+                            {offer.user?.completedTrades || 0} completed trades
                           </div>
                         </div>
                       </div>
