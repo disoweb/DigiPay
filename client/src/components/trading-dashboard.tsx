@@ -105,8 +105,8 @@ export function TradingDashboard() {
                 <p className="text-xl font-semibold">₦{ngnBalance.toLocaleString()}</p>
               </div>
               <div className="text-center">
-                <p className="text-white/90 text-sm mb-1">USDT</p>
-                <p className="text-xl font-semibold">${parseFloat(user?.usdtBalance || "0").toFixed(2)}</p>
+                <p className="text-white/90 text-sm mb-1">USDT (TRON)</p>
+                <p className="text-xl font-semibold">{parseFloat(user?.usdtBalance || "0").toFixed(6)} USDT</p>
               </div>
             </div>
           </div>
@@ -185,7 +185,7 @@ export function TradingDashboard() {
                     <div>
                       <p className="font-medium">Trade #{trade.id}</p>
                       <p className="text-sm text-gray-600">
-                        ${parseFloat(trade.amount).toFixed(2)} @ ₦{parseFloat(trade.rate).toLocaleString()}
+                        {parseFloat(trade.amount).toFixed(2)} USDT @ ₦{parseFloat(trade.rate).toLocaleString()}
                       </p>
                     </div>
                     <div className="text-right">
@@ -244,7 +244,7 @@ export function TradingDashboard() {
                     <div>
                       <p className="font-medium capitalize">{offer.type} USDT</p>
                       <p className="text-sm text-gray-600">
-                        ${parseFloat(offer.amount).toFixed(2)} @ ₦{parseFloat(offer.rate).toLocaleString()}
+                        {parseFloat(offer.amount).toFixed(2)} USDT @ ₦{parseFloat(offer.rate).toLocaleString()}
                       </p>
                     </div>
                     <Badge className={offer.type === 'buy' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}>
@@ -291,7 +291,7 @@ export function TradingDashboard() {
                       }`} />
                       <div>
                         <p className="font-medium">
-                          {isUserBuyer ? 'Bought' : 'Sold'} ${parseFloat(trade.amount).toFixed(2)}
+                          {isUserBuyer ? 'Bought' : 'Sold'} {parseFloat(trade.amount).toFixed(2)} USDT
                         </p>
                         <p className="text-sm text-gray-600">
                           {isUserBuyer ? 'from' : 'to'} {partner?.email} • {new Date(trade.createdAt).toLocaleDateString()}
