@@ -1847,29 +1847,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Paystack payment verification
   app.post("/api/payments/verify", authenticateToken, async (req, res) => {
-
     try {
       const { reference } = req.body;
+      const userId = req.user!.id;
+      
+      console.log(`Verifying payment for user ${userId}, reference: ${reference}`);
+      
       const result = await paystackService.verifyPayment(reference);
+      console.log("Paystack verification result:", result);
 
       if (result.success && result.data) {
-        const transactions = await storage.getUserTransactions(req.user!.id);
-        const pendingTx = transactions.find(tx => tx.paystackRef === reference);
+        // Check if payment was successful
+        if (result.data.status === 'success') {
+          const transactions = await storage.getUserTransactions(userId);
+          const pendingTx = transactions.find(tx => tx.paystackRef === reference && tx.status === 'pending');
+          
+          console.log("Found pending transaction:", pendingTx);
 
-        if (pendingTx) {
-          await storage.updateTransaction(pendingTx.id, { status: "completed" });
+          if (pendingTx) {
+            // Update transaction status
+            await storage.updateTransaction(pendingTx.id, { status: "completed" });
+            console.log(`Transaction ${pendingTx.id} marked as completed`);
 
-          const user = await storage.getUser(req.user!.id);
-          if (user) {
-            const newBalance = parseFloat(user.nairaBalance || "0") + (result.data.amount / 100);
-            await storage.updateUser(user.id, { 
-              nairaBalance: newBalance.toString() 
-            });
+            // Update user balance
+            const user = await storage.getUser(userId);
+            if (user) {
+              const currentBalance = parseFloat(user.nairaBalance || "0");
+              const depositAmount = result.data.amount / 100; // Convert from kobo to naira
+              const newBalance = currentBalance + depositAmount;
+              
+              console.log(`Updating balance: ${currentBalance} + ${depositAmount} = ${newBalance}`);
+              
+              await storage.updateUser(user.id, { 
+                nairaBalance: newBalance.toString() 
+              });
+              
+              console.log(`User ${user.id} balance updated to ₦${newBalance}`);
+            }
+          } else {
+            console.log("No pending transaction found for reference:", reference);
+            console.log("Available transactions:", transactions.map(t => ({ id: t.id, ref: t.paystackRef, status: t.status })));
           }
+        } else {
+          console.log("Payment not successful, status:", result.data.status);
         }
 
         res.json(result);
       } else {
+        console.log("Payment verification failed:", result.message);
         res.status(400).json({ error: result.message || "Payment verification failed" });
       }
     } catch (error) {

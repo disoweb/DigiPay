@@ -622,7 +622,6 @@ export class DatabaseStorage implements IStorage {
       .values({
         ...insertTransaction,
         status: "pending",
-        paystackRef: `PSK_${Math.random().toString(36).substring(2, 15)}`,
       })
       .returning();
     return transaction;
