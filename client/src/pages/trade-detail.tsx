@@ -410,8 +410,7 @@ export default function TradeDetail() {
               </CardContent>
             </Card>
           )}
-
-          </div>
+        </div>
 
         {/* Separate Chat Section */}
         {isUserInTrade && (
@@ -441,24 +440,25 @@ export default function TradeDetail() {
           </div>
         )}
 
-          {/* Rating Form */}
-          {isCompleted && isUserInTrade && showRating && (
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <Star className="h-5 w-5" />
-                  Rate Trading Partner
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <RatingForm 
-                  tradeId={trade.id}
-                  onSubmit={() => setShowRating(false)}
-                />
-              </CardContent>
-            </Card>
-          )}
-        </div>
+        {/* Rating Form */}
+        {isCompleted && isUserInTrade && showRating && (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Star className="h-5 w-5" />
+                Rate Trading Partner
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <RatingForm 
+                tradeId={trade.id}
+                onSubmit={() => setShowRating(false)}
+              />
+            </CardContent>
+          </Card>
+        )}
+      </main>
+    </div>
       </main>
     </div>
   );
