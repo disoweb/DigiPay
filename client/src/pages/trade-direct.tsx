@@ -34,23 +34,39 @@ export default function DirectTrade() {
   const [selectedOffer, setSelectedOffer] = useState(null);
 
   useEffect(() => {
+    console.log("DirectTrade component mounted, offerId:", offerId);
     const storedOffer = sessionStorage.getItem('selectedOffer');
     if (storedOffer) {
-      setSelectedOffer(JSON.parse(storedOffer));
-      // Clear after use
-      sessionStorage.removeItem('selectedOffer');
+      console.log("Found stored offer:", storedOffer);
+      try {
+        setSelectedOffer(JSON.parse(storedOffer));
+        // Clear after use
+        sessionStorage.removeItem('selectedOffer');
+      } catch (e) {
+        console.error("Error parsing stored offer:", e);
+      }
     }
-  }, []);
+  }, [offerId]);
 
-  const { data: offer, isLoading } = useQuery({
+  const { data: offer, isLoading, error: queryError } = useQuery({
     queryKey: [`/api/offers/${offerId}`],
     queryFn: async () => {
+      console.log("Fetching offer for ID:", offerId);
       const response = await apiRequest("GET", `/api/offers/${offerId}`);
       if (!response.ok) throw new Error("Failed to fetch offer");
-      return response.json();
+      const data = await response.json();
+      console.log("Fetched offer data:", data);
+      return data;
     },
     enabled: !!offerId && !selectedOffer,
   });
+
+  useEffect(() => {
+    if (queryError) {
+      console.error("Query error:", queryError);
+      setError(`Failed to load offer: ${queryError.message}`);
+    }
+  }, [queryError]);
 
   const createTradeMutation = useMutation({
     mutationFn: async (tradeData: any) => {
