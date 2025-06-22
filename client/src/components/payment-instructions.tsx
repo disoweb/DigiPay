@@ -59,7 +59,7 @@ export function PaymentInstructions({ trade, userRole, onPaymentMarked }: Paymen
     }
   };
 
-  // Always show payment details for buyers, regardless of trade status
+  // Always show payment details for buyers immediately when they are buying
   if (userRole === 'buyer') {
     return (
       <Card className="border-blue-200 bg-blue-50/50">
