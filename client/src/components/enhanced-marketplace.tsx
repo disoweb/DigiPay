@@ -138,9 +138,13 @@ export function EnhancedMarketplace() {
   const filteredOffers = offers.filter(offer => {
     try {
       if (!offer || typeof offer !== 'object') return false;
-      if (offer.type !== activeTab) return false;
       if (offer.status !== 'active') return false;
       if (offer.userId === user?.id) return false; // Hide own offers
+
+      // For "buy" tab, show "sell" offers (user wants to buy from sellers)
+      // For "sell" tab, show "buy" offers (user wants to sell to buyers)
+      const targetOfferType = activeTab === 'buy' ? 'sell' : 'buy';
+      if (offer.type !== targetOfferType) return false;
 
       // Payment method filter
       if (filters.paymentMethod !== 'all' && offer.paymentMethod !== filters.paymentMethod) {
@@ -246,8 +250,9 @@ export function EnhancedMarketplace() {
   const getBestRate = (type: 'buy' | 'sell') => {
     // For buy rate, we look at sell offers (what users are selling for) - lowest rate is best for buyers
     // For sell rate, we look at buy offers (what users are buying for) - highest rate is best for sellers
+    const targetOfferType = type === 'buy' ? 'sell' : 'buy';
     const relevantOffers = offers.filter(o => 
-      o.type === type && 
+      o.type === targetOfferType && 
       o.status === 'active'
     );
 
@@ -256,9 +261,9 @@ export function EnhancedMarketplace() {
     const rates = relevantOffers.map(o => safeParseFloat(o.rate)).filter(rate => !isNaN(rate) && rate > 0);
     if (!rates.length) return null;
 
-    // For sell offers (when users want to buy), we want the lowest rate (best for buyers)
-    // For buy offers (when users want to sell), we want the highest rate (best for sellers)
-    return type === 'sell' ? Math.min(...rates) : Math.max(...rates);
+    // For buy rate (looking at sell offers), we want the lowest rate (best for buyers)
+    // For sell rate (looking at buy offers), we want the highest rate (best for sellers)
+    return type === 'buy' ? Math.min(...rates) : Math.max(...rates);
   };
 
   const getPaymentMethodIcon = (method: string) => {
@@ -471,11 +476,11 @@ export function EnhancedMarketplace() {
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="buy" className="flex items-center gap-2">
             <TrendingUp className="h-4 w-4" />
-            Buy USDT ({offers.filter(o => o.type === 'sell' && o.status === 'active').length} offers)
+            Buy USDT ({offers.filter(o => o.type === 'sell' && o.status === 'active' && o.userId !== user?.id).length} offers)
           </TabsTrigger>
           <TabsTrigger value="sell" className="flex items-center gap-2">
             <TrendingDown className="h-4 w-4" />
-            Sell USDT ({offers.filter(o => o.type === 'buy' && o.status === 'active').length} offers)
+            Sell USDT ({offers.filter(o => o.type === 'buy' && o.status === 'active' && o.userId !== user?.id).length} offers)
           </TabsTrigger>
         </TabsList>
 

@@ -101,15 +101,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return tradeDate > yesterday;
       });
 
-      const buyRates = sellOffers.map(o => parseFloat(o.rate));
-      const sellRates = buyOffers.map(o => parseFloat(o.rate));
+      const buyRates = sellOffers.map(o => parseFloat(o.rate)).filter(rate => !isNaN(rate));
+      const sellRates = buyOffers.map(o => parseFloat(o.rate)).filter(rate => !isNaN(rate));
 
       const stats = {
         totalOffers: activeOffers.length,
         buyOffers: buyOffers.length,
         sellOffers: sellOffers.length,
-        bestBuyRate: sellOffers.length ? Math.min(...buyRates) : null,
-        bestSellRate: buyOffers.length ? Math.max(...sellRates) : null,
+        bestBuyRate: buyRates.length ? Math.min(...buyRates) : null,
+        bestSellRate: sellRates.length ? Math.max(...sellRates) : null,
         totalVolume: totalVolume,
         last24hVolume: last24hTrades.reduce((sum, trade) => {
           return sum + (parseFloat(trade.amount) * parseFloat(trade.rate));

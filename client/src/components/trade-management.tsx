@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
@@ -138,9 +137,9 @@ export function TradeManagement() {
     const now = Date.now();
     const deadlineTime = new Date(deadline).getTime();
     const remaining = Math.max(0, deadlineTime - now);
-    
+
     if (remaining === 0) return "Expired";
-    
+
     const minutes = Math.floor(remaining / 60000);
     const seconds = Math.floor((remaining % 60000) / 1000);
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
@@ -200,6 +199,20 @@ export function TradeManagement() {
     );
   }
 
+  const activeTrades = trades?.filter(trade => {
+    // Filter out completed, cancelled, and expired trades
+    if (["completed", "cancelled", "expired"].includes(trade.status)) {
+      return false;
+    }
+
+    // Check if trade has expired based on payment deadline
+    if (trade.paymentDeadline && new Date() > new Date(trade.paymentDeadline)) {
+      return false;
+    }
+
+    return true;
+  }) || [];
+
   return (
     <div className="space-y-4 sm:space-y-6 px-2 sm:px-0">
       {/* Trade Statistics */}
@@ -211,7 +224,7 @@ export function TradeManagement() {
               <div>
                 <p className="text-sm text-gray-600">Active</p>
                 <p className="font-bold text-blue-600">
-                  {trades.filter(t => ['pending', 'payment_pending', 'payment_made'].includes(t.status)).length}
+                  {activeTrades.length}
                 </p>
               </div>
             </div>
@@ -272,7 +285,7 @@ export function TradeManagement() {
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="all">All Trades ({trades.length})</TabsTrigger>
           <TabsTrigger value="active">
-            Active ({trades.filter(t => ['pending', 'payment_pending', 'payment_made'].includes(t.status)).length})
+            Active ({activeTrades.length})
           </TabsTrigger>
           <TabsTrigger value="completed">
             Completed ({trades.filter(t => t.status === 'completed').length})
@@ -398,7 +411,7 @@ export function TradeManagement() {
                               <Eye className="h-3 w-3 mr-1" />
                               View Details
                             </Button>
-                            
+
                             <Button 
                               variant="outline" 
                               size="sm"
