@@ -711,19 +711,7 @@ export function TradingDashboard() {
                                   <span>{offer.user?.completedTrades || 0} trades</span>
                                 </div>
                               </div>
-                            <div className="flex items-center space-x-2">
-                              <Avatar className="h-6 w-6">
-                                <AvatarFallback className="text-xs">
-                                  {(offer.user?.username?.substring(0, 2) || offer.user?.email?.substring(0, 2) || "??").toUpperCase()}
-                                </AvatarFallback>
-                              </Avatar>
-                              <span className="text-sm text-gray-600">
-                                {offer.user?.username || offer.user?.email || "Unknown"}
-                              </span>
-                            </div>
-```
-
-Okay, I have applied the changes to display the username in featured offers and ensured consistency.                             </div>
+                              </div>
                             <Badge variant="outline" className="flex items-center gap-1 text-xs h-6 px-2 self-start sm:self-auto">
                               <DollarSign className="h-2 w-2 sm:h-3 sm:w-3" />
                               <span className="hidden sm:inline">{offer.paymentMethod?.replace('_', ' ').toUpperCase() || 'Bank Transfer'}</span>

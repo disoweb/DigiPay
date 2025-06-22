@@ -404,6 +404,20 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  async updateUserProfile(id: number, updates: Partial<User>): Promise<User | null> {
+    try {
+      const [updatedUser] = await db
+        .update(users)
+        .set(updates)
+        .where(eq(users.id, id))
+        .returning();
+      return updatedUser || null;
+    } catch (error) {
+      console.error("Update user profile error:", error);
+      return null;
+    }
+  }
+
   // Offer methods
   async getOffers(): Promise<Offer[]> {
     return await db.select().from(offers).where(eq(offers.status, "active"));
@@ -411,19 +425,19 @@ export class DatabaseStorage implements IStorage {
 
   async getFeaturedOffers(): Promise<{buyOffers: Offer[], sellOffers: Offer[]}> {
     const allOffers = await db.select().from(offers).where(eq(offers.status, "active")).orderBy(desc(offers.createdAt));
-    
+
     // Get top 3 buy offers (highest rates)
     const buyOffers = allOffers
       .filter(o => o.type === "buy")
       .sort((a, b) => parseFloat(b.rate) - parseFloat(a.rate))
       .slice(0, 3);
-    
+
     // Get top 3 sell offers (lowest rates)
     const sellOffers = allOffers
       .filter(o => o.type === "sell")
       .sort((a, b) => parseFloat(a.rate) - parseFloat(b.rate))
       .slice(0, 3);
-    
+
     return { buyOffers, sellOffers };
   }
 
@@ -501,7 +515,7 @@ export class DatabaseStorage implements IStorage {
 
   async updateTradeStatus(tradeId: number, status: string) {
     const trade = await this.getTrade(tradeId);
-    
+
     // If trade is being marked as expired or cancelled, restore offer amount
     if ((status === "expired" || status === "cancelled") && trade) {
       const offer = await this.getOffer(trade.offerId);
@@ -509,12 +523,12 @@ export class DatabaseStorage implements IStorage {
         const currentAmount = parseFloat(offer.amount || "0");
         const tradeAmount = parseFloat(trade.amount);
         const newAmount = currentAmount + tradeAmount;
-        
+
         await this.updateOffer(offer.id, {
           amount: newAmount.toString(),
           status: "active" // Reactivate the offer
         });
-        
+
         // If it's a sell offer, also restore the seller's USDT balance
         if (offer.type === "sell") {
           const seller = await this.getUser(trade.sellerId);
@@ -527,7 +541,7 @@ export class DatabaseStorage implements IStorage {
         }
       }
     }
-    
+
     await db.update(trades)
       .set({ 
         status,
@@ -583,7 +597,7 @@ export class DatabaseStorage implements IStorage {
             tradeId: message.tradeId || null,
             isRead: false
         };
-        
+
         const [newMessage] = await db.insert(messages).values(messageData).returning();
         return newMessage;
     }

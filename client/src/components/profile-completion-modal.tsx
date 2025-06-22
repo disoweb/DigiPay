@@ -146,7 +146,7 @@ export function ProfileCompletionModal({ open, onClose, user }: ProfileCompletio
   const canSkip = user?.firstName && user?.lastName && user?.username;
 
   return (
-    <Dialog open={open} onOpenChange={!canSkip ? undefined : onClose}>
+    <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Complete Your Profile</DialogTitle>

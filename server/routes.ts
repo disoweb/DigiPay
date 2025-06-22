@@ -195,6 +195,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
               user: user ? {
                 id: user.id,
                 email: user.email.replace(/(.{2}).*(@.*)/, '$1***$2'),
+                username: user.username,
+                firstName: user.firstName,
+                lastName: user.lastName,
                 averageRating: user.averageRating || "0.00",
                 ratingCount: user.ratingCount || 0,
                 kycVerified: user.kycVerified || false,

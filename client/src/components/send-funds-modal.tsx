@@ -19,14 +19,53 @@ interface SendFundsModalProps {
 }
 
 export function SendFundsModal({ open, onOpenChange, nairaBalance, usdtBalance }: SendFundsModalProps) {
-  const [currency, setCurrency] = useState<"NGN" | "USDT">("NGN");
-  const [recipient, setRecipient] = useState("");
+  const [recipientEmail, setRecipientEmail] = useState("");
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
-  const [recipientUser, setRecipientUser] = useState<any>(null);
-  const [isLookingUp, setIsLookingUp] = useState(false);
+  const [recipient, setRecipient] = useState<any>(null);
+  const [currency, setCurrency] = useState<"NGN" | "USDT">("NGN");
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  const handleLookup = async () => {
+    if (!recipientEmail.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter a recipient email",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const response = await apiRequest("POST", "/api/users/lookup", {
+        query: recipientEmail.trim()
+      });
+
+      if (response.ok) {
+        const userData = await response.json();
+        setRecipient(userData);
+        toast({
+          title: "User Found",
+          description: `Found ${userData.username || userData.email}`,
+        });
+      } else {
+        toast({
+          title: "User Not Found",
+          description: "No user found with that email",
+          variant: "destructive",
+        });
+        setRecipient(null);
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to lookup user",
+        variant: "destructive",
+      });
+      setRecipient(null);
+    }
+  };
 
   const lookupMutation = useMutation({
     mutationFn: async (query: string) => {
@@ -45,20 +84,20 @@ export function SendFundsModal({ open, onOpenChange, nairaBalance, usdtBalance }
   });
 
   // Manual lookup function
-  const handleLookup = () => {
-    if (!recipient.trim()) return;
-    lookupMutation.mutate(recipient.trim());
-  };
+  // const handleLookup = () => {
+  //   if (!recipient.trim()) return;
+  //   lookupMutation.mutate(recipient.trim());
+  // };
 
   // Auto-lookup when user types
   const handleRecipientChange = (value: string) => {
-    setRecipient(value);
-    setRecipientUser(null);
-    
+    setRecipientEmail(value);
+    setRecipient(null);
+
     // Auto-lookup if it looks like an email
-    if (value.includes('@') && value.includes('.') && value.length > 5) {
-      lookupMutation.mutate(value.trim());
-    }
+    // if (value.includes('@') && value.includes('.') && value.length > 5) {
+    //   lookupMutation.mutate(value.trim());
+    // }
   };
 
   const sendMutation = useMutation({
@@ -96,10 +135,10 @@ export function SendFundsModal({ open, onOpenChange, nairaBalance, usdtBalance }
   });
 
   const resetForm = () => {
-    setRecipient("");
+    setRecipientEmail("");
     setAmount("");
     setDescription("");
-    setRecipientUser(null);
+    setRecipient(null);
     setCurrency("NGN");
   };
 
@@ -116,11 +155,11 @@ export function SendFundsModal({ open, onOpenChange, nairaBalance, usdtBalance }
   };
 
   const handleSend = () => {
-    if (!recipientUser || !amount) return;
-    
+    if (!recipient || !amount) return;
+
     const transferAmount = parseFloat(amount);
     const balance = getUserBalance();
-    
+
     if (transferAmount <= 0) {
       toast({
         title: "Invalid Amount",
@@ -140,12 +179,14 @@ export function SendFundsModal({ open, onOpenChange, nairaBalance, usdtBalance }
     }
 
     sendMutation.mutate({
-      recipientId: recipientUser.id,
+      recipientId: recipient.id,
       amount: transferAmount,
       description: description.trim() || "P2P Transfer",
       currency
     });
   };
+
+    const recipientUser = recipient;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -189,20 +230,16 @@ export function SendFundsModal({ open, onOpenChange, nairaBalance, usdtBalance }
               <Input
                 id="recipient"
                 placeholder="Enter email or username"
-                value={recipient}
+                value={recipientEmail}
                 onChange={(e) => handleRecipientChange(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleLookup()}
               />
               <Button 
                 variant="outline" 
                 onClick={handleLookup}
-                disabled={!recipient.trim() || lookupMutation.isPending}
+                disabled={!recipientEmail.trim()}
               >
-                {lookupMutation.isPending ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  "Find"
-                )}
+                Find
               </Button>
             </div>
           </div>
@@ -293,7 +330,7 @@ export function SendFundsModal({ open, onOpenChange, nairaBalance, usdtBalance }
             </Button>
             <Button
               onClick={handleSend}
-              disabled={!recipientUser || !amount || sendMutation.isPending}
+              disabled={!recipient || !amount || sendMutation.isPending}
               className="flex-1"
             >
               {sendMutation.isPending ? (

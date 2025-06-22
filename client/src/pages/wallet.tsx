@@ -161,15 +161,19 @@ export default function Wallet() {
   const [showProfileCompletion, setShowProfileCompletion] = useState(false);
   const { toast } = useToast();
 
-  // Check if profile is incomplete and show modal
+  // Check if profile is incomplete and show modal only once per session
   useEffect(() => {
     if (user && (!user.firstName || !user.lastName || !user.username)) {
-      const timer = setTimeout(() => {
-        setShowProfileCompletion(true);
-      }, 1000);
-      return () => clearTimeout(timer);
+      const hasShownModal = sessionStorage.getItem(`profile-modal-shown-${user.id}`);
+      if (!hasShownModal) {
+        const timer = setTimeout(() => {
+          setShowProfileCompletion(true);
+          sessionStorage.setItem(`profile-modal-shown-${user.id}`, 'true');
+        }, 1000);
+        return () => clearTimeout(timer);
+      }
     }
-  }, [user?.firstName, user?.lastName, user?.username]);
+  }, [user?.id, user?.firstName, user?.lastName, user?.username]);
 
   const { data: transactions = [], error: transactionsError, isLoading: transactionsLoading } = useQuery<Transaction[]>({
     queryKey: ["/api/transactions"],
