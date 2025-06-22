@@ -137,6 +137,7 @@ Changelog:
 - June 22, 2025. Successfully migrated project from Replit Agent to Replit environment with PostgreSQL setup, enhanced buy/sell button visibility (green for buy, red for sell), and marketplace as default landing page for authenticated users
 - June 22, 2025. Fixed create offer navigation inconsistencies and confirmed wallet balance deduction works correctly - USDT is properly deducted from seller's wallet when trades are initiated
 - June 22, 2025. Redesigned create offer component with modern single-page layout, balance helper buttons (10%, 25%, 50%, MAX), bidirectional rate/margin calculations, and mobile-optimized professional design consistent across all access points
+- June 22, 2025. Converted create offer to multi-step process with navigation between marketplace and trades pages, fixed bidirectional rate/margin calculations to properly populate field values automatically
 ```
 
 ## User Preferences

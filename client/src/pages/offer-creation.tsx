@@ -49,29 +49,31 @@ export default function OfferCreation() {
 
   const [currentMarketPrice] = useState(1487.50);
 
+  // Track which field was last modified to avoid infinite loops
+  const [lastModified, setLastModified] = useState<'rate' | 'margin' | null>(null);
+
   // Auto-calculate rate from price margin
   useEffect(() => {
-    if (offerData.priceMargin && offerData.priceMargin !== "") {
+    if (lastModified === 'margin' && offerData.priceMargin && offerData.priceMargin !== "") {
       const margin = parseFloat(offerData.priceMargin);
       if (!isNaN(margin)) {
-        const newRate = offerData.type === "sell" 
-          ? currentMarketPrice * (1 + margin / 100)
-          : currentMarketPrice * (1 - margin / 100);
+        // For both buy and sell, positive margin = higher rate, negative margin = lower rate
+        const newRate = currentMarketPrice * (1 + margin / 100);
         setOfferData(prev => ({ ...prev, rate: newRate.toFixed(2) }));
       }
     }
-  }, [offerData.priceMargin, offerData.type, currentMarketPrice]);
+  }, [offerData.priceMargin, offerData.type, currentMarketPrice, lastModified]);
 
   // Auto-calculate price margin from rate
   useEffect(() => {
-    if (offerData.rate && offerData.rate !== "" && offerData.priceMargin === "") {
+    if (lastModified === 'rate' && offerData.rate && offerData.rate !== "") {
       const rate = parseFloat(offerData.rate);
-      if (!isNaN(rate) && rate !== currentMarketPrice) {
+      if (!isNaN(rate)) {
         const margin = ((rate - currentMarketPrice) / currentMarketPrice) * 100;
         setOfferData(prev => ({ ...prev, priceMargin: margin.toFixed(2) }));
       }
     }
-  }, [offerData.rate, currentMarketPrice, offerData.priceMargin]);
+  }, [offerData.rate, currentMarketPrice, lastModified]);
 
   const createOfferMutation = useMutation({
     mutationFn: async (data: typeof offerData) => {
@@ -121,6 +123,7 @@ export default function OfferCreation() {
   };
 
   const handleTypeChange = (value: "buy" | "sell") => {
+    setLastModified(null);
     setOfferData(prev => ({ 
       ...prev, 
       type: value,
@@ -141,11 +144,13 @@ export default function OfferCreation() {
   };
 
   const handleRateChange = (value: string) => {
-    setOfferData(prev => ({ ...prev, rate: value, priceMargin: "" }));
+    setLastModified('rate');
+    setOfferData(prev => ({ ...prev, rate: value }));
   };
 
   const handleMarginChange = (value: string) => {
-    setOfferData(prev => ({ ...prev, priceMargin: value, rate: "" }));
+    setLastModified('margin');
+    setOfferData(prev => ({ ...prev, priceMargin: value }));
   };
 
   const getAvailableBalance = () => {
@@ -310,7 +315,7 @@ export default function OfferCreation() {
                   <Percent className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                 </div>
                 <p className="text-xs text-gray-500 mt-1">
-                  {offerData.type === "sell" ? "Positive for above market, negative for below" : "Negative for below market, positive for above"}
+                  Positive % = above market price, Negative % = below market price
                 </p>
               </div>
 
