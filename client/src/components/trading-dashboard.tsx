@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { apiRequest } from "@/lib/queryClient";
@@ -434,90 +435,219 @@ export function TradingDashboard() {
         </CardContent>
       </Card>
 
-      {/* Featured Offers */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Featured Buy Offers */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-green-600" />
-              Featured Buy Offers
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {featuredOffers?.buyOffers?.length === 0 ? (
-              <p className="text-gray-500 text-center py-4">No buy offers available</p>
-            ) : (
-              <div className="space-y-3">
-                {featuredOffers?.buyOffers?.map((offer: any) => (
-                  <div key={offer.id} className="p-3 bg-green-50 rounded-lg border border-green-200">
-                    <div className="flex items-center justify-between mb-2">
-                      <div>
-                        <p className="font-medium text-green-800">Buy ${parseFloat(offer.amount).toFixed(2)} USDT</p>
-                        <p className="text-sm text-green-600">Rate: ₦{parseFloat(offer.rate).toLocaleString()}</p>
-                      </div>
-                      <Badge className="bg-green-100 text-green-600">
-                        {offer.paymentMethod?.replace('_', ' ').toUpperCase()}
-                      </Badge>
-                    </div>
-                    <div className="flex items-center justify-between text-xs text-green-600">
-                      <span>{offer.user?.email}</span>
-                      <span className="flex items-center gap-1">
-                        <div className={`w-2 h-2 rounded-full ${offer.user?.isOnline ? 'bg-green-500' : 'bg-gray-400'}`} />
-                        {offer.user?.isOnline ? 'Online' : 'Offline'}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-                <Button variant="outline" size="sm" className="w-full" onClick={() => setLocation('/marketplace')}>
-                  View All Buy Offers
-                </Button>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+      {/* Featured Offers with Filter Tabs */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <TrendingUp className="h-5 w-5" />
+            Featured Offers
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Tabs defaultValue="buy" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="buy">Buy USDT</TabsTrigger>
+              <TabsTrigger value="sell">Sell USDT</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="buy" className="space-y-4 mt-4">
+              {featuredOffers?.buyOffers?.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-gray-500 mb-4">No buy offers available</p>
+                  <Button onClick={() => setLocation('/marketplace')}>
+                    View All Offers
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {featuredOffers?.buyOffers?.map((offer: any) => (
+                    <Card key={offer.id} className="hover:shadow-md transition-shadow">
+                      <CardContent className="p-4">
+                        <div className="space-y-3">
+                          <div className="flex items-start justify-between">
+                            <div className="flex items-center gap-3">
+                              <div className={`w-3 h-3 rounded-full ${offer.user?.isOnline ? 'bg-green-400' : 'bg-gray-400'}`} />
+                              <div>
+                                <div className="flex items-center gap-2">
+                                  <span className="font-medium">{offer.user?.email || 'Unknown'}</span>
+                                  {offer.user?.isOnline ? (
+                                    <Badge variant="outline" className="text-green-600 border-green-600 text-xs">
+                                      Online
+                                    </Badge>
+                                  ) : (
+                                    <Badge variant="outline" className="text-gray-500 border-gray-300 text-xs">
+                                      Offline
+                                    </Badge>
+                                  )}
+                                  {offer.user?.kycVerified && (
+                                    <Badge variant="outline" className="text-blue-600 border-blue-600 text-xs">
+                                      <Shield className="h-3 w-3 mr-1" />
+                                      Verified
+                                    </Badge>
+                                  )}
+                                </div>
+                                <div className="flex items-center gap-2 text-sm text-gray-600">
+                                  <Activity className="h-3 w-3 text-yellow-400" />
+                                  <span>{parseFloat(offer.user?.averageRating || "0").toFixed(1)}</span>
+                                  <span>({offer.user?.ratingCount || 0})</span>
+                                  <span>•</span>
+                                  <span>{offer.user?.completedTrades || 0} trades</span>
+                                </div>
+                              </div>
+                            </div>
+                            <Badge variant="outline" className="flex items-center gap-1">
+                              <DollarSign className="h-3 w-3" />
+                              {offer.paymentMethod?.replace('_', ' ').toUpperCase() || 'Bank Transfer'}
+                            </Badge>
+                          </div>
 
-        {/* Featured Sell Offers */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingDown className="h-5 w-5 text-red-600" />
-              Featured Sell Offers
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {featuredOffers?.sellOffers?.length === 0 ? (
-              <p className="text-gray-500 text-center py-4">No sell offers available</p>
-            ) : (
-              <div className="space-y-3">
-                {featuredOffers?.sellOffers?.map((offer: any) => (
-                  <div key={offer.id} className="p-3 bg-red-50 rounded-lg border border-red-200">
-                    <div className="flex items-center justify-between mb-2">
-                      <div>
-                        <p className="font-medium text-red-800">Sell ${parseFloat(offer.amount).toFixed(2)} USDT</p>
-                        <p className="text-sm text-red-600">Rate: ₦{parseFloat(offer.rate).toLocaleString()}</p>
-                      </div>
-                      <Badge className="bg-red-100 text-red-600">
-                        {offer.paymentMethod?.replace('_', ' ').toUpperCase()}
-                      </Badge>
-                    </div>
-                    <div className="flex items-center justify-between text-xs text-red-600">
-                      <span>{offer.user?.email}</span>
-                      <span className="flex items-center gap-1">
-                        <div className={`w-2 h-2 rounded-full ${offer.user?.isOnline ? 'bg-green-500' : 'bg-gray-400'}`} />
-                        {offer.user?.isOnline ? 'Online' : 'Offline'}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-                <Button variant="outline" size="sm" className="w-full" onClick={() => setLocation('/marketplace')}>
-                  View All Sell Offers
-                </Button>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+                          <div className="grid grid-cols-3 gap-4">
+                            <div>
+                              <p className="text-sm text-gray-600">Available</p>
+                              <p className="font-semibold">{parseFloat(offer.amount || "0").toFixed(2)} USDT</p>
+                            </div>
+                            <div>
+                              <p className="text-sm text-gray-600">Rate</p>
+                              <p className="font-semibold text-green-600">₦{parseFloat(offer.rate || "0").toLocaleString()}</p>
+                            </div>
+                            <div>
+                              <p className="text-sm text-gray-600">Limits</p>
+                              <p className="font-semibold text-sm">
+                                {offer.minAmount && offer.maxAmount
+                                  ? `${parseFloat(offer.minAmount).toFixed(2)} - ${parseFloat(offer.maxAmount).toFixed(2)}`
+                                  : parseFloat(offer.amount || "0").toFixed(2)} USDT
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex gap-2">
+                            <Button 
+                              onClick={() => setLocation('/marketplace')}
+                              className="flex-1 bg-green-600 hover:bg-green-700"
+                              disabled={!user}
+                            >
+                              Buy USDT
+                            </Button>
+                            <Button
+                              onClick={() => setLocation('/marketplace')}
+                              variant="outline"
+                              size="icon"
+                              disabled={!user}
+                            >
+                              <MessageCircle className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                  <Button variant="outline" size="sm" className="w-full" onClick={() => setLocation('/marketplace')}>
+                    View All Buy Offers
+                  </Button>
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="sell" className="space-y-4 mt-4">
+              {featuredOffers?.sellOffers?.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-gray-500 mb-4">No sell offers available</p>
+                  <Button onClick={() => setLocation('/marketplace')}>
+                    View All Offers
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {featuredOffers?.sellOffers?.map((offer: any) => (
+                    <Card key={offer.id} className="hover:shadow-md transition-shadow">
+                      <CardContent className="p-4">
+                        <div className="space-y-3">
+                          <div className="flex items-start justify-between">
+                            <div className="flex items-center gap-3">
+                              <div className={`w-3 h-3 rounded-full ${offer.user?.isOnline ? 'bg-green-400' : 'bg-gray-400'}`} />
+                              <div>
+                                <div className="flex items-center gap-2">
+                                  <span className="font-medium">{offer.user?.email || 'Unknown'}</span>
+                                  {offer.user?.isOnline ? (
+                                    <Badge variant="outline" className="text-green-600 border-green-600 text-xs">
+                                      Online
+                                    </Badge>
+                                  ) : (
+                                    <Badge variant="outline" className="text-gray-500 border-gray-300 text-xs">
+                                      Offline
+                                    </Badge>
+                                  )}
+                                  {offer.user?.kycVerified && (
+                                    <Badge variant="outline" className="text-blue-600 border-blue-600 text-xs">
+                                      <Shield className="h-3 w-3 mr-1" />
+                                      Verified
+                                    </Badge>
+                                  )}
+                                </div>
+                                <div className="flex items-center gap-2 text-sm text-gray-600">
+                                  <Activity className="h-3 w-3 text-yellow-400" />
+                                  <span>{parseFloat(offer.user?.averageRating || "0").toFixed(1)}</span>
+                                  <span>({offer.user?.ratingCount || 0})</span>
+                                  <span>•</span>
+                                  <span>{offer.user?.completedTrades || 0} trades</span>
+                                </div>
+                              </div>
+                            </div>
+                            <Badge variant="outline" className="flex items-center gap-1">
+                              <DollarSign className="h-3 w-3" />
+                              {offer.paymentMethod?.replace('_', ' ').toUpperCase() || 'Bank Transfer'}
+                            </Badge>
+                          </div>
+
+                          <div className="grid grid-cols-3 gap-4">
+                            <div>
+                              <p className="text-sm text-gray-600">Buying</p>
+                              <p className="font-semibold">{parseFloat(offer.amount || "0").toFixed(2)} USDT</p>
+                            </div>
+                            <div>
+                              <p className="text-sm text-gray-600">Rate</p>
+                              <p className="font-semibold text-red-600">₦{parseFloat(offer.rate || "0").toLocaleString()}</p>
+                            </div>
+                            <div>
+                              <p className="text-sm text-gray-600">Limits</p>
+                              <p className="font-semibold text-sm">
+                                {offer.minAmount && offer.maxAmount
+                                  ? `${parseFloat(offer.minAmount).toFixed(2)} - ${parseFloat(offer.maxAmount).toFixed(2)}`
+                                  : parseFloat(offer.amount || "0").toFixed(2)} USDT
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex gap-2">
+                            <Button 
+                              onClick={() => setLocation('/marketplace')}
+                              className="flex-1 bg-red-600 hover:bg-red-700"
+                              disabled={!user}
+                            >
+                              Sell USDT
+                            </Button>
+                            <Button
+                              onClick={() => setLocation('/marketplace')}
+                              variant="outline"
+                              size="icon"
+                              disabled={!user}
+                            >
+                              <MessageCircle className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                  <Button variant="outline" size="sm" className="w-full" onClick={() => setLocation('/marketplace')}>
+                    View All Sell Offers
+                  </Button>
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
 
       {/* Market Overview */}
       <Card>
