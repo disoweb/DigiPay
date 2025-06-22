@@ -1,7 +1,8 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Star } from "lucide-react";
+import { Star, MessageCircle } from "lucide-react";
+import { useLocation } from "wouter";
 import type { Offer } from "@shared/schema";
 
 type EnrichedOffer = Offer & {
@@ -19,8 +20,15 @@ interface OfferCardProps {
 }
 
 export function OfferCard({ offer, onTrade }: OfferCardProps) {
+  const [, setLocation] = useLocation();
   const total = parseFloat(offer.amount) * parseFloat(offer.rate);
-  const timeAgo = new Date(offer.createdAt).toLocaleDateString();
+  const timeAgo = offer.createdAt ? new Date(offer.createdAt).toLocaleDateString() : 'Recently';
+
+  const handleMessage = () => {
+    if (offer.user) {
+      setLocation(`/user-chat/${offer.user.id}`);
+    }
+  };
 
   return (
     <Card className="border-0 shadow-sm hover:shadow-md transition-shadow">
@@ -74,16 +82,29 @@ export function OfferCard({ offer, onTrade }: OfferCardProps) {
           )}
         </div>
         
-        <Button 
-          onClick={onTrade}
-          className={`w-full mt-4 ${
-            offer.type === "sell" 
-              ? "bg-red-600 hover:bg-red-700" 
-              : "bg-green-600 hover:bg-green-700"
-          }`}
-        >
-          {offer.type === "sell" ? "Buy USDT" : "Sell USDT"}
-        </Button>
+        <div className="flex gap-2 mt-4">
+          <Button 
+            onClick={onTrade}
+            className={`flex-1 ${
+              offer.type === "sell" 
+                ? "bg-red-600 hover:bg-red-700" 
+                : "bg-green-600 hover:bg-green-700"
+            }`}
+          >
+            {offer.type === "sell" ? "Buy USDT" : "Sell USDT"}
+          </Button>
+          
+          {offer.user && (
+            <Button 
+              onClick={handleMessage}
+              variant="outline"
+              size="sm"
+              className="px-3"
+            >
+              <MessageCircle className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
       </CardContent>
     </Card>
   );

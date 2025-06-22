@@ -76,11 +76,17 @@ export function ModernChat({ chatUserId, onBack }: ModernChatProps) {
         receiverId: parseInt(chatUserId),
         content: messageContent,
       });
+      if (!response.ok) {
+        throw new Error("Failed to send message");
+      }
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/messages/user/${chatUserId}`] });
       setMessage("");
+      queryClient.invalidateQueries({ queryKey: [`/api/messages/user/${chatUserId}`] });
+    },
+    onError: (error) => {
+      console.error("Error sending message:", error);
     },
   });
 
@@ -168,60 +174,66 @@ export function ModernChat({ chatUserId, onBack }: ModernChatProps) {
       </div>
 
       {/* Messages area */}
-      <ScrollArea className="flex-1 p-4">
-        <div className="space-y-4">
-          {messages.length === 0 ? (
-            <div className="text-center py-8">
-              <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
-                <Phone className="h-8 w-8 text-gray-400" />
-              </div>
-              <p className="text-gray-500 text-sm">
-                Start a conversation with {chatUser.email.split('@')[0]}
-              </p>
-            </div>
-          ) : (
-            messages.map((msg: Message) => {
-              const isOwnMessage = msg.senderId === user?.id;
-              return (
-                <div
-                  key={msg.id}
-                  className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'}`}
-                >
-                  <div
-                    className={`max-w-[80%] sm:max-w-[70%] rounded-2xl px-4 py-2 ${
-                      isOwnMessage
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-white border shadow-sm'
-                    }`}
-                  >
-                    <p className="text-sm break-words">{msg.content}</p>
-                    <div className={`flex items-center gap-1 mt-1 text-xs ${
-                      isOwnMessage ? 'text-blue-100' : 'text-gray-500'
-                    }`}>
-                      <span>
-                        {new Date(msg.createdAt).toLocaleTimeString([], {
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}
-                      </span>
-                      {isOwnMessage && (
-                        <>
-                          {msg.isRead ? (
-                            <CheckCheck className="h-3 w-3" />
-                          ) : (
-                            <Check className="h-3 w-3" />
-                          )}
-                        </>
-                      )}
-                    </div>
+      <div className="flex-1 overflow-hidden flex flex-col">
+        <div className="flex-1 overflow-y-auto p-4">
+          <div className="space-y-4 min-h-full flex flex-col justify-end">
+            {messages.length === 0 ? (
+              <div className="text-center py-8 flex-1 flex items-center justify-center">
+                <div>
+                  <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+                    <Phone className="h-8 w-8 text-gray-400" />
                   </div>
+                  <p className="text-gray-500 text-sm">
+                    Start a conversation with {chatUser.email.split('@')[0]}
+                  </p>
                 </div>
-              );
-            })
-          )}
-          <div ref={messagesEndRef} />
+              </div>
+            ) : (
+              <>
+                {messages.map((msg: Message) => {
+                  const isOwnMessage = msg.senderId === user?.id;
+                  return (
+                    <div
+                      key={msg.id}
+                      className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'}`}
+                    >
+                      <div
+                        className={`max-w-[80%] sm:max-w-[70%] rounded-2xl px-4 py-2 ${
+                          isOwnMessage
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-white border shadow-sm'
+                        }`}
+                      >
+                        <p className="text-sm break-words">{msg.content}</p>
+                        <div className={`flex items-center gap-1 mt-1 text-xs ${
+                          isOwnMessage ? 'text-blue-100' : 'text-gray-500'
+                        }`}>
+                          <span>
+                            {new Date(msg.createdAt).toLocaleTimeString([], {
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })}
+                          </span>
+                          {isOwnMessage && (
+                            <>
+                              {msg.isRead ? (
+                                <CheckCheck className="h-3 w-3" />
+                              ) : (
+                                <Check className="h-3 w-3" />
+                              )}
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+                <div ref={messagesEndRef} />
+              </>
+            )}
+          </div>
         </div>
-      </ScrollArea>
+      </div>
 
       {/* Message input */}
       <div className="bg-white border-t p-4">
