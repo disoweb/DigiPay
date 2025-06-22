@@ -445,8 +445,8 @@ export class DatabaseStorage implements IStorage {
 
     async getUserMessages(userId: number): Promise<any[]> {
         // Implementation for retrieving user messages
-        // Example:
-        return await db.select().from(messages).where(or(eq(messages.senderId, userId), eq(messages.receiverId, userId))).orderBy(desc(messages.createdAt));
+        // Note: The messages table uses 'recipientId' not 'receiverId'
+        return await db.select().from(messages).where(or(eq(messages.senderId, userId), eq(messages.recipientId, userId))).orderBy(desc(messages.createdAt));
     }
 
     async createDirectMessage(message: any): Promise<Message> {
