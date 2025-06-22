@@ -17,7 +17,7 @@ interface EnrichedMessage {
     id: number;
     email: string;
   };
-  status?: 'sending' | 'sent' | 'delivered' | 'read';
+  status?: 'sending' | 'sent' | 'delivered' | 'read' | 'failed';
 }
 
 interface RealTimeChatProps {
@@ -59,26 +59,64 @@ export function RealTimeChat({ tradeId }: RealTimeChatProps) {
       
       setPendingMessages(prev => new Map(prev.set(tempId, pendingMessage)));
       
-      const res = await apiRequest("POST", `/api/trades/${tradeId}/messages`, {
-        message: messageText,
-      });
-      
-      // Remove pending message
-      setPendingMessages(prev => {
-        const newMap = new Map(prev);
-        newMap.delete(tempId);
-        return newMap;
-      });
-      
-      return res.json();
+      try {
+        const res = await apiRequest("POST", `/api/trades/${tradeId}/messages`, {
+          message: messageText,
+        });
+        
+        if (!res.ok) {
+          throw new Error('Failed to send message');
+        }
+        
+        // Update pending message to sent status
+        setPendingMessages(prev => {
+          const newMap = new Map(prev);
+          const msg = newMap.get(tempId);
+          if (msg) {
+            newMap.set(tempId, { ...msg, status: 'sent' });
+          }
+          return newMap;
+        });
+        
+        // Remove pending message after a delay to show sent status
+        setTimeout(() => {
+          setPendingMessages(prev => {
+            const newMap = new Map(prev);
+            newMap.delete(tempId);
+            return newMap;
+          });
+        }, 1000);
+        
+        return res.json();
+      } catch (error) {
+        // Mark message as failed
+        setPendingMessages(prev => {
+          const newMap = new Map(prev);
+          const msg = newMap.get(tempId);
+          if (msg) {
+            newMap.set(tempId, { ...msg, status: 'failed' });
+          }
+          return newMap;
+        });
+        
+        // Remove failed message after delay
+        setTimeout(() => {
+          setPendingMessages(prev => {
+            const newMap = new Map(prev);
+            newMap.delete(tempId);
+            return newMap;
+          });
+        }, 3000);
+        
+        throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/trades", tradeId, "messages"] });
       setMessage("");
     },
-    onError: () => {
-      // Clear pending messages on error
-      setPendingMessages(new Map());
+    onError: (error) => {
+      console.error('Failed to send message:', error);
     }
   });
 
@@ -216,12 +254,12 @@ export function RealTimeChat({ tradeId }: RealTimeChatProps) {
 
       {/* Messages Area */}
       <ScrollArea className="flex-1 p-4">
-        <div className="space-y-4">
-          {messages.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="bg-white dark:bg-gray-800 rounded-xl p-6 mx-auto max-w-sm shadow-sm">
-                <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Send className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+        <div className="flex flex-col space-y-4 min-h-full justify-end">
+          {messages.length === 0 && pendingMessages.size === 0 ? (
+            <div className="text-center py-8">
+              <div className="bg-white dark:bg-gray-800 rounded-xl p-4 mx-auto max-w-xs shadow-sm">
+                <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <Send className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                 </div>
                 <p className="text-gray-600 dark:text-gray-300 text-sm">
                   No messages yet. Start the conversation!
@@ -229,64 +267,73 @@ export function RealTimeChat({ tradeId }: RealTimeChatProps) {
               </div>
             </div>
           ) : (
-            [...messages, ...Array.from(pendingMessages.values())].map((msg, index) => {
-              const isOwnMessage = msg.senderId === user?.id;
-              const isPending = msg.status === 'sending';
-              const messageKey = msg.id > 0 ? `msg-${msg.id}` : `pending-${index}`;
-              
-              return (
-                <div
-                  key={messageKey}
-                  className={`flex items-end space-x-2 ${
-                    isOwnMessage ? "flex-row-reverse space-x-reverse" : ""
-                  } ${isPending ? "opacity-70" : ""}`}
-                >
-                  {!isOwnMessage && (
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold shadow-md">
-                      {msg.sender?.email?.charAt(0).toUpperCase() || "U"}
-                    </div>
-                  )}
-                  
-                  <div className={`flex flex-col ${isOwnMessage ? "items-end" : "items-start"} max-w-[80%] sm:max-w-xs`}>
-                    <div className={`relative rounded-2xl px-4 py-2 shadow-sm ${
-                      isOwnMessage 
-                        ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-br-md" 
-                        : "bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700 rounded-bl-md"
-                    }`}>
-                      <p className="text-sm leading-relaxed break-words">{msg.message}</p>
-                      
-                      {/* Message tail */}
-                      <div className={`absolute bottom-0 w-3 h-3 ${
-                        isOwnMessage 
-                          ? "right-0 bg-blue-600 transform rotate-45 translate-x-1 translate-y-1" 
-                          : "left-0 bg-white dark:bg-gray-800 border-l border-b border-gray-200 dark:border-gray-700 transform rotate-45 -translate-x-1 translate-y-1"
-                      }`} />
-                    </div>
+            <div className="space-y-4">
+              {[...messages, ...Array.from(pendingMessages.values())].map((msg, index) => {
+                const isOwnMessage = msg.senderId === user?.id;
+                const isPending = msg.status === 'sending';
+                const isFailed = msg.status === 'failed';
+                const messageKey = msg.id > 0 ? `msg-${msg.id}` : `pending-${index}`;
+                
+                return (
+                  <div
+                    key={messageKey}
+                    className={`flex items-end space-x-2 ${
+                      isOwnMessage ? "flex-row-reverse space-x-reverse" : ""
+                    } ${isPending ? "opacity-70" : ""} ${isFailed ? "opacity-50" : ""}`}
+                  >
+                    {!isOwnMessage && (
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold shadow-md">
+                        {msg.sender?.email?.charAt(0).toUpperCase() || "U"}
+                      </div>
+                    )}
                     
-                    <div className={`flex items-center space-x-1 mt-1 px-1 ${isOwnMessage ? "flex-row-reverse space-x-reverse" : ""}`}>
-                      <span className="text-xs text-gray-500 dark:text-gray-400">
-                        {formatTime(msg.createdAt)}
-                      </span>
-                      {isOwnMessage && (
-                        <div className="flex items-center">
-                          {isPending ? (
-                            <Clock className="h-3 w-3 text-gray-400 animate-pulse" />
-                          ) : (
-                            <CheckCheck className="h-3 w-3 text-blue-500" />
-                          )}
-                        </div>
-                      )}
+                    <div className={`flex flex-col ${isOwnMessage ? "items-end" : "items-start"} max-w-[80%] sm:max-w-xs`}>
+                      <div className={`relative rounded-2xl px-4 py-2 shadow-sm ${
+                        isOwnMessage 
+                          ? isFailed 
+                            ? "bg-gradient-to-r from-red-500 to-red-600 text-white rounded-br-md"
+                            : "bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-br-md"
+                          : "bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700 rounded-bl-md"
+                      }`}>
+                        <p className="text-sm leading-relaxed break-words">{msg.message}</p>
+                        
+                        {/* Message tail */}
+                        <div className={`absolute bottom-0 w-3 h-3 ${
+                          isOwnMessage 
+                            ? isFailed
+                              ? "right-0 bg-red-600 transform rotate-45 translate-x-1 translate-y-1"
+                              : "right-0 bg-blue-600 transform rotate-45 translate-x-1 translate-y-1"
+                            : "left-0 bg-white dark:bg-gray-800 border-l border-b border-gray-200 dark:border-gray-700 transform rotate-45 -translate-x-1 translate-y-1"
+                        }`} />
+                      </div>
+                      
+                      <div className={`flex items-center space-x-1 mt-1 px-1 ${isOwnMessage ? "flex-row-reverse space-x-reverse" : ""}`}>
+                        <span className="text-xs text-gray-500 dark:text-gray-400">
+                          {formatTime(msg.createdAt)}
+                        </span>
+                        {isOwnMessage && (
+                          <div className="flex items-center" title={isPending ? "Sending..." : isFailed ? "Failed to send" : "Delivered"}>
+                            {isPending ? (
+                              <Clock className="h-3 w-3 text-yellow-500 animate-pulse" />
+                            ) : isFailed ? (
+                              <div className="h-3 w-3 rounded-full bg-red-500" />
+                            ) : (
+                              <CheckCheck className="h-3 w-3 text-green-500" />
+                            )}
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
 
-                  {isOwnMessage && (
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-white text-xs font-bold shadow-md">
-                      {user?.email?.charAt(0).toUpperCase() || "Y"}
-                    </div>
-                  )}
-                </div>
-              );
-            })
+                    {isOwnMessage && (
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-white text-xs font-bold shadow-md">
+                        {user?.email?.charAt(0).toUpperCase() || "Y"}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           )}
           <div ref={messagesEndRef} />
         </div>
