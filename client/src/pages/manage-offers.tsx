@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -61,13 +61,41 @@ export default function ManageOffers() {
     maxAmount: "",
     terms: ""
   });
+  const [authChecked, setAuthChecked] = useState(false);
 
-  // Fetch user's offers
+  // Use effect to ensure auth is fully checked before proceeding
+  useEffect(() => {
+    if (!authLoading) {
+      // Add a small delay to ensure auth state is settled
+      const timer = setTimeout(() => {
+        setAuthChecked(true);
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [authLoading]);
+
+  // Fetch user's offers with delay to prevent race condition
   const { data: offers = [], isLoading, error } = useQuery<Offer[]>({
     queryKey: [`/api/users/${user?.id}/offers`],
     enabled: !!user?.id && !authLoading,
     retry: 3,
     retryDelay: 1000,
+    // Add a small delay to ensure auth is fully resolved
+    queryFn: async () => {
+      if (!user?.id) throw new Error("User not authenticated");
+      
+      const response = await fetch(`/api/users/${user.id}/offers`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('digipay_token')}`,
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch offers: ${response.status}`);
+      }
+      
+      return response.json();
+    },
   });
 
   // Update offer mutation
@@ -182,7 +210,7 @@ export default function ManageOffers() {
     }
   };
 
-  if (authLoading || isLoading) {
+  if (authLoading || !authChecked || isLoading) {
     return (
       <div className="min-h-screen bg-gray-50">
         <Navbar />
@@ -190,7 +218,9 @@ export default function ManageOffers() {
           <div className="flex items-center justify-center py-12">
             <div className="text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-              <p className="text-gray-600">Loading your offers...</p>
+              <p className="text-gray-600">
+                {authLoading || !authChecked ? "Checking authentication..." : "Loading your offers..."}
+              </p>
             </div>
           </div>
         </div>
@@ -199,7 +229,7 @@ export default function ManageOffers() {
   }
 
   // Redirect to auth if not authenticated after loading
-  if (!authLoading && !user) {
+  if (authChecked && !user) {
     return <Redirect to="/auth" />;
   }
 
