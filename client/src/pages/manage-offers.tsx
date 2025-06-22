@@ -63,7 +63,7 @@ export default function ManageOffers() {
   });
 
   // Fetch user's offers
-  const { data: offers = [], isLoading, error } = useQuery({
+  const { data: offers = [], isLoading, error } = useQuery<Offer[]>({
     queryKey: [`/api/users/${user?.id}/offers`],
     enabled: !!user?.id,
   });
@@ -71,12 +71,14 @@ export default function ManageOffers() {
   // Update offer mutation
   const updateOfferMutation = useMutation({
     mutationFn: async (data: { id: number; updates: any }) => {
-      return apiRequest(`/api/offers/${data.id}`, {
-        method: "PUT",
-        body: JSON.stringify(data.updates),
-      });
+      console.log("Updating offer:", data);
+      const response = await apiRequest("PUT", `/api/offers/${data.id}`, data.updates);
+      console.log("Update response:", response);
+      const result = await response.json();
+      return result;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log("Update success:", data);
       queryClient.invalidateQueries({ queryKey: [`/api/users/${user?.id}/offers`] });
       setEditingOffer(null);
       toast({
@@ -84,10 +86,11 @@ export default function ManageOffers() {
         description: "Offer updated successfully",
       });
     },
-    onError: () => {
+    onError: (error) => {
+      console.error("Update error:", error);
       toast({
         title: "Error",
-        description: "Failed to update offer",
+        description: `Failed to update offer: ${error.message}`,
         variant: "destructive",
       });
     },
@@ -96,9 +99,10 @@ export default function ManageOffers() {
   // Delete offer mutation
   const deleteOfferMutation = useMutation({
     mutationFn: async (offerId: number) => {
-      return apiRequest(`/api/offers/${offerId}`, {
-        method: "DELETE",
-      });
+      console.log("Deleting offer:", offerId);
+      const response = await apiRequest("DELETE", `/api/offers/${offerId}`);
+      const result = await response.json();
+      return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/users/${user?.id}/offers`] });
@@ -107,10 +111,11 @@ export default function ManageOffers() {
         description: "Offer deleted successfully",
       });
     },
-    onError: () => {
+    onError: (error) => {
+      console.error("Delete error:", error);
       toast({
         title: "Error",
-        description: "Failed to delete offer",
+        description: `Failed to delete offer: ${error.message}`,
         variant: "destructive",
       });
     },
