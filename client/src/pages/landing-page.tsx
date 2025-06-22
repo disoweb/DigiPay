@@ -6,7 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { 
   Smartphone, Phone, Shield, Clock, Users, CheckCircle, 
   Star, ArrowRight, Zap, Globe, Lock, CreditCard,
-  BarChart3, Banknote, TrendingUp, TrendingDown, UserCheck, MessageCircle
+  BarChart3, Banknote, TrendingUp, TrendingDown, UserCheck, MessageCircle,
+  Building2, Award, DollarSign, Eye, Wallet
 } from "lucide-react";
 
 export default function LandingPage() {
