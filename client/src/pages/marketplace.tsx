@@ -1,12 +1,14 @@
 
+import { useState } from "react";
 import { Navbar } from "@/components/navbar";
 import { EnhancedMarketplace } from "@/components/enhanced-marketplace";
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
-import { Plus, ArrowLeft } from "lucide-react";
+import { Plus, ArrowLeft, TrendingUp, TrendingDown } from "lucide-react";
 
 export default function Marketplace() {
   const [, setLocation] = useLocation();
+  const [activeTab, setActiveTab] = useState<'buy' | 'sell'>('buy');
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -40,6 +42,42 @@ export default function Marketplace() {
               Create Offer
             </Button>
           </div>
+        </div>
+
+        {/* Buy/Sell Toggle Buttons */}
+        <div className="flex gap-3 mb-6">
+          <Button
+            type="button"
+            variant={activeTab === "buy" ? "default" : "outline"}
+            onClick={() => setActiveTab("buy")}
+            className={`flex-1 h-14 flex items-center justify-center gap-2 text-base font-medium ${
+              activeTab === "buy" 
+                ? "bg-red-600 hover:bg-red-700 text-white" 
+                : "bg-white hover:bg-gray-50 border-red-600 text-red-600"
+            }`}
+          >
+            <TrendingUp className="h-5 w-5" />
+            <span>🔴 Buy</span>
+            <span className="text-xs bg-red-800 text-white px-2 py-1 rounded-full ml-1">
+              2
+            </span>
+          </Button>
+          <Button
+            type="button"
+            variant={activeTab === "sell" ? "default" : "outline"}
+            onClick={() => setActiveTab("sell")}
+            className={`flex-1 h-14 flex items-center justify-center gap-2 text-base font-medium ${
+              activeTab === "sell" 
+                ? "bg-green-600 hover:bg-green-700 text-white" 
+                : "bg-white hover:bg-gray-50 border-green-600 text-green-600"
+            }`}
+          >
+            <TrendingDown className="h-5 w-5" />
+            <span>🟢 Sell</span>
+            <span className="text-xs bg-green-800 text-white px-2 py-1 rounded-full ml-1">
+              2
+            </span>
+          </Button>
         </div>
 
         <EnhancedMarketplace />
