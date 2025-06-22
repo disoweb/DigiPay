@@ -85,28 +85,6 @@ export function TradingDashboard() {
 
   return (
     <div className="space-y-6">
-      {/* KYC Verification Alert */}
-      {!user?.kycVerified && (
-        <Alert className="border-blue-200 bg-blue-50 mb-6">
-          <Shield className="h-4 w-4 text-blue-600" />
-          <AlertDescription className="text-blue-800">
-            <div className="flex items-center justify-between">
-              <div>
-                <strong>Complete your identity verification</strong>
-                <p className="text-sm mt-1">Verify your identity to unlock higher trading limits and enhanced security features.</p>
-              </div>
-              <Button 
-                onClick={() => setLocation("/user-settings")}
-                size="sm"
-                className="bg-blue-600 hover:bg-blue-700 ml-4"
-              >
-                <Shield className="h-4 w-4 mr-2" />
-                Verify Now
-              </Button>
-            </div>
-          </AlertDescription>
-        </Alert>
-      )}
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
           <Card>
