@@ -27,18 +27,22 @@ export function TradingDashboard() {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
 
-  // Force refetch when component mounts
-  useEffect(() => {
-    refetchTrades();
-  }, []);
-
   const { data: trades = [], error: tradesError, refetch: refetchTrades } = useQuery({
     queryKey: ['/api/trades'],
     refetchInterval: 5000,
     refetchOnWindowFocus: true,
     refetchOnMount: true,
     staleTime: 0,
+    gcTime: 0, // Don't cache data
+    enabled: !!user?.id, // Only fetch when user is available
   });
+
+  // Force refetch when component mounts and user is available
+  useEffect(() => {
+    if (user?.id && refetchTrades) {
+      refetchTrades();
+    }
+  }, [user?.id, refetchTrades]);
 
   const { data: offers = [], error: offersError } = useQuery({
     queryKey: [`/api/users/${user?.id}/offers`],
@@ -51,6 +55,9 @@ export function TradingDashboard() {
     },
     enabled: !!user?.id,
     refetchInterval: 10000,
+    staleTime: 0,
+    gcTime: 0,
+    refetchOnMount: true,
   });
 
   const { data: marketStats, error: statsError, isLoading: statsLoading } = useQuery({
