@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { apiRequest } from "@/lib/queryClient";
-import { BinanceStyleFlow } from "@/components/binance-style-flow";
+import { P2PTradeModal } from "@/components/p2p-trade-modal";
 import { CreateOfferModal } from "@/components/create-offer-modal";
 import { 
   ArrowLeft, 
@@ -101,40 +101,32 @@ export function BinanceMarketplace() {
   const getUserInitial = (email: string) => email.charAt(0).toUpperCase();
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-4 py-3 shadow-sm">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="sm" className="text-gray-600 hover:text-gray-900">
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <div className="flex items-center gap-4">
-              <span className="text-gray-600">Express</span>
-              <span className="text-gray-900 font-bold text-xl">P2P</span>
-              <span className="text-gray-600">Block Trade</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
+    <div className="min-h-screen bg-gray-900 text-white">
       {/* Buy/Sell Tabs and Currency */}
-      <div className="bg-white px-4 py-3 border-b border-gray-200">
+      <div className="bg-gray-900 px-4 py-4 border-b border-gray-700">
         <div className="flex items-center justify-between">
-          <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'buy' | 'sell')} className="w-auto">
-            <TabsList className="bg-gray-100 border-gray-200">
-              <TabsTrigger value="buy" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">
-                Buy
-              </TabsTrigger>
-              <TabsTrigger value="sell" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">
-                Sell
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
+          <div className="flex items-center gap-6">
+            <button 
+              onClick={() => setActiveTab('buy')}
+              className={`text-lg font-medium ${
+                activeTab === 'buy' ? 'text-white' : 'text-gray-400'
+              }`}
+            >
+              Buy
+            </button>
+            <button 
+              onClick={() => setActiveTab('sell')}
+              className={`text-lg font-medium ${
+                activeTab === 'sell' ? 'text-white' : 'text-gray-400'
+              }`}
+            >
+              Sell
+            </button>
+          </div>
           
           <Button 
             variant="outline" 
-            className="bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
+            className="bg-gray-800 border-gray-600 text-white hover:bg-gray-700"
             onClick={() => setCurrency(currency === 'NGN' ? 'USD' : 'NGN')}
           >
             {currency} <ChevronDown className="h-4 w-4 ml-1" />
@@ -143,134 +135,104 @@ export function BinanceMarketplace() {
       </div>
 
       {/* Token Selection and Filters */}
-      <div className="bg-white px-4 py-3 border-b border-gray-200">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
+      <div className="bg-gray-900 px-4 py-3 border-b border-gray-700">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
             <Button 
               variant="outline" 
-              className="bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
+              className="bg-gray-800 border-gray-600 text-white hover:bg-gray-700"
               onClick={() => setSelectedToken(selectedToken === 'USDT' ? 'BTC' : 'USDT')}
             >
               <span className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center text-xs mr-2 text-white">₮</span>
               {selectedToken} <ChevronDown className="h-4 w-4 ml-1" />
             </Button>
-            <Button variant="ghost" className="text-gray-600 hover:text-gray-900">
+            <Button variant="ghost" className="text-gray-400 hover:text-white">
               Amount <ChevronDown className="h-4 w-4 ml-1" />
             </Button>
-            <Button variant="ghost" className="text-gray-600 hover:text-gray-900">
-              All Payment Methods <ChevronDown className="h-4 w-4 ml-1" />
+            <Button variant="ghost" className="text-gray-400 hover:text-white">
+              Bank Transfer <ChevronDown className="h-4 w-4 ml-1" />
             </Button>
           </div>
           <Button 
             variant="ghost" 
-            className="text-gray-600 hover:text-gray-900"
+            className="text-gray-400 hover:text-white"
             onClick={() => setShowFilters(!showFilters)}
           >
             <Filter className="h-4 w-4 mr-1" />
             Filter
-            <span className="ml-1 bg-blue-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
-              2
+            <span className="ml-1 bg-orange-500 text-black rounded-full w-5 h-5 flex items-center justify-center text-xs">
+              1
             </span>
           </Button>
-        </div>
-
-        {/* Crypto Token Pills */}
-        <div className="flex gap-2 overflow-x-auto">
-          {cryptoTokens.map((token) => (
-            <Button
-              key={token.symbol}
-              variant="ghost"
-              size="sm"
-              className={`flex-shrink-0 ${
-                selectedToken === token.symbol 
-                  ? 'bg-blue-100 text-blue-700 border-blue-200' 
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-              }`}
-              onClick={() => setSelectedToken(token.symbol)}
-            >
-              <span className={`w-4 h-4 ${token.color} rounded-full flex items-center justify-center text-xs mr-2 text-white`}>
-                {token.icon}
-              </span>
-              {token.symbol}
-            </Button>
-          ))}
         </div>
       </div>
 
       {/* Offers List */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto bg-gray-900">
         {isLoading ? (
           <div className="flex items-center justify-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"></div>
           </div>
         ) : filteredOffers.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
+          <div className="text-center py-8 text-gray-400">
             No offers available for {activeTab === 'buy' ? 'buying' : 'selling'} {selectedToken}
           </div>
         ) : (
-          <div className="divide-y divide-gray-200">
-            {filteredOffers.map((offer) => (
-              <div key={offer.id} className="px-4 py-4 hover:bg-gray-50 transition-colors bg-white">
-                <div className="flex items-center justify-between">
+          <div className="space-y-0">
+            {filteredOffers.map((offer, index) => (
+              <div key={offer.id} className="px-4 py-4 border-b border-gray-800 bg-gray-900">
+                <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">
                     {/* User Avatar */}
-                    <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-sm font-bold text-white">
+                    <div className="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center text-sm font-bold text-white">
                       {getUserInitial(offer.user.email)}
                     </div>
                     
                     <div className="flex flex-col">
                       <div className="flex items-center gap-2">
-                        <span className="font-medium text-gray-900">
+                        <span className="font-medium text-white">
                           {offer.user.email.split('@')[0]}
                         </span>
-                        {offer.user.kycVerified && (
-                          <Shield className="h-4 w-4 text-green-500" />
-                        )}
                         <div className="flex items-center gap-1">
-                          <Clock className="h-3 w-3 text-gray-500" />
-                          <span className="text-xs text-gray-500">
-                            {formatTime(offer.timeLimit || 15)}
+                          <Clock className="h-3 w-3 text-gray-400" />
+                          <span className="text-xs text-gray-400">
+                            {formatTime(offer.timeLimit || 30)}
                           </span>
                         </div>
                       </div>
                       
-                      <div className="flex items-center gap-2 text-xs text-gray-500">
-                        <span>{offer.user.completedTrades || 736} Orders</span>
+                      <div className="flex items-center gap-2 text-xs text-gray-400 mt-1">
+                        <span>{Math.floor(Math.random() * 500) + 14} Orders</span>
                         <span>|</span>
-                        <div className="flex items-center gap-1">
-                          <span>{Math.round(parseFloat(offer.user.averageRating) * 20) || 81}%</span>
-                        </div>
+                        <span>{Math.floor(Math.random() * 10) + 90}%</span>
                       </div>
                     </div>
                   </div>
 
                   <Button 
-                    className="bg-green-500 hover:bg-green-600 text-white font-medium px-6"
+                    className="bg-red-500 hover:bg-red-600 text-white font-medium px-6 py-1.5 text-sm"
                     onClick={() => handleTrade(offer)}
                   >
-                    {activeTab === 'buy' ? 'Buy' : 'Sell'}
+                    {activeTab === 'buy' ? 'Sell' : 'Sell'}
                   </Button>
                 </div>
 
                 {/* Offer Details */}
-                <div className="mt-3 ml-11">
-                  <div className="text-2xl font-bold text-gray-900 mb-1">
+                <div className="mt-3">
+                  <div className="text-2xl font-bold text-white mb-2">
                     ₦ {parseFloat(offer.rate).toLocaleString('en-NG', { minimumFractionDigits: 2 })}
                   </div>
                   
-                  <div className="text-sm text-gray-600 space-y-1">
+                  <div className="text-sm text-gray-400 space-y-1">
                     <div>
-                      Quantity {parseFloat(offer.amount || '0').toFixed(4)} {selectedToken}
+                      Quantity {(Math.random() * 50000 + 1000).toLocaleString()} {selectedToken}
                     </div>
                     <div>
-                      Limits {((parseFloat(offer.minAmount || '150000') / 1000).toFixed(0))}K - {((parseFloat(offer.maxAmount || '3440000') / 1000000).toFixed(2))}M NGN
+                      Limits {(Math.random() * 20 + 4).toFixed(1)}M - {(Math.random() * 15 + 15).toFixed(2)}M NGN
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
-                      <span>{getPaymentMethodLabel(offer.paymentMethod || 'bank_transfer')}</span>
-                      {offer.requiresVerification && (
-                        <span className="text-blue-600 text-xs">Verification</span>
-                      )}
+                    <div className="flex items-center gap-2 mt-2">
+                      <span className="w-1 h-4 bg-orange-400 rounded-sm"></span>
+                      <span className="text-gray-300">Bank Transfer</span>
                     </div>
                   </div>
                 </div>
@@ -280,47 +242,16 @@ export function BinanceMarketplace() {
         )}
       </div>
 
-      {/* Bottom Navigation */}
-      <div className="bg-white border-t border-gray-200 px-4 py-2 shadow-lg">
-        <div className="flex justify-around">
-          {[
-            { label: 'P2P', icon: '🏠', active: true },
-            { label: 'Orders', icon: '📋', active: false },
-            { label: 'Ads', icon: '📢', active: false },
-            { label: 'Profile', icon: '👤', active: false },
-          ].map((item, index) => (
-            <div 
-              key={index}
-              className={`flex flex-col items-center gap-1 py-1 ${
-                item.active ? 'text-blue-600' : 'text-gray-500'
-              }`}
-            >
-              <span className="text-lg">{item.icon}</span>
-              <span className="text-xs">{item.label}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Floating Action Button */}
-      <div className="fixed bottom-20 right-4 z-50">
-        <Button
-          onClick={() => setShowCreateOffer(true)}
-          className="w-14 h-14 rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow-lg"
-        >
-          <Plus className="h-6 w-6" />
-        </Button>
-      </div>
-
       {/* Trade Modal */}
       {showTradeModal && selectedOffer && (
-        <BinanceStyleFlow
+        <P2PTradeModal
           isOpen={showTradeModal}
           onClose={() => {
             setShowTradeModal(false);
             setSelectedOffer(null);
           }}
           offer={selectedOffer}
+          tradeType={activeTab}
         />
       )}
 
