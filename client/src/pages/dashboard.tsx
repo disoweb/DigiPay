@@ -41,17 +41,17 @@ export default function Dashboard() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-3">
             <ErrorBoundary>
               <TradingDashboard />
             </ErrorBoundary>
           </div>
-          <div className="lg:col-span-1">
-            <ErrorBoundary>
-              <MessagingSystem />
-            </ErrorBoundary>
-          </div>
         </div>
+        
+        {/* Mobile floating messaging system */}
+        <ErrorBoundary>
+          <MessagingSystem />
+        </ErrorBoundary>
       </div>
     </div>
   );

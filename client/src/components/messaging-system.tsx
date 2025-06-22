@@ -45,6 +45,7 @@ export function MessagingSystem() {
   const queryClient = useQueryClient();
   const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
   const [replyText, setReplyText] = useState('');
+  const [isExpanded, setIsExpanded] = useState(false);
 
   const { data: messages = [], isLoading } = useQuery<Message[]>({
     queryKey: ['/api/messages'],
@@ -53,7 +54,7 @@ export function MessagingSystem() {
       if (!response.ok) throw new Error("Failed to fetch messages");
       return response.json();
     },
-    refetchInterval: 5000,
+    refetchInterval: 3000,
   });
 
   const markAsReadMutation = useMutation({
@@ -115,85 +116,163 @@ export function MessagingSystem() {
 
   if (isLoading) {
     return (
-      <Card>
-        <CardContent className="p-6 text-center">
-          <p className="text-gray-600">Loading messages...</p>
-        </CardContent>
-      </Card>
+      <div className="fixed bottom-4 right-4 lg:relative lg:bottom-auto lg:right-auto">
+        <Card className="w-80 lg:w-full">
+          <CardContent className="p-4 text-center">
+            <div className="animate-pulse flex items-center gap-2">
+              <div className="w-4 h-4 bg-gray-300 rounded-full"></div>
+              <div className="h-4 bg-gray-300 rounded w-20"></div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 
   return (
-    <div className="space-y-4">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Inbox className="h-5 w-5" />
-            Messages
+    <div className="fixed bottom-4 right-4 lg:relative lg:bottom-auto lg:right-auto z-50">
+      {/* Mobile floating message widget */}
+      <div className="lg:hidden">
+        {!isExpanded ? (
+          <Button
+            onClick={() => setIsExpanded(true)}
+            className="rounded-full w-14 h-14 bg-blue-600 hover:bg-blue-700 shadow-lg relative"
+          >
+            <MessageCircle className="h-6 w-6" />
             {unreadCount > 0 && (
-              <Badge variant="destructive" className="ml-2">
-                {unreadCount} new
+              <Badge className="absolute -top-2 -right-2 bg-red-500 text-white text-xs w-6 h-6 rounded-full flex items-center justify-center p-0">
+                {unreadCount > 9 ? '9+' : unreadCount}
               </Badge>
             )}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {messages.length === 0 ? (
-            <Alert>
-              <MessageCircle className="h-4 w-4" />
-              <AlertDescription>
-                No messages yet. When other traders contact you about your offers, their messages will appear here.
-              </AlertDescription>
-            </Alert>
-          ) : (
-            <div className="space-y-3">
-              {messages.map((message) => (
-                <Card 
-                  key={message.id} 
-                  className={`cursor-pointer transition-colors ${
-                    !message.isRead ? 'bg-blue-50 border-blue-200' : 'hover:bg-gray-50'
-                  }`}
-                  onClick={() => handleMessageClick(message)}
+          </Button>
+        ) : (
+          <Card className="w-80 max-h-96 shadow-lg">
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2 text-sm">
+                  <MessageCircle className="h-4 w-4" />
+                  Messages
+                  {unreadCount > 0 && (
+                    <Badge variant="destructive" className="text-xs">
+                      {unreadCount}
+                    </Badge>
+                  )}
+                </CardTitle>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsExpanded(false)}
+                  className="h-6 w-6 p-0"
                 >
-                  <CardContent className="p-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <User className="h-4 w-4 text-gray-500" />
-                          <span className="font-medium text-sm">{message.sender.email}</span>
-                          {message.sender.isOnline && (
-                            <div className="w-2 h-2 bg-green-400 rounded-full" />
-                          )}
-                          {!message.isRead && (
-                            <Badge variant="destructive" className="text-xs">New</Badge>
-                          )}
-                        </div>
-                        {message.offer && (
-                          <p className="text-xs text-gray-600 mb-2">
-                            About: {message.offer.type === 'sell' ? 'Selling' : 'Buying'} {message.offer.amount} USDT at ₦{parseFloat(message.offer.rate).toLocaleString()}
-                          </p>
-                        )}
-                        <p className="text-sm text-gray-700 line-clamp-2">{message.messageText}</p>
-                      </div>
-                      <div className="flex flex-col items-end gap-1">
-                        <div className="flex items-center gap-1 text-xs text-gray-500">
-                          <Clock className="h-3 w-3" />
-                          {new Date(message.createdAt).toLocaleDateString()}
-                        </div>
-                        {message.isRead ? (
-                          <CheckCircle className="h-4 w-4 text-green-500" />
-                        ) : (
-                          <AlertCircle className="h-4 w-4 text-blue-500" />
+                  ×
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="p-3 max-h-64 overflow-y-auto">
+              {messages.length === 0 ? (
+                <div className="text-center py-4">
+                  <MessageCircle className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                  <p className="text-xs text-gray-500">No messages yet</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {messages.slice(0, 5).map((message) => (
+                    <div
+                      key={message.id}
+                      className={`p-2 rounded-lg cursor-pointer transition-colors ${
+                        !message.isRead ? 'bg-blue-50 border border-blue-200' : 'bg-gray-50 hover:bg-gray-100'
+                      }`}
+                      onClick={() => handleMessageClick(message)}
+                    >
+                      <div className="flex items-center gap-2 mb-1">
+                        <div className={`w-2 h-2 rounded-full ${message.sender.isOnline ? 'bg-green-400' : 'bg-gray-400'}`} />
+                        <span className="font-medium text-xs truncate">{message.sender.email}</span>
+                        {!message.isRead && (
+                          <div className="w-2 h-2 bg-blue-500 rounded-full" />
                         )}
                       </div>
+                      <p className="text-xs text-gray-600 line-clamp-2">{message.messageText}</p>
+                      <p className="text-xs text-gray-400 mt-1">
+                        {new Date(message.createdAt).toLocaleDateString()}
+                      </p>
                     </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+      </div>
+
+      {/* Desktop version */}
+      <div className="hidden lg:block space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Inbox className="h-5 w-5" />
+              Messages
+              {unreadCount > 0 && (
+                <Badge variant="destructive" className="ml-2">
+                  {unreadCount} new
+                </Badge>
+              )}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {messages.length === 0 ? (
+              <Alert>
+                <MessageCircle className="h-4 w-4" />
+                <AlertDescription>
+                  No messages yet. When other traders contact you about your offers, their messages will appear here.
+                </AlertDescription>
+              </Alert>
+            ) : (
+              <div className="space-y-3 max-h-64 overflow-y-auto">
+                {messages.map((message) => (
+                  <Card 
+                    key={message.id} 
+                    className={`cursor-pointer transition-colors ${
+                      !message.isRead ? 'bg-blue-50 border-blue-200' : 'hover:bg-gray-50'
+                    }`}
+                    onClick={() => handleMessageClick(message)}
+                  >
+                    <CardContent className="p-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <div className={`w-2 h-2 rounded-full ${message.sender.isOnline ? 'bg-green-400' : 'bg-gray-400'}`} />
+                            <span className="font-medium text-sm">{message.sender.email}</span>
+                            {!message.isRead && (
+                              <Badge variant="destructive" className="text-xs">New</Badge>
+                            )}
+                          </div>
+                          {message.offer && (
+                            <p className="text-xs text-gray-600 mb-2">
+                              About: {message.offer.type === 'sell' ? 'Selling' : 'Buying'} {message.offer.amount} USDT at ₦{parseFloat(message.offer.rate).toLocaleString()}
+                            </p>
+                          )}
+                          <p className="text-sm text-gray-700 line-clamp-2">{message.messageText}</p>
+                        </div>
+                        <div className="flex flex-col items-end gap-1">
+                          <div className="flex items-center gap-1 text-xs text-gray-500">
+                            <Clock className="h-3 w-3" />
+                            {new Date(message.createdAt).toLocaleDateString()}
+                          </div>
+                          {message.isRead ? (
+                            <CheckCircle className="h-4 w-4 text-green-500" />
+                          ) : (
+                            <AlertCircle className="h-4 w-4 text-blue-500" />
+                          )}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Message Detail Dialog */}
       <Dialog open={!!selectedMessage} onOpenChange={() => setSelectedMessage(null)}>

@@ -17,8 +17,11 @@ A comprehensive peer-to-peer cryptocurrency trading platform built with React, N
 - **2025-01-22**: Implemented direct messaging feature for trader communication
 - **2025-01-22**: Enhanced WebSocket system for real-time status updates
 - **2025-01-22**: Fixed database schema issues with isOnline/lastSeen columns
-- **2025-01-22**: Created new marketplace component with proper online status display
+- **2025-01-22**: Created new marketplace component with proper online status display  
 - **2025-01-22**: Fixed messaging functionality with working send button
+- **2025-01-22**: Modernized messaging system with mobile-optimized floating widget
+- **2025-01-22**: Implemented automatic messaging when new trades are created
+- **2025-01-22**: Added responsive message interface with real-time updates
 
 ## Key Features
 - P2P trading with USDT/Naira pairs

@@ -20,8 +20,10 @@ import {
   BarChart3,
   CheckCircle,
   Activity,
-  MessageCircle
+  MessageCircle,
+  Inbox
 } from "lucide-react";
+import { MessagingSystem } from "@/components/messaging-system";
 
 export function TradingDashboard() {
   const { user } = useAuth();
