@@ -314,7 +314,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      const fiatAmount = (tradeAmount * parseFloat(offer.rate)).toString();
+      const fiatAmount = tradeAmount * parseFloat(offer.rate);
 
       const newTrade = await storage.createTrade({
         offerId,
