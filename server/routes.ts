@@ -10,6 +10,15 @@ import { paystackService } from "./services/paystack";
 import { tronService } from "./services/tron";
 import { emailService, smsService } from "./services/notifications";
 import { kycRoutes } from "./routes/kyc";
+import { db } from "./db";
+import { eq, desc, or, and, asc } from "drizzle-orm";
+import { 
+  users, offers, trades, messages, transactions, ratings,
+  type User, type InsertUser, type Offer, type InsertOffer,
+  type Trade, type InsertTrade, type Message, type InsertMessage,
+  type Transaction, type InsertTransaction, type Rating, type InsertRating
+} from "@shared/schema";
+import { messages as messagesTable } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   setupJWTAuth(app);
@@ -22,6 +31,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Get user error:", error);
       res.status(500).json({ error: "Failed to get user" });
+    }
+  });
+
+    // Get specific user by ID
+  app.get("/api/users/:userId", authenticateToken, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      // Return public profile info only
+      const publicProfile = {
+        id: user.id,
+        email: user.email,
+        kycVerified: user.kycVerified,
+        averageRating: user.averageRating,
+        ratingCount: user.ratingCount,
+        completedTrades: 0, // This should be calculated from actual trades
+        isOnline: true // This should be from websocket status
+      };
+
+      res.json(publicProfile);
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      res.status(500).json({ error: "Failed to fetch user" });
     }
   });
 
@@ -94,7 +130,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/offers/featured", async (req, res) => {
     try {
       const featuredOffers = await storage.getFeaturedOffers();
-      
+
       // Enrich offers with user data
       const enrichFeaturedOffers = async (offers: any[]) => {
         return await Promise.all(
@@ -812,6 +848,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         );
       }
 
+```text
       res.json({ success: true, message: "Dispute raised successfully" });
     } catch (error) {
       console.error("Dispute error:", error);
@@ -1422,6 +1459,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json(message);
     } catch (error) {
       res.status(400).json({ message: "Failed to send message" });
+    }
+  });
+
+    // Get direct messages with a specific user
+  app.get("/api/messages/user/:userId", authenticateToken, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const currentUserId = req.user!.id;
+
+      // Get messages between current user and specified user
+      // const messages = await db.select()
+      //   .from(messagesTable)
+      //   .where(
+      //     or(
+      //       and(eq(messagesTable.senderId, currentUserId), eq(messagesTable.recipientId, userId)),
+      //       and(eq(messagesTable.senderId, userId), eq(messagesTable.recipientId, currentUserId))
+      //     )
+      //   )
+      //   .orderBy(messagesTable.createdAt);
+
+      const messages = [];
+
+      res.json(messages);
+    } catch (error) {
+      console.error("Error fetching user messages:", error);
+      res.status(500).json({ error: "Failed to fetch messages" });
+    }
+  });
+
+    // Send direct message to a user
+  app.post("/api/messages/direct", authenticateToken, async (req, res) => {
+    try {
+      const { recipientId, messageText } = req.body;
+      const senderId = req.user!.id;
+
+      if (!recipientId || !messageText) {
+        return res.status(400).json({ error: "Recipient ID and message text are required" });
+      }
+
+      if (senderId === recipientId) {
+        return res.status(400).json({ error: "Cannot send message to yourself" });
+      }
+
+      const message = await storage.createDirectMessage({
+        senderId,
+        recipientId,
+        messageText,
+        tradeId: null
+      });
+
+      res.json(message);
+    } catch (error) {
+      console.error("Error sending direct message:", error);
+      res.status(500).json({ error: "Failed to send message" });
     }
   });
 

@@ -22,6 +22,7 @@ import NotFound from "@/pages/not-found";
 import ChatPage from "@/pages/chat";
 import AdminKYC from "@/pages/admin-kyc";
 import ManageOffers from "@/pages/manage-offers";
+import { lazy } from "react";
 
 const queryClient = new QueryClient();
 
@@ -54,7 +55,10 @@ function App() {
                 <ChatPage />
               </ProtectedRoute>
             )} />
-            <Route path="/user/:id" component={UserProfile} />
+            <Route path="/user/:userId" component={UserProfile} />
+            <Route path="/user/:userId/chat" component={lazy(() => import("./pages/user-chat"))} />
+            <Route path="/trade/:offerId" component={lazy(() => import("./pages/trade-direct"))} />
+            <ProtectedRoute path="/ratings" component={Ratings} />
             <Route path="/settings" component={UserSettings} />
             <ProtectedRoute path="/manage-offers" component={ManageOffers} />
             <Route component={NotFound} />

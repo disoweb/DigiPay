@@ -450,7 +450,7 @@ export function TradingDashboard() {
               <TabsTrigger value="sell">Sell USDT</TabsTrigger>
             </TabsList>
             
-            <TabsContent value="buy" className="space-y-4 mt-4">
+            <TabsContent value="buy" className="space-y-3 sm:space-y-4 mt-4">
               {featuredOffers?.buyOffers?.length === 0 ? (
                 <div className="text-center py-8">
                   <p className="text-gray-500 mb-4">No buy offers available</p>
@@ -459,35 +459,37 @@ export function TradingDashboard() {
                   </Button>
                 </div>
               ) : (
-                <div className="space-y-4">
+                <div className="space-y-3 sm:space-y-4">
                   {featuredOffers?.buyOffers?.map((offer: any) => (
                     <Card key={offer.id} className="hover:shadow-md transition-shadow">
-                      <CardContent className="p-4">
+                      <CardContent className="p-3 sm:p-4">
                         <div className="space-y-3">
-                          <div className="flex items-start justify-between">
-                            <div className="flex items-center gap-3">
-                              <div className={`w-3 h-3 rounded-full ${offer.user?.isOnline ? 'bg-green-400' : 'bg-gray-400'}`} />
-                              <div>
-                                <div className="flex items-center gap-2">
-                                  <span className="font-medium">{offer.user?.email || 'Unknown'}</span>
+                          {/* Mobile optimized header */}
+                          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-3">
+                            <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                              <div className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full flex-shrink-0 ${offer.user?.isOnline ? 'bg-green-400' : 'bg-gray-400'}`} />
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
+                                  <span className="font-medium text-sm sm:text-base truncate">{offer.user?.email || 'Unknown'}</span>
                                   {offer.user?.isOnline ? (
-                                    <Badge variant="outline" className="text-green-600 border-green-600 text-xs">
+                                    <Badge variant="outline" className="text-green-600 border-green-600 text-xs h-5 px-1">
                                       Online
                                     </Badge>
                                   ) : (
-                                    <Badge variant="outline" className="text-gray-500 border-gray-300 text-xs">
+                                    <Badge variant="outline" className="text-gray-500 border-gray-300 text-xs h-5 px-1">
                                       Offline
                                     </Badge>
                                   )}
                                   {offer.user?.kycVerified && (
-                                    <Badge variant="outline" className="text-blue-600 border-blue-600 text-xs">
-                                      <Shield className="h-3 w-3 mr-1" />
-                                      Verified
+                                    <Badge variant="outline" className="text-blue-600 border-blue-600 text-xs h-5 px-1">
+                                      <Shield className="h-2 w-2 sm:h-3 sm:w-3 mr-1" />
+                                      <span className="hidden sm:inline">Verified</span>
+                                      <span className="sm:hidden">KYC</span>
                                     </Badge>
                                   )}
                                 </div>
-                                <div className="flex items-center gap-2 text-sm text-gray-600">
-                                  <Activity className="h-3 w-3 text-yellow-400" />
+                                <div className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm text-gray-600 mt-1">
+                                  <Activity className="h-2 w-2 sm:h-3 sm:w-3 text-yellow-400 flex-shrink-0" />
                                   <span>{parseFloat(offer.user?.averageRating || "0").toFixed(1)}</span>
                                   <span>({offer.user?.ratingCount || 0})</span>
                                   <span>•</span>
@@ -495,46 +497,63 @@ export function TradingDashboard() {
                                 </div>
                               </div>
                             </div>
-                            <Badge variant="outline" className="flex items-center gap-1">
-                              <DollarSign className="h-3 w-3" />
-                              {offer.paymentMethod?.replace('_', ' ').toUpperCase() || 'Bank Transfer'}
+                            <Badge variant="outline" className="flex items-center gap-1 text-xs h-6 px-2 self-start sm:self-auto">
+                              <DollarSign className="h-2 w-2 sm:h-3 sm:w-3" />
+                              <span className="hidden sm:inline">{offer.paymentMethod?.replace('_', ' ').toUpperCase() || 'Bank Transfer'}</span>
+                              <span className="sm:hidden">{(offer.paymentMethod || 'bank_transfer').split('_')[0].toUpperCase()}</span>
                             </Badge>
                           </div>
 
-                          <div className="grid grid-cols-3 gap-4">
-                            <div>
-                              <p className="text-sm text-gray-600">Available</p>
-                              <p className="font-semibold">{parseFloat(offer.amount || "0").toFixed(2)} USDT</p>
+                          {/* Mobile optimized stats grid */}
+                          <div className="grid grid-cols-3 gap-2 sm:gap-4">
+                            <div className="text-center sm:text-left">
+                              <p className="text-xs text-gray-600">Available</p>
+                              <p className="font-semibold text-sm sm:text-base">{parseFloat(offer.amount || "0").toFixed(2)}</p>
+                              <p className="text-xs text-gray-500">USDT</p>
                             </div>
-                            <div>
-                              <p className="text-sm text-gray-600">Rate</p>
-                              <p className="font-semibold text-green-600">₦{parseFloat(offer.rate || "0").toLocaleString()}</p>
+                            <div className="text-center sm:text-left">
+                              <p className="text-xs text-gray-600">Rate</p>
+                              <p className="font-semibold text-green-600 text-sm sm:text-base">₦{parseFloat(offer.rate || "0").toLocaleString()}</p>
                             </div>
-                            <div>
-                              <p className="text-sm text-gray-600">Limits</p>
-                              <p className="font-semibold text-sm">
+                            <div className="text-center sm:text-left">
+                              <p className="text-xs text-gray-600">Limits</p>
+                              <p className="font-semibold text-xs sm:text-sm">
                                 {offer.minAmount && offer.maxAmount
-                                  ? `${parseFloat(offer.minAmount).toFixed(2)} - ${parseFloat(offer.maxAmount).toFixed(2)}`
-                                  : parseFloat(offer.amount || "0").toFixed(2)} USDT
+                                  ? `${parseFloat(offer.minAmount).toFixed(0)}-${parseFloat(offer.maxAmount).toFixed(0)}`
+                                  : parseFloat(offer.amount || "0").toFixed(0)}
                               </p>
+                              <p className="text-xs text-gray-500">USDT</p>
                             </div>
                           </div>
 
+                          {/* Mobile optimized action buttons */}
                           <div className="flex gap-2">
                             <Button 
-                              onClick={() => setLocation('/marketplace')}
-                              className="flex-1 bg-green-600 hover:bg-green-700"
-                              disabled={!user}
+                              onClick={() => {
+                                // Store selected offer data in sessionStorage for the trade modal
+                                sessionStorage.setItem('selectedOffer', JSON.stringify(offer));
+                                setLocation(`/trade/${offer.id}`);
+                              }}
+                              className="flex-1 bg-green-600 hover:bg-green-700 text-sm py-2 h-9"
+                              disabled={!user || offer.userId === user?.id}
                             >
-                              Buy USDT
+                              <span className="hidden sm:inline">Buy USDT</span>
+                              <span className="sm:hidden">Buy</span>
                             </Button>
                             <Button
-                              onClick={() => setLocation('/marketplace')}
+                              onClick={() => {
+                                // Create a direct message to the offer owner
+                                if (user && offer.userId !== user.id) {
+                                  setLocation(`/user/${offer.userId}/chat`);
+                                }
+                              }}
                               variant="outline"
-                              size="icon"
-                              disabled={!user}
+                              size="sm"
+                              className="px-3 h-9"
+                              disabled={!user || offer.userId === user?.id}
                             >
-                              <MessageCircle className="h-4 w-4" />
+                              <MessageCircle className="h-3 w-3 sm:h-4 sm:w-4" />
+                              <span className="ml-1 hidden sm:inline">Chat</span>
                             </Button>
                           </div>
                         </div>
@@ -548,7 +567,7 @@ export function TradingDashboard() {
               )}
             </TabsContent>
 
-            <TabsContent value="sell" className="space-y-4 mt-4">
+            <TabsContent value="sell" className="space-y-3 sm:space-y-4 mt-4">
               {featuredOffers?.sellOffers?.length === 0 ? (
                 <div className="text-center py-8">
                   <p className="text-gray-500 mb-4">No sell offers available</p>
@@ -557,35 +576,37 @@ export function TradingDashboard() {
                   </Button>
                 </div>
               ) : (
-                <div className="space-y-4">
+                <div className="space-y-3 sm:space-y-4">
                   {featuredOffers?.sellOffers?.map((offer: any) => (
                     <Card key={offer.id} className="hover:shadow-md transition-shadow">
-                      <CardContent className="p-4">
+                      <CardContent className="p-3 sm:p-4">
                         <div className="space-y-3">
-                          <div className="flex items-start justify-between">
-                            <div className="flex items-center gap-3">
-                              <div className={`w-3 h-3 rounded-full ${offer.user?.isOnline ? 'bg-green-400' : 'bg-gray-400'}`} />
-                              <div>
-                                <div className="flex items-center gap-2">
-                                  <span className="font-medium">{offer.user?.email || 'Unknown'}</span>
+                          {/* Mobile optimized header */}
+                          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-3">
+                            <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                              <div className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full flex-shrink-0 ${offer.user?.isOnline ? 'bg-green-400' : 'bg-gray-400'}`} />
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
+                                  <span className="font-medium text-sm sm:text-base truncate">{offer.user?.email || 'Unknown'}</span>
                                   {offer.user?.isOnline ? (
-                                    <Badge variant="outline" className="text-green-600 border-green-600 text-xs">
+                                    <Badge variant="outline" className="text-green-600 border-green-600 text-xs h-5 px-1">
                                       Online
                                     </Badge>
                                   ) : (
-                                    <Badge variant="outline" className="text-gray-500 border-gray-300 text-xs">
+                                    <Badge variant="outline" className="text-gray-500 border-gray-300 text-xs h-5 px-1">
                                       Offline
                                     </Badge>
                                   )}
                                   {offer.user?.kycVerified && (
-                                    <Badge variant="outline" className="text-blue-600 border-blue-600 text-xs">
-                                      <Shield className="h-3 w-3 mr-1" />
-                                      Verified
+                                    <Badge variant="outline" className="text-blue-600 border-blue-600 text-xs h-5 px-1">
+                                      <Shield className="h-2 w-2 sm:h-3 sm:w-3 mr-1" />
+                                      <span className="hidden sm:inline">Verified</span>
+                                      <span className="sm:hidden">KYC</span>
                                     </Badge>
                                   )}
                                 </div>
-                                <div className="flex items-center gap-2 text-sm text-gray-600">
-                                  <Activity className="h-3 w-3 text-yellow-400" />
+                                <div className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm text-gray-600 mt-1">
+                                  <Activity className="h-2 w-2 sm:h-3 sm:w-3 text-yellow-400 flex-shrink-0" />
                                   <span>{parseFloat(offer.user?.averageRating || "0").toFixed(1)}</span>
                                   <span>({offer.user?.ratingCount || 0})</span>
                                   <span>•</span>
@@ -593,46 +614,63 @@ export function TradingDashboard() {
                                 </div>
                               </div>
                             </div>
-                            <Badge variant="outline" className="flex items-center gap-1">
-                              <DollarSign className="h-3 w-3" />
-                              {offer.paymentMethod?.replace('_', ' ').toUpperCase() || 'Bank Transfer'}
+                            <Badge variant="outline" className="flex items-center gap-1 text-xs h-6 px-2 self-start sm:self-auto">
+                              <DollarSign className="h-2 w-2 sm:h-3 sm:w-3" />
+                              <span className="hidden sm:inline">{offer.paymentMethod?.replace('_', ' ').toUpperCase() || 'Bank Transfer'}</span>
+                              <span className="sm:hidden">{(offer.paymentMethod || 'bank_transfer').split('_')[0].toUpperCase()}</span>
                             </Badge>
                           </div>
 
-                          <div className="grid grid-cols-3 gap-4">
-                            <div>
-                              <p className="text-sm text-gray-600">Buying</p>
-                              <p className="font-semibold">{parseFloat(offer.amount || "0").toFixed(2)} USDT</p>
+                          {/* Mobile optimized stats grid */}
+                          <div className="grid grid-cols-3 gap-2 sm:gap-4">
+                            <div className="text-center sm:text-left">
+                              <p className="text-xs text-gray-600">Selling</p>
+                              <p className="font-semibold text-sm sm:text-base">{parseFloat(offer.amount || "0").toFixed(2)}</p>
+                              <p className="text-xs text-gray-500">USDT</p>
                             </div>
-                            <div>
-                              <p className="text-sm text-gray-600">Rate</p>
-                              <p className="font-semibold text-red-600">₦{parseFloat(offer.rate || "0").toLocaleString()}</p>
+                            <div className="text-center sm:text-left">
+                              <p className="text-xs text-gray-600">Rate</p>
+                              <p className="font-semibold text-red-600 text-sm sm:text-base">₦{parseFloat(offer.rate || "0").toLocaleString()}</p>
                             </div>
-                            <div>
-                              <p className="text-sm text-gray-600">Limits</p>
-                              <p className="font-semibold text-sm">
+                            <div className="text-center sm:text-left">
+                              <p className="text-xs text-gray-600">Limits</p>
+                              <p className="font-semibold text-xs sm:text-sm">
                                 {offer.minAmount && offer.maxAmount
-                                  ? `${parseFloat(offer.minAmount).toFixed(2)} - ${parseFloat(offer.maxAmount).toFixed(2)}`
-                                  : parseFloat(offer.amount || "0").toFixed(2)} USDT
+                                  ? `${parseFloat(offer.minAmount).toFixed(0)}-${parseFloat(offer.maxAmount).toFixed(0)}`
+                                  : parseFloat(offer.amount || "0").toFixed(0)}
                               </p>
+                              <p className="text-xs text-gray-500">USDT</p>
                             </div>
                           </div>
 
+                          {/* Mobile optimized action buttons */}
                           <div className="flex gap-2">
                             <Button 
-                              onClick={() => setLocation('/marketplace')}
-                              className="flex-1 bg-red-600 hover:bg-red-700"
-                              disabled={!user}
+                              onClick={() => {
+                                // Store selected offer data in sessionStorage for the trade modal
+                                sessionStorage.setItem('selectedOffer', JSON.stringify(offer));
+                                setLocation(`/trade/${offer.id}`);
+                              }}
+                              className="flex-1 bg-red-600 hover:bg-red-700 text-sm py-2 h-9"
+                              disabled={!user || offer.userId === user?.id}
                             >
-                              Sell USDT
+                              <span className="hidden sm:inline">Sell USDT</span>
+                              <span className="sm:hidden">Sell</span>
                             </Button>
                             <Button
-                              onClick={() => setLocation('/marketplace')}
+                              onClick={() => {
+                                // Create a direct message to the offer owner
+                                if (user && offer.userId !== user.id) {
+                                  setLocation(`/user/${offer.userId}/chat`);
+                                }
+                              }}
                               variant="outline"
-                              size="icon"
-                              disabled={!user}
+                              size="sm"
+                              className="px-3 h-9"
+                              disabled={!user || offer.userId === user?.id}
                             >
-                              <MessageCircle className="h-4 w-4" />
+                              <MessageCircle className="h-3 w-3 sm:h-4 sm:w-4" />
+                              <span className="ml-1 hidden sm:inline">Chat</span>
                             </Button>
                           </div>
                         </div>
