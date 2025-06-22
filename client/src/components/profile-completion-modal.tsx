@@ -16,17 +16,15 @@ interface ProfileCompletionModalProps {
 export function ProfileCompletionModal({ open, onClose, user }: ProfileCompletionModalProps) {
   const [firstName, setFirstName] = useState(user?.firstName || "");
   const [lastName, setLastName] = useState(user?.lastName || "");
+  const [username, setUsername] = useState(user?.username || "");
+  const [location, setLocation] = useState(user?.location || "");
   const [phone, setPhone] = useState(user?.phone || "");
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const updateProfileMutation = useMutation({
     mutationFn: async (data: any) => {
-      const response = await fetch("/api/user/profile", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data)
-      });
+      const response = await apiRequest("PUT", "/api/user/profile", data);
       if (!response.ok) throw new Error("Failed to update profile");
       return response.json();
     },
@@ -50,10 +48,10 @@ export function ProfileCompletionModal({ open, onClose, user }: ProfileCompletio
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!firstName.trim() || !lastName.trim()) {
+    if (!firstName.trim() || !lastName.trim() || !username.trim()) {
       toast({
         title: "Error",
-        description: "Please enter your first and last name",
+        description: "Please enter your first name, last name, and username",
         variant: "destructive",
       });
       return;
@@ -62,6 +60,8 @@ export function ProfileCompletionModal({ open, onClose, user }: ProfileCompletio
     updateProfileMutation.mutate({
       firstName: firstName.trim(),
       lastName: lastName.trim(),
+      username: username.trim(),
+      location: location.trim() || null,
       phone: phone.trim() || null
     });
   };
@@ -95,6 +95,27 @@ export function ProfileCompletionModal({ open, onClose, user }: ProfileCompletio
               onChange={(e) => setLastName(e.target.value)}
               placeholder="Enter your last name"
               required
+            />
+          </div>
+          
+          <div>
+            <Label htmlFor="username">Username *</Label>
+            <Input
+              id="username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="Choose a unique username"
+              required
+            />
+          </div>
+          
+          <div>
+            <Label htmlFor="location">Location</Label>
+            <Input
+              id="location"
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              placeholder="Enter your city/state"
             />
           </div>
           

@@ -163,7 +163,7 @@ export default function Wallet() {
 
   // Check if profile is incomplete and show modal
   useEffect(() => {
-    if (user && (!user.firstName || !user.lastName)) {
+    if (user && (!user.firstName || !user.lastName || !user.username)) {
       const timer = setTimeout(() => {
         setShowProfileCompletion(true);
       }, 1000);
