@@ -83,10 +83,37 @@ export function TradingDashboard() {
     }
   };
 
+  // Calculate total portfolio value in NGN
+  const usdtInNgn = parseFloat(user?.usdtBalance || "0") * 1485; // Using exchange rate
+  const ngnBalance = parseFloat(user?.ngnBalance || "0");
+  const totalPortfolioValue = usdtInNgn + ngnBalance;
+
   return (
     <div className="space-y-6">
+      {/* Total Portfolio Value Card */}
+      <Card className="border-0 shadow-lg overflow-hidden">
+        <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-6 text-white">
+          <div className="text-center">
+            <h2 className="text-lg font-medium text-white/90 mb-2">Total Portfolio Value</h2>
+            <div className="text-4xl font-bold mb-6">
+              ₦{totalPortfolioValue.toLocaleString()}
+            </div>
+            
+            <div className="grid grid-cols-2 gap-8 max-w-md mx-auto">
+              <div className="text-center">
+                <p className="text-white/90 text-sm mb-1">NGN</p>
+                <p className="text-xl font-semibold">₦{ngnBalance.toLocaleString()}</p>
+              </div>
+              <div className="text-center">
+                <p className="text-white/90 text-sm mb-1">USDT (TRON)</p>
+                <p className="text-xl font-semibold">{parseFloat(user?.usdtBalance || "0").toFixed(6)} USDT</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Card>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-2 gap-4">
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center space-x-2">
@@ -130,30 +157,6 @@ export function TradingDashboard() {
                 <div>
                   <p className="text-sm text-gray-600">Active Offers</p>
                   <p className="font-bold text-xl">{activeOffers.length}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-2">
-                <DollarSign className="h-4 w-4 text-blue-600" />
-                <div>
-                  <p className="text-sm text-gray-600">USDT Balance</p>
-                  <p className="font-bold text-xl">{user?.usdtBalance || "0.00"}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-2">
-                <DollarSign className="h-4 w-4 text-orange-600" />
-                <div>
-                  <p className="text-sm text-gray-600">NGN Balance</p>
-                  <p className="font-bold text-xl">₦{user?.ngnBalance?.toLocaleString() || "0.00"}</p>
                 </div>
               </div>
             </CardContent>
