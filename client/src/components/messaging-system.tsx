@@ -99,8 +99,9 @@ export function MessagingSystem() {
           offerId
         });
         if (!response.ok) {
-          console.error("Failed to send reply:", response.status);
-          throw new Error("Failed to send reply");
+          const errorData = await response.json().catch(() => ({}));
+          console.error("Failed to send reply:", response.status, errorData);
+          throw new Error(errorData.error || "Failed to send reply");
         }
         return response.json();
       } catch (error) {

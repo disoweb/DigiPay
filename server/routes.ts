@@ -147,6 +147,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const enrichedOffers = await Promise.all(
         offers.map(async (offer) => {
           const user = await storage.getUser(offer.userId);
+          
+          // Determine online status consistently
+          const isOnline = user?.isOnline || false;
+          const lastSeen = user?.lastSeen || user?.createdAt;
+          
           return {
             ...offer,
             user: user ? {
@@ -156,8 +161,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
               ratingCount: user.ratingCount || 0,
               kycVerified: user.kycVerified || false,
               completedTrades: user.completedTrades || 0,
-              isOnline: user.isOnline || false,
-              lastSeen: user.lastSeen
+              isOnline: isOnline,
+              lastSeen: lastSeen
             } : null,
           };
         })
@@ -165,6 +170,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.json(enrichedOffers);
     } catch (error) {
+      console.error("Offers fetch error:", error);
       res.status(500).json({ error: "Failed to fetch offers" });
     }
   });

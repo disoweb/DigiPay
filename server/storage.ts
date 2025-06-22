@@ -36,9 +36,9 @@ export interface IStorage {
   // Message methods
   getTradeMessages(tradeId: number): Promise<Message[]>;
   createMessage(message: InsertMessage): Promise<Message>;
-  getUserMessages(userId: number): Promise<any[]>;
-  createDirectMessage(message: any): Promise<Message>;
   markMessageAsRead(messageId: number, userId: number): Promise<boolean>;
+  async getUserMessages(userId: number): Promise<any[]>;
+  async createDirectMessage(message: any): Promise<Message>;
 
   // Transaction methods
   getUserTransactions(userId: number): Promise<Transaction[]>;
@@ -442,6 +442,19 @@ export class DatabaseStorage implements IStorage {
       .returning();
     return message;
   }
+
+    async getUserMessages(userId: number): Promise<any[]> {
+        // Implementation for retrieving user messages
+        // Example:
+        return await db.select().from(messages).where(or(eq(messages.senderId, userId), eq(messages.receiverId, userId))).orderBy(desc(messages.createdAt));
+    }
+
+    async createDirectMessage(message: any): Promise<Message> {
+        // Implementation for creating a direct message
+        // Example:
+        const [newMessage] = await db.insert(messages).values(message).returning();
+        return newMessage;
+    }
 
   // Transaction methods
   async getUserTransactions(userId: number): Promise<Transaction[]> {
