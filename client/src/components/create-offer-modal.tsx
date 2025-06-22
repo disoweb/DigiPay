@@ -129,6 +129,19 @@ export function CreateOfferModal({ open, onOpenChange }: CreateOfferModalProps) 
     createOfferMutation.mutate(formData);
   };
 
+  const handleConfirmSubmit = () => {
+    if (!formData.amount || !formData.rate || !formData.paymentMethod) {
+      toast({
+        title: "Error",
+        description: "Please fill in all required fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    createOfferMutation.mutate(formData);
+  };
+
   const handleTypeChange = (value: "buy" | "sell") => {
     setFormData(prev => ({ 
       ...prev, 
@@ -192,7 +205,7 @@ export function CreateOfferModal({ open, onOpenChange }: CreateOfferModalProps) 
             </DialogDescription>
           </DialogHeader>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="space-y-6">
             {/* Offer Type Section */}
             <Card className="p-6 bg-gray-50">
               <div className="space-y-4">
@@ -431,6 +444,47 @@ export function CreateOfferModal({ open, onOpenChange }: CreateOfferModalProps) 
               </div>
             </Card>
 
+            {/* Preview Section */}
+            {formData.amount && formData.rate && formData.paymentMethod && (
+              <Card className="p-6 bg-blue-50 border-blue-200">
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-blue-900">Offer Preview</h3>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="text-gray-600">Type:</span>
+                      <span className="font-medium ml-2 capitalize">{formData.type} USDT</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Amount:</span>
+                      <span className="font-medium ml-2">{formData.amount} USDT</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Rate:</span>
+                      <span className="font-medium ml-2">₦{parseFloat(formData.rate).toLocaleString()}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Payment:</span>
+                      <span className="font-medium ml-2 capitalize">{formData.paymentMethod.replace('_', ' ')}</span>
+                    </div>
+                    {(formData.minAmount || formData.maxAmount) && (
+                      <div className="col-span-2">
+                        <span className="text-gray-600">Limits:</span>
+                        <span className="font-medium ml-2">
+                          {formData.minAmount || formData.amount} - {formData.maxAmount || formData.amount} USDT
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                  {formData.terms && (
+                    <div>
+                      <span className="text-gray-600">Terms:</span>
+                      <p className="text-sm mt-1 p-2 bg-white rounded border">{formData.terms}</p>
+                    </div>
+                  )}
+                </div>
+              </Card>
+            )}
+
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-3 pt-4">
               <Button
@@ -442,7 +496,8 @@ export function CreateOfferModal({ open, onOpenChange }: CreateOfferModalProps) 
                 Cancel
               </Button>
               <Button
-                type="submit"
+                type="button"
+                onClick={handleConfirmSubmit}
                 disabled={createOfferMutation.isPending || !formData.amount || !formData.rate || !formData.paymentMethod}
                 className="flex-1 h-12 text-base bg-blue-600 hover:bg-blue-700"
               >
@@ -450,7 +505,7 @@ export function CreateOfferModal({ open, onOpenChange }: CreateOfferModalProps) 
                 Create Offer
               </Button>
             </div>
-          </form>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

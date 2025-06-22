@@ -34,7 +34,7 @@ export default function OfferCreation() {
   const { user } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = 4;
-  
+
   const [offerData, setOfferData] = useState({
     type: "sell" as "buy" | "sell",
     amount: "",
@@ -108,7 +108,7 @@ export default function OfferCreation() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!offerData.amount || !offerData.rate || !offerData.paymentMethod) {
       toast({
         title: "Error",
@@ -145,11 +145,11 @@ export default function OfferCreation() {
 
   const handleAmountPercentage = (percentage: number) => {
     if (!user) return;
-    
+
     const balance = offerData.type === "sell" 
       ? parseFloat(user.usdtBalance || "0")
       : parseFloat(user.nairaBalance || "0") / currentMarketPrice;
-    
+
     const amount = balance * (percentage / 100);
     setOfferData(prev => ({ ...prev, amount: amount.toFixed(8) }));
   };
@@ -496,6 +496,15 @@ export default function OfferCreation() {
                 )}
               </CardContent>
             </Card>
+            <Button
+                    type="button"
+                    onClick={handleSubmit}
+                    disabled={createOfferMutation.isPending}
+                    className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700"
+                  >
+                    {createOfferMutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+                    Create Offer
+                  </Button>
           </div>
         );
 
@@ -512,11 +521,11 @@ export default function OfferCreation() {
           <div className="flex items-center mb-4">
             <Button
               variant="ghost"
-              onClick={() => setLocation("/marketplace")}
+              onClick={() => setLocation("/dashboard")}
               className="mr-4"
             >
               <ChevronLeft className="h-4 w-4 mr-1" />
-              Back
+              Back to Dashboard
             </Button>
           </div>
           <h1 className="text-2xl font-bold text-center mb-2">Create Trading Offer</h1>
@@ -535,7 +544,7 @@ export default function OfferCreation() {
 
         <Card>
           <CardContent className="p-6">
-            <form onSubmit={handleSubmit}>
+            
               {renderStep()}
 
               <div className="flex justify-between pt-6 mt-6 border-t">
@@ -561,17 +570,10 @@ export default function OfferCreation() {
                     <ChevronRight className="h-4 w-4" />
                   </Button>
                 ) : (
-                  <Button
-                    type="submit"
-                    disabled={createOfferMutation.isPending}
-                    className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700"
-                  >
-                    {createOfferMutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
-                    Create Offer
-                  </Button>
+                   null
                 )}
               </div>
-            </form>
+            
           </CardContent>
         </Card>
       </div>
