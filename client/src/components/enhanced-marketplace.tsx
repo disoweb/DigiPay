@@ -355,26 +355,36 @@ export function EnhancedMarketplace() {
 
       {/* Offers Tabs */}
       <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'buy' | 'sell')}>
-        <TabsList className="grid w-full grid-cols-2 h-12 p-1 bg-gray-100 rounded-xl">
+        <TabsList className="grid w-full grid-cols-2 h-16 p-1 bg-transparent gap-3">
           <TabsTrigger 
             value="buy" 
-            className="flex items-center justify-center gap-2 h-10 rounded-lg data-[state=active]:bg-green-600 data-[state=active]:text-white data-[state=active]:shadow-lg font-medium transition-all duration-200"
+            className={`flex items-center justify-center gap-2 h-14 rounded-xl font-semibold text-base transition-all border-2 ${
+              activeTab === 'buy' 
+                ? 'bg-white border-red-500 text-red-600 shadow-lg' 
+                : 'bg-white border-red-300 text-red-500 hover:border-red-400'
+            }`}
           >
+            <div className="w-3 h-3 bg-red-500 rounded-full"></div>
             <TrendingUp className="h-4 w-4" />
             <span className="hidden sm:inline">Buy USDT</span>
             <span className="sm:hidden">Buy</span>
-            <span className="text-xs bg-white bg-opacity-20 px-1.5 py-0.5 rounded-full data-[state=active]:bg-white data-[state=active]:bg-opacity-30">
+            <span className="text-xs bg-red-100 text-red-600 px-2 py-1 rounded-full ml-1">
               {buyTabCount}
             </span>
           </TabsTrigger>
           <TabsTrigger 
             value="sell" 
-            className="flex items-center justify-center gap-2 h-10 rounded-lg data-[state=active]:bg-red-600 data-[state=active]:text-white data-[state=active]:shadow-lg font-medium transition-all duration-200"
+            className={`flex items-center justify-center gap-2 h-14 rounded-xl font-semibold text-base transition-all ${
+              activeTab === 'sell' 
+                ? 'bg-green-600 hover:bg-green-700 text-white shadow-lg' 
+                : 'bg-green-500 hover:bg-green-600 text-white'
+            }`}
           >
+            <div className="w-3 h-3 bg-green-300 rounded-full"></div>
             <TrendingDown className="h-4 w-4" />
             <span className="hidden sm:inline">Sell USDT</span>
             <span className="sm:hidden">Sell</span>
-            <span className="text-xs bg-white bg-opacity-20 px-1.5 py-0.5 rounded-full data-[state=active]:bg-white data-[state=active]:bg-opacity-30">
+            <span className="text-xs bg-green-800 text-white px-2 py-1 rounded-full ml-1">
               {sellTabCount}
             </span>
           </TabsTrigger>

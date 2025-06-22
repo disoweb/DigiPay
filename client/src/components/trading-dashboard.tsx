@@ -17,7 +17,9 @@ import {
   Plus,
   Shield,
   AlertTriangle,
-  BarChart3
+  BarChart3,
+  CheckCircle,
+  Activity
 } from "lucide-react";
 
 export function TradingDashboard() {
