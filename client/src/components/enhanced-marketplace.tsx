@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,7 +12,8 @@ import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { apiRequest } from "@/lib/queryClient";
-import { TradeModal } from "./trade-modal";
+import { TradeModal } from "@/components/trade-modal";
+import { BinanceStyleFlow } from "@/components/binance-style-flow";
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -107,7 +107,7 @@ export function EnhancedMarketplace() {
         throw error;
       }
     },
-    retry: 2,
+    retry: 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
     refetchInterval: 10000, // Reduce frequency to prevent overwhelming
     refetchOnWindowFocus: false,
@@ -128,7 +128,8 @@ export function EnhancedMarketplace() {
         return null;
       }
     },
-    retry: 1,
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
     refetchInterval: 30000,
     refetchOnWindowFocus: false,
   });
@@ -269,6 +270,19 @@ export function EnhancedMarketplace() {
     return isNaN(parsed) ? fallback : parsed;
   };
 
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardContent className="p-8 text-center">
+            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+            <p className="text-gray-600">Loading marketplace...</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   if (error) {
     return (
       <div className="space-y-6">
@@ -283,19 +297,6 @@ export function EnhancedMarketplace() {
               <RefreshCw className="h-4 w-4 mr-2" />
               Try Again
             </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  if (isLoading) {
-    return (
-      <div className="space-y-6">
-        <Card>
-          <CardContent className="p-8 text-center">
-            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
-            <p className="text-gray-600">Loading marketplace...</p>
           </CardContent>
         </Card>
       </div>
@@ -674,12 +675,10 @@ export function EnhancedMarketplace() {
 
       {/* Trade Modal */}
       {selectedOffer && (
-        <TradeModal
-          isOpen={showTradeModal}
-          onClose={() => setShowTradeModal(false)}
-          offer={selectedOffer}
-          onSubmit={handleTradeSubmit}
-          isLoading={initiateTradeMutation.isPending}
+        <BinanceStyleFlow
+          isOpen={!!selectedOffer}
+          onClose={() => setSelectedOffer(null)}
+          offer={selectedOffer!}
         />
       )}
     </div>

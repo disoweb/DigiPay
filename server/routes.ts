@@ -247,7 +247,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const tradeAmount = parseFloat(amount);
-      
+
 
       if (isNaN(tradeAmount) || tradeAmount <= 0) {
         return res.status(400).json({ error: "Invalid trade amount" });
@@ -1806,7 +1806,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Enrich ratings with rater info
       const enrichedRatings = await Promise.all(
         ratings.map(async (rating) => {
-          const rater = await storage.getUser(rating.raterId);
+          const rater =await storage.getUser(rating.raterId);
           return {
             ...rating,
             rater: rater ? {              id: rater.id, 

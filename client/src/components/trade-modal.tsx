@@ -128,12 +128,17 @@ export function TradeModal({ isOpen, onClose, offer, onSubmit, isLoading }: Trad
     return newErrors;
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const validationErrors = validateTrade();
     setErrors(validationErrors);
 
     if (validationErrors.length === 0) {
-      onSubmit(amount);
+      try {
+        await onSubmit(amount);
+        // Success handled by parent component
+      } catch (error: any) {
+        setErrors([error.message || "Failed to create trade. Please try again."]);
+      }
     }
   };
 
