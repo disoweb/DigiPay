@@ -44,6 +44,12 @@ export function SendFundsModal({ open, onOpenChange, nairaBalance, usdtBalance }
     },
   });
 
+  // Manual lookup function
+  const handleLookup = () => {
+    if (!recipient.trim()) return;
+    lookupMutation.mutate(recipient.trim());
+  };
+
   // Auto-lookup when user types
   const handleRecipientChange = (value: string) => {
     setRecipient(value);
