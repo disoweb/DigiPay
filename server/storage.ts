@@ -565,12 +565,16 @@ export class DatabaseStorage implements IStorage {
   }
 
     async getUserMessages(userId: number): Promise<any[]> {
-        // Implementation for retrieving user messages
-        // For now, return empty array to avoid SQL errors until messages table is properly designed
         try {
-            // Check if the messages table has the required columns first
-            const result = await db.select().from(messages).where(eq(messages.senderId, userId)).orderBy(desc(messages.createdAt)).limit(1);
-            return await db.select().from(messages).where(eq(messages.senderId, userId)).orderBy(desc(messages.createdAt));
+            return await db.select()
+                .from(messages)
+                .where(
+                    or(
+                        eq(messages.senderId, userId),
+                        eq(messages.receiverId, userId)
+                    )
+                )
+                .orderBy(desc(messages.createdAt));
         } catch (error) {
             console.log("Messages table schema issue, returning empty array");
             return [];
@@ -578,17 +582,33 @@ export class DatabaseStorage implements IStorage {
     }
 
     async createDirectMessage(message: any): Promise<Message> {
-        // Implementation for creating a direct message
-        // Map messageText to message field and ensure required fields
         const messageData = {
             senderId: message.senderId,
-            recipientId: message.recipientId, // Use correct field name
-            message: message.messageText || message.message || "", // Handle both field names
-            tradeId: message.tradeId || null // Set to null if not provided
+            receiverId: message.receiverId || message.recipientId,
+            content: message.content || message.messageText || message.message,
+            tradeId: message.tradeId || null,
+            isRead: false
         };
         
         const [newMessage] = await db.insert(messages).values(messageData).returning();
         return newMessage;
+    }
+
+    async markMessageAsRead(messageId: number, userId: number): Promise<boolean> {
+        try {
+            await db.update(messages)
+                .set({ isRead: true })
+                .where(
+                    and(
+                        eq(messages.id, messageId),
+                        eq(messages.receiverId, userId)
+                    )
+                );
+            return true;
+        } catch (error) {
+            console.error("Error marking message as read:", error);
+            return false;
+        }
     }
 
   // Transaction methods

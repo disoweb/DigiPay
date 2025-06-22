@@ -1,34 +1,13 @@
-import { useState, useEffect } from "react";
 import { useParams, useLocation } from "wouter";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Badge } from "@/components/ui/badge";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Navbar } from "@/components/navbar";
-import { useAuth } from "@/hooks/use-auth";
-import { apiRequest } from "@/lib/queryClient";
-import { 
-  ArrowLeft, 
-  Send, 
-  User, 
-  Star, 
-  Shield,
-  MessageCircle,
-  Phone,
-  Mail,
-  AlertTriangle
-} from "lucide-react";
+import { ModernChat } from "@/components/modern-chat";
 
 export default function UserChat() {
   const { userId } = useParams();
-  const { user } = useAuth();
   const [, setLocation] = useLocation();
-  const [message, setMessage] = useState("");
-  const [messages, setMessages] = useState([]);
-  const [loading, setLoading] = useState(false);
+
+  const handleBack = () => {
+    setLocation('/dashboard');
+  };
 
   const { data: chatUser, isLoading } = useQuery({
     queryKey: [`/api/users/${userId}`],

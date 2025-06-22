@@ -23,7 +23,7 @@ import ChatPage from "@/pages/chat";
 import AdminKYC from "@/pages/admin-kyc";
 import ManageOffers from "@/pages/manage-offers";
 import DirectTrade from "./pages/trade-direct";
-import UserChatPage from "./pages/user-chat";
+import UserChatPage from "./pages/user-chat-new";
 
 const queryClient = new QueryClient();
 

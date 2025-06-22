@@ -1501,17 +1501,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const currentUserId = req.user!.id;
 
       // Get messages between current user and specified user
-      // const messages = await db.select()
-      //   .from(messagesTable)
-      //   .where(
-      //     or(
-      //       and(eq(messagesTable.senderId, currentUserId), eq(messagesTable.recipientId, userId)),
-      //       and(eq(messagesTable.senderId, userId), eq(messagesTable.recipientId, currentUserId))
-      //     )
-      //   )
-      //   .orderBy(messagesTable.createdAt);
-
-      const messages = [];
+      const messages = await storage.getUserMessages(currentUserId)
+        .then(allMessages => allMessages.filter(msg => 
+          (msg.senderId === currentUserId && msg.receiverId === userId) ||
+          (msg.senderId === userId && msg.receiverId === currentUserId)
+        ));;
 
       res.json(messages);
     } catch (error) {
@@ -1523,29 +1517,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     // Send direct message to a user
   app.post("/api/messages/direct", authenticateToken, async (req, res) => {
     try {
-      const { recipientId, messageText, message } = req.body;
+      const { receiverId, content } = req.body;
       const senderId = req.user!.id;
 
-      const messageContent = messageText || message || "";
-
-      if (!recipientId || !messageContent.trim()) {
-        return res.status(400).json({ error: "Recipient ID and message text are required" });
+      if (!receiverId || !content || !content.trim()) {
+        return res.status(400).json({ error: "Receiver ID and content are required" });
       }
 
-      if (senderId === parseInt(recipientId)) {
+      if (senderId === parseInt(receiverId)) {
         return res.status(400).json({ error: "Cannot send message to yourself" });
       }
 
-      // Verify recipient exists
-      const recipient = await storage.getUser(parseInt(recipientId));
-      if (!recipient) {
-        return res.status(404).json({ error: "Recipient not found" });
+      // Verify receiver exists
+      const receiver = await storage.getUser(parseInt(receiverId));
+      if (!receiver) {
+        return res.status(404).json({ error: "Receiver not found" });
       }
 
       const messageData = await storage.createDirectMessage({
         senderId,
-        recipientId: parseInt(recipientId),
-        messageText: messageContent.trim(),
+        receiverId: parseInt(receiverId),
+        content: content.trim(),
         tradeId: null
       });
 

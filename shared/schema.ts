@@ -104,9 +104,11 @@ export const trades = pgTable("trades", {
 
 export const messages = pgTable("messages", {
   id: serial("id").primaryKey(),
-  tradeId: integer("trade_id").references(() => trades.id).notNull(),
+  tradeId: integer("trade_id").references(() => trades.id),
   senderId: integer("sender_id").references(() => users.id).notNull(),
-  message: text("message").notNull(),
+  receiverId: integer("receiver_id").references(() => users.id).notNull(),
+  content: text("content").notNull(),
+  isRead: boolean("is_read").default(false),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
