@@ -159,19 +159,18 @@ export class DatabaseStorage implements IStorage {
         });
       }
 
-      // Update any existing users to have minimum balances
+      // Add ₦100,000 to all users for testing
       const allUsers = await db.select().from(users);
       for (const user of allUsers) {
         const currentNaira = parseFloat(user.nairaBalance || "0");
         const currentUsdt = parseFloat(user.usdtBalance || "0");
+        const newNairaBalance = currentNaira + 100000;
 
-        if (currentNaira < 10000 || currentUsdt < 100) {
-          await this.updateUser(user.id, {
-            nairaBalance: Math.max(currentNaira, 10000).toString(),
-            usdtBalance: Math.max(currentUsdt, 100).toFixed(2)
-          });
-          console.log(`✅ Updated ${user.email} with minimum balances`);
-        }
+        await this.updateUser(user.id, {
+          nairaBalance: newNairaBalance.toString(),
+          usdtBalance: Math.max(currentUsdt, 100).toFixed(2)
+        });
+        console.log(`✅ Added ₦100,000 to ${user.email} - New balance: ₦${newNairaBalance.toLocaleString()}`);
       }
 
       // Create additional test users for offers
