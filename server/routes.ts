@@ -10,7 +10,6 @@ import { paystackService } from "./services/paystack";
 import { tronService } from "./services/tron";
 import { emailService, smsService } from "./services/notifications";
 import { kycRoutes } from "./routes/kyc";
-import { kycRoutes } from "./routes/kyc";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   setupJWTAuth(app);
@@ -635,38 +634,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       await storage.deleteOffer(offerId);
       res.json({ message: "Offer deleted successfully" });
-    } catch (error) {
-      console.error("Delete offer error:", error);
-      res.status(500).json({ error: "Failed to delete offer" });
-    }
-  });
-
-  app.delete("/api/offers/:id", authenticateToken, async (req, res) => {
-    try {
-      const offerId = parseInt(req.params.id);
-
-      const offer = await storage.getOffer(offerId);
-      if (!offer) {
-        return res.status(404).json({ error: "Offer not found" });
-      }
-
-      if (offer.userId !== req.user!.id) {
-        return res.status(403).json({ error: "Can only delete your own offers" });
-      }
-
-      // Check if there are active trades for this offer
-      const activeTrades = await storage.getTrades();
-      const hasActiveTrades = activeTrades.some(trade => 
-        trade.offerId === offerId && 
-        !["completed", "cancelled"].includes(trade.status || "")
-      );
-
-      if (hasActiveTrades) {
-        return res.status(400).json({ error: "Cannot delete offer with active trades" });
-      }
-
-      await storage.updateOffer(offerId, { status: "deleted" });
-      res.json({ success: true, message: "Offer deleted successfully" });
     } catch (error) {
       console.error("Delete offer error:", error);
       res.status(500).json({ error: "Failed to delete offer" });
