@@ -405,7 +405,7 @@ export default function TradeDetail() {
 
           {/* Payment Instructions Sidebar */}
           <div className="space-y-6">
-            {/* Always show payment details for buyers immediately */}
+            {/* Buyer View: Show seller's payment details and payment actions */}
             {isUserInTrade && isBuyer && (
               <PaymentInstructions
                 trade={trade}
@@ -421,7 +421,7 @@ export default function TradeDetail() {
               />
             )}
 
-            {/* Show seller's payment details view when they're involved */}
+            {/* Seller View: Show own payment details and confirmation actions */}
             {isUserInTrade && isSeller && (
               <PaymentInstructions
                 trade={trade}

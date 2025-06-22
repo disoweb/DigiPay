@@ -10,6 +10,7 @@ import { Trade } from "@shared/schema";
 
 interface PaymentInstructionsProps {
   trade: Trade;
+  userRole: 'buyer' | 'seller';
   onPaymentMarked: () => void;
   onPaymentConfirmed?: () => void;
 }
@@ -190,17 +191,31 @@ export function PaymentInstructions({ trade, userRole, onPaymentMarked, onPaymen
 
   if (userRole === 'seller') {
     return (
-      <Card>
+      <Card className="border-green-200 bg-green-50/50">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Building2 className="h-5 w-5" />
+            <Building2 className="h-5 w-5 text-green-600" />
             Your Payment Details
           </CardTitle>
           <CardDescription>
-            These are your payment details that the buyer will use
+            The buyer will send ₦{parseFloat(trade.fiatAmount).toLocaleString()} to these details
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          <div className="bg-green-100 p-4 rounded-lg border border-green-300">
+            <div className="flex items-center gap-2 mb-2">
+              <Badge variant="secondary" className="bg-green-200 text-green-800">
+                Amount to Receive
+              </Badge>
+            </div>
+            <p className="text-2xl font-bold text-green-900">
+              ₦{parseFloat(trade.fiatAmount).toLocaleString()}
+            </p>
+            <p className="text-sm text-green-700 mt-1">
+              For {parseFloat(trade.amount).toFixed(2)} USDT at ₦{parseFloat(trade.rate).toLocaleString()}/USDT
+            </p>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-700">Bank Name</label>
@@ -245,48 +260,57 @@ export function PaymentInstructions({ trade, userRole, onPaymentMarked, onPaymen
             </div>
           </div>
 
-          <div className="bg-blue-50 p-4 rounded-lg">
-            <div className="flex items-start gap-3">
-              <Clock className="h-5 w-5 text-blue-600 mt-0.5" />
-              <div className="text-sm text-blue-800">
-                <p className="font-medium mb-1">Waiting for Payment:</p>
-                <p>The buyer has 15 minutes to complete the payment and provide proof.</p>
+          {trade.status === "payment_pending" && (
+            <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+              <div className="flex items-start gap-3">
+                <Clock className="h-5 w-5 text-blue-600 mt-0.5" />
+                <div className="text-sm text-blue-800">
+                  <p className="font-medium mb-1">Waiting for Buyer Payment:</p>
+                  <p>The buyer has been provided with your payment details. Wait for them to complete the payment and mark it as made.</p>
+                </div>
               </div>
             </div>
-          </div>
-          {trade.status === "payment_pending" && (
-            <Button
-              onClick={handleMarkPayment}
-              disabled={markPaymentMutation.isPending}
-              className="w-full"
-              size="lg"
-            >
-              {markPaymentMutation.isPending ? (
-                "Marking as Paid..."
-              ) : (
-                <>
-                  <CheckCircle className="mr-2 h-4 w-4" />
-                  I Have Made Payment
-                </>
-              )}
-            </Button>
           )}
+
           {trade.status === "payment_made" && (
-            <Button
-              onClick={handleConfirmPayment}
-              disabled={isConfirmingPayment}
-              className="w-full"
-              size="lg"
-            >
-              {isConfirmingPayment ? (
-                "Confirming Payment..."
-              ) : (
-                <>
-                  <CheckCircle className="mr-2 h-4 w-4" />
-                  Confirm Payment
-                </>
-              )}
-            </Button>
+            <>
+              <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
+                <div className="flex items-start gap-3">
+                  <AlertTriangle className="h-5 w-5 text-orange-600 mt-0.5" />
+                  <div className="text-sm text-orange-800">
+                    <p className="font-medium mb-1">Payment Marked as Made:</p>
+                    <p>The buyer has indicated they've sent the payment. Check your bank account and confirm receipt to release the USDT from escrow.</p>
+                  </div>
+                </div>
+              </div>
+              <Button
+                onClick={handleConfirmPayment}
+                disabled={isConfirmingPayment}
+                className="w-full bg-green-600 hover:bg-green-700"
+                size="lg"
+              >
+                {isConfirmingPayment ? (
+                  "Confirming Payment..."
+                ) : (
+                  <>
+                    <CheckCircle className="mr-2 h-4 w-4" />
+                    Confirm Payment Received
+                  </>
+                )}
+              </Button>
+            </>
+          )}
+
+          {trade.status === "completed" && (
+            <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+              <div className="flex items-start gap-3">
+                <CheckCircle className="h-5 w-5 text-green-600 mt-0.5" />
+                <div className="text-sm text-green-800">
+                  <p className="font-medium mb-1">Trade Completed:</p>
+                  <p>Payment confirmed and USDT has been released from escrow to the buyer.</p>
+                </div>
+              </div>
+            </div>
           )}
         </CardContent>
       </Card>
