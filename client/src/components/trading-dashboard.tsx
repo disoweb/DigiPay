@@ -34,7 +34,15 @@ export function TradingDashboard() {
 
   const { data: offers = [], error: offersError } = useQuery({
     queryKey: [`/api/users/${user?.id}/offers`],
+    queryFn: async () => {
+      const response = await apiRequest("GET", `/api/users/${user?.id}/offers`);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch user offers: ${response.status}`);
+      }
+      return response.json();
+    },
     enabled: !!user?.id,
+    refetchInterval: 10000,
   });
 
   const { data: marketStats, error: statsError, isLoading: statsLoading } = useQuery({
@@ -84,7 +92,7 @@ export function TradingDashboard() {
     ? (completedTrades.length / trades.length) * 100 
     : 0;
 
-  const activeOffers = offers.filter((o: any) => o.status === 'active');
+  const activeOffers = Array.isArray(offers) ? offers.filter((o: any) => o.status === 'active') : [];
   const buyOffers = activeOffers.filter((o: any) => o.type === 'buy');
   const sellOffers = activeOffers.filter((o: any) => o.type === 'sell');
 
@@ -239,13 +247,28 @@ export function TradingDashboard() {
             <CardTitle className="flex items-center gap-2">
               <TrendingUp className="h-5 w-5" />
               My Offers ({activeOffers.length})
+              {offersError && (
+                <span className="text-xs text-red-500">(Error loading)</span>
+              )}
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {activeOffers.length === 0 ? (
+            {offersError ? (
               <div className="text-center py-4">
-                <p className="text-gray-500 mb-2">No active offers</p>
-                <Button size="sm" onClick={() => window.open('/offer-creation', '_blank')}>
+                <p className="text-red-500 mb-2">Failed to load offers</p>
+                <Button size="sm" variant="outline" onClick={() => window.location.reload()}>
+                  Retry
+                </Button>
+              </div>
+            ) : activeOffers.length === 0 ? (
+              <div className="text-center py-4">
+                <p className="text-gray-500 mb-2">
+                  {Array.isArray(offers) && offers.length > 0 
+                    ? `${offers.length} offers found, but none are active` 
+                    : "No offers created yet"
+                  }
+                </p>
+                <Button size="sm" onClick={() => setLocation('/marketplace')}>
                   Create Your First Offer
                 </Button>
               </div>
@@ -266,17 +289,25 @@ export function TradingDashboard() {
                     <div>
                       <p className="font-medium capitalize">{offer.type} USDT</p>
                       <p className="text-sm text-gray-600">
-                        ${parseFloat(offer.amount).toFixed(2)} @ ₦{parseFloat(offer.rate).toLocaleString()}
+                        ${parseFloat(offer.amount || 0).toFixed(2)} @ ₦{parseFloat(offer.rate || 0).toLocaleString()}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        Min: ${parseFloat(offer.minAmount || 0).toFixed(2)} - Max: ${parseFloat(offer.maxAmount || 0).toFixed(2)}
                       </p>
                     </div>
-                    <Badge className={offer.type === 'buy' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}>
-                      {offer.type === 'buy' ? <TrendingUp className="h-3 w-3 mr-1" /> : <TrendingDown className="h-3 w-3 mr-1" />}
-                      {offer.type.toUpperCase()}
-                    </Badge>
+                    <div className="text-right">
+                      <Badge className={offer.type === 'buy' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}>
+                        {offer.type === 'buy' ? <TrendingUp className="h-3 w-3 mr-1" /> : <TrendingDown className="h-3 w-3 mr-1" />}
+                        {offer.type.toUpperCase()}
+                      </Badge>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {new Date(offer.createdAt).toLocaleDateString()}
+                      </p>
+                    </div>
                   </div>
                 ))}
                 {activeOffers.length > 3 && (
-                  <Button variant="outline" size="sm" className="w-full">
+                  <Button variant="outline" size="sm" className="w-full" onClick={() => setLocation('/marketplace')}>
                     Manage All Offers
                   </Button>
                 )}
