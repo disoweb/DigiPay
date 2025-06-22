@@ -50,7 +50,7 @@ async function comparePasswords(supplied: string, stored: string): Promise<boole
 function generateToken(user: SelectUser): string {
   return jwt.sign(
     { 
-      id: user.id, 
+      userId: user.id, 
       email: user.email,
       isAdmin: user.isAdmin,
       kycVerified: user.kycVerified
@@ -76,7 +76,7 @@ export function authenticateToken(req: Request, res: Response, next: NextFunctio
     }
 
     try {
-      const user = await storage.getUser(decoded.id);
+      const user = await storage.getUser(decoded.userId);
       if (!user) {
         return res.status(401).json({ error: "User not found" });
       }

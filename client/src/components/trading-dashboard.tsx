@@ -50,6 +50,13 @@ export function TradingDashboard() {
 
   const { data: transactions = [] } = useQuery({
     queryKey: ['/api/transactions'],
+    queryFn: async () => {
+      const response = await apiRequest("GET", "/api/transactions");
+      if (!response.ok) {
+        throw new Error(`Failed to fetch transactions: ${response.status}`);
+      }
+      return response.json();
+    },
     enabled: !!user?.id,
   });
 
