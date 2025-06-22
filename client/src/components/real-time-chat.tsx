@@ -17,6 +17,7 @@ interface EnrichedMessage {
     id: number;
     email: string;
   };
+  status?: 'sending' | 'sent' | 'delivered' | 'read';
 }
 
 interface RealTimeChatProps {
@@ -27,6 +28,7 @@ export function RealTimeChat({ tradeId }: RealTimeChatProps) {
   const { user } = useAuth();
   const [message, setMessage] = useState("");
   const [isConnected, setIsConnected] = useState(false);
+  const [pendingMessages, setPendingMessages] = useState<Map<string, EnrichedMessage>>(new Map());
   const wsRef = useRef<WebSocket | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -44,15 +46,40 @@ export function RealTimeChat({ tradeId }: RealTimeChatProps) {
 
   const sendMessageMutation = useMutation({
     mutationFn: async (messageText: string) => {
+      // Add pending message immediately for instant feedback
+      const tempId = `temp-${Date.now()}`;
+      const pendingMessage: EnrichedMessage = {
+        id: 0,
+        tradeId,
+        senderId: user?.id || 0,
+        message: messageText,
+        createdAt: new Date().toISOString(),
+        status: 'sending'
+      };
+      
+      setPendingMessages(prev => new Map(prev.set(tempId, pendingMessage)));
+      
       const res = await apiRequest("POST", `/api/trades/${tradeId}/messages`, {
         message: messageText,
       });
+      
+      // Remove pending message
+      setPendingMessages(prev => {
+        const newMap = new Map(prev);
+        newMap.delete(tempId);
+        return newMap;
+      });
+      
       return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/trades", tradeId, "messages"] });
       setMessage("");
     },
+    onError: () => {
+      // Clear pending messages on error
+      setPendingMessages(new Map());
+    }
   });
 
   // WebSocket connection
@@ -165,18 +192,21 @@ export function RealTimeChat({ tradeId }: RealTimeChatProps) {
               </div>
             </div>
           ) : (
-            messages.map((msg) => {
+            [...messages, ...Array.from(pendingMessages.values())].map((msg, index) => {
               const isOwnMessage = msg.senderId === user?.id;
+              const isPending = msg.status === 'sending';
+              const messageKey = msg.id > 0 ? `msg-${msg.id}` : `pending-${index}`;
+              
               return (
                 <div
-                  key={msg.id}
+                  key={messageKey}
                   className={`flex items-end space-x-2 ${
                     isOwnMessage ? "flex-row-reverse space-x-reverse" : ""
-                  }`}
+                  } ${isPending ? "opacity-70" : ""}`}
                 >
                   {!isOwnMessage && (
                     <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold shadow-md">
-                      {msg.sender?.email.charAt(0).toUpperCase() || "U"}
+                      {msg.sender?.email?.charAt(0).toUpperCase() || "U"}
                     </div>
                   )}
                   
@@ -201,14 +231,20 @@ export function RealTimeChat({ tradeId }: RealTimeChatProps) {
                         {formatTime(msg.createdAt)}
                       </span>
                       {isOwnMessage && (
-                        <CheckCheck className="h-3 w-3 text-blue-500" />
+                        <div className="flex items-center">
+                          {isPending ? (
+                            <Clock className="h-3 w-3 text-gray-400 animate-pulse" />
+                          ) : (
+                            <CheckCheck className="h-3 w-3 text-blue-500" />
+                          )}
+                        </div>
                       )}
                     </div>
                   </div>
 
                   {isOwnMessage && (
                     <div className="w-8 h-8 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-white text-xs font-bold shadow-md">
-                      {user?.email.charAt(0).toUpperCase() || "Y"}
+                      {user?.email?.charAt(0).toUpperCase() || "Y"}
                     </div>
                   )}
                 </div>

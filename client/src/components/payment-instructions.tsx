@@ -27,10 +27,12 @@ export function PaymentInstructions({ trade, userRole, onPaymentMarked }: Paymen
   const handleMarkPayment = async () => {
     setIsMarkingPaid(true);
     try {
+      const token = localStorage.getItem('token');
       const response = await fetch(`/api/trades/${trade.id}/mark-paid`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
         },
       });
 

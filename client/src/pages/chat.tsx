@@ -3,6 +3,7 @@ import { useParams, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Navbar } from "@/components/navbar";
 import { RealTimeChat } from "@/components/real-time-chat";
+import { TradeTimer } from "@/components/trade-timer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -29,6 +30,7 @@ type EnrichedTrade = {
   fiatAmount: string;
   status: string;
   escrowAddress: string | null;
+  paymentDeadline: string | null;
   createdAt: string;
   offer: any;
   buyer: { id: number; email: string } | null;
@@ -169,7 +171,7 @@ export default function ChatPage() {
 
       {/* Compact Trade Info */}
       <div className="bg-blue-50 dark:bg-blue-900/20 border-b border-blue-200 dark:border-blue-800 px-4 py-2 flex-shrink-0">
-        <div className="flex items-center justify-between text-sm">
+        <div className="flex items-center justify-between text-sm mb-2">
           <div className="flex items-center gap-4">
             <span className="font-medium text-blue-900 dark:text-blue-100">
               {parseFloat(trade.amount).toFixed(2)} USDT
@@ -182,6 +184,12 @@ export default function ChatPage() {
             ₦{parseFloat(trade.fiatAmount).toLocaleString()}
           </span>
         </div>
+        
+        {/* Trade Timer */}
+        <TradeTimer 
+          paymentDeadline={trade.paymentDeadline} 
+          tradeStatus={trade.status} 
+        />
       </div>
 
       {/* Full-screen Chat */}
