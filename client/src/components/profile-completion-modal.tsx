@@ -59,11 +59,7 @@ export function ProfileCompletionModal({ open, onClose, user }: ProfileCompletio
     setUsernameStatus(prev => ({ ...prev, checking: true }));
 
     try {
-      const response = await fetch(`/api/user/check-username/${usernameToCheck}`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
+      const response = await apiRequest("GET", `/api/user/check-username/${usernameToCheck}`);
       const data = await response.json();
       
       setUsernameStatus({

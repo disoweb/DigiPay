@@ -56,11 +56,7 @@ export default function ProfilePage() {
     setUsernameStatus(prev => ({ ...prev, checking: true }));
 
     try {
-      const response = await fetch(`/api/user/check-username/${usernameToCheck}`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
+      const response = await apiRequest("GET", `/api/user/check-username/${usernameToCheck}`);
       const data = await response.json();
       
       setUsernameStatus({
@@ -102,10 +98,12 @@ export default function ProfilePage() {
 
   const updateProfileMutation = useMutation({
     mutationFn: async (data: any) => {
-      return apiRequest("/api/user/profile", {
-        method: "PUT",
-        body: JSON.stringify(data),
-      });
+      const response = await apiRequest("PUT", "/api/user/profile", data);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to update profile");
+      }
+      return response.json();
     },
     onSuccess: () => {
       toast({

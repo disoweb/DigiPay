@@ -168,10 +168,8 @@ export default function Wallet() {
         setShowProfileCompletion(true);
       }, 1000);
       return () => clearTimeout(timer);
-    } else {
-      setShowProfileCompletion(false);
     }
-  }, [user]);
+  }, [user?.firstName, user?.lastName, user?.username]);
 
   const { data: transactions = [], error: transactionsError, isLoading: transactionsLoading } = useQuery<Transaction[]>({
     queryKey: ["/api/transactions"],

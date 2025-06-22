@@ -124,17 +124,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { username } = req.params;
       const currentUserId = req.user?.id;
-      
+
       if (!username || username.length < 3) {
         return res.json({ available: false, message: "Username must be at least 3 characters long" });
       }
-      
+
       if (!/^[a-zA-Z0-9_]+$/.test(username)) {
         return res.json({ available: false, message: "Username can only contain letters, numbers, and underscores" });
       }
-      
+
       const existingUser = await storage.getUserByUsername(username);
-      
+
       if (existingUser && existingUser.id !== currentUserId) {
         // Generate suggestions
         const suggestions = [];
@@ -145,7 +145,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             suggestions.push(suggestion);
           }
         }
-        
+
         // Try with random numbers
         if (suggestions.length < 3) {
           for (let i = 0; i < 5; i++) {
@@ -158,14 +158,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
           }
         }
-        
+
         return res.json({ 
           available: false, 
           message: "Username is already taken",
           suggestions: suggestions.slice(0, 3)
         });
       }
-      
+
       res.json({ available: true, message: "Username is available" });
     } catch (error) {
       console.error("Check username error:", error);
@@ -1909,9 +1909,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { reference } = req.body;
       const userId = req.user!.id;
-      
+
       console.log(`Verifying payment for user ${userId}, reference: ${reference}`);
-      
+
       const result = await paystackService.verifyPayment(reference);
       console.log("Paystack verification result:", result);
 
@@ -1920,7 +1920,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (result.data.status === 'success') {
           const transactions = await storage.getUserTransactions(userId);
           const pendingTx = transactions.find(tx => tx.paystackRef === reference && tx.status === 'pending');
-          
+
           console.log("Found pending transaction:", pendingTx);
 
           if (pendingTx) {
@@ -1934,13 +1934,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
               const currentBalance = parseFloat(user.nairaBalance || "0");
               const depositAmount = result.data.amount / 100; // Convert from kobo to naira
               const newBalance = currentBalance + depositAmount;
-              
+
               console.log(`Updating balance: ${currentBalance} + ${depositAmount} = ${newBalance}`);
-              
+
               await storage.updateUser(user.id, { 
                 nairaBalance: newBalance.toString() 
               });
-              
+
               console.log(`User ${user.id} balance updated to ₦${newBalance}`);
             }
           } else {
@@ -1982,7 +1982,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { query } = req.body;
       const user = await storage.getUserByEmail(query.toLowerCase());
-      
+
       if (!user) {
         return res.status(404).json({ error: "User not found" });
       }
@@ -2005,38 +2005,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Update user profile
-  app.put("/api/user/profile", authenticateToken, async (req, res) => {
+  app.put("/api/user/profile", authenticateToken, async (req: any, res: Response) => {
     try {
-      const { firstName, lastName, phone } = req.body;
-      const userId = req.user!.id;
+      const userId = req.user?.id;
+      const { firstName, lastName, username, location, phone } = req.body;
 
-      const updatedUser = await storage.updateUser(userId, {
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+
+      // Check if username is taken by another user
+      if (username) {
+        const existingUser = await storage.getUserByUsername(username);
+        if (existingUser && existingUser.id !== userId) {
+          return res.status(400).json({ error: "Username is already taken" });
+        }
+      }
+
+      const updatedUser = await storage.updateUserProfile(userId, {
         firstName,
         lastName,
+        username,
+        location,
         phone
       });
 
-      if (!updatedUser) {
-        return res.status(404).json({ error: "User not found" });
-      }
-
-      res.json({
-        id: updatedUser.id,
-        email: updatedUser.email,
-        firstName: updatedUser.firstName,
-        lastName: updatedUser.lastName,
-        phone: updatedUser.phone,
-        kycVerified: updatedUser.kycVerified,
-        kycStatus: updatedUser.kycStatus,
-        nairaBalance: updatedUser.nairaBalance,
-        usdtBalance: updatedUser.usdtBalance,
-        tronAddress: updatedUser.tronAddress,
-        averageRating: updatedUser.averageRating,
-        ratingCount: updatedUser.ratingCount,
-        isOnline: updatedUser.isOnline,
-        isAdmin: updatedUser.isAdmin
-      });
+      res.json(updatedUser);
     } catch (error) {
+      console.error("Update profile error:", error);
       res.status(500).json({ error: "Failed to update profile" });
     }
   });
