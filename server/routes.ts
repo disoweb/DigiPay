@@ -147,11 +147,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const enrichedOffers = await Promise.all(
         offers.map(async (offer) => {
           const user = await storage.getUser(offer.userId);
-          
+
           // Determine online status consistently
           const isOnline = user?.isOnline || false;
           const lastSeen = user?.lastSeen || user?.createdAt;
-          
+
           return {
             ...offer,
             user: user ? {
@@ -417,7 +417,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Check if payment deadline has passed
       if (trade.paymentDeadline && new Date() > new Date(trade.paymentDeadline)) {
-        await storage.updateTrade(tradeId, { status: "expired" });
+        await storage.updateTradeStatus(tradeId, "expired");
         return res.status(400).json({ error: "Payment deadline has passed" });
       }
 
@@ -670,7 +670,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Check if payment deadline has passed
       if (trade.paymentDeadline && new Date() > new Date(trade.paymentDeadline)) {
-        await storage.updateTrade(tradeId, { status: "expired" });
+        await storage.updateTradeStatus(tradeId, "expired");
         return res.status(400).json({ error: "Payment deadline has passed" });
       }
 
@@ -1411,14 +1411,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/messages", authenticateToken, async (req, res) => {
     try {
       const { recipientId, messageText, message, offerId, tradeId } = req.body;
-      
+
       // Use messageText or message, whichever is provided
       const messageContent = messageText || message || "";
-      
+
       if (!messageContent.trim()) {
         return res.status(400).json({ error: "Message content is required" });
       }
-      
+
       const messageData = {
         senderId: req.user!.id,
         recipientId,
@@ -1426,7 +1426,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         offerId,
         tradeId: tradeId || null // Default to null if no tradeId provided
       };
-      
+
       const newMessage = await storage.createDirectMessage(messageData);
       res.json(newMessage);
     } catch (error) {
@@ -2060,7 +2060,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (trade.paymentDeadline && 
             new Date(trade.paymentDeadline) < now && 
             ["payment_pending"].includes(trade.status)) {
-          await storage.updateTrade(trade.id, { status: "expired" });
+          await storage.updateTradeStatus(trade.id, { status: "expired" });
           trade.status = "expired"; // Update the local object
         }
       }
@@ -2093,7 +2093,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Check if payment deadline has passed
       if (trade.paymentDeadline && new Date() > new Date(trade.paymentDeadline)) {
-        await storage.updateTrade(tradeId, { status: "expired" });
+        await storage.updateTradeStatus(tradeId, "expired");
         return res.status(400).json({ error: "Payment deadline has passed" });
       }
 

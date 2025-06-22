@@ -413,6 +413,34 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateTradeStatus(tradeId: number, status: string) {
+    const trade = await this.getTrade(tradeId);
+    
+    // If trade is being marked as expired or cancelled, restore offer amount
+    if ((status === "expired" || status === "cancelled") && trade) {
+      const offer = await this.getOffer(trade.offerId);
+      if (offer) {
+        const currentAmount = parseFloat(offer.amount || "0");
+        const tradeAmount = parseFloat(trade.amount);
+        const newAmount = currentAmount + tradeAmount;
+        
+        await this.updateOffer(offer.id, {
+          amount: newAmount.toString(),
+          status: "active" // Reactivate the offer
+        });
+        
+        // If it's a sell offer, also restore the seller's USDT balance
+        if (offer.type === "sell") {
+          const seller = await this.getUser(trade.sellerId);
+          if (seller) {
+            const currentBalance = parseFloat(seller.usdtBalance || "0");
+            await this.updateUser(seller.id, {
+              usdtBalance: (currentBalance + tradeAmount).toString()
+            });
+          }
+        }
+      }
+    }
+    
     await db.update(trades)
       .set({ 
         status,
@@ -454,9 +482,9 @@ export class DatabaseStorage implements IStorage {
         // Map messageText to message field and ensure required fields
         const messageData = {
             senderId: message.senderId,
+            recipientId: message.recipientId, // Use correct field name
             message: message.messageText || message.message || "", // Handle both field names
-            tradeId: message.tradeId || null, // Set to null if not provided
-            receiverId: message.receiverId || null // Optional field
+            tradeId: message.tradeId || null // Set to null if not provided
         };
         
         const [newMessage] = await db.insert(messages).values(messageData).returning();
