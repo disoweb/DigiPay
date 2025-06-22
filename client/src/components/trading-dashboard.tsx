@@ -19,7 +19,8 @@ import {
   AlertTriangle,
   BarChart3,
   CheckCircle,
-  Activity
+  Activity,
+  MessageCircle
 } from "lucide-react";
 
 export function TradingDashboard() {
