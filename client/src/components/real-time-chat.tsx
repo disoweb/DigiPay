@@ -253,22 +253,21 @@ export function RealTimeChat({ tradeId }: RealTimeChatProps) {
       </div>
 
       {/* Messages Area */}
-      <ScrollArea className="flex-1 p-4">
-        <div className="space-y-4">
-          {messages.length === 0 && pendingMessages.size === 0 ? (
-            <div className="text-center py-8">
-              <div className="bg-white dark:bg-gray-800 rounded-xl p-4 mx-auto max-w-xs shadow-sm">
-                <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <Send className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-                </div>
-                <p className="text-gray-600 dark:text-gray-300 text-sm">
-                  No messages yet. Start the conversation!
-                </p>
+      <div className="flex-1 overflow-y-auto p-4">
+        {messages.length === 0 && pendingMessages.size === 0 ? (
+          <div className="text-center py-8">
+            <div className="bg-white dark:bg-gray-800 rounded-xl p-4 mx-auto max-w-xs shadow-sm">
+              <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center mx-auto mb-3">
+                <Send className="h-6 w-6 text-blue-600 dark:text-blue-400" />
               </div>
+              <p className="text-gray-600 dark:text-gray-300 text-sm">
+                No messages yet. Start the conversation!
+              </p>
             </div>
-          ) : (
-            <>
-              {[...messages, ...Array.from(pendingMessages.values())].map((msg, index) => {
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {[...messages, ...Array.from(pendingMessages.values())].map((msg, index) => {
                 const isOwnMessage = msg.senderId === user?.id;
                 const isPending = msg.status === 'sending';
                 const isFailed = msg.status === 'failed';
@@ -333,11 +332,10 @@ export function RealTimeChat({ tradeId }: RealTimeChatProps) {
                   </div>
                 );
               })}
-              <div ref={messagesEndRef} />
-            </>
-          )}
-        </div>
-      </ScrollArea>
+            <div ref={messagesEndRef} />
+          </div>
+        )}
+      </div>
 
       {/* Input Area */}
       <div className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4">
