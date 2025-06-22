@@ -14,6 +14,7 @@ import { User, Mail, Phone, Shield, CheckCircle, AlertTriangle } from "lucide-re
 import { UserProfileSection } from "@/components/user-profile-section";
 import { useAuth } from "@/hooks/use-auth";
 import { Redirect } from "wouter";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 // This is the complete and final code file with all required changes.
 export default function UserSettings() {
@@ -68,31 +69,109 @@ export default function UserSettings() {
           disputedTrades={disputedTrades.length}
           successRate={successRate}
         />
+        <Tabs defaultValue="account" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="account">Account</TabsTrigger>
+            <TabsTrigger value="security">Security</TabsTrigger>
+            <TabsTrigger value="kyc">KYC Verification</TabsTrigger>
+          </TabsList>
 
-        {/* KYC Verification Section */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Shield className="h-5 w-5" />
-                Identity Verification (KYC)
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {userData?.kycVerified ? (
-                <Alert className="border-green-200 bg-green-50">
-                  <CheckCircle className="h-4 w-4 text-green-600" />
-                  <AlertDescription className="text-green-800">
-                    <div className="flex items-center justify-between">
-                      <span>Your identity has been verified successfully!</span>
-                      <Badge variant="outline" className="text-green-600 border-green-600">
-                        <Shield className="h-3 w-3 mr-1" />
+          <TabsContent value="account">
+            {/* Account Overview */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <User className="h-5 w-5 mr-2" />
+                  Account Overview
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-sm text-gray-600">Email</Label>
+                    <div className="flex items-center space-x-2">
+                      <span className="font-medium">{user.email}</span>
+                      <Badge variant="secondary" className="bg-green-100 text-green-800">
+                        <CheckCircle className="h-3 w-3 mr-1" />
                         Verified
                       </Badge>
                     </div>
-                  </AlertDescription>
-                </Alert>
-              ) : (
-                <div className="space-y-4">
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-sm text-gray-600">Phone</Label>
+                    <div className="flex items-center space-x-2">
+                      <span className="font-medium">{user.phone}</span>
+                      <Badge variant="secondary" className="bg-green-100 text-green-800">
+                        <CheckCircle className="h-3 w-3 mr-1" />
+                        Verified
+                      </Badge>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-sm text-gray-600">KYC Status</Label>
+                    <div className="flex items-center space-x-2">
+                      {userData?.kycVerified ? (
+                        <Badge variant="secondary" className="bg-green-100 text-green-800">
+                          <CheckCircle className="h-3 w-3 mr-1" />
+                          Verified
+                        </Badge>
+                      ) : (
+                        <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
+                          <AlertTriangle className="h-3 w-3 mr-1" />
+                          Pending
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-sm text-gray-600">Account Type</Label>
+                    <Badge variant="outline">
+                      {user.isAdmin ? "Admin" : "Standard User"}
+                    </Badge>
+                  </div>
+                </div>
+
+                {!userData?.kycVerified && (
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                    <div className="flex items-start space-x-3">
+                      <AlertTriangle className="h-5 w-5 text-yellow-600 mt-0.5" />
+                      <div>
+                        <h4 className="font-medium text-yellow-800">Complete KYC Verification</h4>
+                        <p className="text-sm text-yellow-700 mt-1">
+                          Verify your identity to increase trading limits and access advanced features.
+                        </p>
+                        <Button size="sm" className="mt-2 bg-yellow-600 hover:bg-yellow-700" onClick={() => setShowKYCForm(true)}>
+                          Start Verification
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="kyc">
+            {showKYCForm ? (
+              <KYCVerification 
+                onVerificationComplete={() => {
+                  setShowKYCForm(false);
+                  // Refresh user data
+                  queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+                }} 
+              />
+            ) : (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Shield className="h-5 w-5" />
+                    Identity Verification (KYC)
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
                   <Alert className="border-yellow-200 bg-yellow-50">
                     <AlertTriangle className="h-4 w-4 text-yellow-600" />
                     <AlertDescription className="text-yellow-800">
@@ -104,52 +183,34 @@ export default function UserSettings() {
                       </div>
                     </AlertDescription>
                   </Alert>
+                  <Button 
+                    onClick={() => setShowKYCForm(true)}
+                    className="w-full bg-blue-600 hover:bg-blue-700"
+                  >
+                    <Shield className="h-4 w-4 mr-2" />
+                    Start KYC Verification
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
 
-                  {showKYCForm ? (
-                    <div className="mt-4">
-                      <KYCVerification 
-                        onVerificationComplete={() => {
-                          setShowKYCForm(false);
-                          // Refresh user data
-                          queryClient.invalidateQueries({ queryKey: ["/api/user"] });
-                        }} 
-                      />
-                      <Button 
-                        variant="outline" 
-                        onClick={() => setShowKYCForm(false)}
-                        className="mt-4 w-full"
-                      >
-                        Cancel
-                      </Button>
-                    </div>
-                  ) : (
-                    <Button 
-                      onClick={() => setShowKYCForm(true)}
-                      className="w-full bg-blue-600 hover:bg-blue-700"
-                    >
-                      <Shield className="h-4 w-4 mr-2" />
-                      Start KYC Verification
-                    </Button>
-                  )}
+          <TabsContent value="security">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Shield className="h-5 w-5" />
+                  Security Settings
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="text-center py-8 text-gray-500">
+                  Security settings coming soon...
                 </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Security Section */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Shield className="h-5 w-5" />
-                Security Settings
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="text-center py-8 text-gray-500">
-                Security settings coming soon...
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

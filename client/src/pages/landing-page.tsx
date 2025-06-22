@@ -4,18 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { 
-  ArrowRight, 
-  Shield, 
-  Zap, 
-  Users, 
-  CheckCircle, 
-  Star,
-  TrendingUp,
-  TrendingDown,
-  UserCheck,
-  Lock,
-  Globe,
-  Clock
+  Smartphone, Phone, Shield, Clock, Users, CheckCircle, 
+  Star, ArrowRight, Zap, Globe, Lock, CreditCard,
+  BarChart3, Banknote, TrendingUp, TrendingDown, UserCheck, MessageCircle
 } from "lucide-react";
 
 export default function LandingPage() {

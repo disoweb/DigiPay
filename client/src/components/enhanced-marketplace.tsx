@@ -31,7 +31,9 @@ import {
   Building,
   Smartphone,
   RefreshCw,
-  Loader2
+  Loader2,
+  MessageCircle,
+  UserCheck
 } from "lucide-react";
 
 interface Offer {
