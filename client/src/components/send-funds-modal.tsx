@@ -158,6 +158,30 @@ export function SendFundsModal({ open, onOpenChange, nairaBalance, usdtBalance }
         </DialogHeader>
 
         <div className="space-y-4">
+          {/* Currency Selection */}
+          <div className="space-y-2">
+            <Label>Select Currency</Label>
+            <Select value={currency} onValueChange={(value: "NGN" | "USDT") => setCurrency(value)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="NGN">
+                  <div className="flex items-center gap-2">
+                    <DollarSign className="h-4 w-4" />
+                    Nigerian Naira (₦{parseFloat(nairaBalance).toLocaleString()})
+                  </div>
+                </SelectItem>
+                <SelectItem value="USDT">
+                  <div className="flex items-center gap-2">
+                    <Coins className="h-4 w-4" />
+                    USDT ({parseFloat(usdtBalance).toFixed(6)})
+                  </div>
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
           {/* Recipient Lookup */}
           <div className="space-y-2">
             <Label htmlFor="recipient">Send to (Email or Username)</Label>

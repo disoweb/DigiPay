@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { ArrowUpDown, DollarSign, Coins, Loader2, TrendingUp, ChevronRight, Check } from "lucide-react";
+import { ArrowUpDown, DollarSign, Coins, Loader2, ChevronLeft, Check } from "lucide-react";
 
 interface SwapModalProps {
   open: boolean;
@@ -56,71 +56,39 @@ export function SwapModal({ open, onOpenChange, nairaBalance, usdtBalance }: Swa
     },
   });
 
-  const calculateOutput = () => {
+  const resetModal = () => {
+    setStep(1);
+    setFromCurrency("NGN");
+    setAmount("");
+  };
+
+  const getAvailableBalance = () => {
+    return fromCurrency === "NGN" ? parseFloat(nairaBalance) : parseFloat(usdtBalance);
+  };
+
+  const calculateExchange = () => {
     const inputAmount = parseFloat(amount || "0");
     const fee = inputAmount * 0.01; // 1% fee
     const amountAfterFee = inputAmount - fee;
     
     if (fromCurrency === "NGN") {
-      return (amountAfterFee / USDT_RATE).toFixed(6);
+      return {
+        fee,
+        amountAfterFee,
+        receiveAmount: amountAfterFee / USDT_RATE,
+        receiveCurrency: "USDT"
+      };
     } else {
-      return (amountAfterFee * USDT_RATE).toLocaleString();
+      return {
+        fee,
+        amountAfterFee,
+        receiveAmount: amountAfterFee * USDT_RATE,
+        receiveCurrency: "NGN"
+      };
     }
   };
 
-  const calculateFee = () => {
-    const inputAmount = parseFloat(amount || "0");
-    const fee = inputAmount * 0.01;
-    return fee;
-  };
-
-  const getMaxBalance = () => {
-    return fromCurrency === "NGN" ? parseFloat(nairaBalance) : parseFloat(usdtBalance);
-  };
-
-  const handleSwap = () => {
-    const swapAmount = parseFloat(amount);
-    const maxBalance = getMaxBalance();
-    
-    if (swapAmount <= 0) {
-      toast({
-        title: "Invalid Amount",
-        description: "Amount must be greater than zero",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (swapAmount > maxBalance) {
-      toast({
-        title: "Insufficient Balance",
-        description: `You don't have enough ${fromCurrency} for this swap`,
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (fromCurrency === "NGN" && swapAmount < USDT_RATE) {
-      toast({
-        title: "Minimum Swap Amount",
-        description: `Minimum swap amount is ₦${USDT_RATE.toLocaleString()} (1 USDT)`,
-        variant: "destructive",
-      });
-      return;
-    }
-
-    swapMutation.mutate({
-      fromCurrency,
-      amount: swapAmount
-    });
-  };
-
-  const toggleCurrency = () => {
-    setFromCurrency(fromCurrency === "NGN" ? "USDT" : "NGN");
-    setAmount("");
-  };
-
-  const goToPreview = () => {
+  const handleProceedToPreview = () => {
     if (!amount || parseFloat(amount) <= 0) {
       toast({
         title: "Invalid Amount",
@@ -129,210 +97,221 @@ export function SwapModal({ open, onOpenChange, nairaBalance, usdtBalance }: Swa
       });
       return;
     }
+
+    if (parseFloat(amount) > getAvailableBalance()) {
+      toast({
+        title: "Insufficient Balance",
+        description: `You don't have enough ${fromCurrency}`,
+        variant: "destructive",
+      });
+      return;
+    }
+
     setStep(2);
   };
 
-  const goBack = () => {
-    setStep(1);
+  const handleConfirmSwap = () => {
+    swapMutation.mutate({
+      fromCurrency,
+      amount: parseFloat(amount)
+    });
   };
 
-  const resetModal = () => {
-    setStep(1);
-    setAmount("");
-    setFromCurrency("NGN");
-  };
+  const exchangeDetails = calculateExchange();
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[95vw] max-w-md mx-auto max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-md mx-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-lg">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <ArrowUpDown className="h-5 w-5 text-blue-600" />
-            </div>
-            Currency Swap
+          <DialogTitle className="flex items-center gap-2">
+            <ArrowUpDown className="h-5 w-5" />
+            Currency Swap {step === 2 && "- Review"}
           </DialogTitle>
-          <p className="text-sm text-gray-600">
-            Instantly swap between NGN and USDT at live market rates
-          </p>
         </DialogHeader>
 
-        <div className="space-y-6 py-2">
-          {/* Current Rate Display */}
-          <Card className="bg-gradient-to-r from-blue-50 to-blue-100 border-blue-200">
-            <CardContent className="p-4">
-              <div className="text-center space-y-2">
-                <div className="flex items-center justify-center gap-2">
-                  <TrendingUp className="h-4 w-4 text-blue-600" />
-                  <span className="text-sm font-medium text-blue-900">Live Exchange Rate</span>
-                </div>
-                <div className="text-2xl font-bold text-blue-900">
-                  1 USDT = ₦{USDT_RATE.toLocaleString()}
-                </div>
-                <p className="text-xs text-blue-700">Updated in real-time • No fees</p>
+        {step === 1 ? (
+          // Step 1: Currency Selection and Amount Entry
+          <div className="space-y-6">
+            {/* Currency Selection */}
+            <div className="space-y-3">
+              <Label>Swap From</Label>
+              <div className="grid grid-cols-2 gap-3">
+                <Card 
+                  className={`cursor-pointer transition-all ${fromCurrency === "NGN" ? "ring-2 ring-blue-500 bg-blue-50" : "hover:bg-gray-50"}`}
+                  onClick={() => setFromCurrency("NGN")}
+                >
+                  <CardContent className="p-4 text-center">
+                    <DollarSign className="h-6 w-6 mx-auto mb-2 text-green-600" />
+                    <p className="font-medium">Nigerian Naira</p>
+                    <p className="text-sm text-gray-500">₦{parseFloat(nairaBalance).toLocaleString()}</p>
+                  </CardContent>
+                </Card>
+                <Card 
+                  className={`cursor-pointer transition-all ${fromCurrency === "USDT" ? "ring-2 ring-blue-500 bg-blue-50" : "hover:bg-gray-50"}`}
+                  onClick={() => setFromCurrency("USDT")}
+                >
+                  <CardContent className="p-4 text-center">
+                    <Coins className="h-6 w-6 mx-auto mb-2 text-blue-600" />
+                    <p className="font-medium">USDT</p>
+                    <p className="text-sm text-gray-500">{parseFloat(usdtBalance).toFixed(6)}</p>
+                  </CardContent>
+                </Card>
               </div>
-            </CardContent>
-          </Card>
-
-          {/* From Currency */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <Label className="text-base font-medium">You Pay</Label>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={toggleCurrency}
-                className="flex items-center gap-1 h-8 px-2 text-sm"
-              >
-                <ArrowUpDown className="h-3 w-3" />
-                Switch
-              </Button>
             </div>
-            <Card className="border-2 border-gray-200 hover:border-blue-300 transition-colors">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <div className={`p-2 rounded-full ${fromCurrency === "NGN" ? "bg-green-100" : "bg-blue-100"}`}>
-                      {fromCurrency === "NGN" ? (
-                        <DollarSign className="h-5 w-5 text-green-600" />
-                      ) : (
-                        <Coins className="h-5 w-5 text-blue-600" />
-                      )}
-                    </div>
-                    <div>
-                      <span className="font-bold text-lg">{fromCurrency}</span>
-                      <p className="text-xs text-gray-500">
-                        {fromCurrency === "NGN" ? "Nigerian Naira" : "Tether USD"}
-                      </p>
-                    </div>
-                  </div>
-                </div>
+
+            {/* Amount Input */}
+            <div className="space-y-2">
+              <Label htmlFor="amount">Amount to Swap</Label>
+              <div className="relative">
+                {fromCurrency === "NGN" ? (
+                  <DollarSign className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                ) : (
+                  <Coins className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                )}
                 <Input
+                  id="amount"
                   type="number"
                   placeholder="0.00"
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
-                  className="text-xl font-bold border-0 p-0 h-auto focus-visible:ring-0"
+                  className="pl-10"
+                  min="0"
                   step={fromCurrency === "NGN" ? "1" : "0.000001"}
                 />
-                <div className="flex justify-between items-center mt-3 pt-3 border-t">
-                  <span className="text-sm text-gray-600">
-                    Available: {fromCurrency === "NGN" ? `₦${parseFloat(nairaBalance).toLocaleString()}` : `${parseFloat(usdtBalance).toFixed(6)} USDT`}
-                  </span>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setAmount(getMaxBalance().toString())}
-                    className="h-7 px-2 text-xs text-blue-600 hover:text-blue-700"
-                  >
-                    Use Max
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Swap Arrow */}
-          <div className="flex justify-center relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-dashed border-gray-300"></div>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600">
+                  Available: {fromCurrency === "NGN" ? "₦" : ""}{getAvailableBalance().toLocaleString()} {fromCurrency}
+                </span>
+                <Button
+                  variant="link"
+                  size="sm"
+                  className="h-auto p-0 text-blue-600"
+                  onClick={() => setAmount(getAvailableBalance().toString())}
+                >
+                  Use Max
+                </Button>
+              </div>
             </div>
-            <div className="relative bg-white p-3 rounded-full border-2 border-gray-200">
-              <ArrowUpDown className="h-5 w-5 text-blue-600" />
-            </div>
-          </div>
 
-          {/* To Currency */}
-          <div className="space-y-3">
-            <Label className="text-base font-medium">You Receive</Label>
-            <Card className="border-2 border-green-200 bg-green-50">
-              <CardContent className="p-4">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className={`p-2 rounded-full ${fromCurrency === "NGN" ? "bg-blue-100" : "bg-green-100"}`}>
-                    {fromCurrency === "NGN" ? (
-                      <Coins className="h-5 w-5 text-blue-600" />
-                    ) : (
-                      <DollarSign className="h-5 w-5 text-green-600" />
-                    )}
-                  </div>
-                  <div>
-                    <span className="font-bold text-lg">{fromCurrency === "NGN" ? "USDT" : "NGN"}</span>
-                    <p className="text-xs text-gray-600">
-                      {fromCurrency === "NGN" ? "Tether USD" : "Nigerian Naira"}
+            {/* Exchange Preview */}
+            {amount && parseFloat(amount) > 0 && (
+              <Card className="bg-gray-50">
+                <CardContent className="p-4">
+                  <div className="text-center space-y-2">
+                    <p className="text-sm text-gray-600">You will receive approximately</p>
+                    <p className="text-2xl font-bold text-green-600">
+                      {fromCurrency === "NGN" ? "" : "₦"}
+                      {fromCurrency === "NGN" 
+                        ? exchangeDetails.receiveAmount.toFixed(6) 
+                        : exchangeDetails.receiveAmount.toLocaleString()
+                      } {exchangeDetails.receiveCurrency}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      Fee: {fromCurrency === "NGN" ? "₦" : ""}{exchangeDetails.fee.toLocaleString()} {fromCurrency} (1%)
                     </p>
                   </div>
-                </div>
-                <div className="bg-white p-4 rounded-lg border">
-                  <div className="text-2xl font-bold text-green-600">
-                    {amount ? calculateOutput() : "0.00"}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Action Buttons */}
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleProceedToPreview}
+                disabled={!amount || parseFloat(amount) <= 0}
+                className="flex-1"
+              >
+                Continue
+              </Button>
+            </div>
+          </div>
+        ) : (
+          // Step 2: Preview and Confirmation
+          <div className="space-y-6">
+            {/* Swap Summary */}
+            <Card>
+              <CardContent className="p-6">
+                <div className="text-center space-y-4">
+                  <div className="flex items-center justify-center space-x-4">
+                    <div className="text-center">
+                      <p className="text-sm text-gray-600">From</p>
+                      <p className="text-lg font-semibold">
+                        {fromCurrency === "NGN" ? "₦" : ""}{parseFloat(amount).toLocaleString()} {fromCurrency}
+                      </p>
+                    </div>
+                    <ArrowUpDown className="h-6 w-6 text-gray-400" />
+                    <div className="text-center">
+                      <p className="text-sm text-gray-600">To</p>
+                      <p className="text-lg font-semibold text-green-600">
+                        {fromCurrency === "NGN" ? "" : "₦"}
+                        {fromCurrency === "NGN" 
+                          ? exchangeDetails.receiveAmount.toFixed(6)
+                          : exchangeDetails.receiveAmount.toLocaleString()
+                        } {exchangeDetails.receiveCurrency}
+                      </p>
+                    </div>
                   </div>
-                  <p className="text-sm text-gray-600 mt-1">
-                    {fromCurrency === "NGN" ? "USDT" : "NGN"} • Instant settlement
-                  </p>
+                  
+                  <div className="border-t pt-4 space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span>Exchange Rate:</span>
+                      <span>1 USDT = ₦{USDT_RATE.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Fee (1%):</span>
+                      <span>
+                        {fromCurrency === "NGN" ? "₦" : ""}{exchangeDetails.fee.toLocaleString()} {fromCurrency}
+                      </span>
+                    </div>
+                    <div className="flex justify-between font-semibold">
+                      <span>You will receive:</span>
+                      <span className="text-green-600">
+                        {fromCurrency === "NGN" ? "" : "₦"}
+                        {fromCurrency === "NGN" 
+                          ? exchangeDetails.receiveAmount.toFixed(6)
+                          : exchangeDetails.receiveAmount.toLocaleString()
+                        } {exchangeDetails.receiveCurrency}
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>
-          </div>
 
-          {/* Transaction Summary */}
-          <Card className="bg-gradient-to-r from-yellow-50 to-orange-50 border-yellow-200">
-            <CardContent className="p-4">
-              <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                  <span className="text-sm font-medium text-gray-800">Transaction Details</span>
-                </div>
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <p className="text-gray-600">Exchange Rate</p>
-                    <p className="font-semibold">1 USDT = ₦{USDT_RATE.toLocaleString()}</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-600">Processing</p>
-                    <p className="font-semibold text-green-600">Instant</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-600">Network Fee</p>
-                    <p className="font-semibold text-green-600">₦0</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-600">Total Cost</p>
-                    <p className="font-semibold">{fromCurrency === "NGN" ? `₦${amount || "0"}` : `${amount || "0"} USDT`}</p>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Action Buttons */}
-          <div className="flex flex-col gap-3 pt-2">
-            <Button
-              onClick={handleSwap}
-              disabled={!amount || parseFloat(amount) <= 0 || swapMutation.isPending}
-              className="w-full h-12 text-base font-semibold bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-              size="lg"
-            >
-              {swapMutation.isPending ? (
-                <div className="flex items-center gap-2">
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                  Processing Swap...
-                </div>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <ArrowUpDown className="h-5 w-5" />
-                  Swap {amount ? `${fromCurrency} ${parseFloat(amount).toLocaleString()}` : fromCurrency}
-                </div>
-              )}
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              className="w-full h-10"
-            >
-              Cancel
-            </Button>
+            {/* Action Buttons */}
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                onClick={() => setStep(1)}
+                className="flex-1"
+                disabled={swapMutation.isPending}
+              >
+                <ChevronLeft className="h-4 w-4 mr-2" />
+                Back
+              </Button>
+              <Button
+                onClick={handleConfirmSwap}
+                disabled={swapMutation.isPending}
+                className="flex-1 bg-green-600 hover:bg-green-700"
+              >
+                {swapMutation.isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                ) : (
+                  <Check className="h-4 w-4 mr-2" />
+                )}
+                {swapMutation.isPending ? "Processing..." : "Confirm Swap"}
+              </Button>
+            </div>
           </div>
-        </div>
+        )}
       </DialogContent>
     </Dialog>
   );
