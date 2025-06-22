@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -25,12 +25,18 @@ import {
 
 export function TradingDashboard() {
   const { user } = useAuth();
-  const setLocation = useLocation()[1];
+  const [, setLocation] = useLocation();
 
-  const { data: trades = [], error: tradesError } = useQuery({
+  // Force refetch when component mounts
+  useEffect(() => {
+    refetchTrades();
+  }, []);
+
+  const { data: trades = [], error: tradesError, refetch: refetchTrades } = useQuery({
     queryKey: ['/api/trades'],
     refetchInterval: 5000,
     refetchOnWindowFocus: true,
+    refetchOnMount: true,
     staleTime: 0,
   });
 
@@ -213,34 +219,34 @@ export function TradingDashboard() {
             ) : (
               <div className="space-y-3">
                 {activeTrades.slice(0, 3).map((trade: any) => (
-                  <div key={trade.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <div className="flex-1">
-                      <p className="font-medium">Trade #{trade.id}</p>
-                      <p className="text-sm text-gray-600">
-                        ${parseFloat(trade.amount).toFixed(2)} @ ₦{parseFloat(trade.rate).toLocaleString()}
-                      </p>
+                  <div key={trade.id} className="p-3 bg-gray-50 rounded-lg">
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex-1">
+                        <p className="font-medium">Trade #{trade.id}</p>
+                        <p className="text-sm text-gray-600">
+                          ${parseFloat(trade.amount).toFixed(2)} @ ₦{parseFloat(trade.rate).toLocaleString()}
+                        </p>
+                      </div>
+                      <Badge className={getStatusColor(trade.status)}>
+                        {trade.status.replace('_', ' ').toUpperCase()}
+                      </Badge>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center justify-between">
+                      {trade.paymentDeadline && (
+                        <p className="text-xs text-gray-500">
+                          <Clock className="h-3 w-3 inline mr-1" />
+                          {new Date(trade.paymentDeadline).toLocaleTimeString()}
+                        </p>
+                      )}
                       <Button 
                         size="sm" 
                         variant="outline"
                         onClick={() => setLocation(`/trade/${trade.id}`)}
-                        className="px-2 py-1 h-7"
+                        className="px-3 py-1 h-7 text-xs ml-auto"
                       >
                         <MessageCircle className="h-3 w-3 mr-1" />
-                        Contact
+                        Chat
                       </Button>
-                      <div className="text-right">
-                        <Badge className={getStatusColor(trade.status)}>
-                          {trade.status.replace('_', ' ').toUpperCase()}
-                        </Badge>
-                        {trade.paymentDeadline && (
-                          <p className="text-xs text-gray-500 mt-1">
-                            <Clock className="h-3 w-3 inline mr-1" />
-                            {new Date(trade.paymentDeadline).toLocaleTimeString()}
-                          </p>
-                        )}
-                      </div>
                     </div>
                   </div>
                 ))}
