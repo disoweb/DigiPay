@@ -42,12 +42,10 @@ export function MyOffers() {
   });
 
   const { data: offers, isLoading } = useQuery<Offer[]>({
-    queryKey: ["/api/offers", "my-offers"],
+    queryKey: [`/api/users/${user?.id}/offers`],
     queryFn: async () => {
-      const response = await apiRequest("GET", "/api/offers");
-      const allOffers = await response.json();
-      // Filter to show only current user's offers
-      return allOffers.filter((offer: Offer) => offer.userId === user?.id);
+      const response = await apiRequest("GET", `/api/users/${user?.id}/offers`);
+      return response.json();
     },
     enabled: !!user?.id,
   });
@@ -58,7 +56,7 @@ export function MyOffers() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/offers", "my-offers"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/users/${user?.id}/offers`] });
       queryClient.invalidateQueries({ queryKey: ["/api/offers"] });
       setEditingOffer(null);
       toast({
@@ -80,7 +78,7 @@ export function MyOffers() {
       await apiRequest("DELETE", `/api/offers/${id}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/offers", "my-offers"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/users/${user?.id}/offers`] });
       queryClient.invalidateQueries({ queryKey: ["/api/offers"] });
       toast({
         title: "Offer deleted",
@@ -102,7 +100,7 @@ export function MyOffers() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/offers", "my-offers"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/users/${user?.id}/offers`] });
       queryClient.invalidateQueries({ queryKey: ["/api/offers"] });
       toast({
         title: "Offer status updated",
@@ -171,7 +169,7 @@ export function MyOffers() {
             <DollarSign className="h-5 w-5" />
             My Offers
           </div>
-          <Button size="sm" onClick={() => setLocation("/create-offer")}>
+          <Button size="sm" onClick={() => setLocation("/marketplace")}>
             <Plus className="h-4 w-4 mr-2" />
             Create Offer
           </Button>
@@ -181,7 +179,7 @@ export function MyOffers() {
         {!offers || offers.length === 0 ? (
           <div className="text-center py-8">
             <p className="text-gray-500 mb-4">You haven't created any offers yet</p>
-            <Button onClick={() => setLocation("/create-offer")}>
+            <Button onClick={() => setLocation("/marketplace")}>
               <Plus className="h-4 w-4 mr-2" />
               Create Your First Offer
             </Button>

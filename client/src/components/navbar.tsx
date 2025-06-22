@@ -22,6 +22,7 @@ import {
   Settings,
   LogOut,
   Shield,
+  User,
 } from "lucide-react";
 
 export function Navbar() {
@@ -166,8 +167,12 @@ export function Navbar() {
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => setLocation("/profile-setup")}>
-                  <Settings className="mr-2 h-4 w-4" />
+                <DropdownMenuItem onClick={() => setLocation("/wallet")}>
+                  <Wallet className="mr-2 h-4 w-4" />
+                  <span>Wallet</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setLocation("/settings")}>
+                  <User className="mr-2 h-4 w-4" />
                   <span>Profile Settings</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleLogout}>

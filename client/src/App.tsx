@@ -16,6 +16,8 @@ import AdminApprovals from "@/pages/admin-approvals";
 import ProfileSetup from "@/pages/profile-setup";
 import OfferCreation from "@/pages/offer-creation";
 import Ratings from "@/pages/ratings";
+import UserProfile from "@/pages/user-profile";
+import UserSettings from "@/pages/user-settings";
 import NotFound from "@/pages/not-found";
 import ChatPage from "@/pages/chat";
 
@@ -49,7 +51,8 @@ function App() {
                 <ChatPage />
               </ProtectedRoute>
             )} />
-
+            <Route path="/user/:id" component={UserProfile} />
+            <Route path="/settings" component={UserSettings} />
             <Route component={NotFound} />
           </Switch>
 
