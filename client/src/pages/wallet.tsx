@@ -6,6 +6,7 @@ import { Navbar } from "@/components/navbar";
 import { DepositModal } from "@/components/deposit-modal";
 import { WithdrawModal } from "@/components/withdraw-modal";
 import { KYCVerification } from "@/components/kyc-verification";
+import { TransactionDetailModal } from "@/components/transaction-detail-modal";
 
 // SendUSDTForm component for handling USDT transfers
 function SendUSDTForm({ onClose, userBalance }: { onClose: () => void; userBalance: number }) {
@@ -236,6 +237,8 @@ export default function Wallet() {
   const [showWithdraw, setShowWithdraw] = useState(false);
   const [showReceive, setShowReceive] = useState(false);
   const [showSendUSDT, setShowSendUSDT] = useState(false);
+  const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
+  const [showTransactionModal, setShowTransactionModal] = useState(false);
 
   const { data: transactions = [] } = useQuery<Transaction[]>({
     queryKey: ["/api/transactions"],
@@ -452,7 +455,14 @@ export default function Wallet() {
               ) : (
                 <div className="divide-y divide-gray-100">
                   {transactions.slice(0, 5).map((transaction) => (
-                    <div key={transaction.id} className="p-4 hover:bg-gray-50 transition-colors">
+                    <div 
+                      key={transaction.id} 
+                      className="p-4 hover:bg-gray-50 transition-colors cursor-pointer"
+                      onClick={() => {
+                        setSelectedTransaction(transaction);
+                        setShowTransactionModal(true);
+                      }}
+                    >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-3">
                           <div className={`p-2 rounded-full ${
@@ -494,7 +504,15 @@ export default function Wallet() {
                   ))}
                   {transactions.length > 5 && (
                     <div className="p-4 text-center border-t">
-                      <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="text-blue-600 hover:text-blue-700"
+                        onClick={() => {
+                          // Show all transactions in modal or expand view
+                          console.log('Show all transactions');
+                        }}
+                      >
                         View All Transactions
                       </Button>
                     </div>

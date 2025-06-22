@@ -162,19 +162,7 @@ export class DatabaseStorage implements IStorage {
         });
       }
 
-      // Add ₦100,000 to all users for testing
-      const allUsers = await db.select().from(users);
-      for (const user of allUsers) {
-        const currentNaira = parseFloat(user.nairaBalance || "0");
-        const currentUsdt = parseFloat(user.usdtBalance || "0");
-        const newNairaBalance = currentNaira + 100000;
-
-        await this.updateUser(user.id, {
-          nairaBalance: newNairaBalance.toString(),
-          usdtBalance: Math.max(currentUsdt, 100).toFixed(2)
-        });
-        console.log(`✅ Added ₦100,000 to ${user.email} - New balance: ₦${newNairaBalance.toLocaleString()}`);
-      }
+      // Removed automatic balance seeding to prevent unwanted fund additions
 
       // Create additional test users for offers
       let testUser1 = await this.getUserByEmail("trader1@example.com");

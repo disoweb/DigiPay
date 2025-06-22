@@ -25,10 +25,13 @@ import {
   Inbox
 } from "lucide-react";
 import { MessagingSystem } from "@/components/messaging-system";
+import { TransactionDetailModal } from "@/components/transaction-detail-modal";
 
 export function TradingDashboard() {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
+  const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
+  const [showTransactionModal, setShowTransactionModal] = useState(false);
 
   const { data: trades = [], error: tradesError, refetch: refetchTrades, isLoading: tradesLoading } = useQuery({
     queryKey: ['/api/trades'],
@@ -467,7 +470,14 @@ export function TradingDashboard() {
           ) : (
             <div className="space-y-3">
               {transactions.slice(0, 5).map((transaction: any) => (
-                <div key={transaction.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 transition-colors">
+                <div 
+                  key={transaction.id} 
+                  className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
+                  onClick={() => {
+                    setSelectedTransaction(transaction);
+                    setShowTransactionModal(true);
+                  }}
+                >
                   <div className="flex items-center space-x-3">
                     <div className={`p-2 rounded-full ${
                       transaction.type === "deposit" 
@@ -821,6 +831,14 @@ export function TradingDashboard() {
           )}
         </CardContent>
       </Card>
+      <TransactionDetailModal
+        transaction={selectedTransaction}
+        isOpen={showTransactionModal}
+        onClose={() => {
+          setShowTransactionModal(false);
+          setSelectedTransaction(null);
+        }}
+      />
     </div>
   );
 }
