@@ -39,9 +39,15 @@ export function MyOffers() {
     status: "active"
   });
 
-  const { data: offers, isLoading } = useQuery<Offer[]>({
+  const { data: offers, isLoading, error } = useQuery<Offer[]>({
     queryKey: [`/api/users/${user?.id}/offers`],
     enabled: !!user?.id,
+    queryFn: async () => {
+      const response = await apiRequest("GET", `/api/users/${user?.id}/offers`);
+      const data = await response.json();
+      console.log("My offers data:", data);
+      return data;
+    },
   });
 
   const updateOfferMutation = useMutation({
@@ -155,6 +161,19 @@ export function MyOffers() {
     );
   }
 
+  if (error) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>My Offers</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-red-500">Error loading offers: {error.message}</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -163,7 +182,7 @@ export function MyOffers() {
             <DollarSign className="h-5 w-5" />
             My Offers
           </div>
-          <Button size="sm" onClick={() => window.location.href = "/create-offer"}>
+          <Button size="sm" onClick={() => window.location.href = "/offer-creation"}>
             <Plus className="h-4 w-4 mr-2" />
             Create Offer
           </Button>
@@ -173,7 +192,7 @@ export function MyOffers() {
         {!offers || offers.length === 0 ? (
           <div className="text-center py-8">
             <p className="text-gray-500 mb-4">You haven't created any offers yet</p>
-            <Button onClick={() => window.location.href = "/create-offer"}>
+            <Button onClick={() => window.location.href = "/offer-creation"}>
               <Plus className="h-4 w-4 mr-2" />
               Create Your First Offer
             </Button>

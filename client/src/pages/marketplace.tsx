@@ -32,7 +32,7 @@ export default function Marketplace() {
               <p className="text-gray-600 text-sm sm:text-base">Trade USDT/Naira with verified users instantly</p>
             </div>
             <Button 
-              onClick={() => setLocation("/create-offer")} 
+              onClick={() => setLocation("/offer-creation")} 
               size="lg" 
               className="w-full sm:w-auto flex-shrink-0"
             >
