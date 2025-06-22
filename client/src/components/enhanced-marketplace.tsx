@@ -351,142 +351,168 @@ export function EnhancedMarketplace() {
         </CardContent>
       </Card>
 
-      {/* Filters and Search */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Filter className="h-5 w-5" />
-            Filters & Search
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1">
-              <Label htmlFor="search">Search Traders</Label>
-              <div className="relative">
-                <Search className="h-4 w-4 absolute left-3 top-3 text-gray-400" />
-                <Input
-                  id="search"
-                  placeholder="Search by trader email..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-            </div>
-            <div className="md:w-48">
-              <Label>Payment Method</Label>
-              <Select value={filters.paymentMethod} onValueChange={(value) => 
-                setFilters(prev => ({ ...prev, paymentMethod: value }))
-              }>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Methods</SelectItem>
-                  <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
-                  <SelectItem value="mobile_money">Mobile Money</SelectItem>
-                  <SelectItem value="digital_wallet">Digital Wallet</SelectItem>
-                  <SelectItem value="card_payment">Card Payment</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div>
-              <Label htmlFor="minAmount">Min Amount (USDT)</Label>
-              <Input
-                id="minAmount"
-                type="number"
-                placeholder="0"
-                value={filters.minAmount}
-                onChange={(e) => setFilters(prev => ({ ...prev, minAmount: e.target.value }))}
-              />
-            </div>
-            <div>
-              <Label htmlFor="maxAmount">Max Amount (USDT)</Label>
-              <Input
-                id="maxAmount"
-                type="number"
-                placeholder="∞"
-                value={filters.maxAmount}
-                onChange={(e) => setFilters(prev => ({ ...prev, maxAmount: e.target.value }))}
-              />
-            </div>
-            <div>
-              <Label htmlFor="minRate">Min Rate (₦)</Label>
-              <Input
-                id="minRate"
-                type="number"
-                placeholder="0"
-                value={filters.minRate}
-                onChange={(e) => setFilters(prev => ({ ...prev, minRate: e.target.value }))}
-              />
-            </div>
-            <div>
-              <Label htmlFor="maxRate">Max Rate (₦)</Label>
-              <Input
-                id="maxRate"
-                type="number"
-                placeholder="∞"
-                value={filters.maxRate}
-                onChange={(e) => setFilters(prev => ({ ...prev, maxRate: e.target.value }))}
-              />
-            </div>
-          </div>
-
-          <div className="flex flex-wrap gap-4 items-center">
-            <div className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                id="verifiedOnly"
-                checked={filters.verifiedOnly}
-                onChange={(e) => setFilters(prev => ({ ...prev, verifiedOnly: e.target.checked }))}
-                className="w-4 h-4"
-              />
-              <Label htmlFor="verifiedOnly">Verified traders only</Label>
-            </div>
-
-            <Select value={filters.sortBy} onValueChange={(value) => 
-              setFilters(prev => ({ ...prev, sortBy: value }))
-            }>
-              <SelectTrigger className="w-32">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="rate">Sort by Rate</SelectItem>
-                <SelectItem value="amount">Sort by Amount</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setFilters(prev => ({ 
-                ...prev, 
-                sortOrder: prev.sortOrder === 'asc' ? 'desc' : 'asc' 
-              }))}
-            >
-              {filters.sortOrder === 'asc' ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
-              {filters.sortOrder === 'asc' ? 'Low to High' : 'High to Low'}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Offers Tabs */}
       <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'buy' | 'sell')}>
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="buy" className="flex items-center gap-2">
+        <TabsList className="grid w-full grid-cols-2 h-12 p-1 bg-gray-100 rounded-xl">
+          <TabsTrigger 
+            value="buy" 
+            className="flex items-center justify-center gap-2 h-10 rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm font-medium"
+          >
             <TrendingUp className="h-4 w-4" />
-            Buy USDT ({buyTabCount} offers)
+            <span className="hidden sm:inline">Buy USDT</span>
+            <span className="sm:hidden">Buy</span>
+            <span className="text-xs bg-gray-200 px-1.5 py-0.5 rounded-full">
+              {buyTabCount}
+            </span>
           </TabsTrigger>
-          <TabsTrigger value="sell" className="flex items-center gap-2">
+          <TabsTrigger 
+            value="sell" 
+            className="flex items-center justify-center gap-2 h-10 rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm font-medium"
+          >
             <TrendingDown className="h-4 w-4" />
-            Sell USDT ({sellTabCount} offers)
+            <span className="hidden sm:inline">Sell USDT</span>
+            <span className="sm:hidden">Sell</span>
+            <span className="text-xs bg-gray-200 px-1.5 py-0.5 rounded-full">
+              {sellTabCount}
+            </span>
           </TabsTrigger>
         </TabsList>
+
+        {/* Mobile-First Search & Filters */}
+        <Card className="mt-4">
+          <CardContent className="p-4 space-y-4">
+            {/* Search Bar - Priority on mobile */}
+            <div className="relative">
+              <Search className="h-4 w-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <Input
+                placeholder="Search traders..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 h-12 text-base border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+              />
+            </div>
+
+            {/* Collapsible Advanced Filters */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-gray-700">Filters</span>
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => setFilters({
+                    paymentMethod: 'all',
+                    minAmount: '',
+                    maxAmount: '',
+                    minRate: '',
+                    maxRate: '',
+                    verifiedOnly: false,
+                    sortBy: 'rate',
+                    sortOrder: 'asc'
+                  })}
+                  className="text-xs text-gray-500 hover:text-gray-700"
+                >
+                  Reset
+                </Button>
+              </div>
+
+              {/* Quick Filter Chips */}
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  variant={filters.verifiedOnly ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setFilters(prev => ({ ...prev, verifiedOnly: !prev.verifiedOnly }))}
+                  className="h-8 text-xs"
+                >
+                  <Shield className="h-3 w-3 mr-1" />
+                  Verified Only
+                </Button>
+                <Select value={filters.paymentMethod} onValueChange={(value) => 
+                  setFilters(prev => ({ ...prev, paymentMethod: value }))
+                }>
+                  <SelectTrigger className="w-auto h-8 text-xs">
+                    <SelectValue placeholder="Payment Method" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Methods</SelectItem>
+                    <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
+                    <SelectItem value="mobile_money">Mobile Money</SelectItem>
+                    <SelectItem value="digital_wallet">Digital Wallet</SelectItem>
+                    <SelectItem value="card_payment">Card Payment</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setFilters(prev => ({ 
+                    ...prev, 
+                    sortOrder: prev.sortOrder === 'asc' ? 'desc' : 'asc' 
+                  }))}
+                  className="h-8 text-xs"
+                >
+                  {filters.sortOrder === 'asc' ? <TrendingUp className="h-3 w-3 mr-1" /> : <TrendingDown className="h-3 w-3 mr-1" />}
+                  {filters.sortBy === 'rate' ? 'Rate' : 'Amount'} 
+                  {filters.sortOrder === 'asc' ? ' ↑' : ' ↓'}
+                </Button>
+              </div>
+
+              {/* Amount & Rate Filters - Collapsible on mobile */}
+              <details className="group">
+                <summary className="flex items-center justify-between cursor-pointer text-sm text-gray-600 hover:text-gray-800">
+                  <span>Amount & Rate Filters</span>
+                  <svg className="h-4 w-4 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </summary>
+                <div className="mt-3 space-y-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <Label className="text-xs text-gray-600">Min Amount (USDT)</Label>
+                      <Input
+                        type="number"
+                        placeholder="0"
+                        value={filters.minAmount}
+                        onChange={(e) => setFilters(prev => ({ ...prev, minAmount: e.target.value }))}
+                        className="h-10 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs text-gray-600">Max Amount (USDT)</Label>
+                      <Input
+                        type="number"
+                        placeholder="∞"
+                        value={filters.maxAmount}
+                        onChange={(e) => setFilters(prev => ({ ...prev, maxAmount: e.target.value }))}
+                        className="h-10 text-sm"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <Label className="text-xs text-gray-600">Min Rate (₦)</Label>
+                      <Input
+                        type="number"
+                        placeholder="0"
+                        value={filters.minRate}
+                        onChange={(e) => setFilters(prev => ({ ...prev, minRate: e.target.value }))}
+                        className="h-10 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs text-gray-600">Max Rate (₦)</Label>
+                      <Input
+                        type="number"
+                        placeholder="∞"
+                        value={filters.maxRate}
+                        onChange={(e) => setFilters(prev => ({ ...prev, maxRate: e.target.value }))}
+                        className="h-10 text-sm"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </details>
+            </div>
+          </CardContent>
+        </Card>
 
         <TabsContent value="buy" className="space-y-4">
           {filteredOffers.length === 0 ? (
