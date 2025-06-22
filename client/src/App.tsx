@@ -18,6 +18,8 @@ import ProfileSetup from "@/pages/profile-setup";
 import OfferCreation from "@/pages/offer-creation";
 import Ratings from "@/pages/ratings";
 import NotFound from "@/pages/not-found";
+import VerifyEmailPage from "@/pages/verify-email-page";
+import PaymentMethodsPage from "@/pages/payment-methods-page"; // Added
 
 const queryClient = new QueryClient();
 
@@ -29,12 +31,14 @@ function App() {
           <Switch>
             <Route path="/" component={LandingPage} />
             <Route path="/auth" component={AuthPage} />
+            <Route path="/verify-email" component={VerifyEmailPage} />
             
             <ProtectedRoute path="/dashboard" component={Dashboard} />
             <ProtectedRoute path="/marketplace" component={Marketplace} />
             <ProtectedRoute path="/trades" component={Trades} />
             <ProtectedRoute path="/trades/:id" component={TradeDetail} />
             <ProtectedRoute path="/wallet" component={Wallet} />
+            <ProtectedRoute path="/payment-methods" component={PaymentMethodsPage} /> {/* Added */}
             <ProtectedRoute path="/ratings" component={Ratings} />
             <ProtectedRoute path="/admin" component={Admin} adminOnly />
             <ProtectedRoute path="/admin/approvals" component={AdminApprovals} adminOnly />

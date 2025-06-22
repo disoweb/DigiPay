@@ -1,21 +1,24 @@
 import { 
   users, offers, trades, messages, transactions, ratings,
+  users, offers, trades, messages, transactions, ratings, paymentMethods,
   type User, type InsertUser, type Offer, type InsertOffer,
   type Trade, type InsertTrade, type Message, type InsertMessage,
-  type Transaction, type InsertTransaction, type Rating, type InsertRating
+  type Transaction, type InsertTransaction, type Rating, type InsertRating,
+  type PaymentMethod, type InsertPaymentMethod
 } from "@shared/schema";
 import session from "express-session";
-import connectPg from "connect-pg-simple";
+import connectPgSimple from "connect-pg-simple";
 import { db, pool } from "./db";
 import { eq, desc, or, and } from "drizzle-orm";
 import bcrypt from "bcrypt";
 
-const PostgresSessionStore = connectPg(session);
+const PostgresSessionStore = connectPgSimple(session);
 
 export interface IStorage {
   // User methods
   getUser(id: number): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
+  getUserByVerificationToken(token: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: number, updates: Partial<User>): Promise<User | undefined>;
 
@@ -56,6 +59,14 @@ export interface IStorage {
   getUserProfile(id: number): Promise<User | undefined>;
   getUserTrades(id: number): Promise<Trade[]>;
   getUserPublicRatings(id: number): Promise<any[]>;
+
+  // PaymentMethod methods
+  getUserPaymentMethods(userId: number): Promise<PaymentMethod[]>;
+  getPaymentMethod(id: number, userId: number): Promise<PaymentMethod | undefined>;
+  createPaymentMethod(userId: number, paymentMethodData: InsertPaymentMethod): Promise<PaymentMethod>;
+  updatePaymentMethod(id: number, userId: number, updates: Partial<PaymentMethod>): Promise<PaymentMethod | undefined>;
+  deletePaymentMethod(id: number, userId: number): Promise<{ success: boolean }>;
+
 
   sessionStore: any;
 }
@@ -278,7 +289,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUserByEmail(email: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.email, email));
+    const [user] = await db.select().from(users).where(eq(users.email, email.toLowerCase()));
+    return user || undefined;
+  }
+
+  async getUserByVerificationToken(token: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.emailVerificationToken, token));
     return user || undefined;
   }
 
@@ -601,6 +617,53 @@ export class DatabaseStorage implements IStorage {
       .limit(20);
 
     return tradesResult as EnrichedTrade[];
+  }
+
+  // PaymentMethod methods
+  async getUserPaymentMethods(userId: number): Promise<PaymentMethod[]> {
+    return db.select().from(paymentMethods).where(eq(paymentMethods.userId, userId)).orderBy(desc(paymentMethods.createdAt));
+  }
+
+  async getPaymentMethod(id: number, userId: number): Promise<PaymentMethod | undefined> {
+    const [result] = await db.select().from(paymentMethods).where(and(eq(paymentMethods.id, id), eq(paymentMethods.userId, userId)));
+    return result;
+  }
+
+  async createPaymentMethod(userId: number, paymentMethodData: InsertPaymentMethod): Promise<PaymentMethod> {
+    const [newPaymentMethod] = await db
+      .insert(paymentMethods)
+      .values({
+        ...paymentMethodData,
+        userId,
+        // 'details' should be part of paymentMethodData and correctly typed as per schema (JSON)
+        // Ensure paymentMethodData.details is a JS object if your schema expects jsonb/text for details
+        details: typeof paymentMethodData.details === 'string' ? JSON.parse(paymentMethodData.details) : paymentMethodData.details,
+      })
+      .returning();
+    return newPaymentMethod;
+  }
+
+  async updatePaymentMethod(id: number, userId: number, updates: Partial<PaymentMethod>): Promise<PaymentMethod | undefined> {
+     // Ensure 'details' is properly handled if it's a string that needs parsing, or already an object
+    if (updates.details && typeof updates.details === 'string') {
+      try {
+        updates.details = JSON.parse(updates.details);
+      } catch (e) {
+        console.error("Error parsing details JSON string in updatePaymentMethod:", e);
+        throw new Error("Invalid JSON format for payment method details.");
+      }
+    }
+    const [updatedPaymentMethod] = await db
+      .update(paymentMethods)
+      .set(updates)
+      .where(and(eq(paymentMethods.id, id), eq(paymentMethods.userId, userId)))
+      .returning();
+    return updatedPaymentMethod;
+  }
+
+  async deletePaymentMethod(id: number, userId: number): Promise<{ success: boolean }> {
+    const result = await db.delete(paymentMethods).where(and(eq(paymentMethods.id, id), eq(paymentMethods.userId, userId)));
+    return { success: result.rowCount > 0 };
   }
 
 }

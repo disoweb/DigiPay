@@ -15,6 +15,10 @@ export const users = pgTable("users", {
   averageRating: decimal("average_rating", { precision: 3, scale: 2 }).default("0"),
   ratingCount: integer("rating_count").default(0),
   isAdmin: boolean("is_admin").default(false),
+  emailVerified: boolean("email_verified").default(false),
+  emailVerificationToken: text("email_verification_token"),
+  emailVerificationTokenExpiresAt: timestamp("email_verification_token_expires_at"),
+  geographicRegion: text("geographic_region"), // Added field for geographic region
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -133,6 +137,7 @@ export const insertUserSchema = createInsertSchema(users).omit({
   averageRating: z.string().optional(),
   ratingCount: z.number().optional(),
   isAdmin: z.boolean().optional(),
+  geographicRegion: z.string().optional(), // Added to Zod schema
 });
 
 export const insertOfferSchema = createInsertSchema(offers).omit({
@@ -172,9 +177,29 @@ export const insertRatingSchema = createInsertSchema(ratings).omit({
   createdAt: true,
 });
 
+export const insertPaymentMethodSchema = createInsertSchema(paymentMethods, {
+  // For now, allowing any JSON object for details.
+  // This can be refined per payment method type (e.g., bank_transfer, digital_wallet)
+  // using Zod unions if specific structures are needed for validation.
+  details: z.custom<Record<string, any>>((data) => typeof data === 'object' && data !== null, {
+    message: "Details must be a valid JSON object",
+  }).optional(), // Making details optional here, but can be required by specific endpoint logic
+}).omit({
+  id: true, // Auto-generated
+  userId: true, // Will be set from the authenticated user context
+  isVerified: true, // Defaulted in DB or handled by an admin process later
+  isActive: true, // Defaulted in DB, can be updated
+  createdAt: true, // Auto-generated
+});
+
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
+
+export type PaymentMethod = typeof paymentMethods.$inferSelect;
+export type InsertPaymentMethod = z.infer<typeof insertPaymentMethodSchema>;
+
 export type Offer = typeof offers.$inferSelect;
 export type InsertOffer = z.infer<typeof insertOfferSchema>;
 export type Trade = typeof trades.$inferSelect;

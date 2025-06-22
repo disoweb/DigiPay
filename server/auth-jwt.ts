@@ -7,7 +7,8 @@ import type { Express, Request, Response, NextFunction } from "express";
 import { storage } from "./storage";
 import { tronService } from "./services/tron";
 import { emailService } from "./services/notifications";
-import type { User as SelectUser } from "@shared/schema";
+import type { User as SelectUser, InsertUser } from "@shared/schema";
+import crypto from 'crypto';
 
 declare global {
   namespace Express {
@@ -159,7 +160,10 @@ export function setupJWTAuth(app: Express) {
       const wallet = tronService.generateWallet();
       const hashedPassword = await hashPassword(password);
       
-      const user = await storage.createUser({
+      const verificationToken = crypto.randomBytes(32).toString('hex');
+      const verificationTokenExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+      const newUserInput: InsertUser = {
         email: email.toLowerCase(),
         password: hashedPassword,
         phone: phone || null,
@@ -171,34 +175,88 @@ export function setupJWTAuth(app: Express) {
         averageRating: "0",
         ratingCount: 0,
         isAdmin: false,
-      });
+        emailVerified: false,
+        emailVerificationToken: verificationToken,
+        emailVerificationTokenExpiresAt: verificationTokenExpiresAt,
+      };
+
+      const user = await storage.createUser(newUserInput);
 
       try {
+        const verificationLink = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/verify-email?token=${verificationToken}`;
         await emailService.sendEmail(
           user.email,
-          "Welcome to DigiPay - P2P USDT Trading Platform",
+          "Verify Your Email Address - DigiPay",
           `
           <h2>Welcome to DigiPay!</h2>
-          <p>Your account has been created successfully.</p>
+          <p>Your account has been created successfully. Please verify your email address to activate your account.</p>
+          <p>Click this link to verify your email: <a href="${verificationLink}">${verificationLink}</a></p>
+          <p>This link will expire in 24 hours.</p>
           <p><strong>TRON Wallet Address:</strong> ${wallet.address}</p>
-          <p>To start trading, please complete your KYC verification in your dashboard.</p>
           <p>Thank you for choosing DigiPay for secure P2P cryptocurrency trading.</p>
           `
         );
       } catch (emailError) {
-        console.error("Welcome email failed:", emailError);
+        console.error("Verification email failed:", emailError);
+        // Optionally, handle this error, e.g., by informing the user or logging more details.
       }
-
-      const token = generateToken(user);
-      const { password: _, ...userWithoutPassword } = user;
       
+      // Do not generate and send JWT token until email is verified.
+      // Send a success message indicating that a verification email has been sent.
       res.status(201).json({ 
-        ...userWithoutPassword, 
-        token 
+        message: "Registration successful. Please check your email to verify your account.",
+        userId: user.id
       });
     } catch (error) {
       console.error("Registration error:", error);
       res.status(500).json({ error: "Registration failed" });
+    }
+  });
+
+  // Email Verification Endpoint
+  app.get("/api/auth/verify-email", async (req: Request, res: Response) => {
+    try {
+      const { token } = req.query;
+
+      if (!token || typeof token !== 'string') {
+        return res.status(400).json({ error: "Verification token is required." });
+      }
+
+      const user = await storage.getUserByVerificationToken(token);
+
+      if (!user) {
+        return res.status(400).json({ error: "Invalid or expired verification token." });
+      }
+
+      if (user.emailVerified) {
+        return res.status(200).json({ message: "Email already verified." });
+      }
+
+      if (user.emailVerificationTokenExpiresAt && new Date(user.emailVerificationTokenExpiresAt) < new Date()) {
+        // Token expired, allow resend? For now, just error.
+        // Optionally, could generate a new token and resend email here.
+        return res.status(400).json({ error: "Verification token has expired. Please request a new one." });
+      }
+
+      await storage.updateUser(user.id, {
+        emailVerified: true,
+        emailVerificationToken: null, // Clear token after use
+        emailVerificationTokenExpiresAt: null,
+      });
+
+      // Optionally, log the user in directly by generating a JWT token
+      const jwtToken = generateToken(user);
+      const { password: _, ...userWithoutPassword } = user;
+
+      res.status(200).json({
+        message: "Email verified successfully.",
+        user: userWithoutPassword,
+        token: jwtToken
+      });
+
+    } catch (error) {
+      console.error("Email verification error:", error);
+      res.status(500).json({ error: "Email verification failed." });
     }
   });
 
@@ -214,6 +272,14 @@ export function setupJWTAuth(app: Express) {
       const user = await storage.getUserByEmail(email.toLowerCase());
       if (!user) {
         return res.status(401).json({ error: "Invalid email or password" });
+      }
+
+      if (!user.emailVerified) {
+        return res.status(401).json({
+          error: "Email not verified. Please check your email to verify your account.",
+          emailNotVerified: true,
+          userId: user.id // Useful for a "resend verification" feature
+        });
       }
 
       const isValidPassword = await comparePasswords(password, user.password);

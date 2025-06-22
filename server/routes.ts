@@ -1,8 +1,17 @@
-import type { Express } from "express";
+import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { setupJWTAuth, authenticateToken, requireKYC, requireAdmin } from "./auth-jwt";
 import { storage } from "./storage";
-import { insertOfferSchema, insertTradeSchema, insertMessageSchema, insertTransactionSchema, insertRatingSchema } from "@shared/schema";
+import {
+  insertOfferSchema,
+  insertTradeSchema,
+  insertMessageSchema,
+  insertTransactionSchema,
+  insertRatingSchema,
+  insertPaymentMethodSchema,
+  type User as SharedUser, // Added for typing
+  type PaymentMethod as SharedPaymentMethod
+} from "@shared/schema";
 import { youVerifyService } from "./services/youverify";
 import { paystackService } from "./services/paystack";
 import { tronService } from "./services/tron";
@@ -961,30 +970,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/user/profile-setup", authenticateToken, async (req, res) => {
     try {
       const userId = req.user!.id;
-      const { fullName, location, bio, preferredPaymentMethods, tradingHours } = req.body;
+      const { fullName, location, bio, preferredPaymentMethods, tradingHours, geographicRegion } = req.body;
 
-      console.log("Profile setup request:", { fullName, location, bio, preferredPaymentMethods, tradingHours });
+      console.log("Profile setup request:", { fullName, location, bio, preferredPaymentMethods, tradingHours, geographicRegion });
 
-      const updates: any = {};
-      if (fullName) updates.fullName = fullName;
-      if (location) updates.location = location;
-      if (bio) updates.bio = bio;
-      if (preferredPaymentMethods && Array.isArray(preferredPaymentMethods)) {
-        updates.preferredPaymentMethods = JSON.stringify(preferredPaymentMethods);
-      }
-      if (tradingHours) {
-        updates.tradingHours = JSON.stringify(tradingHours);
+      const updates: Partial<SharedUser> = {}; // Use SharedUser type
+      if (fullName !== undefined) updates.fullName = fullName; // Assuming fullName is a field in User
+      if (location !== undefined) updates.location = location; // Assuming location is a field in User
+      if (bio !== undefined) updates.bio = bio; // Assuming bio is a field in User
+      if (geographicRegion !== undefined) updates.geographicRegion = geographicRegion;
+
+      // These fields are not directly on the user model based on current schema,
+      // they might be stored differently or this endpoint needs adjustment
+      // if (preferredPaymentMethods && Array.isArray(preferredPaymentMethods)) {
+      //   (updates as any).preferredPaymentMethods = JSON.stringify(preferredPaymentMethods);
+      // }
+      // if (tradingHours) {
+      //  (updates as any).tradingHours = JSON.stringify(tradingHours);
+      // }
+
+      if (Object.keys(updates).length === 0) {
+        return res.status(400).json({ error: "No valid fields to update." });
       }
 
       const updatedUser = await storage.updateUser(userId, updates);
-      console.log("Profile updated successfully:", updatedUser?.id);
+      if (!updatedUser) {
+        return res.status(404).json({ error: "User not found or update failed." });
+      }
 
-      res.json({ success: true, message: "Profile setup completed successfully" });
+      console.log("Profile updated successfully for user ID:", updatedUser?.id);
+      const { password: _, ...userWithoutPassword } = updatedUser;
+      res.json({ success: true, message: "Profile setup completed successfully", user: userWithoutPassword });
+
     } catch (error) {
       console.error("Profile setup error:", error);
-      res.status(500).json({ error: "Failed to setup profile" });
+      res.status(500).json({ error: "Failed to setup profile", details: (error as Error).message });
     }
   });
+
+  // Endpoint to specifically update geographic region
+  app.put("/api/user/region", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.id;
+      const { geographicRegion } = req.body;
+
+      if (typeof geographicRegion !== 'string' || geographicRegion.trim() === '') {
+        return res.status(400).json({ error: "Geographic region must be a non-empty string." });
+      }
+
+      const updatedUser = await storage.updateUser(userId, { geographicRegion });
+
+      if (!updatedUser) {
+        return res.status(404).json({ error: "User not found or update failed" });
+      }
+
+      const { password: _, ...userWithoutPassword } = updatedUser;
+      res.json({ success: true, message: "Geographic region updated successfully.", user: userWithoutPassword });
+
+    } catch (error) {
+      console.error("Update geographic region error:", error);
+      res.status(500).json({ error: "Failed to update geographic region", details: (error as Error).message });
+    }
+  });
+
 
   // Enhanced offer creation endpoint
   app.post("/api/offers", authenticateToken, async (req, res) => {
@@ -2023,9 +2071,124 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(trades);
     } catch (error) {
       console.error("Error fetching trades:", error);
-      res.status(500).json({ error: "Failed to fetch trades", details: error.message });
+      res.status(500).json({ error: "Failed to fetch trades", details: (error as Error).message });
     }
   });
+
+  // Payment Methods CRUD
+  // Create a new payment method
+  app.post("/api/payment-methods", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.id;
+      // Validate request body against Zod schema
+      const parsedBody = insertPaymentMethodSchema.safeParse(req.body);
+      if (!parsedBody.success) {
+        return res.status(400).json({ error: "Invalid payment method data", details: parsedBody.error.format() });
+      }
+
+      const paymentMethodData = parsedBody.data;
+
+      // Ensure 'details' is an object if provided, or default to empty object if schema allows undefined
+      const detailsObject = paymentMethodData.details || {};
+
+      const newPaymentMethod = await storage.createPaymentMethod(userId, {
+        ...paymentMethodData,
+        details: detailsObject, // Pass the object directly
+      } as InsertPaymentMethod); // Type assertion if necessary for 'details'
+
+      res.status(201).json(newPaymentMethod);
+    } catch (error) {
+      console.error("Create payment method error:", error);
+      res.status(500).json({ error: "Failed to create payment method", details: (error as Error).message });
+    }
+  });
+
+  // Get all payment methods for the authenticated user
+  app.get("/api/payment-methods", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.id;
+      const paymentMethods = await storage.getUserPaymentMethods(userId);
+      res.json(paymentMethods);
+    } catch (error) {
+      console.error("Get payment methods error:", error);
+      res.status(500).json({ error: "Failed to fetch payment methods", details: (error as Error).message });
+    }
+  });
+
+  // Get a specific payment method
+  app.get("/api/payment-methods/:id", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.id;
+      const paymentMethodId = parseInt(req.params.id, 10);
+      if (isNaN(paymentMethodId)) {
+        return res.status(400).json({ error: "Invalid payment method ID" });
+      }
+      const paymentMethod = await storage.getPaymentMethod(paymentMethodId, userId);
+      if (!paymentMethod) {
+        return res.status(404).json({ error: "Payment method not found" });
+      }
+      res.json(paymentMethod);
+    } catch (error) {
+      console.error("Get specific payment method error:", error);
+      res.status(500).json({ error: "Failed to fetch payment method", details: (error as Error).message });
+    }
+  });
+
+  // Update a payment method
+  app.put("/api/payment-methods/:id", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.id;
+      const paymentMethodId = parseInt(req.params.id, 10);
+      if (isNaN(paymentMethodId)) {
+        return res.status(400).json({ error: "Invalid payment method ID" });
+      }
+
+      // For PUT, we might expect the full object or allow partial updates.
+      // Here, we'll treat it as partial for flexibility, similar to PATCH.
+      // Zod schema for updates could be different if strict full replacement is needed.
+      const updates: Partial<SharedPaymentMethod> = req.body;
+
+      // Validate specific fields if necessary, e.g. using a separate Zod schema for updates.
+      // For now, we pass through, storage method handles parsing 'details' if it's a string.
+      if (updates.details && typeof updates.details === 'string') {
+        try {
+            updates.details = JSON.parse(updates.details);
+        } catch (e) {
+            return res.status(400).json({ error: "Invalid JSON format for payment method details."});
+        }
+      }
+
+
+      const updatedPaymentMethod = await storage.updatePaymentMethod(paymentMethodId, userId, updates);
+      if (!updatedPaymentMethod) {
+        return res.status(404).json({ error: "Payment method not found or update failed" });
+      }
+      res.json(updatedPaymentMethod);
+    } catch (error) {
+      console.error("Update payment method error:", error);
+      res.status(500).json({ error: "Failed to update payment method", details: (error as Error).message });
+    }
+  });
+
+  // Delete a payment method
+  app.delete("/api/payment-methods/:id", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.id;
+      const paymentMethodId = parseInt(req.params.id, 10);
+      if (isNaN(paymentMethodId)) {
+        return res.status(400).json({ error: "Invalid payment method ID" });
+      }
+      const result = await storage.deletePaymentMethod(paymentMethodId, userId);
+      if (!result.success) {
+        return res.status(404).json({ error: "Payment method not found or could not be deleted" });
+      }
+      res.status(204).send(); // No content
+    } catch (error) {
+      console.error("Delete payment method error:", error);
+      res.status(500).json({ error: "Failed to delete payment method", details: (error as Error).message });
+    }
+  });
+
 
   return httpServer;
 }

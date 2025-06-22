@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,26 +19,42 @@ export default function AuthPage() {
     phone: "",
     bvn: "",
   });
+  const [apiMessage, setApiMessage] = useState<{type: 'success' | 'error', content: string} | null>(null);
+
 
   // Redirect if already logged in
-  React.useEffect(() => {
+  useEffect(() => {
     if (user) {
-      setLocation("/dashboard");
+      setLocation(user.isAdmin ? "/admin" : "/dashboard", { replace: true });
     }
   }, [user, setLocation]);
 
-  if (user) {
-    return null; // Prevent rendering while redirecting
-  }
-
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    loginMutation.mutate(loginForm);
+    setApiMessage(null);
+    try {
+      await loginMutation.mutateAsync(loginForm);
+      // onSuccess in useAuth will redirect
+    } catch (error: any) {
+      setApiMessage({type: 'error', content: error.message || "Login failed."});
+    }
   };
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    registerMutation.mutate(registerForm);
+    setApiMessage(null);
+    try {
+      const response = await registerMutation.mutateAsync(registerForm);
+      // response from server/auth-jwt.ts for register is { message: "...", userId: ... }
+      if (response && response.message) {
+        setApiMessage({type: 'success', content: response.message});
+      } else {
+        setApiMessage({type: 'success', content: "Registration submitted. Please check your email."});
+      }
+      setRegisterForm({ email: "", password: "", phone: "", bvn: "" }); // Clear form
+    } catch (error: any) {
+      setApiMessage({type: 'error', content: error.message || "Registration failed."});
+    }
   };
 
   return (
@@ -53,6 +70,21 @@ export default function AuthPage() {
             <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">Welcome to DigiPay</h1>
             <p className="text-sm sm:text-base text-gray-600">Nigeria's Most Trusted P2P Trading Platform</p>
           </div>
+
+          {apiMessage && (
+            <Alert variant={apiMessage.type === 'error' ? 'destructive' : 'default'} className={apiMessage.type === 'success' ? 'bg-green-50 border-green-500 text-green-700' : ''}>
+              <AlertTitle>{apiMessage.type === 'error' ? 'Error' : 'Success'}</AlertTitle>
+              <AlertDescription>
+                {apiMessage.content}
+                {apiMessage.type === 'success' && apiMessage.content.includes("verify your account") && (
+                  <> Please check your inbox (and spam folder). The verification link is valid for 24 hours.</>
+                )}
+                 {apiMessage.type === 'error' && apiMessage.content.includes("Email not verified") && (
+                  <> <button onClick={() => {/* Resend logic here */ alert("Resend verification email (not implemented yet)."); }} className="font-medium text-blue-600 hover:underline">Resend verification email?</button></>
+                )}
+              </AlertDescription>
+            </Alert>
+          )}
 
           <Tabs defaultValue="login" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
