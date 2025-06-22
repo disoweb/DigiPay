@@ -20,7 +20,7 @@ export function setupWebSocket(server: Server) {
     let currentTradeId: number | null = null;
     let currentUserId: number | null = null;
 
-    ws.on('message', (data: Buffer) => {
+    ws.on('message', async (data: Buffer) => {
       try {
         const message = JSON.parse(data.toString());
         
