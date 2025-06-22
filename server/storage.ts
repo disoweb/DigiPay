@@ -213,30 +213,34 @@ export class DatabaseStorage implements IStorage {
       console.log(`📊 Found ${existingOffers.length} existing offers`);
 
       if (existingOffers.length < 6) {
-        // Clear existing trades first, then offers to avoid foreign key constraint
-        await db.delete(trades);
-        await db.delete(offers);
+        // Clear existing data in correct order to avoid foreign key constraints
+        await db.delete(messages); // Clear messages first
+        await db.delete(trades);   // Then trades
+        await db.delete(offers);   // Finally offers
 
         // Buy offers (users want to buy USDT)
         await this.createOffer({
           userId: testUser1.id,
           type: "buy",
           amount: "10.00",
-          rate: "1485.00"
+          rate: "1485.00",
+          paymentMethod: "bank_transfer"
         });
 
         await this.createOffer({
           userId: testUser2.id,
           type: "buy",
           amount: "25.00",
-          rate: "1490.00"
+          rate: "1490.00",
+          paymentMethod: "mobile_money"
         });
 
         await this.createOffer({
-          userId: testUser1.id,
+          userId: user1.id,
           type: "buy",
           amount: "5.00",
-          rate: "1480.00"
+          rate: "1480.00",
+          paymentMethod: "digital_wallet"
         });
 
         // Sell offers (users want to sell USDT)
@@ -244,21 +248,24 @@ export class DatabaseStorage implements IStorage {
           userId: testUser2.id,
           type: "sell",
           amount: "15.00",
-          rate: "1475.00"
+          rate: "1475.00",
+          paymentMethod: "bank_transfer"
         });
 
         await this.createOffer({
           userId: testUser1.id,
           type: "sell",
           amount: "30.00",
-          rate: "1470.00"
+          rate: "1470.00",
+          paymentMethod: "mobile_money"
         });
 
         await this.createOffer({
-          userId: testUser2.id,
+          userId: user1.id,
           type: "sell",
           amount: "8.00",
-          rate: "1478.00"
+          rate: "1478.00",
+          paymentMethod: "card_payment"
         });
 
         console.log("✅ Seeded 6 demo offers (3 buy, 3 sell)");

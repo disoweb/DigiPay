@@ -199,20 +199,23 @@ export function TradeManagement() {
     );
   }
 
-  const activeTrades = trades?.filter(trade => {
-    // Filter out completed, cancelled, and expired trades
-    if (["completed", "cancelled", "expired"].includes(trade.status)) {
-      return false;
-    }
+  // Filter trades by status - exclude expired trades from active
+  const activeTrades = trades.filter(trade => 
+    ["payment_pending", "payment_made"].includes(trade.status) &&
+    trade.status !== "expired"
+  );
 
-    // Check if trade has expired based on payment deadline
-    if (trade.paymentDeadline && new Date() > new Date(trade.paymentDeadline)) {
-      // Mark as expired in the background if needed
-      return false;
-    }
+  const completedTrades = trades.filter(trade => 
+    trade.status === "completed"
+  );
 
-    return ["pending", "payment_pending", "payment_made", "disputed"].includes(trade.status);
-  }) || [];
+  const disputedTrades = trades.filter(trade => 
+    trade.status === "disputed"
+  );
+
+  const expiredTrades = trades.filter(trade => 
+    trade.status === "expired"
+  );
 
   return (
     <div className="space-y-4 sm:space-y-6 px-2 sm:px-0">
@@ -456,6 +459,42 @@ export function TradeManagement() {
               })}
             </div>
           )}
+        </TabsContent>
+
+        <TabsContent value="disputed">
+          <div className="space-y-4">
+            {disputedTrades.length === 0 ? (
+              <Card className="border-0 shadow-sm">
+                <CardContent className="p-6 text-center">
+                  <AlertTriangle className="h-12 w-12 text-yellow-500 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No Disputed Trades</h3>
+                  <p className="text-gray-600">All your trades are going smoothly!</p>
+                </CardContent>
+              </Card>
+            ) : (
+              disputedTrades.map((trade) => (
+                <TradeCard key={trade.id} trade={trade} />
+              ))
+            )}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="expired">
+          <div className="space-y-4">
+            {expiredTrades.length === 0 ? (
+              <Card className="border-0 shadow-sm">
+                <CardContent className="p-6 text-center">
+                  <Clock className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No Expired Trades</h3>
+                  <p className="text-gray-600">Keep up the good work with timely payments!</p>
+                </CardContent>
+              </Card>
+            ) : (
+              expiredTrades.map((trade) => (
+                <TradeCard key={trade.id} trade={trade} />
+              ))
+            )}
+          </div>
         </TabsContent>
       </Tabs>
     </div>
