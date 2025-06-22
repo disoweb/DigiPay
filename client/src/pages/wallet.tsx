@@ -7,6 +7,8 @@ import { DepositModal } from "@/components/deposit-modal";
 import { WithdrawModal } from "@/components/withdraw-modal";
 import { KYCVerification } from "@/components/kyc-verification";
 import { TransactionDetailModal } from "@/components/transaction-detail-modal";
+import { SendFundsModal } from "@/components/send-funds-modal";
+import { SwapModal } from "@/components/swap-modal";
 
 // SendUSDTForm component for handling USDT transfers
 function SendUSDTForm({ onClose, userBalance }: { onClose: () => void; userBalance: number }) {
@@ -237,6 +239,8 @@ export default function Wallet() {
   const [showWithdraw, setShowWithdraw] = useState(false);
   const [showReceive, setShowReceive] = useState(false);
   const [showSendUSDT, setShowSendUSDT] = useState(false);
+  const [showSendFunds, setShowSendFunds] = useState(false);
+  const [showSwap, setShowSwap] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
   const [showTransactionModal, setShowTransactionModal] = useState(false);
 
@@ -526,6 +530,31 @@ export default function Wallet() {
 
       <DepositModal open={showDeposit} onOpenChange={setShowDeposit} />
       <WithdrawModal open={showWithdraw} onOpenChange={setShowWithdraw} balance={user.nairaBalance || "0"} />
+
+      {/* Transaction Detail Modal */}
+      <TransactionDetailModal
+        transaction={selectedTransaction}
+        isOpen={showTransactionModal}
+        onClose={() => {
+          setShowTransactionModal(false);
+          setSelectedTransaction(null);
+        }}
+      />
+
+      {/* Send Funds Modal */}
+      <SendFundsModal
+        open={showSendFunds}
+        onOpenChange={setShowSendFunds}
+        userBalance={user.nairaBalance || "0"}
+      />
+
+      {/* Currency Swap Modal */}
+      <SwapModal
+        open={showSwap}
+        onOpenChange={setShowSwap}
+        nairaBalance={user.nairaBalance || "0"}
+        usdtBalance={user.usdtBalance || "0"}
+      />
       
       {/* Receive USDT Modal */}
       <Dialog open={showReceive} onOpenChange={setShowReceive}>

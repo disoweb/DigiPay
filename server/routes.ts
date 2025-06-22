@@ -1918,6 +1918,157 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // User lookup for transfers
+  app.post("/api/users/lookup", authenticateToken, async (req, res) => {
+    try {
+      const { query } = req.body;
+      const user = await storage.getUserByEmail(query.toLowerCase());
+      
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      // Return only safe user info
+      res.json({
+        id: user.id,
+        email: user.email,
+        kycVerified: user.kycVerified
+      });
+    } catch (error) {
+      console.error("User lookup error:", error);
+      res.status(500).json({ error: "Lookup failed" });
+    }
+  });
+
+  // Send funds between users
+  app.post("/api/transfers/send", authenticateToken, async (req, res) => {
+    try {
+      const { recipientId, amount, description } = req.body;
+      const senderId = req.user!.id;
+
+      if (senderId === recipientId) {
+        return res.status(400).json({ error: "Cannot send funds to yourself" });
+      }
+
+      const sender = await storage.getUser(senderId);
+      const recipient = await storage.getUser(recipientId);
+
+      if (!sender || !recipient) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      const senderBalance = parseFloat(sender.nairaBalance || "0");
+      if (amount > senderBalance) {
+        return res.status(400).json({ error: "Insufficient balance" });
+      }
+
+      // Update balances
+      const newSenderBalance = senderBalance - amount;
+      const newRecipientBalance = parseFloat(recipient.nairaBalance || "0") + amount;
+
+      await storage.updateUser(senderId, { 
+        nairaBalance: newSenderBalance.toString() 
+      });
+      await storage.updateUser(recipientId, { 
+        nairaBalance: newRecipientBalance.toString() 
+      });
+
+      // Create transaction records
+      await storage.createTransaction({
+        userId: senderId,
+        type: "transfer_out",
+        amount: amount.toString(),
+        status: "completed",
+        adminNotes: `Transfer to ${recipient.email}: ${description}`
+      });
+
+      await storage.createTransaction({
+        userId: recipientId,
+        type: "transfer_in",
+        amount: amount.toString(),
+        status: "completed",
+        adminNotes: `Transfer from ${sender.email}: ${description}`
+      });
+
+      res.json({ 
+        success: true, 
+        message: `₦${amount.toLocaleString()} sent successfully to ${recipient.email}` 
+      });
+    } catch (error) {
+      console.error("Transfer error:", error);
+      res.status(500).json({ error: "Transfer failed" });
+    }
+  });
+
+  // Currency swap
+  app.post("/api/swap", authenticateToken, async (req, res) => {
+    try {
+      const { fromCurrency, amount } = req.body;
+      const userId = req.user!.id;
+      const USDT_RATE = 1485; // ₦1485 per USDT
+
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      let newNairaBalance: number;
+      let newUsdtBalance: number;
+      let transactionNote: string;
+
+      if (fromCurrency === "NGN") {
+        // NGN to USDT
+        const currentNaira = parseFloat(user.nairaBalance || "0");
+        if (amount > currentNaira) {
+          return res.status(400).json({ error: "Insufficient NGN balance" });
+        }
+
+        const usdtAmount = amount / USDT_RATE;
+        newNairaBalance = currentNaira - amount;
+        newUsdtBalance = parseFloat(user.usdtBalance || "0") + usdtAmount;
+        transactionNote = `Swapped ₦${amount.toLocaleString()} to ${usdtAmount.toFixed(6)} USDT`;
+      } else {
+        // USDT to NGN
+        const currentUsdt = parseFloat(user.usdtBalance || "0");
+        if (amount > currentUsdt) {
+          return res.status(400).json({ error: "Insufficient USDT balance" });
+        }
+
+        const nairaAmount = amount * USDT_RATE;
+        newUsdtBalance = currentUsdt - amount;
+        newNairaBalance = parseFloat(user.nairaBalance || "0") + nairaAmount;
+        transactionNote = `Swapped ${amount} USDT to ₦${nairaAmount.toLocaleString()}`;
+      }
+
+      // Update user balances
+      await storage.updateUser(userId, {
+        nairaBalance: newNairaBalance.toString(),
+        usdtBalance: newUsdtBalance.toFixed(6)
+      });
+
+      // Create transaction record
+      await storage.createTransaction({
+        userId,
+        type: "swap",
+        amount: amount.toString(),
+        status: "completed",
+        adminNotes: transactionNote
+      });
+
+      res.json({
+        success: true,
+        message: transactionNote,
+        newBalances: {
+          nairaBalance: newNairaBalance.toString(),
+          usdtBalance: newUsdtBalance.toFixed(6)
+        }
+      });
+    } catch (error) {
+      console.error("Swap error:", error);
+      res.status(500).json({ error: "Swap failed" });
+    }
+  });
+
   // TRON wallet operations
   app.get("/api/tron/balance", authenticateToken, async (req, res) => {
 
