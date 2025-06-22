@@ -166,7 +166,7 @@ export function TradingDashboard() {
             <div className="text-4xl font-bold mb-6">
               ₦{totalPortfolioValue.toLocaleString()}
             </div>
-            
+
             <div className="grid grid-cols-2 gap-8 max-w-md mx-auto">
               <div className="text-center">
                 <p className="text-white/90 text-sm mb-1">NGN</p>
@@ -271,7 +271,7 @@ export function TradingDashboard() {
                       <Button 
                         size="sm" 
                         variant="outline"
-                        onClick={() => setLocation(`/trade/${trade.id}`)}
+                        onClick={() => setLocation(`/trades/${trade.id}/chat`)}
                         className="px-3 py-1 h-7 text-xs ml-auto"
                       >
                         <MessageCircle className="h-3 w-3 mr-1" />

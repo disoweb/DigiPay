@@ -34,6 +34,8 @@ export const userRoutes = {
         averageRating: users.averageRating,
         ratingCount: users.ratingCount,
         kycVerified: users.kycVerified,
+        isOnline: users.isOnline,
+        lastSeen: users.lastSeen,
         createdAt: users.createdAt
       }).from(users).where(eq(users.id, parseInt(id)));
       

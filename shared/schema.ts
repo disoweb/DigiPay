@@ -18,6 +18,8 @@ export const users = pgTable("users", {
   usdtBalance: decimal("usdt_balance", { precision: 12, scale: 8 }).default("0"),
   averageRating: decimal("average_rating", { precision: 3, scale: 2 }).default("0"),
   ratingCount: integer("rating_count").default(0),
+  isOnline: boolean("is_online").default(false),
+  lastSeen: timestamp("last_seen"),
   isAdmin: boolean("is_admin").default(false),
   createdAt: timestamp("created_at").defaultNow(),
 });
@@ -26,14 +28,14 @@ export const users = pgTable("users", {
 export const kycVerifications = pgTable("kyc_verifications", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").references(() => users.id).notNull().unique(),
-  
+
   // Personal Information
   firstName: text("first_name"),
   lastName: text("last_name"),
   middleName: text("middle_name"),
   dateOfBirth: text("date_of_birth"),
   gender: text("gender"),
-  
+
   // Address Information
   street: text("street"),
   city: text("city"),
@@ -41,25 +43,25 @@ export const kycVerifications = pgTable("kyc_verifications", {
   country: text("country").default("Nigeria"),
   postalCode: text("postal_code"),
   residentialType: text("residential_type"),
-  
+
   // Identity Information
   idType: text("id_type"),
   idNumber: text("id_number"),
   nin: text("nin"),
-  
+
   // Document URLs (stored in secure storage)
   idFrontUrl: text("id_front_url"),
   idBackUrl: text("id_back_url"),
   selfieUrl: text("selfie_url"),
   proofOfAddressUrl: text("proof_of_address_url"),
-  
+
   // Verification status and metadata
   status: text("status").default("pending"), // 'pending', 'approved', 'rejected'
   reviewedBy: integer("reviewed_by").references(() => users.id),
   reviewedAt: timestamp("reviewed_at"),
   rejectionReason: text("rejection_reason"),
   adminNotes: text("admin_notes"),
-  
+
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

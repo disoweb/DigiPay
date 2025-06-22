@@ -1,5 +1,8 @@
 import { WebSocketServer, WebSocket } from 'ws';
 import { Server } from 'http';
+import { db } from '../db';
+import { users } from '@shared/schema';
+import { eq } from 'drizzle-orm';
 
 export function setupWebSocket(server: Server) {
   const wss = new WebSocketServer({ 
@@ -8,18 +11,33 @@ export function setupWebSocket(server: Server) {
     perMessageDeflate: false 
   });
 
-  // Store connections by trade ID
+  // Store connections by trade ID and user ID
   const tradeConnections = new Map<number, Set<WebSocket>>();
+  const userConnections = new Map<number, WebSocket>();
 
   wss.on('connection', (ws: WebSocket) => {
     console.log('New WebSocket connection established');
     let currentTradeId: number | null = null;
+    let currentUserId: number | null = null;
 
     ws.on('message', (data: Buffer) => {
       try {
         const message = JSON.parse(data.toString());
         
         switch (message.type) {
+          case 'user_connect':
+            const userId = message.userId;
+            currentUserId = userId;
+            userConnections.set(userId, ws);
+            
+            // Update user online status
+            await db.update(users)
+              .set({ isOnline: true })
+              .where(eq(users.id, userId));
+            
+            console.log(`User ${userId} connected`);
+            break;
+
           case 'join_trade':
             const tradeId = message.tradeId;
             currentTradeId = tradeId;
@@ -39,10 +57,23 @@ export function setupWebSocket(server: Server) {
                 if (client !== ws && client.readyState === WebSocket.OPEN) {
                   client.send(JSON.stringify({
                     type: 'new_message',
+                    tradeId: currentTradeId,
                     data: message.data
                   }));
                 }
               });
+            }
+            break;
+
+          case 'send_notification':
+            const targetUserId = message.targetUserId;
+            const targetConnection = userConnections.get(targetUserId);
+            
+            if (targetConnection && targetConnection.readyState === WebSocket.OPEN) {
+              targetConnection.send(JSON.stringify({
+                type: 'notification',
+                data: message.data
+              }));
             }
             break;
 
@@ -65,8 +96,17 @@ export function setupWebSocket(server: Server) {
       }
     });
 
-    ws.on('close', () => {
+    ws.on('close', async () => {
       console.log('WebSocket connection closed');
+      
+      // Update user offline status
+      if (currentUserId) {
+        await db.update(users)
+          .set({ isOnline: false, lastSeen: new Date() })
+          .where(eq(users.id, currentUserId));
+        
+        userConnections.delete(currentUserId);
+      }
       
       // Remove from trade connections
       if (currentTradeId && tradeConnections.has(currentTradeId)) {

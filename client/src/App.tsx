@@ -49,7 +49,7 @@ function App() {
             <ProtectedRoute path="/admin/kyc" component={AdminKYC} adminOnly />
             <ProtectedRoute path="/profile-setup" component={ProfileSetup} />
             <ProtectedRoute path="/create-offer" component={OfferCreation} />
-            <Route path="/chat/:tradeId" component={({ params }) => (
+            <Route path="/trades/:tradeId/chat" component={({ params }) => (
               <ProtectedRoute>
                 <ChatPage />
               </ProtectedRoute>

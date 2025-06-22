@@ -92,6 +92,20 @@ export function RealTimeChat({ tradeId }: RealTimeChatProps) {
     wsRef.current.onopen = () => {
       setIsConnected(true);
       console.log("WebSocket connected");
+      
+      // Notify server of user connection
+      if (user?.id) {
+        wsRef.current?.send(JSON.stringify({
+          type: 'user_connect',
+          userId: user.id
+        }));
+      }
+      
+      // Join trade room
+      wsRef.current?.send(JSON.stringify({
+        type: 'join_trade',
+        tradeId
+      }));
     };
 
     wsRef.current.onclose = () => {
@@ -104,6 +118,22 @@ export function RealTimeChat({ tradeId }: RealTimeChatProps) {
         const data = JSON.parse(event.data);
         if (data.type === "new_message" && data.tradeId === tradeId) {
           queryClient.invalidateQueries({ queryKey: ["/api/trades", tradeId, "messages"] });
+          
+          // Show notification if page is not focused
+          if (document.hidden && 'Notification' in window) {
+            new Notification('New message in trade chat', {
+              body: 'You have received a new message',
+              icon: '/favicon.ico'
+            });
+          }
+        } else if (data.type === "notification") {
+          // Handle other notifications
+          if ('Notification' in window) {
+            new Notification('DigiPay Notification', {
+              body: data.data.message,
+              icon: '/favicon.ico'
+            });
+          }
         }
       } catch (error) {
         console.error("Error parsing WebSocket message:", error);
@@ -116,6 +146,13 @@ export function RealTimeChat({ tradeId }: RealTimeChatProps) {
       }
     };
   }, [tradeId]);
+
+  // Request notification permission
+  useEffect(() => {
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+  }, []);
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
