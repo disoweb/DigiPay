@@ -1,13 +1,12 @@
 
-import { useState } from "react";
 import { Navbar } from "@/components/navbar";
 import { EnhancedMarketplace } from "@/components/enhanced-marketplace";
-import { CreateOfferModal } from "@/components/create-offer-modal";
 import { Button } from "@/components/ui/button";
+import { useLocation } from "wouter";
 import { Plus } from "lucide-react";
 
 export default function Marketplace() {
-  const [showCreateOffer, setShowCreateOffer] = useState(false);
+  const [, setLocation] = useLocation();
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -20,7 +19,7 @@ export default function Marketplace() {
             <p className="text-gray-600 text-sm sm:text-base">Trade USDT/Naira with verified users instantly</p>
           </div>
           <Button 
-            onClick={() => setShowCreateOffer(true)} 
+            onClick={() => setLocation("/create-offer")} 
             size="lg" 
             className="w-full sm:w-auto flex-shrink-0"
           >
@@ -30,11 +29,6 @@ export default function Marketplace() {
         </div>
 
         <EnhancedMarketplace />
-
-        <CreateOfferModal
-          open={showCreateOffer}
-          onOpenChange={setShowCreateOffer}
-        />
       </div>
     </div>
   );
