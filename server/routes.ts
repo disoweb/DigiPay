@@ -861,8 +861,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.json(enrichedTransactions);
     } catch (error) {
-      res.status(500<string>
-.json({ error: "Failed to fetch transactions" });
+      res.status(500).json({ error: "Failed to fetch transactions" });
     }
   });
 
