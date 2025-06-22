@@ -55,10 +55,19 @@ export function TradeManagement() {
 
   const { data: trades = [], isLoading, error, refetch } = useQuery<Trade[]>({
     queryKey: ['/api/trades'],
-    refetchInterval: 5000,
-    retry: 3,
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-    staleTime: 2000,
+    queryFn: async () => {
+      const response = await apiRequest("GET", "/api/trades");
+      if (!response.ok) {
+        throw new Error(`Failed to fetch trades: ${response.status}`);
+      }
+      return response.json();
+    },
+    refetchInterval: 10000,
+    retry: 2,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
+    staleTime: 5000,
+    refetchOnWindowFocus: false,
+    refetchOnMount: true,
   });
 
   const cancelTradeMutation = useMutation({
@@ -187,9 +196,9 @@ export function TradeManagement() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 px-2 sm:px-0">
       {/* Trade Statistics */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center space-x-2">
@@ -285,9 +294,9 @@ export function TradeManagement() {
                   new Date(trade.paymentDeadline).getTime() - Date.now() < 5 * 60 * 1000; // 5 minutes
 
                 return (
-                  <Card key={trade.id} className={`${isExpiringSoon ? 'border-red-300 bg-red-50' : ''}`}>
-                    <CardContent className="p-4">
-                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <Card key={trade.id} className={`${isExpiringSoon ? 'border-red-300 bg-red-50' : ''} shadow-sm`}>
+                    <CardContent className="p-3 sm:p-4">
+                      <div className="space-y-4">
                         <div className="flex-1 space-y-3">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
@@ -316,28 +325,28 @@ export function TradeManagement() {
                             )}
                           </div>
 
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                            <div>
-                              <p className="text-gray-600">Amount</p>
-                              <p className="font-semibold">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
+                            <div className="bg-gray-50 p-3 rounded-lg">
+                              <p className="text-gray-600 text-xs">Amount</p>
+                              <p className="font-semibold text-sm">
                                 {!isNaN(parseFloat(trade.amount)) ? parseFloat(trade.amount).toFixed(2) : '0.00'} USDT
                               </p>
                             </div>
-                            <div>
-                              <p className="text-gray-600">Rate</p>
-                              <p className="font-semibold">
+                            <div className="bg-gray-50 p-3 rounded-lg">
+                              <p className="text-gray-600 text-xs">Rate</p>
+                              <p className="font-semibold text-sm">
                                 ₦{!isNaN(parseFloat(trade.rate)) ? parseFloat(trade.rate).toLocaleString() : '0'}
                               </p>
                             </div>
-                            <div>
-                              <p className="text-gray-600">Total</p>
-                              <p className="font-semibold">
+                            <div className="bg-gray-50 p-3 rounded-lg">
+                              <p className="text-gray-600 text-xs">Total</p>
+                              <p className="font-semibold text-sm">
                                 ₦{!isNaN(parseFloat(trade.fiatAmount)) ? parseFloat(trade.fiatAmount).toLocaleString() : '0'}
                               </p>
                             </div>
-                            <div>
-                              <p className="text-gray-600">Partner</p>
-                              <p className="font-semibold">{partner?.email}</p>
+                            <div className="bg-gray-50 p-3 rounded-lg">
+                              <p className="text-gray-600 text-xs">Partner</p>
+                              <p className="font-semibold text-sm truncate">{partner?.email}</p>
                             </div>
                           </div>
 
@@ -371,11 +380,12 @@ export function TradeManagement() {
                           )}
 
                           {/* Trade Actions */}
-                          <div className="flex flex-wrap gap-2">
+                          <div className="flex flex-col sm:flex-row gap-2">
                             <Button 
                               variant="outline" 
                               size="sm"
-                              onClick={() => window.open(`/trade/${trade.id}`, '_blank')}
+                              className="flex-1 sm:flex-none"
+                              onClick={() => window.location.href = `/trade/${trade.id}`}
                             >
                               <Eye className="h-3 w-3 mr-1" />
                               View Details
@@ -384,7 +394,8 @@ export function TradeManagement() {
                             <Button 
                               variant="outline" 
                               size="sm"
-                              onClick={() => window.open(`/trade/${trade.id}#chat`, '_blank')}
+                              className="flex-1 sm:flex-none"
+                              onClick={() => window.location.href = `/trade/${trade.id}#chat`}
                             >
                               <MessageCircle className="h-3 w-3 mr-1" />
                               Chat
@@ -394,6 +405,7 @@ export function TradeManagement() {
                               <Button 
                                 variant="destructive" 
                                 size="sm"
+                                className="flex-1 sm:flex-none"
                                 onClick={() => cancelTradeMutation.mutate(trade.id)}
                                 disabled={cancelTradeMutation.isPending}
                               >

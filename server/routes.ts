@@ -869,7 +869,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // For deposits, add to user balance
       if (transaction.type === "deposit") {
-        const user = await storage.getUser(transaction.userId);
+        const user = await storage.getUser(transaction.id);
         if (!user) {
           return res.status(404).json({ error: "User not found" });
         }
@@ -1949,6 +1949,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(stats);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch admin stats" });
+    }
+  });
+
+  // Get all trades for the current user
+  app.get("/api/trades", authenticateToken, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+
+      console.log(`Fetching trades for user ${userId}`);
+
+      const trades = await storage.getUserTrades(userId);
+
+      console.log(`Found ${trades.length} trades for user ${userId}`);
+      res.json(trades);
+    } catch (error) {
+      console.error("Error fetching trades:", error);
+      res.status(500).json({ error: "Failed to fetch trades", details: error.message });
     }
   });
 

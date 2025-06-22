@@ -228,11 +228,26 @@ export function P2PTradingFlow({ tradeId, userRole }: P2PTradingFlowProps) {
 
   return (
     <div className="space-y-4 md:space-y-6">
+      {/* Mobile Back Navigation */}
+      <div className="flex items-center gap-3 sm:hidden">
+        <Button 
+          variant="ghost" 
+          size="sm"
+          onClick={() => window.history.back()}
+          className="p-2"
+        >
+          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+        </Button>
+        <span className="text-lg font-semibold">Trade #{trade.id}</span>
+      </div>
+
       {/* Mobile-Optimized Trade Overview */}
       <Card className="border-0 shadow-sm">
         <CardHeader className="pb-3">
           <CardTitle className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-            <span className="text-lg">Trade #{trade.id}</span>
+            <span className="text-lg hidden sm:block">Trade #{trade.id}</span>
             <Badge className={getStatusColor(trade.status)}>
               {trade.status.replace('_', ' ').toUpperCase()}
             </Badge>
