@@ -9,6 +9,7 @@ import {
   Globe, 
   Users, 
   TrendingUp, 
+  TrendingDown,
   Lock, 
   CheckCircle,
   Star,
@@ -166,24 +167,21 @@ export default function LandingPage() {
                 and smart contract protection. Your funds are mathematically secured.
               </p>
 
-              {/* Mobile CTA Buttons */}
-              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-6 sm:mb-8">
+              {/* Buy/Sell Buttons */}
+              <div className="flex flex-row gap-4 mb-6 sm:mb-8 justify-center lg:justify-start">
                 <Button 
                   size="lg" 
-                  className="bg-white text-primary hover:bg-gray-50 text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-4 shadow-xl"
-                  onClick={() => setLocation("/auth")}
+                  className="bg-green-600 hover:bg-green-700 text-white text-base sm:text-lg px-8 py-3 sm:py-4 shadow-xl flex-1 sm:flex-none"
+                  onClick={() => setLocation("/marketplace?tab=buy")}
                 >
-                  <Smartphone className="mr-2 h-5 w-5" />
-                  Start Trading Now
-                  <ArrowRight className="ml-2 h-5 w-5" />
+                  Buy USDT
                 </Button>
                 <Button 
                   size="lg" 
-                  variant="outline" 
-                  className="border-2 border-white text-white hover:bg-white hover:text-primary text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-4"
+                  className="bg-red-600 hover:bg-red-700 text-white text-base sm:text-lg px-8 py-3 sm:py-4 shadow-xl flex-1 sm:flex-none"
+                  onClick={() => setLocation("/marketplace?tab=sell")}
                 >
-                  <Phone className="mr-2 h-5 w-5" />
-                  Call: +234-800-DIGIPAY
+                  Sell USDT
                 </Button>
               </div>
 

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,7 +24,7 @@ import {
 
 export function TradingDashboard() {
   const { user } = useAuth();
-  
+
   const { data: trades = [] } = useQuery({
     queryKey: ['/api/trades'],
     refetchInterval: 5000,
@@ -47,11 +46,11 @@ export function TradingDashboard() {
     ['pending', 'payment_pending', 'payment_made'].includes(t.status)
   );
   const disputedTrades = trades.filter((t: any) => t.status === 'disputed');
-  
+
   const totalVolume = completedTrades.reduce((sum: number, trade: any) => 
     sum + parseFloat(trade.fiatAmount), 0
   );
-  
+
   const successRate = trades.length > 0 
     ? (completedTrades.length / trades.length) * 100 
     : 0;
@@ -136,7 +135,7 @@ export function TradingDashboard() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Users className="h-5 w-5" />
-              Trading Profile
+              User Profile
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -323,7 +322,7 @@ export function TradingDashboard() {
               {recentTrades.map((trade: any) => {
                 const isUserBuyer = trade.buyerId === user?.id;
                 const partner = isUserBuyer ? trade.seller : trade.buyer;
-                
+
                 return (
                   <div key={trade.id} className="flex items-center justify-between p-3 border rounded-lg">
                     <div className="flex items-center space-x-3">

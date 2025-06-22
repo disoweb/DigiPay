@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -32,6 +33,7 @@ type Offer = {
 export function MyOffers() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
   const [editingOffer, setEditingOffer] = useState<Offer | null>(null);
   const [editForm, setEditForm] = useState({
     amount: "",
@@ -40,7 +42,13 @@ export function MyOffers() {
   });
 
   const { data: offers, isLoading } = useQuery<Offer[]>({
-    queryKey: [`/api/users/${user?.id}/offers`],
+    queryKey: ["/api/offers", "my-offers"],
+    queryFn: async () => {
+      const response = await apiRequest("GET", "/api/offers");
+      const allOffers = await response.json();
+      // Filter to show only current user's offers
+      return allOffers.filter((offer: Offer) => offer.userId === user?.id);
+    },
     enabled: !!user?.id,
   });
 
@@ -50,7 +58,7 @@ export function MyOffers() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/users/${user?.id}/offers`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/offers", "my-offers"] });
       queryClient.invalidateQueries({ queryKey: ["/api/offers"] });
       setEditingOffer(null);
       toast({
@@ -72,7 +80,7 @@ export function MyOffers() {
       await apiRequest("DELETE", `/api/offers/${id}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/users/${user?.id}/offers`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/offers", "my-offers"] });
       queryClient.invalidateQueries({ queryKey: ["/api/offers"] });
       toast({
         title: "Offer deleted",
@@ -94,7 +102,7 @@ export function MyOffers() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/users/${user?.id}/offers`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/offers", "my-offers"] });
       queryClient.invalidateQueries({ queryKey: ["/api/offers"] });
       toast({
         title: "Offer status updated",
@@ -163,7 +171,7 @@ export function MyOffers() {
             <DollarSign className="h-5 w-5" />
             My Offers
           </div>
-          <Button size="sm" onClick={() => window.location.href = "/create-offer"}>
+          <Button size="sm" onClick={() => setLocation("/create-offer")}>
             <Plus className="h-4 w-4 mr-2" />
             Create Offer
           </Button>
@@ -173,7 +181,7 @@ export function MyOffers() {
         {!offers || offers.length === 0 ? (
           <div className="text-center py-8">
             <p className="text-gray-500 mb-4">You haven't created any offers yet</p>
-            <Button onClick={() => window.location.href = "/create-offer"}>
+            <Button onClick={() => setLocation("/create-offer")}>
               <Plus className="h-4 w-4 mr-2" />
               Create Your First Offer
             </Button>
