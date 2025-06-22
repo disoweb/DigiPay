@@ -324,7 +324,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         rate: offer.rate,
         fiatAmount: fiatAmount.toFixed(2),
         status: "payment_pending", // Start directly with payment pending
-        paymentDeadline: new Date(Date.now() + 15 * 60 * 1000).toISOString(), // 15 minutes
+        paymentDeadline: new Date(Date.now() + 15 * 60 * 1000), // 15 minutes
         bankName: "First Bank", // Demo bank details
         accountNumber: "1234567890",
         accountName: "John Doe Seller",

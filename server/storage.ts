@@ -396,7 +396,7 @@ export class DatabaseStorage implements IStorage {
     await db.update(trades)
       .set({ 
         status,
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date()
       })
       .where(eq(trades.id, tradeId));
   }
