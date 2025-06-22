@@ -9,6 +9,7 @@ type EnrichedOffer = Offer & {
   user: {
     id: number;
     email: string;
+    username?: string | null;
     firstName?: string | null;
     lastName?: string | null;
     averageRating: string;
@@ -73,9 +74,10 @@ export function OfferCard({ offer, onTrade }: OfferCardProps) {
               <div className="flex items-center">
                 <span className="text-gray-600 mr-2">Trader:</span>
                 <span className="font-medium">
-                  {offer.user.firstName && offer.user.lastName 
+                  {offer.user.username || 
+                   (offer.user.firstName && offer.user.lastName 
                     ? `${offer.user.firstName} ${offer.user.lastName}` 
-                    : offer.user.email?.split('@')[0] || 'Unknown'}
+                    : offer.user.email?.split('@')[0] || 'Unknown')}
                 </span>
               </div>
               <div className="flex items-center">

@@ -66,7 +66,7 @@ export function ProfileCompletionModal({ open, onClose, user }: ProfileCompletio
     });
   };
 
-  const canSkip = user?.firstName && user?.lastName;
+  const canSkip = user?.firstName && user?.lastName && user?.username;
 
   return (
     <Dialog open={open} onOpenChange={!canSkip ? undefined : onClose}>

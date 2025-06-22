@@ -18,6 +18,7 @@ import OfferCreation from "@/pages/offer-creation";
 import Ratings from "@/pages/ratings";
 import UserProfile from "@/pages/user-profile";
 import UserSettings from "@/pages/user-settings";
+import ProfilePage from "@/pages/profile";
 import NotFound from "@/pages/not-found";
 import ChatPage from "@/pages/chat";
 import AdminKYC from "@/pages/admin-kyc";
@@ -63,6 +64,7 @@ function App() {
             <Route path="/trade-direct/:offerId" component={DirectTrade} />
             <ProtectedRoute path="/ratings" component={Ratings} />
             <Route path="/settings" component={UserSettings} />
+            <ProtectedRoute path="/profile" component={ProfilePage} />
             <ProtectedRoute path="/manage-offers" component={ManageOffers} />
             <Route component={NotFound} />
           </Switch>

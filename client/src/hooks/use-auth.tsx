@@ -29,6 +29,8 @@ interface User {
   phoneNumber?: string;
   firstName?: string;
   lastName?: string;
+  username?: string;
+  location?: string;
   bankName?: string;
   accountNumber?: string;
   accountName?: string;

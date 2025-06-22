@@ -171,7 +171,7 @@ export function Navbar() {
                   <Wallet className="mr-2 h-4 w-4" />
                   <span>Wallet</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setLocation("/settings")}>
+                <DropdownMenuItem onClick={() => setLocation("/profile")}>
                   <User className="mr-2 h-4 w-4" />
                   <span>Profile Settings</span>
                 </DropdownMenuItem>
