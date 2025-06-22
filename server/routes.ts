@@ -194,7 +194,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               ...offer,
               user: user ? {
                 id: user.id,
-                email: user.email.replace(/(.{2}).*(@.*)/, '$1***$2'),
+                email: user.email,
                 username: user.username,
                 firstName: user.firstName,
                 lastName: user.lastName,

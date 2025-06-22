@@ -568,7 +568,7 @@ export function TradingDashboard() {
                               <div className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full flex-shrink-0 ${offer.user?.isOnline ? 'bg-green-400' : 'bg-gray-400'}`} />
                               <div className="min-w-0 flex-1">
                                 <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
-                                  <span className="font-medium text-sm sm:text-base truncate">{offer.user?.username || offer.user?.email?.split('@')[0] || 'Unknown'}</span>
+                                  <span className="font-medium text-sm sm:text-base truncate">{offer.user?.username || offer.user?.firstName || offer.user?.email?.split('@')[0] || 'Unknown'}</span>
                                   {offer.user?.isOnline ? (
                                     <Badge variant="outline" className="text-green-600 border-green-600 text-xs h-5 px-1">
                                       Online
@@ -685,7 +685,7 @@ export function TradingDashboard() {
                               <div className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full flex-shrink-0 ${offer.user?.isOnline ? 'bg-green-400' : 'bg-gray-400'}`} />
                               <div className="min-w-0 flex-1">
                                 <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
-                                  <span className="font-medium text-sm sm:text-base truncate">{offer.user?.username || offer.user?.email?.split('@')[0] || 'Unknown'}</span>
+                                  <span className="font-medium text-sm sm:text-base truncate">{offer.user?.username || offer.user?.firstName || offer.user?.email?.split('@')[0] || 'Unknown'}</span></div>
                                   {offer.user?.isOnline ? (
                                     <Badge variant="outline" className="text-green-600 border-green-600 text-xs h-5 px-1">
                                       Online
@@ -709,9 +709,7 @@ export function TradingDashboard() {
                                   <span>({offer.user?.ratingCount || 0})</span>
                                   <span>•</span>
                                   <span>{offer.user?.completedTrades || 0} trades</span>
-                                </div>
-                              </div>
-                              </div>
+                                </div>                              </div>
                             <Badge variant="outline" className="flex items-center gap-1 text-xs h-6 px-2 self-start sm:self-auto">
                               <DollarSign className="h-2 w-2 sm:h-3 sm:w-3" />
                               <span className="hidden sm:inline">{offer.paymentMethod?.replace('_', ' ').toUpperCase() || 'Bank Transfer'}</span>

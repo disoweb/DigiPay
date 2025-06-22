@@ -7,12 +7,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { User, Settings, Mail, Phone, MapPin, CheckCircle, XCircle, Loader2 } from "lucide-react";
+import { User, Settings, Mail, Phone, MapPin, CheckCircle, XCircle, Loader2, ArrowLeft } from "lucide-react";
+import { useLocation } from "wouter";
 
 export default function ProfilePage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [, setLocation] = useLocation();
   
   const [firstName, setFirstName] = useState(user?.firstName || "");
   const [lastName, setLastName] = useState(user?.lastName || "");
@@ -155,7 +157,15 @@ export default function ProfilePage() {
 
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
-      <div className="flex items-center space-x-2 mb-6">
+      <div className="flex items-center space-x-4 mb-6">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setLocation('/dashboard')}
+          className="hover:bg-gray-100"
+        >
+          <ArrowLeft className="w-5 h-5" />
+        </Button>
         <Settings className="w-6 h-6" />
         <h1 className="text-3xl font-bold">Profile Settings</h1>
       </div>
