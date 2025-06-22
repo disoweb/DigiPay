@@ -1,27 +1,32 @@
-
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Progress } from "@/components/ui/progress";
-import { useAuth } from "@/hooks/use-auth";
-import { useMutation } from "@tanstack/react-query";
+import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useAuth } from "@/hooks/use-auth";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import { 
-  DollarSign, 
-  Clock, 
+  ArrowLeft, 
   Shield, 
-  CheckCircle, 
+  Clock, 
+  DollarSign, 
+  CheckCircle,
+  AlertCircle,
+  Info,
+  Copy,
+  Upload,
   Star,
-  ArrowRight,
+  Users,
+  Wallet,
   CreditCard,
-  Timer,
-  AlertTriangle,
-  Info
+  Building,
+  Smartphone,
+  X
 } from "lucide-react";
 
 interface Offer {
@@ -84,12 +89,12 @@ export function BinanceStyleFlow({ isOpen, onClose, offer }: BinanceStyleFlowPro
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['/api/trades'] });
       queryClient.invalidateQueries({ queryKey: ['/api/offers'] });
-      
+
       toast({
         title: "Trade Created Successfully!",
         description: `Trade #${data.trade.id} has been created. Redirecting to trade details...`,
       });
-      
+
       // Redirect to trade details
       setTimeout(() => {
         window.open(`/trade/${data.trade.id}`, '_blank');
@@ -115,7 +120,7 @@ export function BinanceStyleFlow({ isOpen, onClose, offer }: BinanceStyleFlowPro
     if (!amount || tradeAmount <= 0) return "Please enter a valid amount";
     if (tradeAmount < minAmount) return `Minimum amount is ${minAmount.toFixed(2)} USDT`;
     if (tradeAmount > maxAmount) return `Maximum amount is ${maxAmount.toFixed(2)} USDT`;
-    
+
     // Check user balance
     if (offer.type === "sell" && user) {
       const userNairaBalance = parseFloat(user.nairaBalance || "0");
@@ -128,118 +133,142 @@ export function BinanceStyleFlow({ isOpen, onClose, offer }: BinanceStyleFlowPro
         return `Insufficient USDT. Need ${tradeAmount.toFixed(2)} USDT`;
       }
     }
-    
+
     return null;
   };
 
   const renderStep1 = () => (
-    <div className="space-y-6">
-      <div className="text-center">
-        <h3 className="text-xl font-semibold mb-2">
-          {offer.type === "sell" ? "Buy USDT" : "Sell USDT"}
-        </h3>
-        <p className="text-gray-600">Enter the amount you want to trade</p>
-      </div>
+    <div className="space-y-4">
+      {/* Trader Info - Mobile Optimized */}
+      <Card className="border-0 shadow-sm">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Users className="h-4 w-4" />
+            Trading with {offer.user?.email}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pt-0">
+          <div className="space-y-3">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0">
+                <Users className="h-5 w-5" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="font-medium truncate">{offer.user?.email}</p>
+                <div className="flex items-center gap-2 text-sm text-gray-600 flex-wrap">
+                  <div className="flex items-center gap-1">
+                    <Star className="h-3 w-3 text-yellow-400 fill-current" />
+                    <span>{parseFloat(offer.user?.averageRating || "0").toFixed(1)}</span>
+                    <span>({offer.user?.ratingCount || 0})</span>
+                  </div>
+                  <span>•</span>
+                  <span>{offer.user?.completedTrades || 0} trades</span>
+                </div>
+              </div>
+            </div>
+            {offer.user?.kycVerified && (
+              <Badge variant="outline" className="text-green-600 border-green-600 w-fit">
+                <Shield className="h-3 w-3 mr-1" />
+                Verified
+              </Badge>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
-      {/* Trader Info */}
-      <div className="bg-blue-50 p-4 rounded-lg">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="font-medium">{offer.user.email}</p>
-            <div className="flex items-center gap-1 text-sm">
-              <Star className="h-3 w-3 text-yellow-400 fill-current" />
-              <span>{parseFloat(offer.user.averageRating).toFixed(1)}</span>
-              <span className="text-gray-500">({offer.user.ratingCount} reviews)</span>
+      {/* Trade Details - Mobile Grid */}
+      <Card className="border-0 shadow-sm">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">Trade Details</CardTitle>
+        </CardHeader>
+        <CardContent className="pt-0">
+          <div className="grid grid-cols-2 gap-3 mb-4">
+            <div className="bg-gray-50 p-3 rounded-lg">
+              <Label className="text-xs text-gray-600">Price</Label>
+              <p className="font-semibold text-lg text-green-600">₦{parseFloat(offer.rate).toLocaleString()}</p>
+            </div>
+            <div className="bg-gray-50 p-3 rounded-lg">
+              <Label className="text-xs text-gray-600">Available</Label>
+              <p className="font-semibold text-lg">{parseFloat(offer.amount).toFixed(2)} USDT</p>
             </div>
           </div>
-          <Badge variant="outline">
-            {offer.user.completedTrades || 0} trades
-          </Badge>
-        </div>
-      </div>
 
-      {/* Rate Display */}
-      <div className="bg-green-50 p-4 rounded-lg text-center">
-        <p className="text-sm text-gray-600">Exchange Rate</p>
-        <p className="text-2xl font-bold text-green-600">
-          ₦{rate.toLocaleString()}/USDT
-        </p>
-      </div>
-
-      {/* Amount Input */}
-      <div className="space-y-3">
-        <Label htmlFor="amount">Amount (USDT)</Label>
-        <Input
-          id="amount"
-          type="number"
-          placeholder={`${minAmount} - ${maxAmount} USDT`}
-          value={amount}
-          onChange={(e) => setAmount(e.target.value)}
-          className="text-lg font-medium"
-        />
-        
-        {/* Quick amounts */}
-        <div className="flex gap-2">
-          {[0.25, 0.5, 0.75, 1].map((percentage) => {
-            const quickAmount = (maxAmount * percentage).toFixed(2);
-            return (
-              <Button
-                key={percentage}
-                variant="outline"
-                size="sm"
-                onClick={() => setAmount(quickAmount)}
-                className="flex-1"
-              >
-                {percentage === 1 ? 'Max' : `${percentage * 100}%`}
-              </Button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Trade Summary */}
-      {tradeAmount > 0 && (
-        <div className="bg-gray-50 p-4 rounded-lg space-y-2">
-          <div className="flex justify-between">
-            <span>You {offer.type === "sell" ? "pay" : "receive"}:</span>
-            <span className="font-medium">₦{totalCost.toLocaleString()}</span>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <Label className="text-sm text-gray-600">Payment Method</Label>
+              <div className="flex items-center gap-2">
+                {getPaymentMethodIcon(offer.paymentMethod)}
+                <span className="font-medium text-sm">{getPaymentMethodLabel(offer.paymentMethod)}</span>
+              </div>
+            </div>
+            <div className="flex items-center justify-between">
+              <Label className="text-sm text-gray-600">Time Limit</Label>
+              <p className="font-semibold text-sm">{offer.timeLimit || 30} minutes</p>
+            </div>
           </div>
-          <div className="flex justify-between">
-            <span>You {offer.type === "sell" ? "receive" : "pay"}:</span>
-            <span className="font-medium">{tradeAmount.toFixed(2)} USDT</span>
+
+          {offer.terms && (
+            <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+              <div className="flex items-start gap-2">
+                <Info className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                <div className="min-w-0">
+                  <p className="font-medium text-blue-900 text-sm">Trading Terms</p>
+                  <p className="text-blue-700 text-sm mt-1 leading-relaxed">{offer.terms}</p>
+                </div>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Amount Input - Mobile Optimized */}
+      <Card className="border-0 shadow-sm">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">Enter Amount</CardTitle>
+        </CardHeader>
+        <CardContent className="pt-0">
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="amount" className="text-sm">Amount (USDT)</Label>
+              <Input
+                id="amount"
+                type="number"
+                placeholder="Enter amount"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                min={offer.minAmount || "0"}
+                max={offer.maxAmount || offer.amount}
+                className="h-12 text-base text-center"
+                inputMode="decimal"
+              />
+              <p className="text-xs text-gray-600 mt-2 text-center">
+                Limits: {offer.minAmount ? parseFloat(offer.minAmount).toFixed(2) : '0'} - {offer.maxAmount ? parseFloat(offer.maxAmount).toFixed(2) : parseFloat(offer.amount).toFixed(2)} USDT
+              </p>
+            </div>
+
+            {amount && (
+              <div className="p-4 bg-green-50 rounded-lg border border-green-200">
+                <div className="text-center">
+                  <p className="text-sm text-gray-600 mb-1">
+                    You will {offer.type === 'sell' ? 'pay' : 'receive'}:
+                  </p>
+                  <p className="font-bold text-xl text-green-700">
+                    ₦{(parseFloat(amount) * parseFloat(offer.rate)).toLocaleString()}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            <Button 
+              onClick={handleCreateTrade} 
+              className="w-full h-12 text-base font-medium" 
+              disabled={!amount || parseFloat(amount) <= 0 || processing}
+            >
+              {processing ? 'Creating Trade...' : `Confirm ${offer.type === 'sell' ? 'Buy' : 'Sell'} Order`}
+            </Button>
           </div>
-        </div>
-      )}
-
-      {validateAmount() && (
-        <Alert variant="destructive">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertDescription>{validateAmount()}</AlertDescription>
-        </Alert>
-      )}
-
-      <Button 
-        onClick={() => setStep(2)} 
-        disabled={!!validateAmount() || !agreedToTerms}
-        className="w-full"
-        size="lg"
-      >
-        Continue
-        <ArrowRight className="h-4 w-4 ml-2" />
-      </Button>
-
-      <div className="flex items-start gap-2">
-        <input
-          type="checkbox"
-          id="terms"
-          checked={agreedToTerms}
-          onChange={(e) => setAgreedToTerms(e.target.checked)}
-          className="mt-1"
-        />
-        <label htmlFor="terms" className="text-sm text-gray-600">
-          I agree to the terms and conditions and understand the risks involved in P2P trading
-        </label>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 
@@ -276,7 +305,7 @@ export function BinanceStyleFlow({ isOpen, onClose, offer }: BinanceStyleFlowPro
           <div className="flex justify-between items-center">
             <span className="text-gray-600">Payment Window:</span>
             <div className="flex items-center gap-1">
-              <Timer className="h-3 w-3" />
+              <Clock className="h-3 w-3" />
               <span className="font-medium">{offer.timeLimit} minutes</span>
             </div>
           </div>
@@ -323,21 +352,96 @@ export function BinanceStyleFlow({ isOpen, onClose, offer }: BinanceStyleFlowPro
     </div>
   );
 
+  const renderStepContent = () => {
+    switch (step) {
+      case 1:
+        return renderStep1();
+      case 2:
+        return renderStep2();
+      default:
+        return null;
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center justify-between">
-            <span>Create Trade</span>
-            <Badge variant="outline">Step {step} of 2</Badge>
-          </DialogTitle>
+      <DialogContent className="max-w-4xl max-h-[95vh] p-0 gap-0 rounded-lg md:rounded-lg">
+        {/* Mobile-Friendly Header */}
+        <DialogHeader className="px-4 py-3 border-b bg-white sticky top-0 z-10 rounded-t-lg">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              {step > 1 ? (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setStep(step - 1)}
+                  className="p-2 h-8 w-8"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                </Button>
+              ) : (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={onClose}
+                  className="p-2 h-8 w-8"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
+              <div>
+                <DialogTitle className="text-lg font-bold flex items-center gap-2">
+                  {offer.type === 'sell' ? 'Buy' : 'Sell'} USDT
+                  <Badge 
+                    variant={offer.type === 'sell' ? 'default' : 'destructive'}
+                    className="text-xs"
+                  >
+                    {offer.type === 'sell' ? 'Buy' : 'Sell'}
+                  </Badge>
+                </DialogTitle>
+                <p className="text-sm text-gray-600">
+                  Step {step} of 4
+                </p>
+              </div>
+            </div>
+          </div>
         </DialogHeader>
 
-        {/* Progress Bar */}
-        <Progress value={(step / 2) * 100} className="w-full" />
-
-        {step === 1 ? renderStep1() : renderStep2()}
+        <div className="p-4 space-y-6 overflow-y-auto max-h-[calc(95vh-80px)]">
+          {renderStepContent()}
+        </div>
       </DialogContent>
     </Dialog>
   );
+}
+
+// Helper functions for icons and labels
+function getPaymentMethodIcon(method: string) {
+  switch (method) {
+    case "bank_transfer":
+      return <Building className="h-4 w-4" />;
+    case "mobile_money":
+      return <Smartphone className="h-4 w-4" />;
+    case "credit_card":
+      return <CreditCard className="h-4 w-4" />;
+    case "wallet":
+      return <Wallet className="h-4 w-4" />;
+    default:
+      return <CreditCard className="h-4 w-4" />;
+  }
+}
+
+function getPaymentMethodLabel(method: string) {
+  switch (method) {
+    case "bank_transfer":
+      return "Bank Transfer";
+    case "mobile_money":
+      return "Mobile Money";
+    case "credit_card":
+      return "Credit Card";
+    case "wallet":
+      return "Wallet";
+    default:
+      return "Unknown";
+  }
 }

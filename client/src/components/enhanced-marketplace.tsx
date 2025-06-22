@@ -489,87 +489,88 @@ export function EnhancedMarketplace() {
           ) : (
             <div className="space-y-4">
               {filteredOffers.map((offer) => (
-                <Card key={offer.id} className="hover:shadow-md transition-shadow">
-                  <CardContent className="p-4">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                      <div className="flex-1 space-y-3">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium">{offer.user?.email || 'Unknown'}</span>
+                <Card key={offer.id} className="hover:shadow-md transition-shadow border-0 shadow-sm">
+                  <CardContent className="p-3 sm:p-4">
+                    <div className="space-y-3">
+                      {/* Mobile Header */}
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="font-medium text-sm truncate">{offer.user?.email || 'Unknown'}</span>
                             {offer.user?.kycVerified && (
-                              <Badge variant="outline" className="text-green-600 border-green-600">
-                                <Shield className="h-3 w-3 mr-1" />
-                                Verified
+                              <Badge variant="outline" className="text-green-600 border-green-600 text-xs px-1 py-0">
+                                <Shield className="h-2 w-2 mr-1" />
+                                <span className="hidden sm:inline">Verified</span>
+                                <span className="sm:hidden">✓</span>
                               </Badge>
                             )}
+                          </div>
+                          <div className="flex items-center gap-2 text-xs text-gray-600">
                             <div className="flex items-center gap-1">
                               <Star className="h-3 w-3 text-yellow-400 fill-current" />
-                              <span className="text-xs">
-                                {safeParseFloat(offer.user?.averageRating).toFixed(1)} ({offer.user?.ratingCount || 0})
-                              </span>
+                              <span>{safeParseFloat(offer.user?.averageRating).toFixed(1)}</span>
+                              <span>({offer.user?.ratingCount || 0})</span>
                             </div>
-                          </div>
-                          <Badge variant="outline" className="flex items-center gap-1">
-                            {getPaymentMethodIcon(offer.paymentMethod)}
-                            <span className="ml-1">
-                              {paymentMethodLabels[offer.paymentMethod as keyof typeof paymentMethodLabels] || offer.paymentMethod}
-                            </span>
-                          </Badge>
-                        </div>
-
-                        <div className="grid grid-cols-3 gap-4 text-sm">
-                          <div>
-                            <p className="text-gray-600">Available</p>
-                            <p className="font-semibold">
-                              {safeParseFloat(offer.amount).toFixed(2)} USDT
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-gray-600">Rate</p>
-                            <p className="font-semibold text-green-600">
-                              ₦{safeParseFloat(offer.rate).toLocaleString()}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-gray-600">Limits</p>
-                            <p className="font-semibold">
-                              {offer.minAmount && offer.maxAmount 
-                                ? `${safeParseFloat(offer.minAmount).toFixed(2)} - ${safeParseFloat(offer.maxAmount).toFixed(2)} USDT`
-                                : `${safeParseFloat(offer.amount).toFixed(2)} USDT`}
-                            </p>
+                            <span>•</span>
+                            <span>{offer.user?.completedTrades || 0} trades</span>
                           </div>
                         </div>
+                        <Badge variant="outline" className="flex items-center gap-1 text-xs px-2 py-1">
+                          {getPaymentMethodIcon(offer.paymentMethod)}
+                          <span className="hidden sm:inline ml-1">
+                            {paymentMethodLabels[offer.paymentMethod as keyof typeof paymentMethodLabels] || offer.paymentMethod}
+                          </span>
+                        </Badge>
+                      </div>
 
-                        {offer.terms && (
-                          <div className="text-xs text-gray-600 bg-gray-50 p-2 rounded">
-                            <strong>Terms:</strong> {offer.terms}
+                      <div className="grid grid-cols-3 gap-2 text-sm">
+                        <div>
+                          <p className="text-gray-600 text-xs">Available</p>
+                          <p className="font-semibold">{safeParseFloat(offer.amount).toFixed(2)} USDT</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-600 text-xs">Rate</p>
+                          <p className="font-semibold text-green-600">
+                            ₦{safeParseFloat(offer.rate).toLocaleString()}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-gray-600 text-xs">Limits</p>
+                          <p className="font-semibold">
+                            {offer.minAmount && offer.maxAmount
+                              ? `${safeParseFloat(offer.minAmount).toFixed(2)} - ${safeParseFloat(offer.maxAmount).toFixed(2)} USDT`
+                              : `${safeParseFloat(offer.amount).toFixed(2)} USDT`}
+                          </p>
+                        </div>
+                      </div>
+
+                      {offer.terms && (
+                        <div className="text-xs text-gray-600 bg-gray-50 p-2 rounded">
+                          <strong>Terms:</strong> {offer.terms}
+                        </div>
+                      )}
+
+                      {/* <div className="flex items-center gap-4 text-xs text-gray-500">
+                        {offer.timeLimit && (
+                          <div className="flex items-center gap-1">
+                            <Clock className="h-3 w-3" />
+                            {offer.timeLimit} min payment window
                           </div>
                         )}
-
-                        <div className="flex items-center gap-4 text-xs text-gray-500">
-                          {offer.timeLimit && (
-                            <div className="flex items-center gap-1">
-                              <Clock className="h-3 w-3" />
-                              {offer.timeLimit} min payment window
-                            </div>
-                          )}
-                          <div className="flex items-center gap-1">
-                            <Users className="h-3 w-3" />
-                            {offer.user?.completedTrades || 0} completed trades
-                          </div>
+                        <div className="flex items-center gap-1">
+                          <Users className="h-3 w-3" />
+                          {offer.user?.completedTrades || 0} completed trades
                         </div>
-                      </div>
-
-                      <div className="md:w-32">
-                        <Button 
-                          onClick={() => handleTrade(offer)}
-                          className="w-full bg-green-600 hover:bg-green-700"
-                          disabled={!user}
-                        >
-                          Buy USDT
-                        </Button>
-                      </div>
+                      </div> */}
                     </div>
+
+                    <Button
+                      onClick={() => handleTrade(offer)}
+                      className="w-full bg-green-600 hover:bg-green-700 text-sm"
+                      disabled={!user}
+                    >
+                      Buy USDT
+                    </Button>
                   </CardContent>
                 </Card>
               ))}
@@ -588,83 +589,86 @@ export function EnhancedMarketplace() {
           ) : (
             <div className="space-y-4">
               {filteredOffers.map((offer) => (
-                <Card key={offer.id} className="hover:shadow-md transition-shadow">
-                  <CardContent className="p-4">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                      <div className="flex-1 space-y-3">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium">{offer.user?.email || 'Unknown'}</span>
+                <Card key={offer.id} className="hover:shadow-md transition-shadow border-0 shadow-sm">
+                  <CardContent className="p-3 sm:p-4">
+                    <div className="space-y-3">
+                      {/* Mobile Header */}
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="font-medium text-sm truncate">{offer.user?.email || 'Unknown'}</span>
                             {offer.user?.kycVerified && (
-                              <Badge variant="outline" className="text-green-600 border-green-600">
-                                <Shield className="h-3 w-3 mr-1" />
-                                Verified
+                              <Badge variant="outline" className="text-green-600 border-green-600 text-xs px-1 py-0">
+                                <Shield className="h-2 w-2 mr-1" />
+                                <span className="hidden sm:inline">Verified</span>
+                                <span className="sm:hidden">✓</span>
                               </Badge>
                             )}
+                          </div>
+                          <div className="flex items-center gap-2 text-xs text-gray-600">
                             <div className="flex items-center gap-1">
                               <Star className="h-3 w-3 text-yellow-400 fill-current" />
-                              <span className="text-xs">
-                                {safeParseFloat(offer.user?.averageRating).toFixed(1)} ({offer.user?.ratingCount || 0})
-                              </span>
+                              <span>{safeParseFloat(offer.user?.averageRating).toFixed(1)}</span>
+                              <span>({offer.user?.ratingCount || 0})</span>
                             </div>
-                          </div>
-                          <Badge variant="outline" className="flex items-center gap-1">
-                            {getPaymentMethodIcon(offer.paymentMethod)}
-                            <span className="ml-1">
-                              {paymentMethodLabels[offer.paymentMethod as keyof typeof paymentMethodLabels] || offer.paymentMethod}
-                            </span>
-                          </Badge>
-                        </div>
-
-                        <div className="grid grid-cols-3 gap-4 text-sm">
-                          <div>
-                            <p className="text-gray-600">Buying</p>
-                            <p className="font-semibold">{safeParseFloat(offer.amount).toFixed(2)} USDT</p>
-                          </div>
-                          <div>
-                            <p className="text-gray-600">Rate</p>
-                            <p className="font-semibold text-red-600">₦{safeParseFloat(offer.rate).toLocaleString()}</p>
-                          </div>
-                          <div>
-                            <p className="text-gray-600">Limits</p>
-                            <p className="font-semibold">
-                              {offer.minAmount && offer.maxAmount 
-                                ? `${safeParseFloat(offer.minAmount).toFixed(2)} - ${safeParseFloat(offer.maxAmount).toFixed(2)} USDT`
-                                : `${safeParseFloat(offer.amount).toFixed(2)} USDT`}
-                            </p>
+                            <span>•</span>
+                            <span>{offer.user?.completedTrades || 0} trades</span>
                           </div>
                         </div>
+                        <Badge variant="outline" className="flex items-center gap-1 text-xs px-2 py-1">
+                          {getPaymentMethodIcon(offer.paymentMethod)}
+                          <span className="hidden sm:inline ml-1">
+                            {paymentMethodLabels[offer.paymentMethod as keyof typeof paymentMethodLabels] || offer.paymentMethod}
+                          </span>
+                        </Badge>
+                      </div>
 
-                        {offer.terms && (
-                          <div className="text-xs text-gray-600 bg-gray-50 p-2 rounded">
-                            <strong>Terms:</strong> {offer.terms}
+                      <div className="grid grid-cols-3 gap-2 text-sm">
+                        <div>
+                          <p className="text-gray-600 text-xs">Buying</p>
+                          <p className="font-semibold">{safeParseFloat(offer.amount).toFixed(2)} USDT</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-600 text-xs">Rate</p>
+                          <p className="font-semibold text-red-600">₦{safeParseFloat(offer.rate).toLocaleString()}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-600 text-xs">Limits</p>
+                          <p className="font-semibold">
+                            {offer.minAmount && offer.maxAmount
+                              ? `${safeParseFloat(offer.minAmount).toFixed(2)} - ${safeParseFloat(offer.maxAmount).toFixed(2)} USDT`
+                              : `${safeParseFloat(offer.amount).toFixed(2)} USDT`}
+                          </p>
+                        </div>
+                      </div>
+
+                      {offer.terms && (
+                        <div className="text-xs text-gray-600 bg-gray-50 p-2 rounded">
+                          <strong>Terms:</strong> {offer.terms}
+                        </div>
+                      )}
+
+                      {/* <div className="flex items-center gap-4 text-xs text-gray-500">
+                        {offer.timeLimit && (
+                          <div className="flex items-center gap-1">
+                            <Clock className="h-3 w-3" />
+                            {offer.timeLimit} min payment window
                           </div>
                         )}
-
-                        <div className="flex items-center gap-4 text-xs text-gray-500">
-                          {offer.timeLimit && (
-                            <div className="flex items-center gap-1">
-                              <Clock className="h-3 w-3" />
-                              {offer.timeLimit} min payment window
-                            </div>
-                          )}
-                          <div className="flex items-center gap-1">
-                            <Users className="h-3 w-3" />
-                            {offer.user?.completedTrades || 0} completed trades
-                          </div>
+                        <div className="flex items-center gap-1">
+                          <Users className="h-3 w-3" />
+                          {offer.user?.completedTrades || 0} completed trades
                         </div>
-                      </div>
-
-                      <div className="md:w-32">
-                        <Button 
-                          onClick={() => handleTrade(offer)}
-                          className="w-full bg-red-600 hover:bg-red-700"
-                          disabled={!user}
-                        >
-                          Sell USDT
-                        </Button>
-                      </div>
+                      </div> */}
                     </div>
+
+                    <Button
+                      onClick={() => handleTrade(offer)}
+                      className="w-full bg-red-600 hover:bg-red-700 text-sm"
+                      disabled={!user}
+                    >
+                      Sell USDT
+                    </Button>
                   </CardContent>
                 </Card>
               ))}
