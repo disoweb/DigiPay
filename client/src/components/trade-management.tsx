@@ -207,10 +207,11 @@ export function TradeManagement() {
 
     // Check if trade has expired based on payment deadline
     if (trade.paymentDeadline && new Date() > new Date(trade.paymentDeadline)) {
+      // Mark as expired in the background if needed
       return false;
     }
 
-    return true;
+    return ["pending", "payment_pending", "payment_made", "disputed"].includes(trade.status);
   }) || [];
 
   return (

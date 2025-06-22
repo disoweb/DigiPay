@@ -27,27 +27,33 @@ export function PaymentInstructions({ trade, userRole, onPaymentMarked, onPaymen
     });
   };
 
-  const handleMarkPayment = async () => {
-    setIsMarkingPaid(true);
-    try {
-      const token = localStorage.getItem('token');
+  const markPaymentMutation = useMutation({
+    mutationFn: async () => {
       const response = await apiRequest("POST", `/api/trades/${trade.id}/payment-made`);
-
-      const data = await response.json();
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to mark payment");
+      }
+      return response.json();
+    },
+    onSuccess: () => {
       toast({
         title: "Payment Marked",
         description: "Payment has been marked as made",
       });
       onPaymentMarked();
-    } catch (error) {
+    },
+    onError: (error: any) => {
       toast({
         title: "Error",
-        description: "Failed to mark payment",
+        description: error.message || "Failed to mark payment",
         variant: "destructive",
       });
-    } finally {
-      setIsMarkingPaid(false);
-    }
+    },
+  });
+
+  const handleMarkPayment = () => {
+    markPaymentMutation.mutate();
   };
 
   const handleConfirmPayment = async () => {
@@ -163,11 +169,11 @@ export function PaymentInstructions({ trade, userRole, onPaymentMarked, onPaymen
           {trade.status === "payment_pending" && (
             <Button
               onClick={handleMarkPayment}
-              disabled={isMarkingPaid}
+              disabled={markPaymentMutation.isPending}
               className="w-full"
               size="lg"
             >
-              {isMarkingPaid ? (
+              {markPaymentMutation.isPending ? (
                 "Marking as Paid..."
               ) : (
                 <>
@@ -251,11 +257,11 @@ export function PaymentInstructions({ trade, userRole, onPaymentMarked, onPaymen
           {trade.status === "payment_pending" && (
             <Button
               onClick={handleMarkPayment}
-              disabled={isMarkingPaid}
+              disabled={markPaymentMutation.isPending}
               className="w-full"
               size="lg"
             >
-              {isMarkingPaid ? (
+              {markPaymentMutation.isPending ? (
                 "Marking as Paid..."
               ) : (
                 <>

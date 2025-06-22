@@ -101,15 +101,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return tradeDate > yesterday;
       });
 
-      const buyRates = sellOffers.map(o => parseFloat(o.rate)).filter(rate => !isNaN(rate));
-      const sellRates = buyOffers.map(o => parseFloat(o.rate)).filter(rate => !isNaN(rate));
+      // For buy rate: users want to buy USDT, so look at sell offers (lowest rate is best for buyers)
+      // For sell rate: users want to sell USDT, so look at buy offers (highest rate is best for sellers)
+      const sellOfferRates = sellOffers.map(o => parseFloat(o.rate)).filter(rate => !isNaN(rate) && rate > 0);
+      const buyOfferRates = buyOffers.map(o => parseFloat(o.rate)).filter(rate => !isNaN(rate) && rate > 0);
 
       const stats = {
         totalOffers: activeOffers.length,
-        buyOffers: buyOffers.length,
-        sellOffers: sellOffers.length,
-        bestBuyRate: buyRates.length ? Math.min(...buyRates) : null,
-        bestSellRate: sellRates.length ? Math.max(...sellRates) : null,
+        buyOffers: sellOffers.length, // Count of sell offers available for buying
+        sellOffers: buyOffers.length, // Count of buy offers available for selling
+        bestBuyRate: sellOfferRates.length ? Math.min(...sellOfferRates) : null,
+        bestSellRate: buyOfferRates.length ? Math.max(...buyOfferRates) : null,
         totalVolume: totalVolume,
         last24hVolume: last24hTrades.reduce((sum, trade) => {
           return sum + (parseFloat(trade.amount) * parseFloat(trade.rate));
@@ -1996,6 +1998,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`Fetching trades for user ${userId}`);
 
       const trades = await storage.getUserTrades(userId);
+
+      // Check for expired trades and update their status
+      const now = new Date();
+      for (const trade of trades) {
+        if (trade.paymentDeadline && 
+            new Date(trade.paymentDeadline) < now && 
+            ["payment_pending"].includes(trade.status)) {
+          await storage.updateTrade(trade.id, { status: "expired" });
+          trade.status = "expired"; // Update the local object
+        }
+      }
 
       console.log(`Found ${trades.length} trades for user ${userId}`);
       res.json(trades);
