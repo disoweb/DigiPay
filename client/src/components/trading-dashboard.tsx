@@ -86,55 +86,68 @@ export function TradingDashboard() {
   return (
     <div className="space-y-6">
 
-        <div className="grid grid-cols-2 gap-4 md:gap-6">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
           <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-2">
-                <DollarSign className="h-4 w-4 text-muted-foreground" />
-                <div>
-                  <p className="text-sm text-gray-600">USDT Balance</p>
-                  <p className="font-bold text-xl">{user?.usdtBalance || "0.00"}</p>
-                </div>
-              </div>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">USDT Balance</CardTitle>
+              <DollarSign className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{user?.usdtBalance || "0.00"}</div>
+              <p className="text-xs text-muted-foreground">
+                Available for trading
+              </p>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-2">
-                <BarChart3 className="h-4 w-4 text-blue-600" />
-                <div>
-                  <p className="text-sm text-gray-600">Total Trades</p>
-                  <p className="font-bold text-xl">{trades.length}</p>
-                </div>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-2">
+              <BarChart3 className="h-4 w-4 text-blue-600" />
+              <div>
+                <p className="text-sm text-gray-600">Total Trades</p>
+                <p className="font-bold text-xl">{trades.length}</p>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </CardContent>
+        </Card>
 
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-2">
-                <DollarSign className="h-4 w-4 text-green-600" />
-                <div>
-                  <p className="text-sm text-gray-600">Total Volume</p>
-                  <p className="font-bold text-xl">₦{totalVolume.toLocaleString()}</p>
-                </div>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-2">
+              <DollarSign className="h-4 w-4 text-green-600" />
+              <div>
+                <p className="text-sm text-gray-600">Total Volume</p>
+                <p className="font-bold text-xl">₦{totalVolume.toLocaleString()}</p>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </CardContent>
+        </Card>
 
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-2">
-                <CheckCircle className="h-4 w-4 text-green-600" />
-                <div>
-                  <p className="text-sm text-gray-600">Success Rate</p>
-                  <p className="font-bold text-xl">{successRate.toFixed(1)}%</p>
-                </div>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-2">
+              <CheckCircle className="h-4 w-4 text-green-600" />
+              <div>
+                <p className="text-sm text-gray-600">Success Rate</p>
+                <p className="font-bold text-xl">{successRate.toFixed(1)}%</p>
               </div>
-            </CardContent>
-          </Card>
-        </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-2">
+              <Activity className="h-4 w-4 text-purple-600" />
+              <div>
+                <p className="text-sm text-gray-600">Active Offers</p>
+                <p className="font-bold text-xl">{activeOffers.length}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
 
 
