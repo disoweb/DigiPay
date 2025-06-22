@@ -85,7 +85,7 @@ export function TradingDashboard() {
 
   // Calculate total portfolio value in NGN
   const usdtInNgn = parseFloat(user?.usdtBalance || "0") * 1485; // Using exchange rate
-  const ngnBalance = parseFloat(user?.ngnBalance || "0");
+  const ngnBalance = parseFloat(user?.nairaBalance || "0");
   const totalPortfolioValue = usdtInNgn + ngnBalance;
 
   return (
