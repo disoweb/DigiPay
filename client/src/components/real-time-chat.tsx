@@ -253,7 +253,7 @@ export function RealTimeChat({ tradeId }: RealTimeChatProps) {
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-4">
+      <div className="overflow-y-auto p-4 min-h-0">
         {messages.length === 0 && pendingMessages.size === 0 ? (
           <div className="text-center py-8">
             <div className="bg-white dark:bg-gray-800 rounded-xl p-4 mx-auto max-w-xs shadow-sm">
@@ -267,9 +267,12 @@ export function RealTimeChat({ tradeId }: RealTimeChatProps) {
           </div>
         ) : (
           <div className="space-y-4">
-            {[...messages, ...Array.from(pendingMessages.values())].sort((a, b) => 
-              new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-            ).map((msg, index) => {
+            {(() => {
+              const allMessages = [...messages, ...Array.from(pendingMessages.values())];
+              return allMessages.sort((a, b) => 
+                new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+              );
+            })().map((msg, index) => {
                 const isOwnMessage = msg.senderId === user?.id;
                 const isPending = msg.status === 'sending';
                 const isFailed = msg.status === 'failed';
@@ -319,7 +322,7 @@ export function RealTimeChat({ tradeId }: RealTimeChatProps) {
                             ) : isFailed ? (
                               <div className="h-3 w-3 rounded-full bg-red-500" />
                             ) : (
-                              <CheckCheck className="h-3 w-3 text-blue-200" />
+                              <CheckCheck className="h-3 w-3 text-blue-600" />
                             )}
                           </div>
                         )}
