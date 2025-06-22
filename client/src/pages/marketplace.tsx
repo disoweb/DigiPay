@@ -1,6 +1,7 @@
+
 import { useState } from "react";
 import { Navbar } from "@/components/navbar";
-import { MarketplaceFallback } from "@/components/marketplace-fallback";
+import { EnhancedMarketplace } from "@/components/enhanced-marketplace";
 import { CreateOfferModal } from "@/components/create-offer-modal";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
@@ -28,7 +29,7 @@ export default function Marketplace() {
           </Button>
         </div>
 
-        <MarketplaceFallback />
+        <EnhancedMarketplace />
 
         <CreateOfferModal
           open={showCreateOffer}

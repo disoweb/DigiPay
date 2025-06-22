@@ -1,0 +1,382 @@
+
+import { useState, useEffect } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Progress } from "@/components/ui/progress";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
+import { apiRequest } from "@/lib/queryClient";
+import { 
+  Clock, 
+  CheckCircle, 
+  XCircle, 
+  AlertTriangle,
+  Eye,
+  MessageCircle,
+  Shield,
+  Timer,
+  TrendingUp,
+  TrendingDown,
+  User,
+  DollarSign
+} from "lucide-react";
+
+interface Trade {
+  id: number;
+  offerId: number;
+  buyerId: number;
+  sellerId: number;
+  amount: string;
+  rate: string;
+  fiatAmount: string;
+  status: string;
+  escrowAddress?: string;
+  paymentDeadline?: string;
+  paymentMadeAt?: string;
+  sellerConfirmedAt?: string;
+  disputeReason?: string;
+  paymentReference?: string;
+  paymentProof?: string;
+  createdAt: string;
+  buyer?: { id: number; email: string; averageRating: string };
+  seller?: { id: number; email: string; averageRating: string };
+  offer?: { type: string; paymentMethod?: string };
+}
+
+export function TradeManagement() {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [selectedStatus, setSelectedStatus] = useState<'all' | 'active' | 'completed' | 'disputed'>('all');
+
+  const { data: trades = [], isLoading } = useQuery<Trade[]>({
+    queryKey: ['/api/trades'],
+    refetchInterval: 5000,
+  });
+
+  const cancelTradeMutation = useMutation({
+    mutationFn: async (tradeId: number) => {
+      const response = await apiRequest("POST", `/api/trades/${tradeId}/cancel`, {
+        reason: "User requested cancellation"
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Trade Cancelled",
+        description: "Trade has been cancelled successfully",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/trades'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to cancel trade",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'pending': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'payment_pending': return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'payment_made': return 'bg-orange-100 text-orange-800 border-orange-200';
+      case 'completed': return 'bg-green-100 text-green-800 border-green-200';
+      case 'disputed': return 'bg-red-100 text-red-800 border-red-200';
+      case 'cancelled': return 'bg-gray-100 text-gray-800 border-gray-200';
+      case 'expired': return 'bg-red-100 text-red-800 border-red-200';
+      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'pending': return <Clock className="h-4 w-4" />;
+      case 'payment_pending': return <Timer className="h-4 w-4" />;
+      case 'payment_made': return <AlertTriangle className="h-4 w-4" />;
+      case 'completed': return <CheckCircle className="h-4 w-4" />;
+      case 'disputed': return <AlertTriangle className="h-4 w-4" />;
+      case 'cancelled': return <XCircle className="h-4 w-4" />;
+      case 'expired': return <XCircle className="h-4 w-4" />;
+      default: return <Clock className="h-4 w-4" />;
+    }
+  };
+
+  const filteredTrades = trades.filter(trade => {
+    if (selectedStatus === 'all') return true;
+    if (selectedStatus === 'active') {
+      return ['pending', 'payment_pending', 'payment_made'].includes(trade.status);
+    }
+    if (selectedStatus === 'completed') return trade.status === 'completed';
+    if (selectedStatus === 'disputed') return trade.status === 'disputed';
+    return true;
+  });
+
+  const getTimeRemaining = (deadline: string) => {
+    const now = Date.now();
+    const deadlineTime = new Date(deadline).getTime();
+    const remaining = Math.max(0, deadlineTime - now);
+    
+    if (remaining === 0) return "Expired";
+    
+    const minutes = Math.floor(remaining / 60000);
+    const seconds = Math.floor((remaining % 60000) / 1000);
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  };
+
+  const getTradeRole = (trade: Trade): 'buyer' | 'seller' => {
+    return trade.buyerId === user?.id ? 'buyer' : 'seller';
+  };
+
+  const getTradePartner = (trade: Trade) => {
+    const role = getTradeRole(trade);
+    return role === 'buyer' ? trade.seller : trade.buyer;
+  };
+
+  const canCancelTrade = (trade: Trade) => {
+    return ['pending', 'payment_pending'].includes(trade.status) && 
+           (trade.buyerId === user?.id || trade.sellerId === user?.id);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Trade Statistics */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-2">
+              <Clock className="h-4 w-4 text-blue-600" />
+              <div>
+                <p className="text-sm text-gray-600">Active</p>
+                <p className="font-bold text-blue-600">
+                  {trades.filter(t => ['pending', 'payment_pending', 'payment_made'].includes(t.status)).length}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-2">
+              <CheckCircle className="h-4 w-4 text-green-600" />
+              <div>
+                <p className="text-sm text-gray-600">Completed</p>
+                <p className="font-bold text-green-600">
+                  {trades.filter(t => t.status === 'completed').length}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-2">
+              <AlertTriangle className="h-4 w-4 text-red-600" />
+              <div>
+                <p className="text-sm text-gray-600">Disputed</p>
+                <p className="font-bold text-red-600">
+                  {trades.filter(t => t.status === 'disputed').length}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-2">
+              <DollarSign className="h-4 w-4 text-purple-600" />
+              <div>
+                <p className="text-sm text-gray-600">Total Volume</p>
+                <p className="font-bold text-purple-600">
+                  ₦{trades
+                    .filter(t => t.status === 'completed')
+                    .reduce((sum, t) => sum + parseFloat(t.fiatAmount), 0)
+                    .toLocaleString()}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Filter Tabs */}
+      <Tabs value={selectedStatus} onValueChange={(value) => setSelectedStatus(value as any)}>
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="all">All Trades ({trades.length})</TabsTrigger>
+          <TabsTrigger value="active">
+            Active ({trades.filter(t => ['pending', 'payment_pending', 'payment_made'].includes(t.status)).length})
+          </TabsTrigger>
+          <TabsTrigger value="completed">
+            Completed ({trades.filter(t => t.status === 'completed').length})
+          </TabsTrigger>
+          <TabsTrigger value="disputed">
+            Disputed ({trades.filter(t => t.status === 'disputed').length})
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value={selectedStatus} className="space-y-4">
+          {filteredTrades.length === 0 ? (
+            <Alert>
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                No trades found in this category.
+              </AlertDescription>
+            </Alert>
+          ) : (
+            <div className="space-y-4">
+              {filteredTrades.map((trade) => {
+                const role = getTradeRole(trade);
+                const partner = getTradePartner(trade);
+                const isExpiringSoon = trade.paymentDeadline && 
+                  new Date(trade.paymentDeadline).getTime() - Date.now() < 5 * 60 * 1000; // 5 minutes
+
+                return (
+                  <Card key={trade.id} className={`${isExpiringSoon ? 'border-red-300 bg-red-50' : ''}`}>
+                    <CardContent className="p-4">
+                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div className="flex-1 space-y-3">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium">Trade #{trade.id}</span>
+                              <Badge className={`${getStatusColor(trade.status)} flex items-center gap-1`}>
+                                {getStatusIcon(trade.status)}
+                                {trade.status.replace('_', ' ').toUpperCase()}
+                              </Badge>
+                              {role === 'buyer' ? (
+                                <Badge variant="outline" className="text-green-600 border-green-600">
+                                  <TrendingUp className="h-3 w-3 mr-1" />
+                                  Buying
+                                </Badge>
+                              ) : (
+                                <Badge variant="outline" className="text-red-600 border-red-600">
+                                  <TrendingDown className="h-3 w-3 mr-1" />
+                                  Selling
+                                </Badge>
+                              )}
+                            </div>
+                            {trade.escrowAddress && (
+                              <Badge variant="outline" className="text-blue-600 border-blue-600">
+                                <Shield className="h-3 w-3 mr-1" />
+                                Escrow Protected
+                              </Badge>
+                            )}
+                          </div>
+
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                            <div>
+                              <p className="text-gray-600">Amount</p>
+                              <p className="font-semibold">{parseFloat(trade.amount).toFixed(2)} USDT</p>
+                            </div>
+                            <div>
+                              <p className="text-gray-600">Rate</p>
+                              <p className="font-semibold">₦{parseFloat(trade.rate).toLocaleString()}</p>
+                            </div>
+                            <div>
+                              <p className="text-gray-600">Total</p>
+                              <p className="font-semibold">₦{parseFloat(trade.fiatAmount).toLocaleString()}</p>
+                            </div>
+                            <div>
+                              <p className="text-gray-600">Partner</p>
+                              <p className="font-semibold">{partner?.email}</p>
+                            </div>
+                          </div>
+
+                          {/* Payment Timer */}
+                          {trade.status === 'payment_pending' && trade.paymentDeadline && (
+                            <div className={`p-3 rounded-lg ${isExpiringSoon ? 'bg-red-100 border border-red-200' : 'bg-blue-50 border border-blue-200'}`}>
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                  <Timer className={`h-4 w-4 ${isExpiringSoon ? 'text-red-600' : 'text-blue-600'}`} />
+                                  <span className={`font-medium ${isExpiringSoon ? 'text-red-900' : 'text-blue-900'}`}>
+                                    Payment Deadline
+                                  </span>
+                                </div>
+                                <span className={`font-bold ${isExpiringSoon ? 'text-red-700' : 'text-blue-700'}`}>
+                                  {getTimeRemaining(trade.paymentDeadline)}
+                                </span>
+                              </div>
+                              {isExpiringSoon && (
+                                <p className="text-xs text-red-700 mt-1">
+                                  ⚠️ Payment deadline approaching! Complete payment to avoid cancellation.
+                                </p>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Payment Reference */}
+                          {trade.paymentReference && (
+                            <div className="text-xs text-gray-600 bg-gray-50 p-2 rounded">
+                              <strong>Payment Reference:</strong> {trade.paymentReference}
+                            </div>
+                          )}
+
+                          {/* Trade Actions */}
+                          <div className="flex flex-wrap gap-2">
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => window.open(`/trade/${trade.id}`, '_blank')}
+                            >
+                              <Eye className="h-3 w-3 mr-1" />
+                              View Details
+                            </Button>
+                            
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => window.open(`/trade/${trade.id}#chat`, '_blank')}
+                            >
+                              <MessageCircle className="h-3 w-3 mr-1" />
+                              Chat
+                            </Button>
+
+                            {canCancelTrade(trade) && (
+                              <Button 
+                                variant="destructive" 
+                                size="sm"
+                                onClick={() => cancelTradeMutation.mutate(trade.id)}
+                                disabled={cancelTradeMutation.isPending}
+                              >
+                                {cancelTradeMutation.isPending ? (
+                                  <>
+                                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-1" />
+                                    Cancelling...
+                                  </>
+                                ) : (
+                                  <>
+                                    <XCircle className="h-3 w-3 mr-1" />
+                                    Cancel
+                                  </>
+                                )}
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}

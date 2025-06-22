@@ -80,6 +80,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Market stats endpoint
+  app.get("/api/market/stats", async (req, res) => {
+    try {
+      const offers = await storage.getOffers();
+      const trades = await storage.getTrades();
+      
+      const activeOffers = offers.filter(o => o.status === 'active');
+      const buyOffers = activeOffers.filter(o => o.type === 'buy');
+      const sellOffers = activeOffers.filter(o => o.type === 'sell');
+      
+      const completedTrades = trades.filter(t => t.status === 'completed');
+      const totalVolume = completedTrades.reduce((sum, trade) => {
+        return sum + (parseFloat(trade.amount) * parseFloat(trade.rate));
+      }, 0);
+      
+      const last24hTrades = completedTrades.filter(trade => {
+        const tradeDate = new Date(trade.createdAt);
+        const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
+        return tradeDate > yesterday;
+      });
+      
+      const buyRates = sellOffers.map(o => parseFloat(o.rate));
+      const sellRates = buyOffers.map(o => parseFloat(o.rate));
+      
+      const stats = {
+        totalOffers: activeOffers.length,
+        buyOffers: buyOffers.length,
+        sellOffers: sellOffers.length,
+        bestBuyRate: buyRates.length ? Math.min(...buyRates) : null,
+        bestSellRate: sellRates.length ? Math.max(...sellRates) : null,
+        totalVolume: totalVolume,
+        last24hVolume: last24hTrades.reduce((sum, trade) => {
+          return sum + (parseFloat(trade.amount) * parseFloat(trade.rate));
+        }, 0),
+        activeTraders: new Set(activeOffers.map(o => o.userId)).size,
+        completedTrades: completedTrades.length,
+        last24hTrades: last24hTrades.length
+      };
+      
+      res.json(stats);
+    } catch (error) {
+      console.error("Market stats error:", error);
+      res.status(500).json({ error: "Failed to fetch market stats" });
+    }
+  });
+
   // Offer routes
   app.get("/api/offers", async (req, res) => {
     try {

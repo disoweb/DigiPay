@@ -1,212 +1,419 @@
-import { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
+
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
-import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Star, Loader2, Shield } from "lucide-react";
-import type { Offer } from "@shared/schema";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Separator } from "@/components/ui/separator";
+import { useAuth } from "@/hooks/use-auth";
+import { 
+  DollarSign, 
+  Clock, 
+  Shield, 
+  AlertTriangle, 
+  CheckCircle, 
+  Star,
+  User,
+  CreditCard,
+  Building,
+  Smartphone,
+  Wallet
+} from "lucide-react";
 
-type EnrichedOffer = Offer & {
+interface Offer {
+  id: number;
+  userId: number;
+  amount: string;
+  rate: string;
+  type: string;
+  paymentMethod: string;
+  terms?: string;
+  minAmount?: string;
+  maxAmount?: string;
+  timeLimit?: number;
+  requiresVerification?: boolean;
   user: {
     id: number;
     email: string;
     averageRating: string;
     ratingCount: number;
-  } | null;
-};
-
-interface TradeModalProps {
-  offer: EnrichedOffer;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+    kycVerified?: boolean;
+    completedTrades?: number;
+  };
 }
 
-export function TradeModal({ offer, open, onOpenChange }: TradeModalProps) {
-  const { toast } = useToast();
+interface TradeModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  offer: Offer;
+  onSubmit: (amount: string) => void;
+  isLoading: boolean;
+}
+
+const paymentMethodIcons = {
+  bank_transfer: Building,
+  mobile_money: Smartphone,
+  digital_wallet: Wallet,
+  card_payment: CreditCard,
+};
+
+const paymentMethodLabels = {
+  bank_transfer: "Bank Transfer",
+  mobile_money: "Mobile Money",
+  digital_wallet: "Digital Wallet",
+  card_payment: "Card Payment",
+};
+
+export function TradeModal({ isOpen, onClose, offer, onSubmit, isLoading }: TradeModalProps) {
+  const { user } = useAuth();
   const [amount, setAmount] = useState("");
+  const [errors, setErrors] = useState<string[]>([]);
 
-  const createTradeMutation = useMutation({
-    mutationFn: async () => {
-      await apiRequest("POST", "/api/trades", {
-        offerId: offer.id,
-        amount: parseFloat(amount),
-      });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/trades"] });
-      toast({
-        title: "Success",
-        description: "Trade initiated successfully!",
-      });
-      onOpenChange(false);
-      setAmount("");
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to initiate trade",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!amount || parseFloat(amount) <= 0) {
-      toast({
-        title: "Error",
-        description: "Please enter a valid amount",
-        variant: "destructive",
-      });
-      return;
-    }
-    if (parseFloat(amount) > parseFloat(offer.amount)) {
-      toast({
-        title: "Error",
-        description: "Amount exceeds available offer",
-        variant: "destructive",
-      });
-      return;
-    }
-    createTradeMutation.mutate();
-  };
+  const minAmount = parseFloat(offer.minAmount || offer.amount);
+  const maxAmount = parseFloat(offer.maxAmount || offer.amount);
+  const availableAmount = parseFloat(offer.amount);
+  const rate = parseFloat(offer.rate);
 
   const tradeAmount = parseFloat(amount) || 0;
-  const total = tradeAmount * parseFloat(offer.rate);
+  const totalCost = tradeAmount * rate;
+
+  useEffect(() => {
+    if (isOpen) {
+      setAmount("");
+      setErrors([]);
+    }
+  }, [isOpen]);
+
+  const validateTrade = (): string[] => {
+    const newErrors: string[] = [];
+
+    if (!amount || tradeAmount <= 0) {
+      newErrors.push("Please enter a valid amount");
+    }
+
+    if (tradeAmount < minAmount) {
+      newErrors.push(`Minimum amount is ${minAmount.toFixed(2)} USDT`);
+    }
+
+    if (tradeAmount > maxAmount) {
+      newErrors.push(`Maximum amount is ${maxAmount.toFixed(2)} USDT`);
+    }
+
+    if (tradeAmount > availableAmount) {
+      newErrors.push(`Only ${availableAmount.toFixed(2)} USDT available`);
+    }
+
+    // Check user balances
+    if (offer.type === "sell" && user) {
+      // User is buying USDT, needs enough Naira
+      const userNairaBalance = parseFloat(user.nairaBalance || "0");
+      if (totalCost > userNairaBalance) {
+        newErrors.push(`Insufficient Naira balance. Need ₦${totalCost.toLocaleString()}, have ₦${userNairaBalance.toLocaleString()}`);
+      }
+    } else if (offer.type === "buy" && user) {
+      // User is selling USDT, needs enough USDT
+      const userUsdtBalance = parseFloat(user.usdtBalance || "0");
+      if (tradeAmount > userUsdtBalance) {
+        newErrors.push(`Insufficient USDT balance. Need ${tradeAmount.toFixed(2)} USDT, have ${userUsdtBalance.toFixed(8)} USDT`);
+      }
+    }
+
+    // Check KYC requirement
+    if (offer.requiresVerification && !user?.kycVerified) {
+      newErrors.push("This offer requires KYC verification");
+    }
+
+    return newErrors;
+  };
+
+  const handleSubmit = () => {
+    const validationErrors = validateTrade();
+    setErrors(validationErrors);
+
+    if (validationErrors.length === 0) {
+      onSubmit(amount);
+    }
+  };
+
+  const getPaymentMethodIcon = () => {
+    const IconComponent = paymentMethodIcons[offer.paymentMethod as keyof typeof paymentMethodIcons] || Wallet;
+    return <IconComponent className="h-4 w-4" />;
+  };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Initiate Trade</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+            {offer.type === "sell" ? (
+              <>
+                <DollarSign className="h-5 w-5 text-green-600" />
+                Buy USDT
+              </>
+            ) : (
+              <>
+                <DollarSign className="h-5 w-5 text-red-600" />
+                Sell USDT
+              </>
+            )}
+          </DialogTitle>
         </DialogHeader>
 
-        {/* Offer Details */}
-        <Card className="bg-gray-50">
-          <CardContent className="p-4">
-            <h4 className="font-medium mb-2">
-              {offer.type === "sell" ? "Buy" : "Sell"} USDT from {offer.user?.email}
+        <div className="space-y-6">
+          {/* Trader Information */}
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <h4 className="font-medium mb-3 flex items-center gap-2">
+              <User className="h-4 w-4" />
+              Trading Partner
             </h4>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span>Available:</span>
-                <span>{parseFloat(offer.amount).toFixed(2)} USDT</span>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">Email:</span>
+                <span className="font-medium">{offer.user.email}</span>
               </div>
-              <div className="flex justify-between">
-                <span>Rate:</span>
-                <span>₦{parseFloat(offer.rate).toLocaleString()}/USDT</span>
-              </div>
-              {offer.user && (
-                <div className="flex justify-between">
-                  <span>Trader Rating:</span>
-                  <span className="flex items-center">
-                    <Star className="h-3 w-3 text-yellow-400 fill-current mr-1" />
-                    {parseFloat(offer.user.averageRating).toFixed(1)} ({offer.user.ratingCount})
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">Rating:</span>
+                <div className="flex items-center gap-1">
+                  <Star className="h-3 w-3 text-yellow-400 fill-current" />
+                  <span className="text-sm font-medium">
+                    {parseFloat(offer.user.averageRating).toFixed(1)} ({offer.user.ratingCount} reviews)
                   </span>
                 </div>
-              )}
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">Completed Trades:</span>
+                <span className="font-medium">{offer.user.completedTrades || 0}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">Verification:</span>
+                {offer.user.kycVerified ? (
+                  <Badge variant="outline" className="text-green-600 border-green-600">
+                    <Shield className="h-3 w-3 mr-1" />
+                    Verified
+                  </Badge>
+                ) : (
+                  <Badge variant="outline" className="text-gray-600 border-gray-600">
+                    Not Verified
+                  </Badge>
+                )}
+              </div>
             </div>
-          </CardContent>
-        </Card>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="trade-amount">Amount to Trade (USDT)</Label>
-            <Input
-              id="trade-amount"
-              type="number"
-              step="0.01"
-              max={offer.amount}
-              placeholder="Enter amount"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              required
-            />
-            {tradeAmount > 0 && (
-              <p className="text-sm text-gray-600">
-                Total: ₦{total.toLocaleString()}
-              </p>
-            )}
           </div>
 
+          {/* Offer Details */}
+          <div className="bg-blue-50 p-4 rounded-lg">
+            <h4 className="font-medium mb-3">Offer Details</h4>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-sm text-gray-600">Type</p>
+                <p className="font-medium capitalize">{offer.type === "sell" ? "Sell USDT (You Buy)" : "Buy USDT (You Sell)"}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Rate</p>
+                <p className="font-medium text-lg">₦{rate.toLocaleString()}/USDT</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Available Amount</p>
+                <p className="font-medium">{availableAmount.toFixed(2)} USDT</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Payment Method</p>
+                <div className="flex items-center gap-1">
+                  {getPaymentMethodIcon()}
+                  <span className="font-medium text-sm">
+                    {paymentMethodLabels[offer.paymentMethod as keyof typeof paymentMethodLabels]}
+                  </span>
+                </div>
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Trade Limits</p>
+                <p className="font-medium">
+                  {minAmount.toFixed(2)} - {maxAmount.toFixed(2)} USDT
+                </p>
+              </div>
+              {offer.timeLimit && (
+                <div>
+                  <p className="text-sm text-gray-600">Payment Window</p>
+                  <div className="flex items-center gap-1">
+                    <Clock className="h-3 w-3" />
+                    <span className="font-medium">{offer.timeLimit} minutes</span>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Terms and Conditions */}
+          {offer.terms && (
+            <div className="bg-yellow-50 p-4 rounded-lg">
+              <h4 className="font-medium mb-2 flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                Terms & Conditions
+              </h4>
+              <p className="text-sm text-gray-700">{offer.terms}</p>
+            </div>
+          )}
+
+          {/* Trade Amount Input */}
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <span className="text-gray-600">Rate:</span>
-                <p className="font-medium">₦{parseFloat(offer.rate).toLocaleString()}/USDT</p>
-              </div>
-              <div>
-                <span className="text-gray-600">Available:</span>
-                <p className="font-medium">{parseFloat(offer.amount).toFixed(2)} USDT</p>
-              </div>
-              <div>
-                <span className="text-gray-600">Payment Method:</span>
-                <p className="font-medium">{offer.paymentMethod || "Bank Transfer"}</p>
-              </div>
-              <div>
-                <span className="text-gray-600">Time Limit:</span>
-                <p className="font-medium">15 minutes</p>
-              </div>
-              <div className="col-span-2">
-                <span className="text-gray-600">Total:</span>
-                <p className="font-bold text-lg">₦{(parseFloat(amount || "0") * parseFloat(offer.rate)).toLocaleString()}</p>
+            <div>
+              <Label htmlFor="amount">
+                Amount to {offer.type === "sell" ? "Buy" : "Sell"} (USDT)
+              </Label>
+              <Input
+                id="amount"
+                type="number"
+                placeholder={`Min: ${minAmount}, Max: ${maxAmount}`}
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                min={minAmount}
+                max={maxAmount}
+                step="0.01"
+              />
+              <div className="flex justify-between text-xs text-gray-500 mt-1">
+                <span>Min: {minAmount.toFixed(2)} USDT</span>
+                <span>Max: {maxAmount.toFixed(2)} USDT</span>
               </div>
             </div>
 
-            {offer.type === "sell" && (
-              <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
-                <div className="flex items-start space-x-2">
-                  <Shield className="h-4 w-4 text-blue-500 mt-0.5" />
-                  <div className="text-xs text-blue-700">
-                    <p className="font-medium">Buyer Protection:</p>
-                    <p>• Seller's USDT is locked in escrow</p>
-                    <p>• Pay only after USDT is secured</p>
-                    <p>• Get full refund if seller doesn't deliver</p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {offer.type === "buy" && (
-              <div className="p-3 bg-green-50 rounded-lg border border-green-200">
-                <div className="flex items-start space-x-2">
-                  <Shield className="h-4 w-4 text-green-500 mt-0.5" />
-                  <div className="text-xs text-green-700">
-                    <p className="font-medium">Seller Protection:</p>
-                    <p>• Receive payment before releasing USDT</p>
-                    <p>• Buyer's funds are verified before trade</p>
-                    <p>• Dispute resolution available</p>
-                  </div>
-                </div>
-              </div>
-            )}
+            {/* Quick Amount Buttons */}
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setAmount(minAmount.toString())}
+              >
+                Min
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setAmount((maxAmount * 0.25).toFixed(2))}
+              >
+                25%
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setAmount((maxAmount * 0.5).toFixed(2))}
+              >
+                50%
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setAmount((maxAmount * 0.75).toFixed(2))}
+              >
+                75%
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setAmount(maxAmount.toString())}
+              >
+                Max
+              </Button>
+            </div>
           </div>
 
-          <div className="flex space-x-3 pt-4">
-            <Button 
-              type="submit" 
-              className="flex-1"
-              disabled={createTradeMutation.isPending}
-            >
-              {createTradeMutation.isPending && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              )}
-              Start Trade
-            </Button>
-            <Button 
-              type="button" 
-              variant="outline" 
-              className="flex-1"
-              onClick={() => onOpenChange(false)}
-            >
+          {/* Trade Summary */}
+          {tradeAmount > 0 && (
+            <div className="bg-green-50 p-4 rounded-lg">
+              <h4 className="font-medium mb-3">Trade Summary</h4>
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600">
+                    {offer.type === "sell" ? "You pay:" : "You receive:"}
+                  </span>
+                  <span className="font-medium">₦{totalCost.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600">
+                    {offer.type === "sell" ? "You receive:" : "You pay:"}
+                  </span>
+                  <span className="font-medium">{tradeAmount.toFixed(2)} USDT</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600">Exchange Rate:</span>
+                  <span className="font-medium">₦{rate.toLocaleString()}/USDT</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Your Balances */}
+          {user && (
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <h4 className="font-medium mb-3">Your Balances</h4>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-gray-600">USDT Balance</p>
+                  <p className="font-medium">{parseFloat(user.usdtBalance || "0").toFixed(8)} USDT</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Naira Balance</p>
+                  <p className="font-medium">₦{parseFloat(user.nairaBalance || "0").toLocaleString()}</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Errors */}
+          {errors.length > 0 && (
+            <Alert variant="destructive">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                <ul className="list-disc list-inside">
+                  {errors.map((error, index) => (
+                    <li key={index}>{error}</li>
+                  ))}
+                </ul>
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {/* Security Notice */}
+          <Alert>
+            <Shield className="h-4 w-4" />
+            <AlertDescription>
+              <strong>Security Notice:</strong> Your funds will be held in escrow until the trade is completed. 
+              Always verify payment details before confirming any transaction.
+            </AlertDescription>
+          </Alert>
+
+          <Separator />
+
+          {/* Action Buttons */}
+          <div className="flex gap-3">
+            <Button variant="outline" onClick={onClose} className="flex-1">
               Cancel
             </Button>
+            <Button 
+              onClick={handleSubmit} 
+              disabled={isLoading || errors.length > 0 || !amount}
+              className="flex-1"
+            >
+              {isLoading ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                  Processing...
+                </>
+              ) : (
+                <>
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  Confirm Trade
+                </>
+              )}
+            </Button>
           </div>
-        </form>
+        </div>
       </DialogContent>
     </Dialog>
   );

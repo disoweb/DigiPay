@@ -19,7 +19,8 @@ import {
   CreditCard,
   Timer,
   ArrowRight,
-  Wallet
+  Wallet,
+  Star
 } from "lucide-react";
 
 interface Trade {

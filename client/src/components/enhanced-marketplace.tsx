@@ -1,4 +1,5 @@
-import { useState, useMemo } from "react";
+
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,548 +7,577 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
-import { useLocation } from "wouter";
+import { apiRequest } from "@/lib/queryClient";
+import { TradeModal } from "./trade-modal";
 import { 
+  TrendingUp, 
+  TrendingDown, 
+  Filter, 
+  Search, 
   Star, 
   Shield, 
-  Clock, 
-  TrendingUp, 
-  TrendingDown,
-  Filter,
-  Search,
-  Zap,
-  CheckCircle
+  Clock,
+  DollarSign,
+  Users,
+  CheckCircle,
+  AlertCircle,
+  Wallet,
+  CreditCard,
+  Building,
+  Smartphone
 } from "lucide-react";
-import type { Offer } from "@shared/schema";
 
-type EnrichedOffer = Offer & {
+interface Offer {
+  id: number;
+  userId: number;
+  amount: string;
+  rate: string;
+  type: string;
+  status: string;
+  paymentMethod: string;
+  terms?: string;
+  minAmount?: string;
+  maxAmount?: string;
+  timeLimit?: number;
+  requiresVerification?: boolean;
+  createdAt: string;
   user: {
     id: number;
     email: string;
     averageRating: string;
     ratingCount: number;
-  } | null;
-};
-
-interface TradeModalProps {
-  offer: EnrichedOffer;
-  isOpen: boolean;
-  onClose: () => void;
+    kycVerified?: boolean;
+    completedTrades?: number;
+  };
 }
 
-function TradeModal({ offer, isOpen, onClose }: TradeModalProps) {
-  const [amount, setAmount] = useState("");
+const paymentMethodIcons = {
+  bank_transfer: Building,
+  mobile_money: Smartphone,
+  digital_wallet: Wallet,
+  card_payment: CreditCard,
+};
+
+const paymentMethodLabels = {
+  bank_transfer: "Bank Transfer",
+  mobile_money: "Mobile Money",
+  digital_wallet: "Digital Wallet",
+  card_payment: "Card Payment",
+};
+
+export function EnhancedMarketplace() {
+  const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [, setLocation] = useLocation();
+  
+  const [selectedOffer, setSelectedOffer] = useState<Offer | null>(null);
+  const [showTradeModal, setShowTradeModal] = useState(false);
+  const [activeTab, setActiveTab] = useState<'buy' | 'sell'>('buy');
+  const [filters, setFilters] = useState({
+    paymentMethod: 'all',
+    minAmount: '',
+    maxAmount: '',
+    minRate: '',
+    maxRate: '',
+    verifiedOnly: false,
+    sortBy: 'rate',
+    sortOrder: 'asc'
+  });
+  const [searchTerm, setSearchTerm] = useState('');
 
-  const createTradeMutation = useMutation({
-    mutationFn: async () => {
-      const response = await apiRequest("POST", "/api/trades", {
-        offerId: offer.id,
-        amount: parseFloat(amount),
-      });
+  const { data: offers = [], isLoading, refetch } = useQuery<Offer[]>({
+    queryKey: ['/api/offers'],
+    refetchInterval: 5000, // Real-time updates every 5 seconds
+  });
+
+  const { data: marketStats } = useQuery({
+    queryKey: ['/api/market/stats'],
+    refetchInterval: 10000,
+  });
+
+  // Filter and sort offers
+  const filteredOffers = offers.filter(offer => {
+    if (offer.type !== activeTab) return false;
+    if (offer.status !== 'active') return false;
+    if (offer.userId === user?.id) return false; // Hide own offers
+    
+    // Payment method filter
+    if (filters.paymentMethod !== 'all' && offer.paymentMethod !== filters.paymentMethod) {
+      return false;
+    }
+    
+    // Amount filters
+    const offerAmount = parseFloat(offer.amount);
+    if (filters.minAmount && offerAmount < parseFloat(filters.minAmount)) return false;
+    if (filters.maxAmount && offerAmount > parseFloat(filters.maxAmount)) return false;
+    
+    // Rate filters
+    const offerRate = parseFloat(offer.rate);
+    if (filters.minRate && offerRate < parseFloat(filters.minRate)) return false;
+    if (filters.maxRate && offerRate > parseFloat(filters.maxRate)) return false;
+    
+    // Verification filter
+    if (filters.verifiedOnly && !offer.user.kycVerified) return false;
+    
+    // Search filter
+    if (searchTerm && !offer.user.email.toLowerCase().includes(searchTerm.toLowerCase())) {
+      return false;
+    }
+    
+    return true;
+  }).sort((a, b) => {
+    const aValue = filters.sortBy === 'rate' ? parseFloat(a.rate) : parseFloat(a.amount);
+    const bValue = filters.sortBy === 'rate' ? parseFloat(b.rate) : parseFloat(b.amount);
+    
+    return filters.sortOrder === 'asc' ? aValue - bValue : bValue - aValue;
+  });
+
+  const initiateTradeMutation = useMutation({
+    mutationFn: async ({ offerId, amount }: { offerId: number; amount: string }) => {
+      const response = await apiRequest("POST", "/api/trades", { offerId, amount });
       return response.json();
     },
-    onSuccess: (trade) => {
+    onSuccess: (data) => {
       toast({
-        title: "Trade Created",
-        description: "Trade initiated successfully! You'll be redirected to the trade page.",
+        title: "Trade Initiated",
+        description: `Trade #${data.trade.id} has been created successfully!`,
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/offers"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/trades"] });
-      onClose();
-      setLocation(`/trades/${trade.id}`);
+      setShowTradeModal(false);
+      queryClient.invalidateQueries({ queryKey: ['/api/offers'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/trades'] });
     },
     onError: (error: any) => {
       toast({
-        title: "Error",
-        description: error.message || "Failed to create trade",
+        title: "Trade Failed",
+        description: error.message || "Failed to initiate trade",
         variant: "destructive",
       });
     },
   });
 
-  const maxAmount = parseFloat(offer.amount);
-  const tradeAmount = parseFloat(amount) || 0;
-  const totalCost = tradeAmount * parseFloat(offer.rate);
+  const handleTrade = (offer: Offer) => {
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to start trading",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setSelectedOffer(offer);
+    setShowTradeModal(true);
+  };
 
-  return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            {offer.type === "sell" ? (
-              <TrendingDown className="h-5 w-5 text-red-500" />
-            ) : (
-              <TrendingUp className="h-5 w-5 text-green-500" />
-            )}
-            {offer.type === "sell" ? "Buy" : "Sell"} USDT
-          </DialogTitle>
-          <DialogDescription>
-            Create a trade for {offer.type === "sell" ? "buying" : "selling"} USDT with escrow protection
-          </DialogDescription>
-        </DialogHeader>
+  const handleTradeSubmit = (amount: string) => {
+    if (selectedOffer) {
+      initiateTradeMutation.mutate({
+        offerId: selectedOffer.id,
+        amount,
+      });
+    }
+  };
 
-        <div className="space-y-4">
-          {/* Offer Details */}
-          <div className="bg-gray-50 p-3 rounded-lg space-y-2">
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-600">Available:</span>
-              <span className="font-medium">{parseFloat(offer.amount).toFixed(2)} USDT</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-600">Rate:</span>
-              <span className="font-medium">₦{parseFloat(offer.rate).toLocaleString()}/USDT</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-600">Seller:</span>
-              <div className="flex items-center gap-1">
-                <span className="font-medium">{offer.user?.email.split('@')[0]}</span>
-                <div className="flex items-center gap-1 text-yellow-600">
-                  <Star className="h-3 w-3" />
-                  <span className="text-xs">{parseFloat(offer.user?.averageRating || "0").toFixed(1)}</span>
-                </div>
-              </div>
-            </div>
-          </div>
+  const getBestRate = (type: 'buy' | 'sell') => {
+    const relevantOffers = offers.filter(o => o.type === type && o.status === 'active');
+    if (relevantOffers.length === 0) return null;
+    
+    const rates = relevantOffers.map(o => parseFloat(o.rate));
+    return type === 'buy' ? Math.min(...rates) : Math.max(...rates);
+  };
 
-          {/* Amount Input */}
-          <div className="space-y-2">
-            <Label htmlFor="amount">Amount (USDT)</Label>
-            <Input
-              id="amount"
-              type="number"
-              placeholder="Enter amount"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              max={maxAmount}
-              step="0.01"
-            />
-            <div className="flex justify-between text-xs text-gray-500">
-              <span>Min: 1 USDT</span>
-              <span>Max: {maxAmount.toFixed(2)} USDT</span>
-            </div>
-          </div>
-
-          {/* Trade Summary */}
-          {tradeAmount > 0 && (
-            <div className="bg-blue-50 p-3 rounded-lg space-y-2">
-              <h4 className="font-medium text-blue-900">Trade Summary</h4>
-              <div className="flex justify-between text-sm">
-                <span className="text-blue-700">You will receive:</span>
-                <span className="font-medium text-blue-900">{tradeAmount.toFixed(2)} USDT</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-blue-700">You will pay:</span>
-                <span className="font-medium text-blue-900">₦{totalCost.toLocaleString()}</span>
-              </div>
-            </div>
-          )}
-
-          {/* Security Notice */}
-          <div className="flex items-start gap-2 p-3 bg-green-50 rounded-lg">
-            <Shield className="h-4 w-4 text-green-600 mt-0.5" />
-            <div className="text-sm">
-              <p className="font-medium text-green-900">Escrow Protection</p>
-              <p className="text-green-700">Funds are held securely until trade completion</p>
-            </div>
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex gap-2 pt-2">
-            <Button
-              variant="outline"
-              onClick={onClose}
-              className="flex-1"
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={() => createTradeMutation.mutate()}
-              disabled={!amount || parseFloat(amount) <= 0 || parseFloat(amount) > maxAmount || createTradeMutation.isPending}
-              className="flex-1"
-            >
-              {createTradeMutation.isPending ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
-                  Creating...
-                </>
-              ) : (
-                <>
-                  <Zap className="h-4 w-4 mr-2" />
-                  Start Trade
-                </>
-              )}
-            </Button>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-interface EnhancedOfferCardProps {
-  offer: EnrichedOffer;
-  onTrade: () => void;
-}
-
-function EnhancedOfferCard({ offer, onTrade }: EnhancedOfferCardProps) {
-  const { user } = useAuth();
-  const total = parseFloat(offer.amount) * parseFloat(offer.rate);
-  const timeAgo = new Date(offer.createdAt).toLocaleDateString();
-  const isOwnOffer = offer.userId === user?.id;
-
-  return (
-    <Card className="border-0 shadow-sm hover:shadow-md transition-all duration-200 hover:-translate-y-1">
-      <CardContent className="p-4">
-        {/* Header - Mobile Optimized */}
-        <div className="flex items-center justify-between mb-3">
-          <Badge 
-            variant="secondary"
-            className={
-              offer.type === "sell" 
-                ? "bg-red-100 text-red-800 border-red-200 text-xs px-2 py-1" 
-                : "bg-green-100 text-green-800 border-green-200 text-xs px-2 py-1"
-            }
-          >
-            {offer.type === "sell" ? "SELL" : "BUY"}
-          </Badge>
-          <div className="flex items-center gap-1 text-xs text-gray-500">
-            <Clock className="h-3 w-3" />
-            <span className="hidden sm:inline">{timeAgo}</span>
-            <span className="sm:hidden">{new Date(offer.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
-          </div>
-        </div>
-        
-        {/* Amount Details - Compact for Mobile */}
-        <div className="space-y-2 mb-4">
-          <div className="flex justify-between items-center">
-            <span className="text-sm text-gray-600">Amount:</span>
-            <span className="font-semibold text-base md:text-lg">{parseFloat(offer.amount).toFixed(2)} USDT</span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span className="text-sm text-gray-600">Rate:</span>
-            <span className="font-semibold text-green-600 text-sm md:text-base">₦{parseFloat(offer.rate).toLocaleString()}</span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span className="text-sm text-gray-600">Total:</span>
-            <span className="font-semibold text-blue-600 text-sm md:text-base">₦{total.toLocaleString()}</span>
-          </div>
-        </div>
-
-        {/* Seller Info - Mobile Optimized */}
-        <div className="flex items-center justify-between mb-4 p-2 bg-gray-50 rounded-lg">
-          <div className="min-w-0 flex-1">
-            <p className="text-sm font-medium truncate">{offer.user?.email.split('@')[0] || 'Anonymous'}</p>
-            <div className="flex items-center gap-1">
-              <Star className="h-3 w-3 text-yellow-500 flex-shrink-0" />
-              <span className="text-xs text-gray-600 truncate">
-                {parseFloat(offer.user?.averageRating || "0").toFixed(1)} ({offer.user?.ratingCount || 0})
-              </span>
-            </div>
-          </div>
-          <div className="flex items-center gap-1 text-green-600 flex-shrink-0 ml-2">
-            <CheckCircle className="h-3 w-3" />
-            <span className="text-xs hidden sm:inline">Verified</span>
-          </div>
-        </div>
-
-        {/* Action Button */}
-        <Button
-          onClick={onTrade}
-          disabled={isOwnOffer}
-          className="w-full text-sm md:text-base"
-          variant={isOwnOffer ? "outline" : "default"}
-          size="sm"
-        >
-          {isOwnOffer ? "Your Offer" : (
-            <>
-              {offer.type === "sell" ? "Buy Now" : "Sell Now"}
-              <Zap className="h-3 w-3 md:h-4 md:w-4 ml-2" />
-            </>
-          )}
-        </Button>
-      </CardContent>
-    </Card>
-  );
-}
-
-export function EnhancedMarketplace() {
-  const [selectedOffer, setSelectedOffer] = useState<EnrichedOffer | null>(null);
-  const [filters, setFilters] = useState({
-    type: "all",
-    minAmount: "",
-    maxAmount: "",
-    minRate: "",
-    maxRate: "",
-    search: ""
-  });
-
-  const { data: offers = [], isLoading, error } = useQuery<EnrichedOffer[]>({
-    queryKey: ["/api/offers"],
-    refetchInterval: 30000, // Refresh every 30 seconds
-    retry: 3,
-    retryDelay: 1000,
-  });
-
-  // Filter and sort offers
-  const filteredOffers = useMemo(() => {
-    let filtered = offers.filter(offer => {
-      if (filters.type !== "all" && offer.type !== filters.type) return false;
-      
-      const amount = parseFloat(offer.amount);
-      const rate = parseFloat(offer.rate);
-      
-      if (filters.minAmount && amount < parseFloat(filters.minAmount)) return false;
-      if (filters.maxAmount && amount > parseFloat(filters.maxAmount)) return false;
-      if (filters.minRate && rate < parseFloat(filters.minRate)) return false;
-      if (filters.maxRate && rate > parseFloat(filters.maxRate)) return false;
-      
-      if (filters.search) {
-        const searchLower = filters.search.toLowerCase();
-        const userEmail = offer.user?.email.toLowerCase() || "";
-        if (!userEmail.includes(searchLower)) return false;
-      }
-      
-      return offer.status === "active";
-    });
-
-    // Sort by best rates
-    return filtered.sort((a, b) => {
-      if (a.type === "sell") {
-        return parseFloat(a.rate) - parseFloat(b.rate); // Lowest sell price first
-      } else {
-        return parseFloat(b.rate) - parseFloat(a.rate); // Highest buy price first
-      }
-    });
-  }, [offers, filters]);
+  const getPaymentMethodIcon = (method: string) => {
+    const IconComponent = paymentMethodIcons[method as keyof typeof paymentMethodIcons] || Wallet;
+    return <IconComponent className="h-4 w-4" />;
+  };
 
   if (isLoading) {
     return (
-      <div className="space-y-4">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <Card key={i} className="animate-pulse">
-            <CardContent className="p-4">
-              <div className="h-4 bg-gray-200 rounded mb-2"></div>
-              <div className="h-6 bg-gray-200 rounded mb-2"></div>
-              <div className="h-4 bg-gray-200 rounded"></div>
-            </CardContent>
-          </Card>
-        ))}
+      <div className="flex items-center justify-center p-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
       </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <Card>
-        <CardContent className="p-6 text-center">
-          <p className="text-red-600">Failed to load offers. Please try again.</p>
-        </CardContent>
-      </Card>
     );
   }
 
   return (
     <div className="space-y-6">
-      {/* Market Stats - Mobile Friendly */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
-        <Card className="border-0 shadow-sm">
-          <CardContent className="p-3 md:p-4">
-            <div className="flex items-center gap-2">
-              <TrendingUp className="h-4 w-4 text-green-600 flex-shrink-0" />
-              <div className="min-w-0">
-                <p className="text-xs text-gray-500 truncate">Active Offers</p>
-                <p className="font-semibold text-sm md:text-base">{offers.length}</p>
-              </div>
+      {/* Market Overview */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <TrendingUp className="h-5 w-5" />
+            Market Overview
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="text-center p-3 bg-green-50 rounded-lg">
+              <p className="text-sm text-gray-600">Best Buy Rate</p>
+              <p className="font-bold text-green-600">
+                ₦{getBestRate('sell')?.toLocaleString() || 'N/A'}
+              </p>
             </div>
-          </CardContent>
-        </Card>
-        <Card className="border-0 shadow-sm">
-          <CardContent className="p-3 md:p-4">
-            <div className="flex items-center gap-2">
-              <TrendingDown className="h-4 w-4 text-red-600 flex-shrink-0" />
-              <div className="min-w-0">
-                <p className="text-xs text-gray-500 truncate">Best Buy</p>
-                <p className="font-semibold text-sm md:text-base">
-                  ₦{Math.max(...offers.filter(o => o.type === "buy").map(o => parseFloat(o.rate)), 0).toLocaleString()}
-                </p>
-              </div>
+            <div className="text-center p-3 bg-red-50 rounded-lg">
+              <p className="text-sm text-gray-600">Best Sell Rate</p>
+              <p className="font-bold text-red-600">
+                ₦{getBestRate('buy')?.toLocaleString() || 'N/A'}
+              </p>
             </div>
-          </CardContent>
-        </Card>
-        <Card className="border-0 shadow-sm">
-          <CardContent className="p-3 md:p-4">
-            <div className="flex items-center gap-2">
-              <TrendingUp className="h-4 w-4 text-green-600 flex-shrink-0" />
-              <div className="min-w-0">
-                <p className="text-xs text-gray-500 truncate">Best Sell</p>
-                <p className="font-semibold text-sm md:text-base">
-                  ₦{Math.min(...offers.filter(o => o.type === "sell").map(o => parseFloat(o.rate)), Infinity).toLocaleString()}
-                </p>
-              </div>
+            <div className="text-center p-3 bg-blue-50 rounded-lg">
+              <p className="text-sm text-gray-600">Active Offers</p>
+              <p className="font-bold text-blue-600">{offers.length}</p>
             </div>
-          </CardContent>
-        </Card>
-        <Card className="border-0 shadow-sm">
-          <CardContent className="p-3 md:p-4">
-            <div className="flex items-center gap-2">
-              <Shield className="h-4 w-4 text-blue-600 flex-shrink-0" />
-              <div className="min-w-0">
-                <p className="text-xs text-gray-500 truncate">Volume</p>
-                <p className="font-semibold text-sm md:text-base">
-                  {offers.reduce((sum, offer) => sum + parseFloat(offer.amount), 0).toFixed(0)} USDT
-                </p>
-              </div>
+            <div className="text-center p-3 bg-purple-50 rounded-lg">
+              <p className="text-sm text-gray-600">Online Traders</p>
+              <p className="font-bold text-purple-600">
+                {new Set(offers.map(o => o.userId)).size}
+              </p>
             </div>
-          </CardContent>
-        </Card>
-      </div>
+          </div>
+        </CardContent>
+      </Card>
 
-      {/* Mobile-Friendly Filters */}
-      <Card className="border-0 shadow-sm">
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <Filter className="h-4 w-4" />
-            Filters
+      {/* Filters and Search */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Filter className="h-5 w-5" />
+            Filters & Search
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Primary Filters Row */}
-          <div className="flex flex-col sm:flex-row gap-3">
+          <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1">
-              <Label htmlFor="type" className="text-sm">Type</Label>
-              <Select value={filters.type} onValueChange={(value) => setFilters(prev => ({ ...prev, type: value }))}>
-                <SelectTrigger className="mt-1">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All</SelectItem>
-                  <SelectItem value="buy">Buy Offers</SelectItem>
-                  <SelectItem value="sell">Sell Offers</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="flex-1">
-              <Label htmlFor="search" className="text-sm">Search User</Label>
-              <div className="relative mt-1">
-                <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
+              <Label htmlFor="search">Search Traders</Label>
+              <div className="relative">
+                <Search className="h-4 w-4 absolute left-3 top-3 text-gray-400" />
                 <Input
                   id="search"
-                  placeholder="User email..."
-                  value={filters.search}
-                  onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
-                  className="pl-8"
+                  placeholder="Search by trader email..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
                 />
               </div>
             </div>
+            <div className="md:w-48">
+              <Label>Payment Method</Label>
+              <Select value={filters.paymentMethod} onValueChange={(value) => 
+                setFilters(prev => ({ ...prev, paymentMethod: value }))
+              }>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Methods</SelectItem>
+                  <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
+                  <SelectItem value="mobile_money">Mobile Money</SelectItem>
+                  <SelectItem value="digital_wallet">Digital Wallet</SelectItem>
+                  <SelectItem value="card_payment">Card Payment</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
-          {/* Amount and Rate Filters */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div>
-              <Label htmlFor="minAmount" className="text-sm">Min Amount</Label>
+              <Label htmlFor="minAmount">Min Amount (USDT)</Label>
               <Input
                 id="minAmount"
                 type="number"
                 placeholder="0"
                 value={filters.minAmount}
                 onChange={(e) => setFilters(prev => ({ ...prev, minAmount: e.target.value }))}
-                className="mt-1"
               />
             </div>
-
             <div>
-              <Label htmlFor="maxAmount" className="text-sm">Max Amount</Label>
+              <Label htmlFor="maxAmount">Max Amount (USDT)</Label>
               <Input
                 id="maxAmount"
                 type="number"
-                placeholder="1000"
+                placeholder="∞"
                 value={filters.maxAmount}
                 onChange={(e) => setFilters(prev => ({ ...prev, maxAmount: e.target.value }))}
-                className="mt-1"
               />
             </div>
-
             <div>
-              <Label htmlFor="minRate" className="text-sm">Min Rate</Label>
+              <Label htmlFor="minRate">Min Rate (₦)</Label>
               <Input
                 id="minRate"
                 type="number"
-                placeholder="1400"
+                placeholder="0"
                 value={filters.minRate}
                 onChange={(e) => setFilters(prev => ({ ...prev, minRate: e.target.value }))}
-                className="mt-1"
               />
             </div>
-
             <div>
-              <Label htmlFor="maxRate" className="text-sm">Max Rate</Label>
+              <Label htmlFor="maxRate">Max Rate (₦)</Label>
               <Input
                 id="maxRate"
                 type="number"
-                placeholder="1600"
+                placeholder="∞"
                 value={filters.maxRate}
                 onChange={(e) => setFilters(prev => ({ ...prev, maxRate: e.target.value }))}
-                className="mt-1"
               />
             </div>
           </div>
-          
-          <Button
-            variant="outline"
-            onClick={() => setFilters({
-              type: "all",
-              minAmount: "",
-              maxAmount: "",
-              minRate: "",
-              maxRate: "",
-              search: ""
-            })}
-            className="w-full sm:w-auto"
-          >
-            Clear Filters
-          </Button>
+
+          <div className="flex flex-wrap gap-4 items-center">
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="verifiedOnly"
+                checked={filters.verifiedOnly}
+                onChange={(e) => setFilters(prev => ({ ...prev, verifiedOnly: e.target.checked }))}
+                className="w-4 h-4"
+              />
+              <Label htmlFor="verifiedOnly">Verified traders only</Label>
+            </div>
+            
+            <Select value={filters.sortBy} onValueChange={(value) => 
+              setFilters(prev => ({ ...prev, sortBy: value }))
+            }>
+              <SelectTrigger className="w-32">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="rate">Sort by Rate</SelectItem>
+                <SelectItem value="amount">Sort by Amount</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setFilters(prev => ({ 
+                ...prev, 
+                sortOrder: prev.sortOrder === 'asc' ? 'desc' : 'asc' 
+              }))}
+            >
+              {filters.sortOrder === 'asc' ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
+              {filters.sortOrder === 'asc' ? 'Low to High' : 'High to Low'}
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
-      {/* Mobile-Optimized Offers Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredOffers.length === 0 ? (
-          <div className="col-span-full">
-            <Card className="border-0 shadow-sm">
-              <CardContent className="p-6 md:p-8 text-center">
-                <div className="mx-auto w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                  <Search className="h-5 w-5 text-gray-400" />
-                </div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No offers found</h3>
-                <p className="text-gray-500 text-sm">No offers match your criteria. Try adjusting your filters.</p>
-              </CardContent>
-            </Card>
-          </div>
-        ) : (
-          filteredOffers.map((offer) => (
-            <EnhancedOfferCard
-              key={offer.id}
-              offer={offer}
-              onTrade={() => setSelectedOffer(offer)}
-            />
-          ))
-        )}
-      </div>
+      {/* Offers Tabs */}
+      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'buy' | 'sell')}>
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="buy" className="flex items-center gap-2">
+            <TrendingUp className="h-4 w-4" />
+            Buy USDT ({offers.filter(o => o.type === 'sell' && o.status === 'active').length} offers)
+          </TabsTrigger>
+          <TabsTrigger value="sell" className="flex items-center gap-2">
+            <TrendingDown className="h-4 w-4" />
+            Sell USDT ({offers.filter(o => o.type === 'buy' && o.status === 'active').length} offers)
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="buy" className="space-y-4">
+          {filteredOffers.length === 0 ? (
+            <Alert>
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                No buy offers available matching your criteria.
+              </AlertDescription>
+            </Alert>
+          ) : (
+            <div className="space-y-4">
+              {filteredOffers.map((offer) => (
+                <Card key={offer.id} className="hover:shadow-md transition-shadow">
+                  <CardContent className="p-4">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                      <div className="flex-1 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium">{offer.user.email}</span>
+                            {offer.user.kycVerified && (
+                              <Badge variant="outline" className="text-green-600 border-green-600">
+                                <Shield className="h-3 w-3 mr-1" />
+                                Verified
+                              </Badge>
+                            )}
+                            <div className="flex items-center gap-1">
+                              <Star className="h-3 w-3 text-yellow-400 fill-current" />
+                              <span className="text-xs">
+                                {parseFloat(offer.user.averageRating).toFixed(1)} ({offer.user.ratingCount})
+                              </span>
+                            </div>
+                          </div>
+                          <Badge className={getPaymentMethodIcon(offer.paymentMethod)}>
+                            {getPaymentMethodIcon(offer.paymentMethod)}
+                            <span className="ml-1">
+                              {paymentMethodLabels[offer.paymentMethod as keyof typeof paymentMethodLabels]}
+                            </span>
+                          </Badge>
+                        </div>
+
+                        <div className="grid grid-cols-3 gap-4 text-sm">
+                          <div>
+                            <p className="text-gray-600">Available</p>
+                            <p className="font-semibold">{parseFloat(offer.amount).toFixed(2)} USDT</p>
+                          </div>
+                          <div>
+                            <p className="text-gray-600">Rate</p>
+                            <p className="font-semibold text-green-600">₦{parseFloat(offer.rate).toLocaleString()}</p>
+                          </div>
+                          <div>
+                            <p className="text-gray-600">Limits</p>
+                            <p className="font-semibold">
+                              {offer.minAmount && offer.maxAmount 
+                                ? `${parseFloat(offer.minAmount).toFixed(2)} - ${parseFloat(offer.maxAmount).toFixed(2)} USDT`
+                                : `${parseFloat(offer.amount).toFixed(2)} USDT`}
+                            </p>
+                          </div>
+                        </div>
+
+                        {offer.terms && (
+                          <div className="text-xs text-gray-600 bg-gray-50 p-2 rounded">
+                            <strong>Terms:</strong> {offer.terms}
+                          </div>
+                        )}
+
+                        <div className="flex items-center gap-4 text-xs text-gray-500">
+                          {offer.timeLimit && (
+                            <div className="flex items-center gap-1">
+                              <Clock className="h-3 w-3" />
+                              {offer.timeLimit} min payment window
+                            </div>
+                          )}
+                          <div className="flex items-center gap-1">
+                            <Users className="h-3 w-3" />
+                            {offer.user.completedTrades || 0} completed trades
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="md:w-32">
+                        <Button 
+                          onClick={() => handleTrade(offer)}
+                          className="w-full bg-green-600 hover:bg-green-700"
+                          disabled={!user}
+                        >
+                          Buy USDT
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="sell" className="space-y-4">
+          {filteredOffers.length === 0 ? (
+            <Alert>
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                No sell offers available matching your criteria.
+              </AlertDescription>
+            </Alert>
+          ) : (
+            <div className="space-y-4">
+              {filteredOffers.map((offer) => (
+                <Card key={offer.id} className="hover:shadow-md transition-shadow">
+                  <CardContent className="p-4">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                      <div className="flex-1 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium">{offer.user.email}</span>
+                            {offer.user.kycVerified && (
+                              <Badge variant="outline" className="text-green-600 border-green-600">
+                                <Shield className="h-3 w-3 mr-1" />
+                                Verified
+                              </Badge>
+                            )}
+                            <div className="flex items-center gap-1">
+                              <Star className="h-3 w-3 text-yellow-400 fill-current" />
+                              <span className="text-xs">
+                                {parseFloat(offer.user.averageRating).toFixed(1)} ({offer.user.ratingCount})
+                              </span>
+                            </div>
+                          </div>
+                          <Badge className={getPaymentMethodIcon(offer.paymentMethod)}>
+                            {getPaymentMethodIcon(offer.paymentMethod)}
+                            <span className="ml-1">
+                              {paymentMethodLabels[offer.paymentMethod as keyof typeof paymentMethodLabels]}
+                            </span>
+                          </Badge>
+                        </div>
+
+                        <div className="grid grid-cols-3 gap-4 text-sm">
+                          <div>
+                            <p className="text-gray-600">Buying</p>
+                            <p className="font-semibold">{parseFloat(offer.amount).toFixed(2)} USDT</p>
+                          </div>
+                          <div>
+                            <p className="text-gray-600">Rate</p>
+                            <p className="font-semibold text-red-600">₦{parseFloat(offer.rate).toLocaleString()}</p>
+                          </div>
+                          <div>
+                            <p className="text-gray-600">Limits</p>
+                            <p className="font-semibold">
+                              {offer.minAmount && offer.maxAmount 
+                                ? `${parseFloat(offer.minAmount).toFixed(2)} - ${parseFloat(offer.maxAmount).toFixed(2)} USDT`
+                                : `${parseFloat(offer.amount).toFixed(2)} USDT`}
+                            </p>
+                          </div>
+                        </div>
+
+                        {offer.terms && (
+                          <div className="text-xs text-gray-600 bg-gray-50 p-2 rounded">
+                            <strong>Terms:</strong> {offer.terms}
+                          </div>
+                        )}
+
+                        <div className="flex items-center gap-4 text-xs text-gray-500">
+                          {offer.timeLimit && (
+                            <div className="flex items-center gap-1">
+                              <Clock className="h-3 w-3" />
+                              {offer.timeLimit} min payment window
+                            </div>
+                          )}
+                          <div className="flex items-center gap-1">
+                            <Users className="h-3 w-3" />
+                            {offer.user.completedTrades || 0} completed trades
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="md:w-32">
+                        <Button 
+                          onClick={() => handleTrade(offer)}
+                          className="w-full bg-red-600 hover:bg-red-700"
+                          disabled={!user}
+                        >
+                          Sell USDT
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
 
       {/* Trade Modal */}
       {selectedOffer && (
         <TradeModal
+          isOpen={showTradeModal}
+          onClose={() => setShowTradeModal(false)}
           offer={selectedOffer}
-          isOpen={!!selectedOffer}
-          onClose={() => setSelectedOffer(null)}
+          onSubmit={handleTradeSubmit}
+          isLoading={initiateTradeMutation.isPending}
         />
       )}
     </div>
