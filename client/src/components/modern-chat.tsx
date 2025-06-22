@@ -180,17 +180,19 @@ export function ModernChat({ chatUserId, onBack }: ModernChatProps) {
       </div>
 
       {/* Messages area */}
-      <div className="flex-1 overflow-hidden flex flex-col" style={{ height: 'calc(100vh - 140px)' }}>
-        <div className="flex-1 overflow-y-auto p-4">
-          <div className="space-y-4">
+      <div className="flex-1 overflow-y-auto flex flex-col">
+        <div className="flex-1 flex flex-col justify-end">
+          <div className="p-4 space-y-4">
             {messages.length === 0 ? (
-              <div className="text-center py-8">
-                <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
-                  <Phone className="h-8 w-8 text-gray-400" />
+              <div className="flex items-center justify-center py-20">
+                <div className="text-center">
+                  <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+                    <Phone className="h-8 w-8 text-gray-400" />
+                  </div>
+                  <p className="text-gray-500 text-sm">
+                    Start a conversation with {chatUser?.email?.split('@')[0] || 'this user'}
+                  </p>
                 </div>
-                <p className="text-gray-500 text-sm">
-                  Start a conversation with {chatUser?.email?.split('@')[0] || 'this user'}
-                </p>
               </div>
             ) : (
               <>
@@ -199,7 +201,7 @@ export function ModernChat({ chatUserId, onBack }: ModernChatProps) {
                   const messageTime = new Date(msg.createdAt);
                   const now = new Date();
                   const timeDiff = now.getTime() - messageTime.getTime();
-                  const isRecent = timeDiff < 5000; // Less than 5 seconds
+                  const isRecent = timeDiff < 10000; // Less than 10 seconds
                   
                   return (
                     <div
@@ -225,12 +227,14 @@ export function ModernChat({ chatUserId, onBack }: ModernChatProps) {
                           </span>
                           {isOwnMessage && (
                             <>
-                              {sendMessageMutation.isPending && isRecent ? (
-                                <Clock className="h-3 w-3 animate-pulse" />
+                              {sendingState === 'sending' && isRecent ? (
+                                <Clock className="h-3 w-3 animate-pulse text-yellow-300" />
+                              ) : sendingState === 'failed' && isRecent ? (
+                                <div className="h-3 w-3 rounded-full bg-red-400" />
                               ) : msg.isRead ? (
-                                <CheckCheck className="h-3 w-3" />
+                                <CheckCheck className="h-3 w-3 text-blue-200" />
                               ) : (
-                                <Check className="h-3 w-3" />
+                                <Check className="h-3 w-3 text-blue-200" />
                               )}
                             </>
                           )}
@@ -246,34 +250,8 @@ export function ModernChat({ chatUserId, onBack }: ModernChatProps) {
         </div>
       </div>
 
-      {/* Status indicator */}
-      {sendingState !== 'idle' && (
-        <div className="px-4 py-2 bg-gray-50 border-t">
-          <div className="flex items-center gap-2 text-xs text-gray-600">
-            {sendingState === 'sending' && (
-              <>
-                <Clock className="h-3 w-3 animate-spin" />
-                <span>Sending message...</span>
-              </>
-            )}
-            {sendingState === 'sent' && (
-              <>
-                <CheckCheck className="h-3 w-3 text-green-600" />
-                <span className="text-green-600">Message sent</span>
-              </>
-            )}
-            {sendingState === 'failed' && (
-              <>
-                <div className="h-3 w-3 rounded-full bg-red-500" />
-                <span className="text-red-600">Failed to send message</span>
-              </>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Message input */}
-      <div className="bg-white border-t p-4">
+      {/* Message input - sticky at bottom */}
+      <div className="bg-white border-t p-4 flex-shrink-0">
         <form onSubmit={handleSendMessage} className="flex items-center gap-3">
           <Input
             value={message}
