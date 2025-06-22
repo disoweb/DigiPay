@@ -39,20 +39,6 @@ export default function Dashboard() {
           </p>
         </div>
 
-        {/* KYC Warning */}
-        {!user.kycVerified && (
-          <Card className="mb-6 border-yellow-200 bg-yellow-50">
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-2">
-                <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></div>
-                <p className="text-yellow-800 font-medium">
-                  Complete your KYC verification to unlock full trading features and higher limits.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
         <ErrorBoundary>
           <TradingDashboard />
         </ErrorBoundary>

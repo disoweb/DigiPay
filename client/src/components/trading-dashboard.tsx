@@ -83,22 +83,37 @@ export function TradingDashboard() {
     }
   };
 
+  // Calculate total portfolio value in NGN
+  const usdtInNgn = parseFloat(user?.usdtBalance || "0") * 1485; // Using exchange rate
+  const ngnBalance = parseFloat(user?.nairaBalance || "0");
+  const totalPortfolioValue = usdtInNgn + ngnBalance;
+
   return (
     <div className="space-y-6">
-
-        <div className="grid grid-cols-2 gap-4 md:gap-6">
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-2">
-                <DollarSign className="h-4 w-4 text-muted-foreground" />
-                <div>
-                  <p className="text-sm text-gray-600">USDT Balance</p>
-                  <p className="font-bold text-xl">{user?.usdtBalance || "0.00"}</p>
-                </div>
+      {/* Total Portfolio Value Card */}
+      <Card className="border-0 shadow-lg overflow-hidden">
+        <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-6 text-white">
+          <div className="text-center">
+            <h2 className="text-lg font-medium text-white/90 mb-2">Total Portfolio Value</h2>
+            <div className="text-4xl font-bold mb-6">
+              ₦{totalPortfolioValue.toLocaleString()}
+            </div>
+            
+            <div className="grid grid-cols-2 gap-8 max-w-md mx-auto">
+              <div className="text-center">
+                <p className="text-white/90 text-sm mb-1">NGN</p>
+                <p className="text-xl font-semibold">₦{ngnBalance.toLocaleString()}</p>
               </div>
-            </CardContent>
-          </Card>
+              <div className="text-center">
+                <p className="text-white/90 text-sm mb-1">USDT</p>
+                <p className="text-xl font-semibold">${parseFloat(user?.usdtBalance || "0").toFixed(2)}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Card>
 
+        <div className="grid grid-cols-2 md:grid-cols-2 gap-4">
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center space-x-2">
@@ -134,6 +149,18 @@ export function TradingDashboard() {
               </div>
             </CardContent>
           </Card>
+
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center space-x-2">
+                <Activity className="h-4 w-4 text-purple-600" />
+                <div>
+                  <p className="text-sm text-gray-600">Active Offers</p>
+                  <p className="font-bold text-xl">{activeOffers.length}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
 
@@ -158,7 +185,7 @@ export function TradingDashboard() {
                     <div>
                       <p className="font-medium">Trade #{trade.id}</p>
                       <p className="text-sm text-gray-600">
-                        {parseFloat(trade.amount).toFixed(2)} USDT @ ₦{parseFloat(trade.rate).toLocaleString()}
+                        ${parseFloat(trade.amount).toFixed(2)} @ ₦{parseFloat(trade.rate).toLocaleString()}
                       </p>
                     </div>
                     <div className="text-right">
@@ -217,7 +244,7 @@ export function TradingDashboard() {
                     <div>
                       <p className="font-medium capitalize">{offer.type} USDT</p>
                       <p className="text-sm text-gray-600">
-                        {parseFloat(offer.amount).toFixed(2)} USDT @ ₦{parseFloat(offer.rate).toLocaleString()}
+                        ${parseFloat(offer.amount).toFixed(2)} @ ₦{parseFloat(offer.rate).toLocaleString()}
                       </p>
                     </div>
                     <Badge className={offer.type === 'buy' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}>
@@ -264,7 +291,7 @@ export function TradingDashboard() {
                       }`} />
                       <div>
                         <p className="font-medium">
-                          {isUserBuyer ? 'Bought' : 'Sold'} {parseFloat(trade.amount).toFixed(2)} USDT
+                          {isUserBuyer ? 'Bought' : 'Sold'} ${parseFloat(trade.amount).toFixed(2)}
                         </p>
                         <p className="text-sm text-gray-600">
                           {isUserBuyer ? 'from' : 'to'} {partner?.email} • {new Date(trade.createdAt).toLocaleDateString()}
