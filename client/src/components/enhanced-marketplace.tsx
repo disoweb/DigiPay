@@ -823,6 +823,50 @@ export function EnhancedMarketplace() {
           offer={selectedOffer!}
         />
       )}
+
+      {/* Contact Modal */}
+      <Dialog open={showContactModal} onOpenChange={setShowContactModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Contact Trader</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <div className={`w-2 h-2 rounded-full ${contactOffer?.user?.isOnline ? 'bg-green-400' : 'bg-gray-400'}`} />
+                <span className="font-medium">{contactOffer?.user?.email || 'Unknown'}</span>
+                {contactOffer?.user?.isOnline ? (
+                  <Badge variant="outline" className="text-green-600 border-green-600">Online</Badge>
+                ) : (
+                  <Badge variant="outline" className="text-gray-500 border-gray-300">Offline</Badge>
+                )}
+              </div>
+              <p className="text-sm text-gray-600">
+                {contactOffer?.type === 'sell' ? 'Selling' : 'Buying'} {contactOffer?.amount} USDT at ₦{parseFloat(contactOffer?.rate || '0').toLocaleString()}
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="message">Message</Label>
+              <Textarea
+                id="message"
+                placeholder="Type your message here..."
+                value={contactMessage}
+                onChange={(e) => setContactMessage(e.target.value)}
+                rows={4}
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button onClick={() => setShowContactModal(false)} variant="outline" className="flex-1">
+                Cancel
+              </Button>
+              <Button onClick={sendDirectMessage} className="flex-1" disabled={!contactMessage.trim()}>
+                <Send className="h-4 w-4 mr-2" />
+                Send Message
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
