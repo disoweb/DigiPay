@@ -19,26 +19,17 @@ function SendUSDTForm({ onClose, userBalance }: { onClose: () => void; userBalan
 
   const sendUSDTMutation = useMutation({
     mutationFn: async (data: { amount: string; to: string }) => {
-      const response = await fetch("/api/tron/send", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem("auth_token")}`,
-        },
-        body: JSON.stringify(data),
-      });
-
+      const response = await apiRequest("POST", "/api/tron/send", data);
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.error || "Failed to send USDT");
       }
-
       return response.json();
     },
     onSuccess: () => {
       toast({
         title: "USDT Sent Successfully",
-        description: "Your transaction has been broadcast to the TRON network.",
+        description: `${amount} USDT has been sent successfully`,
       });
       setAmount("");
       setRecipientAddress("");
@@ -67,10 +58,10 @@ function SendUSDTForm({ onClose, userBalance }: { onClose: () => void; userBalan
     }
 
     const amountNum = parseFloat(amount);
-    if (amountNum <= 0) {
+    if (isNaN(amountNum) || amountNum <= 0) {
       toast({
         title: "Invalid Amount",
-        description: "Amount must be greater than 0",
+        description: "Amount must be a valid number greater than 0",
         variant: "destructive",
       });
       return;
@@ -228,7 +219,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus, Minus, DollarSign, Coins, Clock, CheckCircle, XCircle, AlertCircle, TrendingUp, TrendingDown, Wallet as WalletIcon, Copy, Send } from "lucide-react";
+import { Plus, Minus, DollarSign, Coins, Clock, CheckCircle, XCircle, AlertCircle, TrendingUp, TrendingDown, Wallet as WalletIcon, Copy, Send, ArrowUpDown } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import type { Transaction } from "@shared/schema";
