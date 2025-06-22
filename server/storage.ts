@@ -36,6 +36,9 @@ export interface IStorage {
   // Message methods
   getTradeMessages(tradeId: number): Promise<Message[]>;
   createMessage(message: InsertMessage): Promise<Message>;
+  getUserMessages(userId: number): Promise<any[]>;
+  createDirectMessage(message: any): Promise<Message>;
+  markMessageAsRead(messageId: number, userId: number): Promise<boolean>;
 
   // Transaction methods
   getUserTransactions(userId: number): Promise<Transaction[]>;

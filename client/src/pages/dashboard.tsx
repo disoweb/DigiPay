@@ -1,5 +1,6 @@
 import { Navbar } from "@/components/navbar";
 import { TradingDashboard } from "@/components/trading-dashboard";
+import { MessagingSystem } from "@/components/messaging-system";
 import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from "@/hooks/use-auth";
 import { Redirect } from "wouter";
@@ -39,9 +40,18 @@ export default function Dashboard() {
           </p>
         </div>
 
-        <ErrorBoundary>
-          <TradingDashboard />
-        </ErrorBoundary>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2">
+            <ErrorBoundary>
+              <TradingDashboard />
+            </ErrorBoundary>
+          </div>
+          <div className="lg:col-span-1">
+            <ErrorBoundary>
+              <MessagingSystem />
+            </ErrorBoundary>
+          </div>
+        </div>
       </div>
     </div>
   );
