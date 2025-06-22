@@ -58,11 +58,14 @@ export function TradeManagement() {
   const { data: trades = [], isLoading, error, refetch } = useQuery<Trade[]>({
     queryKey: ['/api/trades'],
     queryFn: async () => {
+      console.log("Fetching trades for user:", user?.id);
       const response = await apiRequest("GET", "/api/trades");
       if (!response.ok) {
         throw new Error(`Failed to fetch trades: ${response.status}`);
       }
-      return response.json();
+      const data = await response.json();
+      console.log("Trades fetched:", data);
+      return data;
     },
     refetchInterval: 10000,
     retry: 2,
@@ -387,7 +390,10 @@ export function TradeManagement() {
                               variant="outline" 
                               size="sm"
                               className="flex-1 sm:flex-none"
-                              onClick={() => setLocation(`/trades/${trade.id}`)}
+                              onClick={() => {
+                                console.log("Navigating to trade:", trade.id);
+                                setLocation(`/trades/${trade.id}`);
+                              }}
                             >
                               <Eye className="h-3 w-3 mr-1" />
                               View Details
@@ -397,7 +403,10 @@ export function TradeManagement() {
                               variant="outline" 
                               size="sm"
                               className="flex-1 sm:flex-none"
-                              onClick={() => setLocation(`/trades/${trade.id}`)}
+                              onClick={() => {
+                                console.log("Navigating to trade chat:", trade.id);
+                                setLocation(`/trades/${trade.id}`);
+                              }}
                             >
                               <MessageCircle className="h-3 w-3 mr-1" />
                               Chat

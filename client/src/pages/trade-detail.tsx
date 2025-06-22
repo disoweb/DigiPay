@@ -63,15 +63,20 @@ export default function TradeDetail() {
   const [showRating, setShowRating] = useState(false);
   
   const tradeId = parseInt(params.id || "0");
+  console.log("Trade Detail - tradeId:", tradeId, "params:", params);
 
   const { data: trade, isLoading, error } = useQuery<EnrichedTrade>({
     queryKey: [`/api/trades/${tradeId}`],
     queryFn: async () => {
+      console.log("Fetching trade:", tradeId);
       const response = await apiRequest("GET", `/api/trades/${tradeId}`);
       if (!response.ok) {
+        console.error("Trade fetch failed:", response.status);
         throw new Error(`Failed to fetch trade: ${response.status}`);
       }
-      return response.json();
+      const data = await response.json();
+      console.log("Trade data received:", data);
+      return data;
     },
     enabled: !!tradeId && tradeId > 0,
     refetchInterval: 5000,
