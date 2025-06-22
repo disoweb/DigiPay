@@ -30,7 +30,6 @@ import {
   RefreshCw
 } from "lucide-react";
 import { MessagingSystem } from "@/components/messaging-system";
-import { TransactionDetailModal } from "@/components/transaction-detail-modal";
 
 export function TradingDashboard() {
   const { user } = useAuth();
