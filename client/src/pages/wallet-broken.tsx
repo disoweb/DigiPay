@@ -9,6 +9,16 @@ import { KYCVerification } from "@/components/kyc-verification";
 import { TransactionDetailModal } from "@/components/transaction-detail-modal";
 import { SendFundsModal } from "@/components/send-funds-modal";
 import { SwapModal } from "@/components/swap-modal";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Plus, Minus, DollarSign, Coins, Clock, CheckCircle, XCircle, AlertCircle, TrendingUp, TrendingDown, Wallet as WalletIcon, Copy, Send, ArrowUpDown } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useToast } from "@/hooks/use-toast";
+import type { Transaction } from "@shared/schema";
 
 // SendUSDTForm component for handling USDT transfers
 function SendUSDTForm({ onClose, userBalance }: { onClose: () => void; userBalance: number }) {
@@ -47,7 +57,7 @@ function SendUSDTForm({ onClose, userBalance }: { onClose: () => void; userBalan
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!recipientAddress || !amount) {
       toast({
         title: "Invalid Input",
@@ -211,18 +221,6 @@ function SendUSDTForm({ onClose, userBalance }: { onClose: () => void; userBalan
     </form>
   );
 }
-
-
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Plus, Minus, DollarSign, Coins, Clock, CheckCircle, XCircle, AlertCircle, TrendingUp, TrendingDown, Wallet as WalletIcon, Copy, Send, ArrowUpDown } from "lucide-react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { useToast } from "@/hooks/use-toast";
-import type { Transaction } from "@shared/schema";
 
 export default function Wallet() {
   const { user } = useAuth();
@@ -566,7 +564,7 @@ export default function Wallet() {
         nairaBalance={user.nairaBalance || "0"}
         usdtBalance={user.usdtBalance || "0"}
       />
-      
+
       {/* Receive USDT Modal */}
       <Dialog open={showReceive} onOpenChange={setShowReceive}>
         <DialogContent className="w-[95vw] max-w-md mx-auto max-h-[90vh] overflow-y-auto">
@@ -581,7 +579,7 @@ export default function Wallet() {
               Share your TRON address to receive USDT payments
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="space-y-6 py-2">
             {/* QR Code Section */}
             <Card className="bg-gradient-to-r from-green-50 to-green-100 border-green-200">
@@ -596,7 +594,7 @@ export default function Wallet() {
                 </div>
               </CardContent>
             </Card>
-            
+
             {/* Address Section */}
             <div className="space-y-3">
               <Label className="text-sm font-medium text-gray-700">
@@ -642,7 +640,7 @@ export default function Wallet() {
                 </div>
               </CardContent>
             </Card>
-            
+
             {/* Action Buttons */}
             <div className="flex flex-col gap-3 pt-2">
               <Button 
@@ -682,7 +680,7 @@ export default function Wallet() {
               Transfer USDT to another TRON wallet address
             </DialogDescription>
           </DialogHeader>
-          
+
           <SendUSDTForm 
             onClose={() => setShowSendUSDT(false)} 
             userBalance={parseFloat(user?.usdtBalance || "0")} 
