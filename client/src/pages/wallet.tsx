@@ -180,6 +180,9 @@ export default function Wallet() {
 
   if (!user) return null;
 
+  // Debug: Log user data to console
+  console.log('Wallet user data:', user);
+
   const getTransactionIcon = (type: string) => {
     return type === "deposit" ? (
       <TrendingUp className="h-4 w-4 text-green-600" />
