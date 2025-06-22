@@ -3,13 +3,15 @@ import { useLocation } from "wouter";
 import { useEffect } from "react";
 
 interface ProtectedRouteProps {
-  component: React.ComponentType<any>;
+  component?: React.ComponentType<any>;
+  children?: React.ReactNode;
   adminOnly?: boolean;
   path?: string;
 }
 
 export function ProtectedRoute({ 
   component: Component, 
+  children,
   adminOnly = false,
   ...props 
 }: ProtectedRouteProps) {
@@ -48,5 +50,9 @@ export function ProtectedRoute({
     return null;
   }
 
-  return <Component {...props} />;
+  if (Component) {
+    return <Component {...props} />;
+  }
+  
+  return <>{children}</>;
 }

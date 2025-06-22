@@ -56,14 +56,14 @@ type EnrichedTrade = {
 };
 
 export default function TradeDetail() {
-  const params = useParams();
+  const params = useParams<{ id: string }>();
   const [, setLocation] = useLocation();
   const { user } = useAuth();
   const { toast } = useToast();
   const [showRating, setShowRating] = useState(false);
   
   const tradeId = parseInt(params.id || "0");
-  console.log("Trade Detail - tradeId:", tradeId, "params:", params);
+  console.log("Trade Detail - tradeId:", tradeId, "params:", params, "raw id:", params.id);
 
   const { data: trade, isLoading, error } = useQuery<EnrichedTrade>({
     queryKey: [`/api/trades/${tradeId}`],

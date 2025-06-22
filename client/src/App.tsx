@@ -33,7 +33,11 @@ function App() {
             <ProtectedRoute path="/dashboard" component={Dashboard} />
             <ProtectedRoute path="/marketplace" component={Marketplace} />
             <ProtectedRoute path="/trades" component={Trades} />
-            <ProtectedRoute path="/trades/:id" component={TradeDetail} />
+            <Route path="/trades/:id" component={({ params }) => (
+              <ProtectedRoute>
+                <TradeDetail />
+              </ProtectedRoute>
+            )} />
             <ProtectedRoute path="/wallet" component={Wallet} />
             <ProtectedRoute path="/ratings" component={Ratings} />
             <ProtectedRoute path="/admin" component={Admin} adminOnly />
