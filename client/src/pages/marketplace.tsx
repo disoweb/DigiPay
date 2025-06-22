@@ -1,14 +1,12 @@
 
-import { useState } from "react";
 import { Navbar } from "@/components/navbar";
 import { EnhancedMarketplace } from "@/components/enhanced-marketplace";
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
-import { Plus, ArrowLeft, TrendingUp, TrendingDown } from "lucide-react";
+import { Plus, ArrowLeft } from "lucide-react";
 
 export default function Marketplace() {
   const [, setLocation] = useLocation();
-  const [activeTab, setActiveTab] = useState<'buy' | 'sell'>('buy');
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -33,41 +31,14 @@ export default function Marketplace() {
               <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 truncate">P2P Marketplace</h1>
               <p className="text-gray-600 text-sm sm:text-base">Trade USDT/Naira with verified users instantly</p>
             </div>
-            {/* Buy/Sell Toggle Buttons */}
-            <div className="flex gap-3 w-full sm:w-auto">
-              <Button
-                type="button"
-                variant={activeTab === "buy" ? "default" : "outline"}
-                onClick={() => setActiveTab("buy")}
-                className={`flex-1 sm:flex-none h-12 flex items-center justify-center gap-2 text-sm font-medium ${
-                  activeTab === "buy" 
-                    ? "bg-red-600 hover:bg-red-700 text-white" 
-                    : "bg-white hover:bg-gray-50 border-red-600 text-red-600"
-                }`}
-              >
-                <TrendingUp className="h-4 w-4" />
-                <span>🔴 Buy</span>
-                <span className="text-xs bg-red-800 text-white px-2 py-1 rounded-full ml-1">
-                  2
-                </span>
-              </Button>
-              <Button
-                type="button"
-                variant={activeTab === "sell" ? "default" : "outline"}
-                onClick={() => setActiveTab("sell")}
-                className={`flex-1 sm:flex-none h-12 flex items-center justify-center gap-2 text-sm font-medium ${
-                  activeTab === "sell" 
-                    ? "bg-green-600 hover:bg-green-700 text-white" 
-                    : "bg-white hover:bg-gray-50 border-green-600 text-green-600"
-                }`}
-              >
-                <TrendingDown className="h-4 w-4" />
-                <span>🟢 Sell</span>
-                <span className="text-xs bg-green-800 text-white px-2 py-1 rounded-full ml-1">
-                  2
-                </span>
-              </Button>
-            </div>
+            <Button 
+              onClick={() => setLocation("/create-offer")} 
+              size="lg" 
+              className="w-full sm:w-auto flex-shrink-0"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Create Offer
+            </Button>
           </div>
         </div>
 
