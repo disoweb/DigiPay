@@ -58,8 +58,8 @@ function App() {
               </ProtectedRoute>
             )} />
             <Route path="/user/:userId" component={UserProfile} />
-            <Route path="/user/:userId/chat" component={lazy(() => import("./pages/user-chat"))} />
-            <Route path="/trade/:offerId" component={lazy(() => import("./pages/trade-direct"))} />
+            <Route path="/user-chat/:userId" component={lazy(() => import("./pages/user-chat"))} />
+            <Route path="/trade-direct/:offerId" component={lazy(() => import("./pages/trade-direct"))} />
             <ProtectedRoute path="/ratings" component={Ratings} />
             <Route path="/settings" component={UserSettings} />
             <ProtectedRoute path="/manage-offers" component={ManageOffers} />
