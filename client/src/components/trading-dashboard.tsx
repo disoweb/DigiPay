@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
 import { useAuth } from "@/hooks/use-auth";
+import { apiRequest } from "@/lib/queryClient";
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -21,9 +22,11 @@ import {
   Star,
   MessageCircle
 } from "lucide-react";
+import { CreateOfferModal } from "./create-offer-modal";
 
 export function TradingDashboard() {
   const { user } = useAuth();
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
   const { data: trades = [] } = useQuery({
     queryKey: ['/api/trades'],
@@ -187,7 +190,7 @@ export function TradingDashboard() {
             {activeOffers.length === 0 ? (
               <div className="text-center py-4">
                 <p className="text-gray-500 mb-2">No active offers</p>
-                <Button size="sm" onClick={() => window.open('/offer-creation', '_blank')}>
+                <Button size="sm" onClick={() => setShowCreateModal(true)}>
                   Create Your First Offer
                 </Button>
               </div>
@@ -313,6 +316,10 @@ export function TradingDashboard() {
           </CardContent>
         </Card>
       )}
+      <CreateOfferModal 
+        open={showCreateModal} 
+        onOpenChange={setShowCreateModal}
+      />
     </div>
   );
 }

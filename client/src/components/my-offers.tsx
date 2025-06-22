@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { CreateOfferModal } from "./create-offer-modal";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -33,6 +34,7 @@ export function MyOffers() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [editingOffer, setEditingOffer] = useState<Offer | null>(null);
+  const [showCreateModal, setShowCreateModal] = useState(false);
   const [editForm, setEditForm] = useState({
     amount: "",
     rate: "",
@@ -182,7 +184,7 @@ export function MyOffers() {
             <DollarSign className="h-5 w-5" />
             My Offers
           </div>
-          <Button size="sm" onClick={() => window.location.href = "/offer-creation"}>
+          <Button size="sm" onClick={() => setShowCreateModal(true)}>
             <Plus className="h-4 w-4 mr-2" />
             Create Offer
           </Button>
@@ -192,7 +194,7 @@ export function MyOffers() {
         {!offers || offers.length === 0 ? (
           <div className="text-center py-8">
             <p className="text-gray-500 mb-4">You haven't created any offers yet</p>
-            <Button onClick={() => window.location.href = "/offer-creation"}>
+            <Button onClick={() => setShowCreateModal(true)}>
               <Plus className="h-4 w-4 mr-2" />
               Create Your First Offer
             </Button>
@@ -330,6 +332,10 @@ export function MyOffers() {
           </div>
         )}
       </CardContent>
+      <CreateOfferModal 
+        open={showCreateModal} 
+        onOpenChange={setShowCreateModal}
+      />
     </Card>
   );
 }

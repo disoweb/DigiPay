@@ -5,25 +5,16 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { 
   Shield, 
-  Zap, 
-  Globe, 
   Users, 
-  TrendingUp, 
-  Lock, 
-  CheckCircle,
-  Star,
-  ArrowRight,
-  BarChart3,
-  Wallet,
-  MessageCircle,
-  Award,
-  Phone,
-  Clock,
+  Zap, 
+  CheckCircle, 
+  Star, 
+  ArrowRight, 
+  TrendingUp,
+  TrendingDown,
   DollarSign,
-  Eye,
-  UserCheck,
-  Building2,
-  Smartphone
+  Lock,
+  Globe
 } from "lucide-react";
 
 export default function LandingPage() {
