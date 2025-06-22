@@ -319,7 +319,7 @@ export default function TradeDetail() {
             </Card>
 
             {/* Trade Instructions */}
-            {trade.status === "pending" && isUserInTrade && (
+            {isUserInTrade && (
               <Card>
                 <CardHeader className="pb-3">
                   <CardTitle className="flex items-center gap-2 text-lg">
@@ -333,14 +333,14 @@ export default function TradeDetail() {
                       <AlertTriangle className="h-4 w-4" />
                       <AlertDescription>
                         <strong>As the buyer:</strong> Send ₦{parseFloat(trade.fiatAmount).toLocaleString()} 
-                        to the seller's payment details shown below, then mark payment as made.
+                        to the seller's payment details shown on the right, then mark payment as made.
                       </AlertDescription>
                     </Alert>
                   ) : (
                     <Alert>
                       <Shield className="h-4 w-4" />
                       <AlertDescription>
-                        <strong>As the seller:</strong> Your payment details are shown below. Wait for the buyer to make payment, then confirm receipt to complete the trade.
+                        <strong>As the seller:</strong> Your payment details are shown on the right. Wait for the buyer to make payment, then confirm receipt to complete the trade.
                       </AlertDescription>
                     </Alert>
                   )}
@@ -394,7 +394,7 @@ export default function TradeDetail() {
 
           {/* Payment Instructions Sidebar */}
           <div className="space-y-6">
-            {/* Always show payment details for buyers */}
+            {/* Always show payment details for buyers immediately */}
             {isUserInTrade && isBuyer && (
               <PaymentInstructions
                 trade={trade}
@@ -406,7 +406,7 @@ export default function TradeDetail() {
             )}
 
             {/* Show seller's payment details view when they're involved */}
-            {isUserInTrade && isSeller && ["payment_pending", "payment_made"].includes(trade.status) && (
+            {isUserInTrade && isSeller && (
               <PaymentInstructions
                 trade={trade}
                 userRole="seller"
@@ -418,12 +418,12 @@ export default function TradeDetail() {
           </div>
         </div>
 
-        {/* Separate Chat Section */}
+        {/* Completely Separate Chat Section */}
         {isUserInTrade && (
-          <div className="space-y-6">
-            <Separator className="my-8" />
+          <div className="mt-12">
+            <Separator className="mb-8" />
             
-            <div className="flex items-center gap-2 mb-4">
+            <div className="flex items-center gap-2 mb-6">
               <MessageCircle className="h-6 w-6 text-blue-600" />
               <h2 className="text-xl font-semibold text-gray-900">Trade Communication</h2>
             </div>
