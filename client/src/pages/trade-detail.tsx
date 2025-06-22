@@ -459,7 +459,5 @@ export default function TradeDetail() {
         )}
       </main>
     </div>
-      </main>
-    </div>
   );
 }
