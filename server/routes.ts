@@ -1766,6 +1766,102 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // User Profile Management Endpoints
+  app.get("/api/users/profile/payment-methods", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.id;
+      const paymentMethods = await storage.getUserPaymentMethods(userId);
+      res.json(paymentMethods);
+    } catch (error) {
+      console.error("Get payment methods error:", error);
+      res.status(500).json({ error: "Failed to retrieve payment methods." });
+    }
+  });
+
+  app.post("/api/users/profile/payment-methods", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.id;
+      const { type, name, details } = req.body;
+
+      if (!type || !name || !details) {
+        return res.status(400).json({ error: "Missing required fields: type, name, details." });
+      }
+
+      // Basic validation for details (can be expanded)
+      if (typeof details !== 'object' || details === null) {
+          return res.status(400).json({ error: "Details must be a JSON object." });
+      }
+      if (type === "bank_transfer" && (!details.account_number || !details.bank_code || !details.account_name)) {
+        return res.status(400).json({ error: "For bank transfers, account_number, account_name, and bank_code are required in details." });
+      }
+
+
+      const newPaymentMethod = await storage.createUserPaymentMethod({
+        userId,
+        type,
+        name,
+        details, // Drizzle should handle JSONB stringification
+        isVerified: false, // Default, admin might verify later
+        isActive: true,
+      });
+      res.status(201).json(newPaymentMethod);
+    } catch (error) {
+      console.error("Create payment method error:", error);
+      // Check for zod validation errors from schema if applicable during creation
+      res.status(500).json({ error: "Failed to create payment method." });
+    }
+  });
+
+  app.delete("/api/users/profile/payment-methods/:methodId", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.id;
+      const methodId = parseInt(req.params.methodId);
+
+      if (isNaN(methodId)) {
+        return res.status(400).json({ error: "Invalid payment method ID."});
+      }
+
+      const success = await storage.deleteUserPaymentMethod(userId, methodId);
+      if (success) {
+        res.status(200).json({ message: "Payment method deleted successfully." });
+      } else {
+        // Could be because methodId doesn't exist or doesn't belong to user
+        res.status(404).json({ error: "Payment method not found or not authorized to delete." });
+      }
+    } catch (error) {
+      console.error("Delete payment method error:", error);
+      res.status(500).json({ error: "Failed to delete payment method." });
+    }
+  });
+
+  app.get("/api/users/profile/regions", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const user = await storage.getUser(req.user!.id);
+      if (!user) return res.status(404).json({ error: "User not found." }); // Should not happen if authenticated
+      res.json(user.geographicRegions || []); // Return empty array if null/undefined
+    } catch (error) {
+      console.error("Get geographic regions error:", error);
+      res.status(500).json({ error: "Failed to retrieve geographic regions." });
+    }
+  });
+
+  app.put("/api/users/profile/regions", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.id;
+      const { regions } = req.body; // Expecting an array of strings
+
+      if (!Array.isArray(regions) || !regions.every(r => typeof r === 'string')) {
+        return res.status(400).json({ error: "Regions must be an array of strings." });
+      }
+
+      await storage.updateUser(userId, { geographicRegions: regions });
+      res.json({ success: true, geographicRegions: regions });
+    } catch (error) {
+      console.error("Update geographic regions error:", error);
+      res.status(500).json({ error: "Failed to update geographic regions." });
+    }
+  });
+
   // Admin stats endpoint
   app.get("/api/admin/stats", async (req, res) => {
     if (!req.isAuthenticated() || !req.user!.isAdmin) {

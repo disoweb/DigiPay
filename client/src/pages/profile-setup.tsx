@@ -1,101 +1,141 @@
-import { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
-import { useLocation } from "wouter";
+import { useState, useEffect } from "react";
+import { useAuth } from "@/hooks/use-auth";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Navbar } from "@/components/navbar";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { User, MapPin, Clock, CreditCard, Globe } from "lucide-react";
+import { User, MailCheck, MailWarning, CreditCard, Globe, Trash2, PlusCircle, Loader2 } from "lucide-react";
+import type { UserPaymentMethod, InsertUserPaymentMethod } from "@shared/schema"; // Import types
 
-const paymentMethodOptions = [
-  "Bank Transfer",
-  "Mobile Money (MTN)",
-  "Mobile Money (Airtel)",
-  "Mobile Money (Glo)",
-  "Opay",
-  "PalmPay",
-  "Kuda",
-  "Moniepoint",
-  "Cash Pickup"
-];
-
-const locationOptions = [
-  "Lagos, Nigeria",
-  "Abuja, Nigeria", 
-  "Port Harcourt, Nigeria",
-  "Kano, Nigeria",
-  "Ibadan, Nigeria",
-  "Kaduna, Nigeria",
-  "Benin City, Nigeria",
-  "Enugu, Nigeria",
-  "Calabar, Nigeria",
-  "Other"
+// Example available regions - this could come from a config or API later
+const NIGERIAN_STATES = [
+  "Abia", "Adamawa", "Akwa Ibom", "Anambra", "Bauchi", "Bayelsa", "Benue", "Borno",
+  "Cross River", "Delta", "Ebonyi", "Edo", "Ekiti", "Enugu", "Gombe", "Imo",
+  "Jigawa", "Kaduna", "Kano", "Katsina", "Kebbi", "Kogi", "Kwara", "Lagos",
+  "Nasarawa", "Niger", "Ogun", "Ondo", "Osun", "Oyo", "Plateau", "Rivers",
+  "Sokoto", "Taraba", "Yobe", "Zamfara", "FCT"
 ];
 
 export default function ProfileSetup() {
-  const [, setLocation] = useLocation();
+  const { user, isLoading: isUserLoading } = useAuth();
   const { toast } = useToast();
-  
-  const [formData, setFormData] = useState({
-    fullName: "",
-    location: "",
-    bio: "",
-    preferredPaymentMethods: [] as string[],
-    tradingHours: {
-      start: "09:00",
-      end: "18:00",
-      timezone: "WAT"
-    }
+
+  // State for new payment method form
+  const [newPaymentMethod, setNewPaymentMethod] = useState<{ type: string; name: string; accountNumber: string; bankCode: string; accountName: string }>({
+    type: "bank_transfer",
+    name: "",
+    accountNumber: "",
+    bankCode: "",
+    accountName: "",
+  });
+  const [selectedRegions, setSelectedRegions] = useState<string[]>([]);
+
+  // Fetch existing payment methods
+  const { data: paymentMethods, isLoading: isLoadingPaymentMethods, refetch: refetchPaymentMethods } = useQuery<UserPaymentMethod[]>({
+    queryKey: ["/api/users/profile/payment-methods"],
+    queryFn: async () => apiRequest("GET", "/api/users/profile/payment-methods"),
+    enabled: !!user, // Only fetch if user is loaded
   });
 
-  const setupMutation = useMutation({
-    mutationFn: async (data: typeof formData) => {
-      await apiRequest("POST", "/api/user/profile-setup", data);
+  // Initialize selectedRegions when user data is available
+  useEffect(() => {
+    if (user?.geographicRegions) {
+      setSelectedRegions(user.geographicRegions);
+    }
+  }, [user?.geographicRegions]);
+
+  // Mutation for adding a payment method
+  const addPaymentMethodMutation = useMutation({
+    mutationFn: async (data: Omit<InsertUserPaymentMethod, 'userId' | 'isVerified' | 'isActive'>) => {
+      return apiRequest("POST", "/api/users/profile/payment-methods", data);
     },
     onSuccess: () => {
-      toast({
-        title: "Profile Setup Complete",
-        description: "Your trading profile has been configured successfully!",
-      });
-      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
-      setLocation("/marketplace");
+      toast({ title: "Success", description: "Payment method added." });
+      refetchPaymentMethods();
+      setNewPaymentMethod({ type: "bank_transfer", name: "", accountNumber: "", bankCode: "", accountName: "" }); // Reset form
     },
     onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to setup profile",
-        variant: "destructive",
-      });
+      toast({ variant: "destructive", title: "Error", description: error.message || "Failed to add payment method." });
     },
   });
 
-  const handlePaymentMethodChange = (method: string, checked: boolean) => {
-    setFormData(prev => ({
-      ...prev,
-      preferredPaymentMethods: checked
-        ? [...prev.preferredPaymentMethods, method]
-        : prev.preferredPaymentMethods.filter(m => m !== method)
-    }));
-  };
+  // Mutation for deleting a payment method
+  const deletePaymentMethodMutation = useMutation({
+    mutationFn: async (methodId: number) => {
+      return apiRequest("DELETE", `/api/users/profile/payment-methods/${methodId}`);
+    },
+    onSuccess: () => {
+      toast({ title: "Success", description: "Payment method deleted." });
+      refetchPaymentMethods();
+    },
+    onError: (error: any) => {
+      toast({ variant: "destructive", title: "Error", description: error.message || "Failed to delete payment method." });
+    },
+  });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Mutation for updating geographic regions
+  const updateRegionsMutation = useMutation({
+    mutationFn: async (regions: string[]) => {
+      return apiRequest("PUT", "/api/users/profile/regions", { regions });
+    },
+    onSuccess: (data) => {
+      toast({ title: "Success", description: "Geographic regions updated." });
+      queryClient.setQueryData(['/api/user'], (oldData: User | null) => oldData ? ({ ...oldData, geographicRegions: data.geographicRegions }) : null);
+    },
+    onError: (error: any) => {
+      toast({ variant: "destructive", title: "Error", description: error.message || "Failed to update regions." });
+    },
+  });
+
+
+  const handleAddPaymentMethod = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.fullName || !formData.location || formData.preferredPaymentMethods.length === 0) {
-      toast({
-        title: "Incomplete Profile",
-        description: "Please fill in all required fields",
-        variant: "destructive",
-      });
+    if (!newPaymentMethod.name || !newPaymentMethod.type) {
+      toast({ variant: "destructive", title: "Error", description: "Payment method type and name are required." });
       return;
     }
-    setupMutation.mutate(formData);
+    let details: any = {};
+    if (newPaymentMethod.type === 'bank_transfer') {
+        if (!newPaymentMethod.accountNumber || !newPaymentMethod.bankCode || !newPaymentMethod.accountName) {
+            toast({ variant: "destructive", title: "Error", description: "Account number, account name, and bank code are required for bank transfers."});
+            return;
+        }
+        details = { account_number: newPaymentMethod.accountNumber, bank_code: newPaymentMethod.bankCode, account_name: newPaymentMethod.accountName };
+    } else {
+        // Handle other types if necessary, or expect generic details
+        toast({ variant: "destructive", title: "Error", description: "Unsupported payment method type for detailed entry."});
+        return;
+    }
+    addPaymentMethodMutation.mutate({
+      type: newPaymentMethod.type,
+      name: newPaymentMethod.name,
+      details,
+    });
   };
+
+  const handleRegionChange = (region: string) => {
+    setSelectedRegions(prev =>
+      prev.includes(region) ? prev.filter(r => r !== region) : [...prev, region]
+    );
+  };
+
+  const handleSaveRegions = () => {
+    updateRegionsMutation.mutate(selectedRegions);
+  };
+
+  if (isUserLoading || isLoadingPaymentMethods && user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-12 w-12 animate-spin text-blue-600" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -103,149 +143,167 @@ export default function ProfileSetup() {
       
       <main className="max-w-3xl mx-auto p-4 py-8">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Complete Your Trading Profile</h1>
-          <p className="text-gray-600">Set up your profile to start trading with confidence</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Profile Settings</h1>
+          <p className="text-gray-600">Manage your account details and preferences.</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Personal Information */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <User className="h-5 w-5" />
-                Personal Information
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="fullName">Full Name *</Label>
-                <Input
-                  id="fullName"
-                  value={formData.fullName}
-                  onChange={(e) => setFormData(prev => ({ ...prev, fullName: e.target.value }))}
-                  placeholder="Enter your full legal name"
-                  required
-                />
-              </div>
+        {/* Email Verification Status */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              {user?.emailVerified ? <MailCheck className="h-5 w-5 text-green-500" /> : <MailWarning className="h-5 w-5 text-yellow-500" />}
+              Email Verification
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {user?.emailVerified ? (
+              <p className="text-green-600">Your email address (<strong>{user.email}</strong>) is verified.</p>
+            ) : (
+              <p className="text-yellow-700">
+                Your email address (<strong>{user?.email}</strong>) is not yet verified.
+                Please check your inbox for a verification link.
+                {/* TODO: Add a "Resend verification email" button here */}
+              </p>
+            )}
+          </CardContent>
+        </Card>
 
-              <div>
-                <Label htmlFor="location">Location *</Label>
-                <Select value={formData.location} onValueChange={(value) => setFormData(prev => ({ ...prev, location: value }))}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select your location" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {locationOptions.map((location) => (
-                      <SelectItem key={location} value={location}>
-                        {location}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label htmlFor="bio">Bio (Optional)</Label>
-                <Textarea
-                  id="bio"
-                  value={formData.bio}
-                  onChange={(e) => setFormData(prev => ({ ...prev, bio: e.target.value }))}
-                  placeholder="Tell other traders about yourself..."
-                  rows={3}
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Payment Methods */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <CreditCard className="h-5 w-5" />
-                Preferred Payment Methods *
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {paymentMethodOptions.map((method) => (
-                  <div key={method} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={method}
-                      checked={formData.preferredPaymentMethods.includes(method)}
-                      onCheckedChange={(checked) => handlePaymentMethodChange(method, checked as boolean)}
-                    />
-                    <Label htmlFor={method} className="text-sm font-medium">
-                      {method}
-                    </Label>
+        {/* Payment Methods */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <CreditCard className="h-5 w-5" />
+              Payment Methods
+            </CardTitle>
+            <CardDescription>Manage your preferred payment methods for trades.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {paymentMethods && paymentMethods.length > 0 && (
+              <div className="space-y-3 mb-6">
+                <Label>Your Saved Methods:</Label>
+                {paymentMethods.map(method => (
+                  <div key={method.id} className="flex items-center justify-between p-3 border rounded-md bg-gray-50">
+                    <div>
+                      <p className="font-medium">{method.name} ({method.type})</p>
+                      {method.type === 'bank_transfer' && typeof method.details === 'object' && method.details && 'account_number' in method.details && (
+                        <p className="text-sm text-gray-500">
+                          { (method.details as any).account_name} - Acct: ****{(method.details as any).account_number.slice(-4)}
+                        </p>
+                      )}
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => deletePaymentMethodMutation.mutate(method.id)}
+                      disabled={deletePaymentMethodMutation.isPending && deletePaymentMethodMutation.variables === method.id}
+                    >
+                      {deletePaymentMethodMutation.isPending && deletePaymentMethodMutation.variables === method.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4 text-red-500" />}
+                    </Button>
                   </div>
                 ))}
               </div>
-              <p className="text-xs text-gray-500 mt-3">
-                Select all payment methods you can accept for trades
-              </p>
-            </CardContent>
-          </Card>
+            )}
 
-          {/* Trading Hours */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Clock className="h-5 w-5" />
-                Trading Hours
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="startTime">Start Time</Label>
-                  <Input
-                    id="startTime"
-                    type="time"
-                    value={formData.tradingHours.start}
-                    onChange={(e) => setFormData(prev => ({
-                      ...prev,
-                      tradingHours: { ...prev.tradingHours, start: e.target.value }
-                    }))}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="endTime">End Time</Label>
-                  <Input
-                    id="endTime"
-                    type="time"
-                    value={formData.tradingHours.end}
-                    onChange={(e) => setFormData(prev => ({
-                      ...prev,
-                      tradingHours: { ...prev.tradingHours, end: e.target.value }
-                    }))}
-                  />
-                </div>
+            <form onSubmit={handleAddPaymentMethod} className="space-y-4 border-t pt-6">
+              <Label className="text-lg font-semibold">Add New Payment Method</Label>
+              <div>
+                <Label htmlFor="pm-type">Type</Label>
+                <Select
+                  value={newPaymentMethod.type}
+                  onValueChange={(value) => setNewPaymentMethod(prev => ({ ...prev, type: value }))}
+                >
+                  <SelectTrigger id="pm-type"><SelectValue placeholder="Select type" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
+                    {/* Add other types as needed */}
+                  </SelectContent>
+                </Select>
               </div>
-              <p className="text-xs text-gray-500">
-                Set your preferred trading hours (WAT timezone)
-              </p>
-            </CardContent>
-          </Card>
+              <div>
+                <Label htmlFor="pm-name">Display Name</Label>
+                <Input
+                  id="pm-name"
+                  placeholder="E.g., My GTB Savings"
+                  value={newPaymentMethod.name}
+                  onChange={e => setNewPaymentMethod(prev => ({ ...prev, name: e.target.value }))}
+                  required
+                />
+              </div>
+              {newPaymentMethod.type === 'bank_transfer' && (
+                <>
+                  <div>
+                    <Label htmlFor="pm-account-name">Account Name</Label>
+                    <Input
+                      id="pm-account-name"
+                      placeholder="Full Account Name"
+                      value={newPaymentMethod.accountName}
+                      onChange={e => setNewPaymentMethod(prev => ({ ...prev, accountName: e.target.value }))}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="pm-account-number">Account Number</Label>
+                    <Input
+                      id="pm-account-number"
+                      placeholder="Bank Account Number"
+                      value={newPaymentMethod.accountNumber}
+                      onChange={e => setNewPaymentMethod(prev => ({ ...prev, accountNumber: e.target.value }))}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="pm-bank-code">Bank Code (Paystack)</Label>
+                    <Input
+                      id="pm-bank-code"
+                      placeholder="E.g., 058 for GTBank"
+                      value={newPaymentMethod.bankCode}
+                      onChange={e => setNewPaymentMethod(prev => ({ ...prev, bankCode: e.target.value }))}
+                      required
+                    />
+                     <p className="text-xs text-gray-500 mt-1">Find Paystack bank codes <a href="https://paystack.com/docs/payments/bank-codes/" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">here</a>.</p>
+                  </div>
+                </>
+              )}
+              <Button type="submit" disabled={addPaymentMethodMutation.isPending} className="w-full sm:w-auto">
+                {addPaymentMethodMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <PlusCircle className="mr-2 h-4 w-4" />}
+                Add Method
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
 
-          {/* Submit Button */}
-          <div className="flex gap-4 pt-4">
+        {/* Geographic Regions */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Globe className="h-5 w-5" />
+              Geographic Trading Regions
+            </CardTitle>
+            <CardDescription>Select the regions where you primarily trade or find offers.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3 mb-4 max-h-60 overflow-y-auto pr-2">
+              {NIGERIAN_STATES.map(region => (
+                <div key={region} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={`region-${region}`}
+                    checked={selectedRegions.includes(region)}
+                    onCheckedChange={() => handleRegionChange(region)}
+                  />
+                  <Label htmlFor={`region-${region}`} className="font-normal">{region}</Label>
+                </div>
+              ))}
+            </div>
             <Button
-              type="button"
-              variant="outline"
-              onClick={() => setLocation("/dashboard")}
-              className="flex-1"
+              onClick={handleSaveRegions}
+              disabled={updateRegionsMutation.isPending}
+              className="w-full sm:w-auto"
             >
-              Skip for Now
+              {updateRegionsMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              Save Regions
             </Button>
-            <Button
-              type="submit"
-              disabled={setupMutation.isPending}
-              className="flex-1 bg-blue-600 hover:bg-blue-700"
-            >
-              {setupMutation.isPending ? "Setting up..." : "Complete Setup"}
-            </Button>
-          </div>
-        </form>
+          </CardContent>
+        </Card>
       </main>
     </div>
   );
