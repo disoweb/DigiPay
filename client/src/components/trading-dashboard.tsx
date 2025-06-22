@@ -449,7 +449,7 @@ export function TradingDashboard() {
               <TabsTrigger value="buy">Buy USDT</TabsTrigger>
               <TabsTrigger value="sell">Sell USDT</TabsTrigger>
             </TabsList>
-            
+
             <TabsContent value="buy" className="space-y-3 sm:space-y-4 mt-4">
               {featuredOffers?.buyOffers?.length === 0 ? (
                 <div className="text-center py-8">
@@ -532,7 +532,7 @@ export function TradingDashboard() {
                               onClick={() => {
                                 // Store selected offer data in sessionStorage for the trade modal
                                 sessionStorage.setItem('selectedOffer', JSON.stringify(offer));
-                                setLocation(`/trade/${offer.id}`);
+                                setLocation(`/trade-direct/${offer.id}`);
                               }}
                               className="flex-1 bg-green-600 hover:bg-green-700 text-sm py-2 h-9"
                               disabled={!user || offer.userId === user?.id}
@@ -544,7 +544,7 @@ export function TradingDashboard() {
                               onClick={() => {
                                 // Create a direct message to the offer owner
                                 if (user && offer.userId !== user.id) {
-                                  setLocation(`/user/${offer.userId}/chat`);
+                                  setLocation(`/user-chat/${offer.userId}`);
                                 }
                               }}
                               variant="outline"
@@ -649,7 +649,7 @@ export function TradingDashboard() {
                               onClick={() => {
                                 // Store selected offer data in sessionStorage for the trade modal
                                 sessionStorage.setItem('selectedOffer', JSON.stringify(offer));
-                                setLocation(`/trade/${offer.id}`);
+                                setLocation(`/trade-direct/${offer.id}`);
                               }}
                               className="flex-1 bg-red-600 hover:bg-red-700 text-sm py-2 h-9"
                               disabled={!user || offer.userId === user?.id}
@@ -661,7 +661,7 @@ export function TradingDashboard() {
                               onClick={() => {
                                 // Create a direct message to the offer owner
                                 if (user && offer.userId !== user.id) {
-                                  setLocation(`/user/${offer.userId}/chat`);
+                                  setLocation(`/user-chat/${offer.userId}`);
                                 }
                               }}
                               variant="outline"

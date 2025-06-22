@@ -1490,25 +1490,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     // Send direct message to a user
   app.post("/api/messages/direct", authenticateToken, async (req, res) => {
     try {
-      const { recipientId, messageText } = req.body;
+      const { recipientId, messageText, message } = req.body;
       const senderId = req.user!.id;
 
-      if (!recipientId || !messageText) {
+      const messageContent = messageText || message || "";
+
+      if (!recipientId || !messageContent.trim()) {
         return res.status(400).json({ error: "Recipient ID and message text are required" });
       }
 
-      if (senderId === recipientId) {
+      if (senderId === parseInt(recipientId)) {
         return res.status(400).json({ error: "Cannot send message to yourself" });
       }
 
-      const message = await storage.createDirectMessage({
+      // Verify recipient exists
+      const recipient = await storage.getUser(parseInt(recipientId));
+      if (!recipient) {
+        return res.status(404).json({ error: "Recipient not found" });
+      }
+
+      const messageData = await storage.createDirectMessage({
         senderId,
-        recipientId,
-        messageText,
+        recipientId: parseInt(recipientId),
+        messageText: messageContent.trim(),
         tradeId: null
       });
 
-      res.json(message);
+      res.json(messageData);
     } catch (error) {
       console.error("Error sending direct message:", error);
       res.status(500).json({ error: "Failed to send message" });

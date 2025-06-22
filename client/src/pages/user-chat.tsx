@@ -1,10 +1,10 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useLocation } from "wouter";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Navbar } from "@/components/navbar";
@@ -12,11 +12,13 @@ import { useAuth } from "@/hooks/use-auth";
 import { apiRequest } from "@/lib/queryClient";
 import { 
   ArrowLeft, 
-  Shield, 
+  Send, 
+  User, 
   Star, 
-  Send,
-  Users,
+  Shield,
   MessageCircle,
+  Phone,
+  Mail,
   AlertTriangle
 } from "lucide-react";
 
@@ -144,7 +146,7 @@ export default function UserChat() {
           </Button>
           <div className="flex items-center gap-3 flex-1 min-w-0">
             <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
-              <Users className="h-5 w-5" />
+              <User className="h-5 w-5" />
             </div>
             <div className="min-w-0 flex-1">
               <h1 className="text-lg sm:text-2xl font-bold text-gray-900 truncate">
@@ -255,7 +257,7 @@ export default function UserChat() {
             variant="outline"
             className="flex items-center justify-center gap-2"
           >
-            <Users className="h-4 w-4" />
+            <User className="h-4 w-4" />
             View Profile
           </Button>
         </div>
