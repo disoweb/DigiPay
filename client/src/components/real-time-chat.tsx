@@ -267,7 +267,9 @@ export function RealTimeChat({ tradeId }: RealTimeChatProps) {
           </div>
         ) : (
           <div className="space-y-4">
-            {[...messages, ...Array.from(pendingMessages.values())].map((msg, index) => {
+            {[...messages, ...Array.from(pendingMessages.values())].sort((a, b) => 
+              new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+            ).map((msg, index) => {
                 const isOwnMessage = msg.senderId === user?.id;
                 const isPending = msg.status === 'sending';
                 const isFailed = msg.status === 'failed';
@@ -317,7 +319,7 @@ export function RealTimeChat({ tradeId }: RealTimeChatProps) {
                             ) : isFailed ? (
                               <div className="h-3 w-3 rounded-full bg-red-500" />
                             ) : (
-                              <CheckCheck className="h-3 w-3 text-green-500" />
+                              <CheckCheck className="h-3 w-3 text-blue-200" />
                             )}
                           </div>
                         )}
