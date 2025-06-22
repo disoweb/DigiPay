@@ -1,28 +1,33 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/hooks/use-auth";
+import { useCurrencyPreference } from "@/hooks/use-currency-preference";
+import { apiRequest } from "@/lib/queryClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLocation } from "wouter";
-import { useAuth } from "@/hooks/use-auth";
-import { apiRequest } from "@/lib/queryClient";
-import { 
-  TrendingUp, 
-  TrendingDown, 
-  DollarSign, 
-  Users, 
+import { TransactionDetailModal } from "@/components/transaction-detail-modal";
+import {
+  TrendingUp,
+  TrendingDown,
   Clock,
-  ArrowRight,
-  Plus,
-  Shield,
-  AlertTriangle,
-  BarChart3,
-  CheckCircle,
-  Activity,
   MessageCircle,
-  Inbox
+  Plus,
+  ArrowRight,
+  Wallet,
+  Activity,
+  DollarSign,
+  Users,
+  BarChart3,
+  Filter,
+  Search,
+  AlertCircle,
+  CheckCircle,
+  XCircle,
+  Eye,
+  RefreshCw
 } from "lucide-react";
 import { MessagingSystem } from "@/components/messaging-system";
 import { TransactionDetailModal } from "@/components/transaction-detail-modal";
@@ -32,6 +37,12 @@ export function TradingDashboard() {
   const [, setLocation] = useLocation();
   const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
   const [showTransactionModal, setShowTransactionModal] = useState(false);
+  const [activeTab, setActiveTab] = useState("overview");
+  const { currency: portfolioCurrency, toggleCurrency } = useCurrencyPreference();
+
+  // Exchange rates
+  const USDT_TO_NGN_RATE = 1485;
+  const NGN_TO_USD_RATE = 0.00067;
 
   const { data: trades = [], error: tradesError, refetch: refetchTrades, isLoading: tradesLoading } = useQuery({
     queryKey: ['/api/trades'],
@@ -182,10 +193,26 @@ export function TradingDashboard() {
     }
   };
 
-  // Calculate total portfolio value in NGN
-  const usdtInNgn = parseFloat(user?.usdtBalance || "0") * 1485; // Using exchange rate
+  // Calculate total portfolio value
+  const usdtInNgn = parseFloat(user?.usdtBalance || "0") * USDT_TO_NGN_RATE;
   const ngnBalance = parseFloat(user?.nairaBalance || "0");
-  const totalPortfolioValue = usdtInNgn + ngnBalance;
+
+  let totalPortfolioValue;
+  let ngnBalanceInPreferredCurrency;
+  let usdtBalanceInPreferredCurrency;
+  let currencySymbol;
+
+  if (portfolioCurrency === "NGN") {
+    totalPortfolioValue = usdtInNgn + ngnBalance;
+    ngnBalanceInPreferredCurrency = ngnBalance;
+    usdtBalanceInPreferredCurrency = parseFloat(user?.usdtBalance || "0")
+    currencySymbol = "₦";
+  } else {
+    totalPortfolioValue = (usdtInNgn + ngnBalance) * NGN_TO_USD_RATE;
+    ngnBalanceInPreferredCurrency = ngnBalance * NGN_TO_USD_RATE
+    usdtBalanceInPreferredCurrency = parseFloat(user?.usdtBalance || "0")
+    currencySymbol = "$";
+  }
 
   return (
     <div className="space-y-6">
@@ -195,17 +222,19 @@ export function TradingDashboard() {
           <div className="text-center">
             <h2 className="text-lg font-medium text-white/90 mb-2">Total Portfolio Value</h2>
             <div className="text-4xl font-bold mb-6">
-              ₦{totalPortfolioValue.toLocaleString()}
+              {currencySymbol}{totalPortfolioValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
-
+             <Button onClick={toggleCurrency} variant="secondary" size="sm">
+              Toggle Currency ({portfolioCurrency})
+            </Button>
             <div className="grid grid-cols-2 gap-8 max-w-md mx-auto">
               <div className="text-center">
                 <p className="text-white/90 text-sm mb-1">NGN</p>
-                <p className="text-xl font-semibold">₦{ngnBalance.toLocaleString()}</p>
+                <p className="text-xl font-semibold">{currencySymbol}{ngnBalanceInPreferredCurrency.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
               </div>
               <div className="text-center">
                 <p className="text-white/90 text-sm mb-1">USDT</p>
-                <p className="text-xl font-semibold">${parseFloat(user?.usdtBalance || "0").toFixed(2)}</p>
+                <p className="text-xl font-semibold">{currencySymbol}{usdtBalanceInPreferredCurrency.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
               </div>
             </div>
           </div>
