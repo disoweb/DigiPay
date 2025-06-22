@@ -9,14 +9,15 @@ import { apiRequest } from "@/lib/queryClient";
 import { Trade } from "@shared/schema";
 
 interface PaymentInstructionsProps {
-  trade: any;
-  userRole: 'buyer' | 'seller';
+  trade: Trade;
   onPaymentMarked: () => void;
+  onPaymentConfirmed?: () => void;
 }
 
-export function PaymentInstructions({ trade, userRole, onPaymentMarked }: PaymentInstructionsProps) {
+export function PaymentInstructions({ trade, userRole, onPaymentMarked, onPaymentConfirmed }: PaymentInstructionsProps) {
   const { toast } = useToast();
   const [isMarkingPaid, setIsMarkingPaid] = useState(false);
+  const [isConfirmingPayment, setIsConfirmingPayment] = useState(false);
 
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
@@ -46,6 +47,28 @@ export function PaymentInstructions({ trade, userRole, onPaymentMarked }: Paymen
       });
     } finally {
       setIsMarkingPaid(false);
+    }
+  };
+
+  const handleConfirmPayment = async () => {
+    setIsConfirmingPayment(true);
+    try {
+      const response = await apiRequest("POST", `/api/trades/${trade.id}/confirm-payment`);
+
+      const data = await response.json();
+      toast({
+        title: "Payment Confirmed",
+        description: "Payment confirmed and USDT released from escrow",
+      });
+      onPaymentConfirmed?.();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to confirm payment",
+        variant: "destructive",
+      });
+    } finally {
+      setIsConfirmingPayment(false);
     }
   };
 
@@ -225,6 +248,40 @@ export function PaymentInstructions({ trade, userRole, onPaymentMarked }: Paymen
               </div>
             </div>
           </div>
+          {trade.status === "payment_pending" && (
+            <Button
+              onClick={handleMarkPayment}
+              disabled={isMarkingPaid}
+              className="w-full"
+              size="lg"
+            >
+              {isMarkingPaid ? (
+                "Marking as Paid..."
+              ) : (
+                <>
+                  <CheckCircle className="mr-2 h-4 w-4" />
+                  I Have Made Payment
+                </>
+              )}
+            </Button>
+          )}
+          {trade.status === "payment_made" && (
+            <Button
+              onClick={handleConfirmPayment}
+              disabled={isConfirmingPayment}
+              className="w-full"
+              size="lg"
+            >
+              {isConfirmingPayment ? (
+                "Confirming Payment..."
+              ) : (
+                <>
+                  <CheckCircle className="mr-2 h-4 w-4" />
+                  Confirm Payment
+                </>
+              )}
+            </Button>
+          )}
         </CardContent>
       </Card>
     );

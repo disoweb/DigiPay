@@ -244,21 +244,21 @@ export function EnhancedMarketplace() {
   };
 
   const getBestRate = (type: 'buy' | 'sell') => {
-    // For buy rate, we look at sell offers (what users are selling for)
-    // For sell rate, we look at buy offers (what users are buying for)
+    // For buy rate, we look at sell offers (what users are selling for) - lowest rate is best for buyers
+    // For sell rate, we look at buy offers (what users are buying for) - highest rate is best for sellers
     const relevantOffers = offers.filter(o => 
-      o.type === (type === 'buy' ? 'sell' : 'buy') && 
+      o.type === type && 
       o.status === 'active'
     );
 
     if (!relevantOffers.length) return null;
 
-    const rates = relevantOffers.map(o => safeParseFloat(o.rate)).filter(rate => !isNaN(rate));
+    const rates = relevantOffers.map(o => safeParseFloat(o.rate)).filter(rate => !isNaN(rate) && rate > 0);
     if (!rates.length) return null;
 
-    // For buying USDT (looking at sell offers), we want the lowest rate
-    // For selling USDT (looking at buy offers), we want the highest rate
-    return type === 'buy' ? Math.min(...rates) : Math.max(...rates);
+    // For sell offers (when users want to buy), we want the lowest rate (best for buyers)
+    // For buy offers (when users want to sell), we want the highest rate (best for sellers)
+    return type === 'sell' ? Math.min(...rates) : Math.max(...rates);
   };
 
   const getPaymentMethodIcon = (method: string) => {
@@ -319,13 +319,13 @@ export function EnhancedMarketplace() {
             <div className="text-center p-3 bg-green-50 rounded-lg">
               <p className="text-sm text-gray-600">Best Buy Rate</p>
               <p className="font-bold text-green-600">
-                ₦{getBestRate('sell')?.toLocaleString() || 'N/A'}
+                ₦{getBestRate('buy')?.toLocaleString() || 'N/A'}
               </p>
             </div>
             <div className="text-center p-3 bg-red-50 rounded-lg">
               <p className="text-sm text-gray-600">Best Sell Rate</p>
               <p className="font-bold text-red-600">
-                ₦{getBestRate('buy')?.toLocaleString() || 'N/A'}
+                ₦{getBestRate('sell')?.toLocaleString() || 'N/A'}
               </p>
             </div>
             <div className="text-center p-3 bg-blue-50 rounded-lg">

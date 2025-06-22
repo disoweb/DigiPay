@@ -401,15 +401,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Payment deadline has passed" });
       }
 
-      await storage.updateTrade(tradeId, {
+      await storage.updateTrade(tradeId, { 
         status: "payment_made",
         paymentMadeAt: new Date()
       });
 
-      res.json({ success: true, message: "Payment marked as made. Waiting for seller confirmation." });
+      // Notify seller
+      const seller = await storage.getUser(trade.sellerId);
+      if (seller?.email) {
+        await emailService.sendTradeNotification(
+          seller.email,
+          tradeId,
+          "Payment has been made by the buyer. Please confirm receipt to complete the trade."
+        );
+      }
+
+      res.json({ success: true, message: "Payment marked as made" });
     } catch (error) {
-      console.error("Payment confirmation error:", error);
-      res.status(500).json({ error: "Failed to confirm payment" });
+      console.error("Mark payment error:", error);
+      res.status(500).json({ error: "Failed to mark payment" });
     }
   });
 
@@ -476,7 +486,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  
+
 
   // Raise dispute
   app.post("/api/trades/:id/dispute", authenticateToken, async (req, res) => {
@@ -1992,6 +2002,115 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching trades:", error);
       res.status(500).json({ error: "Failed to fetch trades", details: error.message });
+    }
+  });
+
+  // Mark payment as made (buyer action)
+  app.post("/api/trades/:id/payment-made", authenticateToken, async (req, res) => {
+    try {
+      const tradeId = parseInt(req.params.id);
+      const trade = await storage.getTrade(tradeId);
+
+      if (!trade) {
+        return res.status(404).json({ error: "Trade not found" });
+      }
+
+      if (trade.buyerId !== req.user!.id) {
+        return res.status(403).json({ error: "Only the buyer can mark payment as made" });
+      }
+
+      if (trade.status !== "payment_pending") {
+        return res.status(400).json({ error: "Trade is not in payment pending status" });
+      }
+
+      // Check if payment deadline has passed
+      if (trade.paymentDeadline && new Date() > new Date(trade.paymentDeadline)) {
+        await storage.updateTrade(tradeId, { status: "expired" });
+        return res.status(400).json({ error: "Payment deadline has passed" });
+      }
+
+      await storage.updateTrade(tradeId, { 
+        status: "payment_made",
+        paymentMadeAt: new Date()
+      });
+
+      // Notify seller
+      const seller = await storage.getUser(trade.sellerId);
+      if (seller?.email) {
+        await emailService.sendTradeNotification(
+          seller.email,
+          tradeId,
+          "Payment has been made by the buyer. Please confirm receipt to complete the trade."
+        );
+      }
+
+      res.json({ success: true, message: "Payment marked as made" });
+    } catch (error) {
+      console.error("Mark payment error:", error);
+      res.status(500).json({ error: "Failed to mark payment" });
+    }
+  });
+
+  // Confirm payment received (seller action)
+  app.post("/api/trades/:id/confirm-payment", authenticateToken, async (req, res) => {
+    try {
+      const tradeId = parseInt(req.params.id);
+      const userId = req.user!.id;
+
+      const trade = await storage.getTrade(tradeId);
+      if (!trade) {
+        return res.status(404).json({ error: "Trade not found" });
+      }
+
+      if (trade.sellerId !== userId) {
+        return res.status(403).json({ error: "Only seller can confirm payment" });
+      }
+
+      if (trade.status !== "payment_made") {
+        return res.status(400).json({ error: "Payment has not been marked as made" });
+      }
+
+      // Complete the trade
+      const updatedTrade = await storage.updateTrade(tradeId, {
+        status: "completed",
+        sellerConfirmedAt: new Date()
+      });
+
+      // Release funds and update balances
+      const buyer = await storage.getUser(trade.buyerId);
+      const seller = await storage.getUser(trade.sellerId);
+
+      if (buyer && seller) {
+        const tradeAmount = parseFloat(trade.amount);
+        const fiatAmount = parseFloat(trade.fiatAmount);
+
+        // Buyer gets USDT, Seller gets Naira
+        await storage.updateUser(buyer.id, {
+          usdtBalance: (parseFloat(buyer.usdtBalance || "0") + tradeAmount).toString()
+        });
+
+        await storage.updateUser(seller.id, {
+          nairaBalance: (parseFloat(seller.nairaBalance || "0") + fiatAmount).toString()
+        });
+
+        // Send completion notifications
+        await emailService.sendTradeNotification(
+          buyer.email,
+          trade.id,
+          `Trade completed! You received ${tradeAmount} USDT.`
+        );
+
+        await emailService.sendTradeNotification(
+          seller.email,
+          trade.id,
+          `Trade completed! You received ₦${fiatAmount.toLocaleString()}.`
+        );
+      }
+
+      res.json(updatedTrade);
+    } catch (error) {
+      console.error("Confirm payment error:", error);
+      res.status(500).json({ error: "Failed to confirm payment" });
     }
   });
 

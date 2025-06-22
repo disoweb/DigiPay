@@ -64,7 +64,7 @@ export default function TradeDetail() {
   const tradeId = parseInt(params.id || "0");
   console.log("Trade Detail - tradeId:", tradeId, "params:", params, "raw id:", params.id);
 
-  const { data: trade, isLoading, error } = useQuery<EnrichedTrade>({
+  const { data: trade, isLoading, error, refetch } = useQuery<EnrichedTrade>({
     queryKey: [`/api/trades/${tradeId}`],
     queryFn: async () => {
       console.log("Fetching trade:", tradeId);
@@ -343,6 +343,18 @@ export default function TradeDetail() {
                       </AlertDescription>
                     </Alert>
                   )}
+
+                  {trade.status === 'payment_made' && (
+                    <Alert className="border-blue-200 bg-blue-50">
+                      <Clock className="h-4 w-4" />
+                      <AlertDescription>
+                        {user?.id === trade.buyerId 
+                          ? "Payment marked as made. Waiting for seller to confirm payment receipt and release USDT from escrow."
+                          : "Buyer has marked payment as made. Please verify payment received and confirm to release USDT from escrow."
+                        }
+                      </AlertDescription>
+                    </Alert>
+                  )}
                 </CardContent>
               </Card>
             )}
@@ -399,7 +411,12 @@ export default function TradeDetail() {
                 trade={trade}
                 userRole="buyer"
                 onPaymentMarked={() => {
-                  queryClient.invalidateQueries({ queryKey: [`/api/trades/${trade.id}`] });
+                  // Refetch trade data
+                  refetch();
+                }}
+                onPaymentConfirmed={() => {
+                  // Refetch trade data
+                  refetch();
                 }}
               />
             )}
@@ -410,7 +427,12 @@ export default function TradeDetail() {
                 trade={trade}
                 userRole="seller"
                 onPaymentMarked={() => {
-                  queryClient.invalidateQueries({ queryKey: [`/api/trades/${trade.id}`] });
+                  // Refetch trade data
+                  refetch();
+                }}
+                onPaymentConfirmed={() => {
+                  // Refetch trade data
+                  refetch();
                 }}
               />
             )}
