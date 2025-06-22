@@ -94,7 +94,8 @@ export default function OfferCreation() {
         description: "Your trading offer has been published successfully!",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/offers"] });
-      setLocation("/marketplace");
+      queryClient.invalidateQueries({ queryKey: [`/api/users/${user?.id}/offers`] });
+      setLocation("/trades");
     },
     onError: (error: any) => {
       toast({
@@ -107,6 +108,16 @@ export default function OfferCreation() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!offerData.amount || !offerData.rate || !offerData.paymentMethod) {
+      toast({
+        title: "Error",
+        description: "Please fill in all required fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
     createOfferMutation.mutate(offerData);
   };
 
@@ -498,6 +509,16 @@ export default function OfferCreation() {
       <Navbar />
       <div className="container mx-auto px-4 py-8 max-w-2xl">
         <div className="mb-8">
+          <div className="flex items-center mb-4">
+            <Button
+              variant="ghost"
+              onClick={() => setLocation("/marketplace")}
+              className="mr-4"
+            >
+              <ChevronLeft className="h-4 w-4 mr-1" />
+              Back
+            </Button>
+          </div>
           <h1 className="text-2xl font-bold text-center mb-2">Create Trading Offer</h1>
           <p className="text-gray-600 text-center">
             Step {currentStep} of {totalSteps}: {
