@@ -358,23 +358,23 @@ export function EnhancedMarketplace() {
         <TabsList className="grid w-full grid-cols-2 h-12 p-1 bg-gray-100 rounded-xl">
           <TabsTrigger 
             value="buy" 
-            className="flex items-center justify-center gap-2 h-10 rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm font-medium"
+            className="flex items-center justify-center gap-2 h-10 rounded-lg data-[state=active]:bg-green-600 data-[state=active]:text-white data-[state=active]:shadow-lg font-medium transition-all duration-200"
           >
             <TrendingUp className="h-4 w-4" />
             <span className="hidden sm:inline">Buy USDT</span>
             <span className="sm:hidden">Buy</span>
-            <span className="text-xs bg-gray-200 px-1.5 py-0.5 rounded-full">
+            <span className="text-xs bg-white bg-opacity-20 px-1.5 py-0.5 rounded-full data-[state=active]:bg-white data-[state=active]:bg-opacity-30">
               {buyTabCount}
             </span>
           </TabsTrigger>
           <TabsTrigger 
             value="sell" 
-            className="flex items-center justify-center gap-2 h-10 rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm font-medium"
+            className="flex items-center justify-center gap-2 h-10 rounded-lg data-[state=active]:bg-red-600 data-[state=active]:text-white data-[state=active]:shadow-lg font-medium transition-all duration-200"
           >
             <TrendingDown className="h-4 w-4" />
             <span className="hidden sm:inline">Sell USDT</span>
             <span className="sm:hidden">Sell</span>
-            <span className="text-xs bg-gray-200 px-1.5 py-0.5 rounded-full">
+            <span className="text-xs bg-white bg-opacity-20 px-1.5 py-0.5 rounded-full data-[state=active]:bg-white data-[state=active]:bg-opacity-30">
               {sellTabCount}
             </span>
           </TabsTrigger>

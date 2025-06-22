@@ -16,7 +16,8 @@ import {
   ArrowRight,
   Plus,
   Shield,
-  AlertTriangle
+  AlertTriangle,
+  BarChart3
 } from "lucide-react";
 
 export function TradingDashboard() {
