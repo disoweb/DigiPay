@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -58,6 +59,7 @@ interface BinanceStyleFlowProps {
 export function BinanceStyleFlow({ isOpen, onClose, offer }: BinanceStyleFlowProps) {
   const { user } = useAuth();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [step, setStep] = useState(1);
   const [amount, setAmount] = useState("");
   const [agreedToTerms, setAgreedToTerms] = useState(false);
@@ -84,6 +86,12 @@ export function BinanceStyleFlow({ isOpen, onClose, offer }: BinanceStyleFlowPro
         offerId: offer.id,
         amount: amount,
       });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Trade failed' }));
+        throw new Error(errorData.error || 'Failed to create trade');
+      }
+      
       return response.json();
     },
     onSuccess: (data) => {
@@ -92,28 +100,45 @@ export function BinanceStyleFlow({ isOpen, onClose, offer }: BinanceStyleFlowPro
 
       toast({
         title: "Trade Created Successfully!",
-        description: `Trade #${data.trade.id} has been created. Redirecting to trade details...`,
+        description: `Trade #${data.trade?.id || 'N/A'} has been created successfully!`,
       });
 
-      // Redirect to trade details
+      // Close modal and let user navigate to trades page
+      onClose();
+      
+      // Optional: Navigate to trades page
       setTimeout(() => {
-        window.open(`/trade/${data.trade.id}`, '_blank');
-        onClose();
-      }, 1500);
+        window.location.href = '/trades';
+      }, 1000);
     },
     onError: (error: any) => {
+      setProcessing(false);
       toast({
         title: "Failed to Create Trade",
         description: error.message || "Something went wrong. Please try again.",
         variant: "destructive",
       });
-      setProcessing(false);
     },
   });
 
   const handleCreateTrade = async () => {
+    const validationError = validateAmount();
+    if (validationError) {
+      toast({
+        title: "Invalid Amount",
+        description: validationError,
+        variant: "destructive",
+      });
+      return;
+    }
+
     setProcessing(true);
-    await createTradeMutation.mutateAsync();
+    try {
+      await createTradeMutation.mutateAsync();
+    } catch (error) {
+      // Error handling is done in the mutation
+      setProcessing(false);
+    }
   };
 
   const validateAmount = () => {

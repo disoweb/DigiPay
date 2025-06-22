@@ -235,10 +235,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/trades", authenticateToken, async (req, res) => {
     try {
       const { offerId, amount } = req.body;
+      
+      console.log("Trade creation request:", { offerId, amount, userId: req.user!.id });
+      
       const offer = await storage.getOffer(offerId);
       const user = req.user!;
 
       if (!offer || offer.status !== "active") {
+        console.log("Offer not found or inactive:", { offerId, offer });
         return res.status(404).json({ error: "Offer not found or inactive" });
       }
 
@@ -247,7 +251,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const tradeAmount = parseFloat(amount);
-
 
       if (isNaN(tradeAmount) || tradeAmount <= 0) {
         return res.status(400).json({ error: "Invalid trade amount" });
