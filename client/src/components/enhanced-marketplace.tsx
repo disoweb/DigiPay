@@ -310,6 +310,9 @@ export function EnhancedMarketplace() {
     );
   }
 
+  const buyTabCount = offers.filter(o => o.type === 'sell' && o.status === 'active' && o.userId !== user?.id).length;
+  const sellTabCount = offers.filter(o => o.type === 'buy' && o.status === 'active' && o.userId !== user?.id).length;
+
   return (
     <div className="space-y-6">
       {/* Market Overview */}
@@ -477,11 +480,11 @@ export function EnhancedMarketplace() {
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="buy" className="flex items-center gap-2">
             <TrendingUp className="h-4 w-4" />
-            Buy USDT ({filteredOffers.filter(o => o.type === 'sell').length} offers)
+            Buy USDT ({buyTabCount} offers)
           </TabsTrigger>
           <TabsTrigger value="sell" className="flex items-center gap-2">
             <TrendingDown className="h-4 w-4" />
-            Sell USDT ({filteredOffers.filter(o => o.type === 'buy').length} offers)
+            Sell USDT ({sellTabCount} offers)
           </TabsTrigger>
         </TabsList>
 
