@@ -242,15 +242,21 @@ export function P2PTradingFlow({ tradeId, userRole }: P2PTradingFlowProps) {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
             <div className="p-3 bg-gray-50 rounded-lg">
               <Label className="text-xs text-gray-500">Amount</Label>
-              <p className="font-semibold text-sm md:text-base">{parseFloat(trade.amount).toFixed(2)} USDT</p>
+              <p className="font-semibold text-sm md:text-base">
+                {!isNaN(parseFloat(trade.amount)) ? parseFloat(trade.amount).toFixed(2) : '0.00'} USDT
+              </p>
             </div>
             <div className="p-3 bg-gray-50 rounded-lg">
               <Label className="text-xs text-gray-500">Rate</Label>
-              <p className="font-semibold text-sm md:text-base">₦{parseFloat(trade.rate).toLocaleString()}</p>
+              <p className="font-semibold text-sm md:text-base">
+                ₦{!isNaN(parseFloat(trade.rate)) ? parseFloat(trade.rate).toLocaleString() : '0'}
+              </p>
             </div>
             <div className="p-3 bg-gray-50 rounded-lg">
               <Label className="text-xs text-gray-500">Total</Label>
-              <p className="font-semibold text-sm md:text-base">₦{parseFloat(trade.fiatAmount).toLocaleString()}</p>
+              <p className="font-semibold text-sm md:text-base">
+                ₦{!isNaN(parseFloat(trade.fiatAmount)) ? parseFloat(trade.fiatAmount).toLocaleString() : '0'}
+              </p>
             </div>
             <div className="p-3 bg-gray-50 rounded-lg">
               <Label className="text-xs text-gray-500">Your Role</Label>

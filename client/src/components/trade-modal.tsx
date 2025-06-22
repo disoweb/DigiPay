@@ -71,12 +71,12 @@ export function TradeModal({ isOpen, onClose, offer, onSubmit, isLoading }: Trad
   const [amount, setAmount] = useState("");
   const [errors, setErrors] = useState<string[]>([]);
 
-  const minAmount = parseFloat(offer.minAmount || offer.amount);
-  const maxAmount = parseFloat(offer.maxAmount || offer.amount);
-  const availableAmount = parseFloat(offer.amount);
-  const rate = parseFloat(offer.rate);
+  const minAmount = !isNaN(parseFloat(offer.minAmount || offer.amount)) ? parseFloat(offer.minAmount || offer.amount) : 0;
+  const maxAmount = !isNaN(parseFloat(offer.maxAmount || offer.amount)) ? parseFloat(offer.maxAmount || offer.amount) : 0;
+  const availableAmount = !isNaN(parseFloat(offer.amount)) ? parseFloat(offer.amount) : 0;
+  const rate = !isNaN(parseFloat(offer.rate)) ? parseFloat(offer.rate) : 0;
 
-  const tradeAmount = parseFloat(amount) || 0;
+  const tradeAmount = !isNaN(parseFloat(amount)) ? parseFloat(amount) : 0;
   const totalCost = tradeAmount * rate;
 
   useEffect(() => {
@@ -108,13 +108,13 @@ export function TradeModal({ isOpen, onClose, offer, onSubmit, isLoading }: Trad
     // Check user balances
     if (offer.type === "sell" && user) {
       // User is buying USDT, needs enough Naira
-      const userNairaBalance = parseFloat(user.nairaBalance || "0");
+      const userNairaBalance = !isNaN(parseFloat(user.nairaBalance || "0")) ? parseFloat(user.nairaBalance || "0") : 0;
       if (totalCost > userNairaBalance) {
         newErrors.push(`Insufficient Naira balance. Need ₦${totalCost.toLocaleString()}, have ₦${userNairaBalance.toLocaleString()}`);
       }
     } else if (offer.type === "buy" && user) {
       // User is selling USDT, needs enough USDT
-      const userUsdtBalance = parseFloat(user.usdtBalance || "0");
+      const userUsdtBalance = !isNaN(parseFloat(user.usdtBalance || "0")) ? parseFloat(user.usdtBalance || "0") : 0;
       if (tradeAmount > userUsdtBalance) {
         newErrors.push(`Insufficient USDT balance. Need ${tradeAmount.toFixed(2)} USDT, have ${userUsdtBalance.toFixed(8)} USDT`);
       }
@@ -178,7 +178,7 @@ export function TradeModal({ isOpen, onClose, offer, onSubmit, isLoading }: Trad
                 <div className="flex items-center gap-1">
                   <Star className="h-3 w-3 text-yellow-400 fill-current" />
                   <span className="text-sm font-medium">
-                    {parseFloat(offer.user.averageRating).toFixed(1)} ({offer.user.ratingCount} reviews)
+                    {!isNaN(parseFloat(offer.user.averageRating)) ? parseFloat(offer.user.averageRating).toFixed(1) : '0.0'} ({offer.user.ratingCount || 0} reviews)
                   </span>
                 </div>
               </div>
@@ -355,11 +355,15 @@ export function TradeModal({ isOpen, onClose, offer, onSubmit, isLoading }: Trad
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-gray-600">USDT Balance</p>
-                  <p className="font-medium">{parseFloat(user.usdtBalance || "0").toFixed(8)} USDT</p>
+                  <p className="font-medium">
+                    {!isNaN(parseFloat(user.usdtBalance || "0")) ? parseFloat(user.usdtBalance || "0").toFixed(8) : '0.00000000'} USDT
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Naira Balance</p>
-                  <p className="font-medium">₦{parseFloat(user.nairaBalance || "0").toLocaleString()}</p>
+                  <p className="font-medium">
+                    ₦{!isNaN(parseFloat(user.nairaBalance || "0")) ? parseFloat(user.nairaBalance || "0").toLocaleString() : '0'}
+                  </p>
                 </div>
               </div>
             </div>

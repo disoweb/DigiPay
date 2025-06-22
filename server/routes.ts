@@ -37,7 +37,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { amount, bankName, accountNumber, accountName } = req.body;
       const userId = req.user!.id;
-      
+
       if (!amount || !bankName || !accountNumber || !accountName) {
         return res.status(400).json({ error: "All fields are required" });
       }
@@ -85,25 +85,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const offers = await storage.getOffers();
       const trades = await storage.getTrades();
-      
+
       const activeOffers = offers.filter(o => o.status === 'active');
       const buyOffers = activeOffers.filter(o => o.type === 'buy');
       const sellOffers = activeOffers.filter(o => o.type === 'sell');
-      
+
       const completedTrades = trades.filter(t => t.status === 'completed');
       const totalVolume = completedTrades.reduce((sum, trade) => {
         return sum + (parseFloat(trade.amount) * parseFloat(trade.rate));
       }, 0);
-      
+
       const last24hTrades = completedTrades.filter(trade => {
         const tradeDate = new Date(trade.createdAt);
         const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
         return tradeDate > yesterday;
       });
-      
+
       const buyRates = sellOffers.map(o => parseFloat(o.rate));
       const sellRates = buyOffers.map(o => parseFloat(o.rate));
-      
+
       const stats = {
         totalOffers: activeOffers.length,
         buyOffers: buyOffers.length,
@@ -118,7 +118,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         completedTrades: completedTrades.length,
         last24hTrades: last24hTrades.length
       };
-      
+
       res.json(stats);
     } catch (error) {
       console.error("Market stats error:", error);
@@ -173,7 +173,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (type === "sell") {
         const userBalance = parseFloat(user.usdtBalance || "0");
         const offerAmount = parseFloat(amount);
-        
+
         if (userBalance < offerAmount) {
           return res.status(400).json({ error: "Insufficient USDT balance" });
         }
@@ -195,7 +195,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const offer = await storage.createOffer(offerData);
       console.log("Created offer:", offer);
-      
+
       res.status(201).json({ success: true, offer });
     } catch (error) {
       console.error("Offer creation error:", error);
@@ -245,10 +245,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const tradeAmount = parseFloat(amount);
-      const offerAmount = parseFloat(offer.amount);
       
-      if (tradeAmount <= 0 || tradeAmount > offerAmount) {
+
+      if (isNaN(tradeAmount) || tradeAmount <= 0) {
         return res.status(400).json({ error: "Invalid trade amount" });
+      }
+
+      const offerAmount = parseFloat(offer.amount);
+      const minAmount = parseFloat(offer.minAmount || offer.amount);
+      const maxAmount = parseFloat(offer.maxAmount || offer.amount);
+
+      if (isNaN(offerAmount) || isNaN(minAmount) || isNaN(maxAmount)) {
+        return res.status(400).json({ message: "Invalid offer amounts" });
+      }
+
+      if (tradeAmount < minAmount || tradeAmount > maxAmount) {
+        return res.status(400).json({ 
+          error: `Trade amount must be between ${minAmount} and ${maxAmount} USDT` 
+        });
       }
 
       // Check user balances for real trades
@@ -256,21 +270,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // User is buying USDT, needs Naira
         const requiredNaira = tradeAmount * parseFloat(offer.rate);
         const userNairaBalance = parseFloat(user.nairaBalance || "0");
-        
+
         if (userNairaBalance < requiredNaira) {
           return res.status(400).json({ error: "Insufficient Naira balance" });
         }
       } else {
         // User is selling USDT, needs USDT
         const userUsdtBalance = parseFloat(user.usdtBalance || "0");
-        
+
         if (userUsdtBalance < tradeAmount) {
           return res.status(400).json({ error: "Insufficient USDT balance" });
         }
       }
 
       const fiatAmount = (tradeAmount * parseFloat(offer.rate)).toString();
-      
+
       const tradeData = insertTradeSchema.parse({
         offerId: offer.id,
         buyerId: offer.type === "sell" ? user.id : offer.userId,
@@ -295,7 +309,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Set payment deadline (15 minutes from now)
       const paymentDeadline = new Date(Date.now() + 15 * 60 * 1000);
-      
+
       await storage.updateTrade(trade.id, { 
         status: "payment_pending",
         paymentDeadline: paymentDeadline
@@ -334,7 +348,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const tradeId = parseInt(req.params.id);
       const trade = await storage.getTrade(tradeId);
-      
+
       if (!trade) {
         return res.status(404).json({ error: "Trade not found" });
       }
@@ -526,13 +540,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/users/:userId/offers", authenticateToken, async (req, res) => {
     try {
       const userId = parseInt(req.params.userId);
-      
+
       if (req.user!.id !== userId && !req.user!.isAdmin) {
         return res.status(403).json({ error: "Can only view your own offers" });
       }
 
       const offers = await storage.getUserOffers(userId);
-      
+
       // Enrich with user data for consistency
       const enrichedOffers = offers.map(offer => ({
         ...offer,
@@ -555,7 +569,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const offerId = parseInt(req.params.id);
       const { amount, rate, status } = req.body;
-      
+
       const offer = await storage.getOffer(offerId);
       if (!offer) {
         return res.status(404).json({ error: "Offer not found" });
@@ -581,7 +595,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/offers/:id", authenticateToken, async (req, res) => {
     try {
       const offerId = parseInt(req.params.id);
-      
+
       const offer = await storage.getOffer(offerId);
       if (!offer) {
         return res.status(404).json({ error: "Offer not found" });
@@ -611,13 +625,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Enhanced P2P Trading Flow Endpoints
-  
+
   // Mark payment as made (buyer action)
   app.post("/api/trades/:id/mark-paid", authenticateToken, async (req, res) => {
     try {
       const tradeId = parseInt(req.params.id);
       const trade = await storage.getTrade(tradeId);
-      
+
       if (!trade) {
         return res.status(404).json({ error: "Trade not found" });
       }
@@ -664,7 +678,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const tradeId = parseInt(req.params.id);
       const { paymentReference, paymentNotes } = req.body;
       const trade = await storage.getTrade(tradeId);
-      
+
       if (!trade) {
         return res.status(404).json({ error: "Trade not found" });
       }
@@ -707,7 +721,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const tradeId = parseInt(req.params.id);
       const { reason, raisedBy } = req.body;
       const trade = await storage.getTrade(tradeId);
-      
+
       if (!trade) {
         return res.status(404).json({ error: "Trade not found" });
       }
@@ -748,7 +762,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const tradeId = parseInt(req.params.id);
       const { reason } = req.body;
       const trade = await storage.getTrade(tradeId);
-      
+
       if (!trade) {
         return res.status(404).json({ error: "Trade not found" });
       }
@@ -799,7 +813,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/admin/transactions", authenticateToken, requireAdmin, async (req, res) => {
     try {
       const allTransactions = await storage.getAllTransactions();
-      
+
       // Enrich with user data
       const enrichedTransactions = await Promise.all(
         allTransactions.map(async (transaction) => {
@@ -970,7 +984,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (type === "sell") {
         const userBalance = parseFloat(user.usdtBalance || "0");
         const offerAmount = parseFloat(amount);
-        
+
         if (userBalance < offerAmount) {
           return res.status(400).json({ error: "Insufficient USDT balance" });
         }
@@ -1004,7 +1018,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = parseInt(req.params.id);
       const user = await storage.getUserProfile(userId);
-      
+
       if (!user) {
         return res.status(404).json({ error: "User not found" });
       }
@@ -1022,7 +1036,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = parseInt(req.params.id);
       const trades = await storage.getUserTrades(userId);
-      
+
       // Only return basic trade info for privacy
       const publicTrades = trades.map(trade => ({
         id: trade.id,
@@ -1032,7 +1046,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         type: trade.buyerId === userId ? "buy" : "sell",
         createdAt: trade.createdAt,
       }));
-      
+
       res.json(publicTrades);
     } catch (error) {
       console.error("User trades fetch error:", error);
@@ -1793,8 +1807,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const rater = await storage.getUser(rating.raterId);
           return {
             ...rating,
-            rater: rater ? { 
-              id: rater.id, 
+            rater: rater ? {              id: rater.id, 
               email: rater.email.replace(/(.{2}).*(@.*)/, '$1***$2') // Mask email
             } : null,
           };

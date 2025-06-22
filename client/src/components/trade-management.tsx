@@ -206,7 +206,10 @@ export function TradeManagement() {
                 <p className="font-bold text-purple-600">
                   ₦{trades
                     .filter(t => t.status === 'completed')
-                    .reduce((sum, t) => sum + parseFloat(t.fiatAmount), 0)
+                    .reduce((sum, t) => {
+                      const amount = parseFloat(t.fiatAmount);
+                      return sum + (!isNaN(amount) ? amount : 0);
+                    }, 0)
                     .toLocaleString()}
                 </p>
               </div>
@@ -281,15 +284,21 @@ export function TradeManagement() {
                           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                             <div>
                               <p className="text-gray-600">Amount</p>
-                              <p className="font-semibold">{parseFloat(trade.amount).toFixed(2)} USDT</p>
+                              <p className="font-semibold">
+                                {!isNaN(parseFloat(trade.amount)) ? parseFloat(trade.amount).toFixed(2) : '0.00'} USDT
+                              </p>
                             </div>
                             <div>
                               <p className="text-gray-600">Rate</p>
-                              <p className="font-semibold">₦{parseFloat(trade.rate).toLocaleString()}</p>
+                              <p className="font-semibold">
+                                ₦{!isNaN(parseFloat(trade.rate)) ? parseFloat(trade.rate).toLocaleString() : '0'}
+                              </p>
                             </div>
                             <div>
                               <p className="text-gray-600">Total</p>
-                              <p className="font-semibold">₦{parseFloat(trade.fiatAmount).toLocaleString()}</p>
+                              <p className="font-semibold">
+                                ₦{!isNaN(parseFloat(trade.fiatAmount)) ? parseFloat(trade.fiatAmount).toLocaleString() : '0'}
+                              </p>
                             </div>
                             <div>
                               <p className="text-gray-600">Partner</p>

@@ -187,7 +187,11 @@ export function EnhancedMarketplace() {
     const relevantOffers = offers.filter(o => o.type === type && o.status === 'active');
     if (relevantOffers.length === 0) return null;
     
-    const rates = relevantOffers.map(o => parseFloat(o.rate));
+    const rates = relevantOffers
+      .map(o => parseFloat(o.rate))
+      .filter(rate => !isNaN(rate) && rate > 0);
+    
+    if (rates.length === 0) return null;
     return type === 'buy' ? Math.min(...rates) : Math.max(...rates);
   };
 
@@ -421,18 +425,22 @@ export function EnhancedMarketplace() {
                         <div className="grid grid-cols-3 gap-4 text-sm">
                           <div>
                             <p className="text-gray-600">Available</p>
-                            <p className="font-semibold">{parseFloat(offer.amount).toFixed(2)} USDT</p>
+                            <p className="font-semibold">
+                              {!isNaN(parseFloat(offer.amount)) ? parseFloat(offer.amount).toFixed(2) : '0.00'} USDT
+                            </p>
                           </div>
                           <div>
                             <p className="text-gray-600">Rate</p>
-                            <p className="font-semibold text-green-600">₦{parseFloat(offer.rate).toLocaleString()}</p>
+                            <p className="font-semibold text-green-600">
+                              ₦{!isNaN(parseFloat(offer.rate)) ? parseFloat(offer.rate).toLocaleString() : '0'}
+                            </p>
                           </div>
                           <div>
                             <p className="text-gray-600">Limits</p>
                             <p className="font-semibold">
                               {offer.minAmount && offer.maxAmount 
-                                ? `${parseFloat(offer.minAmount).toFixed(2)} - ${parseFloat(offer.maxAmount).toFixed(2)} USDT`
-                                : `${parseFloat(offer.amount).toFixed(2)} USDT`}
+                                ? `${!isNaN(parseFloat(offer.minAmount)) ? parseFloat(offer.minAmount).toFixed(2) : '0.00'} - ${!isNaN(parseFloat(offer.maxAmount)) ? parseFloat(offer.maxAmount).toFixed(2) : '0.00'} USDT`
+                                : `${!isNaN(parseFloat(offer.amount)) ? parseFloat(offer.amount).toFixed(2) : '0.00'} USDT`}
                             </p>
                           </div>
                         </div>
