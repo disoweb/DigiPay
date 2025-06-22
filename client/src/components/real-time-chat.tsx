@@ -253,7 +253,7 @@ export function RealTimeChat({ tradeId }: RealTimeChatProps) {
       </div>
 
       {/* Messages Area */}
-      <div className="overflow-y-auto p-4 max-h-[calc(100vh-200px)]">
+      <div className="flex-1 overflow-y-auto p-3 max-h-[calc(100vh-200px)]">
         {messages.length === 0 && pendingMessages.size === 0 ? (
           <div className="text-center py-8">
             <div className="bg-white dark:bg-gray-800 rounded-xl p-4 mx-auto max-w-xs shadow-sm">
@@ -266,79 +266,52 @@ export function RealTimeChat({ tradeId }: RealTimeChatProps) {
             </div>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-2">
             {(() => {
-              // Sort messages by timestamp first
-              const sortedMessages = [...messages].sort((a, b) => 
-                new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-              );
-              
-              // Add pending messages at the end (they should appear as latest)
-              const allMessages = [...sortedMessages, ...Array.from(pendingMessages.values())];
+              // Sort all messages by timestamp to ensure proper ordering
+              const allMessages = [
+                ...messages.map(m => ({...m, isPending: false})),
+                ...Array.from(pendingMessages.values()).map(m => ({...m, isPending: true}))
+              ].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
               
               return allMessages;
             })().map((msg, index) => {
                 const isOwnMessage = msg.senderId === user?.id;
-                const isPending = msg.status === 'sending';
+                const isPending = msg.status === 'sending' || (msg as any).isPending;
                 const isFailed = msg.status === 'failed';
                 const messageKey = msg.id > 0 ? `msg-${msg.id}` : `pending-${index}`;
                 
                 return (
                   <div
                     key={messageKey}
-                    className={`flex items-end space-x-2 ${
-                      isOwnMessage ? "flex-row-reverse space-x-reverse" : ""
-                    } ${isPending ? "opacity-70" : ""} ${isFailed ? "opacity-50" : ""}`}
+                    className={`flex ${isOwnMessage ? "justify-end" : "justify-start"} mb-1`}
                   >
-                    {!isOwnMessage && (
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold shadow-md">
-                        {msg.sender?.email?.charAt(0).toUpperCase() || "U"}
-                      </div>
-                    )}
-                    
-                    <div className={`flex flex-col ${isOwnMessage ? "items-end" : "items-start"} max-w-[80%] sm:max-w-xs`}>
-                      <div className={`relative rounded-2xl px-4 py-2 shadow-sm ${
+                    <div className={`max-w-[80%] sm:max-w-xs ${isPending ? "opacity-70" : ""} ${isFailed ? "opacity-50" : ""}`}>
+                      <div className={`rounded-2xl px-3 py-2 ${
                         isOwnMessage 
                           ? isFailed 
-                            ? "bg-gradient-to-r from-red-500 to-red-600 text-white rounded-br-md"
-                            : "bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-br-md"
-                          : "bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700 rounded-bl-md"
+                            ? "bg-red-500 text-white"
+                            : "bg-blue-500 text-white"
+                          : "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white"
                       }`}>
-                        <p className="text-sm leading-relaxed break-words">{msg.message}</p>
-                        
-                        {/* Message tail */}
-                        <div className={`absolute bottom-0 w-3 h-3 ${
-                          isOwnMessage 
-                            ? isFailed
-                              ? "right-0 bg-red-600 transform rotate-45 translate-x-1 translate-y-1"
-                              : "right-0 bg-blue-600 transform rotate-45 translate-x-1 translate-y-1"
-                            : "left-0 bg-white dark:bg-gray-800 border-l border-b border-gray-200 dark:border-gray-700 transform rotate-45 -translate-x-1 translate-y-1"
-                        }`} />
+                        <p className="text-sm break-words">{msg.message}</p>
                       </div>
                       
-                      <div className={`flex items-center space-x-1 mt-1 px-1 ${isOwnMessage ? "flex-row-reverse space-x-reverse" : ""}`}>
-                        <span className="text-xs text-gray-500 dark:text-gray-400">
-                          {formatTime(msg.createdAt)}
-                        </span>
+                      <div className={`flex items-center gap-1 mt-1 text-xs text-gray-500 ${isOwnMessage ? "justify-end" : "justify-start"}`}>
+                        <span>{formatTime(msg.createdAt)}</span>
                         {isOwnMessage && (
-                          <div className="flex items-center" title={isPending ? "Sending..." : isFailed ? "Failed to send" : "Delivered"}>
+                          <>
                             {isPending ? (
                               <Clock className="h-3 w-3 text-yellow-500 animate-pulse" />
                             ) : isFailed ? (
                               <div className="h-3 w-3 rounded-full bg-red-500" />
                             ) : (
-                              <CheckCheck className="h-3 w-3 text-green-500" />
+                              <CheckCheck className="h-3 w-3 text-blue-500" />
                             )}
-                          </div>
+                          </>
                         )}
                       </div>
                     </div>
-
-                    {isOwnMessage && (
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-white text-xs font-bold shadow-md">
-                        {user?.email?.charAt(0).toUpperCase() || "Y"}
-                      </div>
-                    )}
                   </div>
                 );
               })}
