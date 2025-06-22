@@ -58,7 +58,8 @@ export function DepositModal({ open, onOpenChange }: DepositModalProps) {
           title: "Payment Successful",
           description: "Your account has been credited successfully.",
         });
-        queryClient.invalidateQueries({ queryKey: ["user"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
         setAmount("");
         onOpenChange(false);
       } else {

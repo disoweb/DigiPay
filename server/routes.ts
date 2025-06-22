@@ -1892,7 +1892,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.log("Payment not successful, status:", result.data.status);
         }
 
-        res.json(result);
+        res.json({
+          ...result,
+          balanceUpdated: true // Flag to indicate balance was updated
+        });
       } else {
         console.log("Payment verification failed:", result.message);
         res.status(400).json({ error: result.message || "Payment verification failed" });
@@ -1900,6 +1903,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Payment verification error:", error);
       res.status(500).json({ error: "Payment verification failed" });
+    }
+  });
+
+  // Get user transactions
+  app.get("/api/transactions", authenticateToken, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      const transactions = await storage.getUserTransactions(userId);
+      res.json(transactions);
+    } catch (error) {
+      console.error("Get transactions error:", error);
+      res.status(500).json({ error: "Failed to fetch transactions" });
     }
   });
 

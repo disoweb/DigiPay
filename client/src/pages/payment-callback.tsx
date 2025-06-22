@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,6 +11,7 @@ export default function PaymentCallback() {
   const [, setLocation] = useLocation();
   const [status, setStatus] = useState<'verifying' | 'success' | 'failed'>('verifying');
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const verifyPaymentMutation = useMutation({
     mutationFn: async (reference: string) => {
@@ -21,6 +22,11 @@ export default function PaymentCallback() {
       if (data.success) {
         setStatus('success');
         localStorage.removeItem('pending_payment_reference');
+        
+        // Invalidate queries to refresh user data and transactions
+        queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
+        
         toast({
           title: "Payment Successful",
           description: "Your account has been credited successfully.",
