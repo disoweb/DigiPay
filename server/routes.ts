@@ -1943,7 +1943,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Send funds between users
   app.post("/api/transfers/send", authenticateToken, async (req, res) => {
     try {
-      const { recipientId, amount, description } = req.body;
+      const { recipientId, amount, description, currency = "NGN" } = req.body;
       const senderId = req.user!.id;
 
       if (senderId === recipientId) {
@@ -1957,42 +1957,73 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "User not found" });
       }
 
-      const senderBalance = parseFloat(sender.nairaBalance || "0");
-      if (amount > senderBalance) {
-        return res.status(400).json({ error: "Insufficient balance" });
+      // Check balance based on currency
+      let senderBalance: number;
+      if (currency === "NGN") {
+        senderBalance = parseFloat(sender.nairaBalance || "0");
+      } else {
+        senderBalance = parseFloat(sender.usdtBalance || "0");
       }
 
-      // Update balances
-      const newSenderBalance = senderBalance - amount;
-      const newRecipientBalance = parseFloat(recipient.nairaBalance || "0") + amount;
+      if (amount > senderBalance) {
+        return res.status(400).json({ error: `Insufficient ${currency} balance` });
+      }
 
-      await storage.updateUser(senderId, { 
-        nairaBalance: newSenderBalance.toString() 
-      });
-      await storage.updateUser(recipientId, { 
-        nairaBalance: newRecipientBalance.toString() 
-      });
 
-      // Create transaction records
+
+      // Calculate fee (1%)
+      const fee = amount * 0.01;
+      const netAmount = amount - fee;
+
+      // Update balances based on currency
+      if (currency === "NGN") {
+        const newSenderBalance = senderBalance - amount;
+        const newRecipientBalance = parseFloat(recipient.nairaBalance || "0") + netAmount;
+        
+        await storage.updateUser(senderId, { 
+          nairaBalance: newSenderBalance.toString() 
+        });
+        await storage.updateUser(recipientId, { 
+          nairaBalance: newRecipientBalance.toString() 
+        });
+      } else {
+        const newSenderBalance = senderBalance - amount;
+        const newRecipientBalance = parseFloat(recipient.usdtBalance || "0") + netAmount;
+        
+        await storage.updateUser(senderId, { 
+          usdtBalance: newSenderBalance.toFixed(6) 
+        });
+        await storage.updateUser(recipientId, { 
+          usdtBalance: newRecipientBalance.toFixed(6) 
+        });
+      }
+
+      // Create transaction records with completed status
       await storage.createTransaction({
         userId: senderId,
         type: "transfer_out",
         amount: amount.toString(),
         status: "completed",
-        adminNotes: `Transfer to ${recipient.email}: ${description}`
+        adminNotes: `${currency} transfer to ${recipient.email}: ${description} (Fee: ${currency === "NGN" ? "₦" : ""}${fee.toFixed(currency === "NGN" ? 2 : 6)}${currency === "USDT" ? " USDT" : ""})`
       });
 
       await storage.createTransaction({
         userId: recipientId,
-        type: "transfer_in",
-        amount: amount.toString(),
+        type: "transfer_in", 
+        amount: netAmount.toString(),
         status: "completed",
-        adminNotes: `Transfer from ${sender.email}: ${description}`
+        adminNotes: `${currency} transfer from ${sender.email}: ${description}`
       });
 
+      const currencySymbol = currency === "NGN" ? "₦" : "";
+      const currencyLabel = currency === "USDT" ? " USDT" : "";
+      
       res.json({ 
         success: true, 
-        message: `₦${amount.toLocaleString()} sent successfully to ${recipient.email}` 
+        message: `${currencySymbol}${netAmount.toLocaleString()}${currencyLabel} sent successfully to ${recipient.email} (Fee: ${currencySymbol}${fee.toFixed(currency === "NGN" ? 2 : 6)}${currencyLabel})`,
+        fee: fee,
+        netAmount: netAmount,
+        currency: currency
       });
     } catch (error) {
       console.error("Transfer error:", error);
@@ -2006,6 +2037,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { fromCurrency, amount } = req.body;
       const userId = req.user!.id;
       const USDT_RATE = 1485; // ₦1485 per USDT
+      const SWAP_FEE_RATE = 0.01; // 1% fee
 
       const user = await storage.getUser(userId);
       if (!user) {
@@ -2015,6 +2047,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let newNairaBalance: number;
       let newUsdtBalance: number;
       let transactionNote: string;
+      let fee: number;
 
       if (fromCurrency === "NGN") {
         // NGN to USDT
@@ -2023,10 +2056,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(400).json({ error: "Insufficient NGN balance" });
         }
 
-        const usdtAmount = amount / USDT_RATE;
+        fee = amount * SWAP_FEE_RATE;
+        const netAmount = amount - fee;
+        const usdtAmount = netAmount / USDT_RATE;
+        
         newNairaBalance = currentNaira - amount;
         newUsdtBalance = parseFloat(user.usdtBalance || "0") + usdtAmount;
-        transactionNote = `Swapped ₦${amount.toLocaleString()} to ${usdtAmount.toFixed(6)} USDT`;
+        transactionNote = `Swapped ₦${amount.toLocaleString()} to ${usdtAmount.toFixed(6)} USDT (Fee: ₦${fee.toFixed(2)})`;
       } else {
         // USDT to NGN
         const currentUsdt = parseFloat(user.usdtBalance || "0");
@@ -2034,10 +2070,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(400).json({ error: "Insufficient USDT balance" });
         }
 
-        const nairaAmount = amount * USDT_RATE;
+        const grossNairaAmount = amount * USDT_RATE;
+        fee = grossNairaAmount * SWAP_FEE_RATE;
+        const netNairaAmount = grossNairaAmount - fee;
+        
         newUsdtBalance = currentUsdt - amount;
-        newNairaBalance = parseFloat(user.nairaBalance || "0") + nairaAmount;
-        transactionNote = `Swapped ${amount} USDT to ₦${nairaAmount.toLocaleString()}`;
+        newNairaBalance = parseFloat(user.nairaBalance || "0") + netNairaAmount;
+        transactionNote = `Swapped ${amount} USDT to ₦${netNairaAmount.toLocaleString()} (Fee: ₦${fee.toFixed(2)})`;
       }
 
       // Update user balances
@@ -2046,7 +2085,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         usdtBalance: newUsdtBalance.toFixed(6)
       });
 
-      // Create transaction record
+      // Create transaction record with completed status
       await storage.createTransaction({
         userId,
         type: "swap",
@@ -2058,6 +2097,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({
         success: true,
         message: transactionNote,
+        fee: fee,
         newBalances: {
           nairaBalance: newNairaBalance.toString(),
           usdtBalance: newUsdtBalance.toFixed(6)
