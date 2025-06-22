@@ -22,13 +22,18 @@ import {
 } from "lucide-react";
 
 export default function DirectTrade() {
-  const { offerId } = useParams();
+  const params = useParams();
   const { user } = useAuth();
   const [, setLocation] = useLocation();
   const [amount, setAmount] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const queryClient = useQueryClient();
+
+  // Extract offerId from params
+  const offerId = params.offerId;
+  console.log("DirectTrade params:", params);
+  console.log("DirectTrade offerId:", offerId);
 
   // Get offer from sessionStorage or fetch it
   const [selectedOffer, setSelectedOffer] = useState(null);
