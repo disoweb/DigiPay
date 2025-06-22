@@ -513,50 +513,26 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getTradeById(tradeId: number) {
-    return await db.select().from(trades).where(eq(trades.id, tradeId)).get();
+    const [trade] = await db.select().from(trades).where(eq(trades.id, tradeId));
+    return trade || null;
   }
 
   async getTradeWithDetails(tradeId: number): Promise<EnrichedTrade | null> {
-    const result = await db
-      .select({
-        id: trades.id,
-        offerId: trades.offerId,
-        buyerId: trades.buyerId,
-        sellerId: trades.sellerId,
-        amount: trades.amount,
-        rate: trades.rate,
-        fiatAmount: trades.fiatAmount,
-        status: trades.status,
-        escrowAddress: trades.escrowAddress,
-        paymentDeadline: trades.paymentDeadline,
-        paymentReference: trades.paymentReference,
-        paymentProof: trades.paymentProof,
-        bankName: trades.bankName,
-        accountNumber: trades.accountNumber,
-        accountName: trades.accountName,
-        createdAt: trades.createdAt,
-        offer: {
-          id: offers.id,
-          type: offers.type,
-          paymentMethod: offers.paymentMethod,
-        },
-        buyer: {
-          id: buyerUser.id,
-          email: buyerUser.email,
-        },
-        seller: {
-          id: sellerUser.id,
-          email: sellerUser.email,
-        },
-      })
-      .from(trades)
-      .leftJoin(offers, eq(trades.offerId, offers.id))
-      .leftJoin(buyerUser, eq(trades.buyerId, buyerUser.id))
-      .leftJoin(sellerUser, eq(trades.sellerId, sellerUser.id))
-      .where(eq(trades.id, tradeId))
-      .get();
+    // Get trade first
+    const [trade] = await db.select().from(trades).where(eq(trades.id, tradeId));
+    if (!trade) return null;
 
-    return result as EnrichedTrade | null;
+    // Get related data separately
+    const [offer] = await db.select().from(offers).where(eq(offers.id, trade.offerId));
+    const [buyer] = await db.select().from(users).where(eq(users.id, trade.buyerId));
+    const [seller] = await db.select().from(users).where(eq(users.id, trade.sellerId));
+
+    return {
+      ...trade,
+      offer: offer ? { id: offer.id, type: offer.type, paymentMethod: offer.paymentMethod } : null,
+      buyer: buyer ? { id: buyer.id, email: buyer.email } : null,
+      seller: seller ? { id: seller.id, email: seller.email } : null,
+    } as EnrichedTrade;
   }
 
   async getTradesByUser(userId: number): Promise<EnrichedTrade[]> {
