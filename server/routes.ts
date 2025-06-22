@@ -250,6 +250,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get individual offer by ID
+  app.get("/api/offers/:id", async (req, res) => {
+    try {
+      const offerId = parseInt(req.params.id);
+      const offer = await storage.getOffer(offerId);
+
+      if (!offer) {
+        return res.status(404).json({ error: "Offer not found" });
+      }
+
+      // Enrich offer with user data
+      const user = await storage.getUser(offer.userId);
+      const enrichedOffer = {
+        ...offer,
+        user: user ? {
+          id: user.id,
+          email: user.email,
+          averageRating: user.averageRating || "0.00",
+          ratingCount: user.ratingCount || 0,
+          kycVerified: user.kycVerified || false,
+          completedTrades: user.completedTrades || 0,
+          isOnline: user.isOnline || false,
+          lastSeen: user.lastSeen || user.createdAt
+        } : null,
+      };
+
+      res.json(enrichedOffer);
+    } catch (error) {
+      console.error("Offer fetch error:", error);
+      res.status(500).json({ error: "Failed to fetch offer" });
+    }
+  });
+
   app.post("/api/offers", authenticateToken, async (req, res) => {
     try {
       console.log("Creating offer with data:", req.body);
