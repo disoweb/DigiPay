@@ -14,12 +14,12 @@ export default function ProfilePage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [, setLocation] = useLocation();
+  const [, navigate] = useLocation();
   
   const [firstName, setFirstName] = useState(user?.firstName || "");
   const [lastName, setLastName] = useState(user?.lastName || "");
   const [username, setUsername] = useState(user?.username || "");
-  const [location, setLocation] = useState(user?.location || "");
+  const [userLocation, setUserLocation] = useState(user?.location || "");
   const [phone, setPhone] = useState(user?.phone || "");
   const [usernameStatus, setUsernameStatus] = useState<{
     checking: boolean;
@@ -139,7 +139,7 @@ export default function ProfilePage() {
       firstName: firstName.trim(),
       lastName: lastName.trim(),
       username: username.trim(),
-      location: location.trim() || null,
+      location: userLocation.trim() || null,
       phone: phone.trim() || null
     });
   };
@@ -161,7 +161,7 @@ export default function ProfilePage() {
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => setLocation('/dashboard')}
+          onClick={() => navigate('/dashboard')}
           className="hover:bg-gray-100"
         >
           <ArrowLeft className="w-5 h-5" />
@@ -264,8 +264,8 @@ export default function ProfilePage() {
                 </Label>
                 <Input
                   id="location"
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
+                  value={userLocation}
+                  onChange={(e) => setUserLocation(e.target.value)}
                   placeholder="Enter your city/state"
                 />
               </div>
