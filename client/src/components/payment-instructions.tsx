@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Copy, CheckCircle, CreditCard, Building2, Clock } from "lucide-react";
+import { Copy, CheckCircle, CreditCard, Building2, Clock, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Trade } from "@shared/schema";
 
@@ -62,25 +62,28 @@ export function PaymentInstructions({ trade, userRole, onPaymentMarked }: Paymen
   // Always show payment details for buyers, regardless of trade status
   if (userRole === 'buyer') {
     return (
-      <Card>
+      <Card className="border-blue-200 bg-blue-50/50">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <CreditCard className="h-5 w-5" />
-            Payment Instructions
+            <CreditCard className="h-5 w-5 text-blue-600" />
+            Seller's Payment Details
           </CardTitle>
           <CardDescription>
-            Send payment to the seller's account details below
+            Use these details to send your payment of ₦{parseFloat(trade.fiatAmount).toLocaleString()}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
+          <div className="bg-blue-100 p-4 rounded-lg border border-blue-300">
             <div className="flex items-center gap-2 mb-2">
-              <Badge variant="secondary" className="bg-orange-200 text-orange-800">
+              <Badge variant="secondary" className="bg-blue-200 text-blue-800">
                 Amount to Pay
               </Badge>
             </div>
-            <p className="text-2xl font-bold text-orange-900">
+            <p className="text-2xl font-bold text-blue-900">
               ₦{parseFloat(trade.fiatAmount).toLocaleString()}
+            </p>
+            <p className="text-sm text-blue-700 mt-1">
+              For {parseFloat(trade.amount).toFixed(2)} USDT at ₦{parseFloat(trade.rate).toLocaleString()}/USDT
             </p>
           </div>
 
@@ -128,14 +131,18 @@ export function PaymentInstructions({ trade, userRole, onPaymentMarked }: Paymen
             </div>
           </div>
 
-          <div className="bg-red-50 p-4 rounded-lg border border-red-200">
-            <div className="text-sm text-red-800">
-              <p className="font-medium mb-2">Important Instructions:</p>
+          <div className="bg-amber-50 p-4 rounded-lg border border-amber-200">
+            <div className="text-sm text-amber-800">
+              <p className="font-medium mb-2 flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4" />
+                Important Payment Instructions:
+              </p>
               <ul className="list-disc list-inside space-y-1">
-                <li>Send the exact amount: ₦{parseFloat(trade.fiatAmount).toLocaleString()}</li>
-                <li>Use the account details provided above</li>
-                <li>Keep your payment receipt/reference</li>
-                <li>Mark payment as completed after sending</li>
+                <li>Send exactly ₦{parseFloat(trade.fiatAmount).toLocaleString()} - no more, no less</li>
+                <li>Transfer to the account details shown above</li>
+                <li>Save your payment receipt/confirmation</li>
+                <li>Click "I Have Made Payment" button after sending</li>
+                <li>Wait for seller confirmation to receive your USDT</li>
               </ul>
             </div>
           </div>

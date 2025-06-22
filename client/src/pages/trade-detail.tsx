@@ -316,11 +316,22 @@ export default function TradeDetail() {
             </CardContent>
           </Card>
 
-          {/* Payment Instructions - Show immediately for buyers or when payment is pending */}
-          {isUserInTrade && (isBuyer || ["payment_pending", "payment_made"].includes(trade.status)) && (
+          {/* Payment Instructions - Show immediately for buyers, regardless of status */}
+          {isUserInTrade && isBuyer && (
             <PaymentInstructions
               trade={trade}
-              userRole={isBuyer ? 'buyer' : 'seller'}
+              userRole="buyer"
+              onPaymentMarked={() => {
+                queryClient.invalidateQueries({ queryKey: [`/api/trades/${trade.id}`] });
+              }}
+            />
+          )}
+
+          {/* Show seller's payment details view when they're involved */}
+          {isUserInTrade && isSeller && ["payment_pending", "payment_made"].includes(trade.status) && (
+            <PaymentInstructions
+              trade={trade}
+              userRole="seller"
               onPaymentMarked={() => {
                 queryClient.invalidateQueries({ queryKey: [`/api/trades/${trade.id}`] });
               }}
@@ -342,14 +353,14 @@ export default function TradeDetail() {
                     <AlertTriangle className="h-4 w-4" />
                     <AlertDescription>
                       <strong>As the buyer:</strong> Send ₦{parseFloat(trade.fiatAmount).toLocaleString()} 
-                      to the payment details shown above, then mark payment as made.
+                      to the seller's payment details shown above, then mark payment as made.
                     </AlertDescription>
                   </Alert>
                 ) : (
                   <Alert>
                     <Shield className="h-4 w-4" />
                     <AlertDescription>
-                      <strong>As the seller:</strong> Wait for the buyer to make payment, then confirm receipt to complete the trade.
+                      <strong>As the seller:</strong> Your payment details are shown above. Wait for the buyer to make payment, then confirm receipt to complete the trade.
                     </AlertDescription>
                   </Alert>
                 )}
@@ -400,14 +411,26 @@ export default function TradeDetail() {
             </Card>
           )}
 
-          {/* Chat Section - Separate from trade details */}
-          {isUserInTrade && (
+          </div>
+
+        {/* Separate Chat Section */}
+        {isUserInTrade && (
+          <div className="space-y-6">
+            <Separator className="my-8" />
+            
+            <div className="flex items-center gap-2 mb-4">
+              <MessageCircle className="h-6 w-6 text-blue-600" />
+              <h2 className="text-xl font-semibold text-gray-900">Trade Communication</h2>
+            </div>
+
             <Card>
               <CardHeader className="pb-3">
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <MessageCircle className="h-5 w-5" />
-                  Trade Chat
+                <CardTitle className="text-lg">
+                  Chat with {isBuyer ? 'Seller' : 'Buyer'}
                 </CardTitle>
+                <CardDescription>
+                  Communicate securely about this trade. All messages are logged for dispute resolution.
+                </CardDescription>
               </CardHeader>
               <CardContent className="p-0">
                 <div className="h-[400px] p-4">
@@ -415,7 +438,8 @@ export default function TradeDetail() {
                 </div>
               </CardContent>
             </Card>
-          )}
+          </div>
+        )}
 
           {/* Rating Form */}
           {isCompleted && isUserInTrade && showRating && (
