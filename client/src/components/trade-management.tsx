@@ -385,7 +385,9 @@ export function TradeManagement() {
                               variant="outline" 
                               size="sm"
                               className="flex-1 sm:flex-none"
-                              onClick={() => window.location.href = `/trade/${trade.id}`}
+                              onClick={() => {
+                                window.location.href = `/trade/${trade.id}`;
+                              }}
                             >
                               <Eye className="h-3 w-3 mr-1" />
                               View Details
@@ -395,7 +397,9 @@ export function TradeManagement() {
                               variant="outline" 
                               size="sm"
                               className="flex-1 sm:flex-none"
-                              onClick={() => window.location.href = `/trade/${trade.id}#chat`}
+                              onClick={() => {
+                                window.location.href = `/trade/${trade.id}`;
+                              }}
                             >
                               <MessageCircle className="h-3 w-3 mr-1" />
                               Chat

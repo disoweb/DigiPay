@@ -128,3 +128,119 @@ export function PaymentProofUpload({ tradeId, onProofSubmitted }: PaymentProofUp
     </Card>
   );
 }
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Upload, CheckCircle } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+
+interface PaymentProofUploadProps {
+  tradeId: number;
+  onProofSubmitted: () => void;
+}
+
+export function PaymentProofUpload({ tradeId, onProofSubmitted }: PaymentProofUploadProps) {
+  const [paymentReference, setPaymentReference] = useState("");
+  const [proofDescription, setProofDescription] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { toast } = useToast();
+
+  const handleSubmitProof = async () => {
+    if (!paymentReference.trim()) {
+      toast({
+        title: "Missing Reference",
+        description: "Please provide a payment reference",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const response = await fetch(`/api/trades/${tradeId}/payment-proof`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("digipay_token")}`,
+        },
+        body: JSON.stringify({
+          paymentReference,
+          proofDescription,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to submit payment proof");
+      }
+
+      toast({
+        title: "Payment Proof Submitted",
+        description: "The seller will be notified to confirm your payment",
+      });
+
+      onProofSubmitted();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to submit payment proof. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Upload className="h-5 w-5" />
+          Submit Payment Proof
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="reference">Payment Reference *</Label>
+          <Input
+            id="reference"
+            placeholder="Enter transaction reference/ID"
+            value={paymentReference}
+            onChange={(e) => setPaymentReference(e.target.value)}
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="proof">Additional Details (Optional)</Label>
+          <Textarea
+            id="proof"
+            placeholder="Any additional details about the payment..."
+            value={proofDescription}
+            onChange={(e) => setProofDescription(e.target.value)}
+            rows={3}
+          />
+        </div>
+
+        <Button 
+          onClick={handleSubmitProof}
+          disabled={isSubmitting || !paymentReference.trim()}
+          className="w-full"
+        >
+          {isSubmitting ? (
+            <>
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+              Submitting...
+            </>
+          ) : (
+            <>
+              <CheckCircle className="mr-2 h-4 w-4" />
+              Submit Payment Proof
+            </>
+          )}
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}

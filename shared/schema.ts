@@ -30,31 +30,22 @@ export const offers = pgTable("offers", {
 
 export const trades = pgTable("trades", {
   id: serial("id").primaryKey(),
-  offerId: integer("offer_id").references(() => offers.id).notNull(),
-  buyerId: integer("buyer_id").references(() => users.id).notNull(),
-  sellerId: integer("seller_id").references(() => users.id).notNull(),
-  amount: decimal("amount", { precision: 12, scale: 8 }).notNull(),
-  rate: decimal("rate", { precision: 10, scale: 2 }).notNull(),
+  offerId: integer("offer_id").references(() => offers.id),
+  buyerId: integer("buyer_id").references(() => users.id),
+  sellerId: integer("seller_id").references(() => users.id),
+  amount: decimal("amount", { precision: 18, scale: 8 }).notNull(),
+  rate: decimal("rate", { precision: 12, scale: 2 }).notNull(),
   fiatAmount: decimal("fiat_amount", { precision: 12, scale: 2 }).notNull(),
-  status: text("status").default("pending"), // 'pending', 'accepted', 'payment_pending', 'payment_made', 'completed', 'cancelled', 'disputed', 'expired'
+  status: text("status").notNull().default("pending"),
   escrowAddress: text("escrow_address"),
   paymentDeadline: timestamp("payment_deadline"),
-  paymentMadeAt: timestamp("payment_made_at"),
-  sellerConfirmedAt: timestamp("seller_confirmed_at"),
-  disputeReason: text("dispute_reason"),
-  disputeResolvedAt: timestamp("dispute_resolved_at"),
   paymentReference: text("payment_reference"),
-  paymentProof: text("payment_proof"), // File path or URL
-  buyerInstructions: text("buyer_instructions"),
-  sellerInstructions: text("seller_instructions"),
-  cancelReason: text("cancel_reason"),
-  feedbackFromBuyer: text("feedback_from_buyer"),
-  feedbackFromSeller: text("feedback_from_seller"),
-  // Payment details for the trade
+  paymentProof: text("payment_proof"),
   bankName: text("bank_name"),
   accountNumber: text("account_number"),
   accountName: text("account_name"),
   createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 export const messages = pgTable("messages", {

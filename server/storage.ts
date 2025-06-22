@@ -60,6 +60,50 @@ export interface IStorage {
   sessionStore: any;
 }
 
+// Define the EnrichedTrade type
+interface EnrichedTrade {
+  id: number;
+  offerId: number;
+  buyerId: number;
+  sellerId: number;
+  amount: number;
+  rate: number;
+  fiatAmount: number;
+  status: string;
+  escrowAddress: string;
+  paymentDeadline: string;
+  paymentReference: string;
+  paymentProof: string;
+  bankName: string;
+  accountNumber: string;
+  accountName: string;
+  createdAt: string;
+  offer: {
+    id: number;
+    type: string;
+    paymentMethod: string;
+  };
+  buyer: {
+    id: number;
+    email: string;
+  };
+  seller: {
+    id: number;
+    email: string;
+  };
+}
+
+// Define buyerUser and sellerUser outside the class
+const buyerUser = {
+  id: users.id,
+  email: users.email,
+};
+
+const sellerUser = {
+  id: users.id,
+  email: users.email,
+};
+
 export class DatabaseStorage implements IStorage {
   sessionStore: any;
 
@@ -348,6 +392,15 @@ export class DatabaseStorage implements IStorage {
     return trade;
   }
 
+  async updateTradeStatus(tradeId: number, status: string) {
+    await db.update(trades)
+      .set({ 
+        status,
+        updatedAt: new Date().toISOString()
+      })
+      .where(eq(trades.id, tradeId));
+  }
+
   async updateTrade(id: number, updates: Partial<Trade>): Promise<Trade | undefined> {
     const [trade] = await db
       .update(trades)
@@ -457,6 +510,97 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(users, eq(ratings.raterId, users.id))
       .where(eq(ratings.ratedUserId, id))
       .orderBy(desc(ratings.createdAt));
+  }
+
+  async getTradeById(tradeId: number) {
+    return await db.select().from(trades).where(eq(trades.id, tradeId)).get();
+  }
+
+  async getTradeWithDetails(tradeId: number): Promise<EnrichedTrade | null> {
+    const result = await db
+      .select({
+        id: trades.id,
+        offerId: trades.offerId,
+        buyerId: trades.buyerId,
+        sellerId: trades.sellerId,
+        amount: trades.amount,
+        rate: trades.rate,
+        fiatAmount: trades.fiatAmount,
+        status: trades.status,
+        escrowAddress: trades.escrowAddress,
+        paymentDeadline: trades.paymentDeadline,
+        paymentReference: trades.paymentReference,
+        paymentProof: trades.paymentProof,
+        bankName: trades.bankName,
+        accountNumber: trades.accountNumber,
+        accountName: trades.accountName,
+        createdAt: trades.createdAt,
+        offer: {
+          id: offers.id,
+          type: offers.type,
+          paymentMethod: offers.paymentMethod,
+        },
+        buyer: {
+          id: buyerUser.id,
+          email: buyerUser.email,
+        },
+        seller: {
+          id: sellerUser.id,
+          email: sellerUser.email,
+        },
+      })
+      .from(trades)
+      .leftJoin(offers, eq(trades.offerId, offers.id))
+      .leftJoin(buyerUser, eq(trades.buyerId, buyerUser.id))
+      .leftJoin(sellerUser, eq(trades.sellerId, sellerUser.id))
+      .where(eq(trades.id, tradeId))
+      .get();
+
+    return result as EnrichedTrade | null;
+  }
+
+  async getTradesByUser(userId: number): Promise<EnrichedTrade[]> {
+    const tradesResult = await db
+      .select({
+        id: trades.id,
+        offerId: trades.offerId,
+        buyerId: trades.buyerId,
+        sellerId: trades.sellerId,
+        amount: trades.amount,
+        rate: trades.rate,
+        fiatAmount: trades.fiatAmount,
+        status: trades.status,
+        escrowAddress: trades.escrowAddress,
+        paymentDeadline: trades.paymentDeadline,
+        paymentReference: trades.paymentReference,
+        paymentProof: trades.paymentProof,
+        bankName: trades.bankName,
+        accountNumber: trades.accountNumber,
+        accountName: trades.accountName,
+        createdAt: trades.createdAt,
+        offer: {
+          id: offers.id,
+          type: offers.type,
+          paymentMethod: offers.paymentMethod,
+        },
+        buyer: {
+          id: buyerUser.id,
+          email: buyerUser.email,
+        },
+        seller: {
+          id: sellerUser.id,
+          email: sellerUser.email,
+        },
+      })
+      .from(trades)
+      .leftJoin(offers, eq(trades.offerId, offers.id))
+      .leftJoin(buyerUser, eq(trades.buyerId, buyerUser.id))
+      .leftJoin(sellerUser, eq(trades.sellerId, sellerUser.id))
+      .where(or(eq(trades.buyerId, userId), eq(trades.sellerId, userId)))
+      .orderBy(desc(trades.createdAt))
+      .limit(20);
+
+    return tradesResult as EnrichedTrade[];
   }
 
 }

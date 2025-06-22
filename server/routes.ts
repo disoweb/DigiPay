@@ -206,6 +206,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Trade routes
+  app.get("/api/trades/:id", authenticateToken, async (req, res) => {
+    try {
+      const tradeId = parseInt(req.params.id);
+      const user = req.user!;
+
+      const trade = await storage.getTradeById(tradeId);
+
+      if (!trade) {
+        return res.status(404).json({ error: "Trade not found" });
+      }
+
+      // Check if user is part of this trade
+      if (trade.buyerId !== user.id && trade.sellerId !== user.id) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+
+      // Get trade with full details
+      const tradeWithDetails = await storage.getTradeWithDetails(tradeId);
+
+      res.json(tradeWithDetails);
+    } catch (error) {
+      console.error("Error fetching trade:", error);
+      res.status(500).json({ error: "Failed to fetch trade" });
+    }
+  });
+
   app.get("/api/trades", authenticateToken, async (req, res) => {
     try {
       const trades = await storage.getUserTrades(req.user!.id);
@@ -235,9 +261,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/trades", authenticateToken, async (req, res) => {
     try {
       const { offerId, amount } = req.body;
-      
+
       console.log("Trade creation request:", { offerId, amount, userId: req.user!.id });
-      
+
       const offer = await storage.getOffer(offerId);
       const user = req.user!;
 
@@ -290,16 +316,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const fiatAmount = (tradeAmount * parseFloat(offer.rate)).toString();
 
-      const tradeData = insertTradeSchema.parse({
-        offerId: offer.id,
+      const newTrade = await storage.createTrade({
+        offerId,
         buyerId: offer.type === "sell" ? user.id : offer.userId,
         sellerId: offer.type === "sell" ? offer.userId : user.id,
         amount: tradeAmount.toString(),
         rate: offer.rate,
-        fiatAmount: fiatAmount,
+        fiatAmount: fiatAmount.toFixed(2),
+        status: "payment_pending", // Start directly with payment pending
+        paymentDeadline: new Date(Date.now() + 15 * 60 * 1000).toISOString(), // 15 minutes
+        bankName: "First Bank", // Demo bank details
+        accountNumber: "1234567890",
+        accountName: "John Doe Seller",
       });
-
-      const trade = await storage.createTrade(tradeData);
 
       // Lock USDT in escrow for sell offers (seller has USDT, buyer needs to pay)
       if (offer.type === "sell") {
@@ -315,7 +344,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Set payment deadline (15 minutes from now)
       const paymentDeadline = new Date(Date.now() + 15 * 60 * 1000);
 
-      await storage.updateTrade(trade.id, { 
+      await storage.updateTrade(newTrade.id, { 
         status: "payment_pending",
         paymentDeadline: paymentDeadline
       });
@@ -336,7 +365,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ 
         success: true, 
         trade: {
-          ...trade,
+          ...newTrade,
           paymentDeadline: paymentDeadline
         },
         message: "Trade initiated! Payment must be made within 15 minutes.",
@@ -832,7 +861,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.json(enrichedTransactions);
     } catch (error) {
-      res.status(500).json({ error: "Failed to fetch transactions" });
+      res.status(500<string>
+.json({ error: "Failed to fetch transactions" });
     }
   });
 
@@ -1952,6 +1982,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(stats);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch admin stats" });
+    }
+  });
+
+  app.get("/api/trades/:id", authenticateToken, async (req, res) => {
+    try {
+      const tradeId = parseInt(req.params.id);
+      const user = req.user!;
+
+      const trade = await storage.getTradeById(tradeId);
+
+      if (!trade) {
+        return res.status(404).json({ error: "Trade not found" });
+      }
+
+      // Check if user is part of this trade
+      if (trade.buyerId !== user.id && trade.sellerId !== user.id) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+
+      // Get trade with full details
+      const tradeWithDetails = await storage.getTradeWithDetails(tradeId);
+
+      res.json(tradeWithDetails);
+    } catch (error) {
+      console.error("Error fetching trade:", error);
+      res.status(500).json({ error: "Failed to fetch trade" });
     }
   });
 

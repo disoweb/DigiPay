@@ -216,3 +216,12 @@ export function RealTimeChat({ tradeId }: RealTimeChatProps) {
     </Card>
   );
 }
+import { TradeChat } from "./trade-chat";
+
+interface RealTimeChatProps {
+  tradeId: number;
+}
+
+export function RealTimeChat({ tradeId }: RealTimeChatProps) {
+  return <TradeChat tradeId={tradeId} />;
+}
