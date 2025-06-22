@@ -30,28 +30,14 @@ export function PaymentInstructions({ trade, userRole, onPaymentMarked }: Paymen
     setIsMarkingPaid(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`/api/trades/${trade.id}/mark-paid`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      const response = await apiRequest("POST", `/api/trades/${trade.id}/payment-made`);
 
-      if (response.ok) {
-        toast({
-          title: "Payment Marked",
-          description: "Payment has been marked as made",
-        });
-        onPaymentMarked();
-      } else {
-        const errorData = await response.json();
-        toast({
-          title: "Error",
-          description: errorData.error || "Failed to mark payment",
-          variant: "destructive",
-        });
-      }
+      const data = await response.json();
+      toast({
+        title: "Payment Marked",
+        description: "Payment has been marked as made",
+      });
+      onPaymentMarked();
     } catch (error) {
       toast({
         title: "Error",
