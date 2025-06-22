@@ -48,7 +48,8 @@ export class PaystackService {
   async initializePayment(
     email: string,
     amount: number,
-    reference: string
+    reference: string,
+    callbackUrl?: string
   ): Promise<InitializePaymentResponse> {
     if (!this.secretKey) {
       throw new Error('Paystack secret key not configured');
@@ -61,7 +62,8 @@ export class PaystackService {
           email,
           amount: amount * 100, // Paystack expects amount in kobo
           reference,
-          currency: 'NGN'
+          currency: 'NGN',
+          callback_url: callbackUrl
         },
         {
           headers: {

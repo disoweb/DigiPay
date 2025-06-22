@@ -24,6 +24,7 @@ import AdminKYC from "@/pages/admin-kyc";
 import ManageOffers from "@/pages/manage-offers";
 import DirectTrade from "./pages/trade-direct";
 import UserChatPage from "./pages/user-chat-new";
+import PaymentCallback from "./pages/payment-callback";
 
 const queryClient = new QueryClient();
 
@@ -45,6 +46,7 @@ function App() {
               </ProtectedRoute>
             )} />
             <ProtectedRoute path="/wallet" component={Wallet} />
+            <ProtectedRoute path="/payment-callback" component={PaymentCallback} />
             <ProtectedRoute path="/ratings" component={Ratings} />
             <ProtectedRoute path="/admin" component={Admin} adminOnly />
             <ProtectedRoute path="/admin/approvals" component={AdminApprovals} adminOnly />

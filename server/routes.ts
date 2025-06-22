@@ -1817,7 +1817,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Allow deposits without KYC verification
 
       const reference = `digipay_${Date.now()}_${user.id}`;
-      const result = await paystackService.initializePayment(user.email, amount, reference);
+      const callbackUrl = `${process.env.NODE_ENV === 'production' ? 'https' : 'http'}://${req.get('host')}/payment-callback`;
+      const result = await paystackService.initializePayment(user.email, amount, reference, callbackUrl);
 
       if (result.success) {
         await storage.createTransaction({

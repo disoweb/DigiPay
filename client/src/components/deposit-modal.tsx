@@ -80,67 +80,28 @@ export function DepositModal({ open, onOpenChange }: DepositModalProps) {
   });
 
   const handlePaystackPayment = async (paymentData: any) => {
-    if (!PAYSTACK_PUBLIC_KEY) {
-      toast({
-        title: "Configuration Error",
-        description: "Paystack public key not configured",
-        variant: "destructive",
-      });
-      setIsProcessing(false);
-      return;
-    }
-
-    if (!user?.email) {
-      toast({
-        title: "Authentication Error",
-        description: "User email not found",
-        variant: "destructive",
-      });
-      setIsProcessing(false);
-      return;
-    }
-
-    console.log("Initializing Paystack payment with:", {
-      key: PAYSTACK_PUBLIC_KEY,
-      email: user.email,
-      amount: parseFloat(amount) * 100,
-      reference: paymentData.reference
-    });
-
-    try {
-      await initializePaystack({
-        key: PAYSTACK_PUBLIC_KEY,
-        email: user.email,
-        amount: parseFloat(amount) * 100, // Convert to kobo
-        currency: 'NGN',
-        reference: paymentData.reference,
-        callback: (response) => {
-          console.log("Paystack callback:", response);
-          if (response.status === 'success') {
-            verifyPaymentMutation.mutate(response.reference);
-          } else {
-            setIsProcessing(false);
-            toast({
-              title: "Payment Cancelled",
-              description: "Payment was not completed",
-              variant: "destructive",
-            });
-          }
-        },
-        onClose: () => {
-          console.log("Paystack modal closed");
-          setIsProcessing(false);
-        },
-      });
-    } catch (error) {
-      console.error("Paystack initialization error:", error);
-      setIsProcessing(false);
+    if (!paymentData.authorization_url) {
       toast({
         title: "Payment Error",
-        description: "Failed to initialize payment: " + (error as Error).message,
+        description: "Invalid payment data received",
         variant: "destructive",
       });
+      setIsProcessing(false);
+      return;
     }
+
+    // Store payment reference for verification when user returns
+    localStorage.setItem('pending_payment_reference', paymentData.reference);
+    
+    toast({
+      title: "Redirecting to Payment",
+      description: "You will be redirected to Paystack to complete your payment",
+    });
+
+    // Add a small delay to show the toast, then redirect
+    setTimeout(() => {
+      window.location.href = paymentData.authorization_url;
+    }, 1500);
   };
 
   const handleDeposit = async () => {
