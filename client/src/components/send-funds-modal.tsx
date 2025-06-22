@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,6 +26,10 @@ export function SendFundsModal({ open, onOpenChange, nairaBalance, usdtBalance }
   const [currency, setCurrency] = useState<"NGN" | "USDT">("NGN");
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [lookupQuery, setLookupQuery] = useState("");
+  const [isLookingUp, setIsLookingUp] = useState(false);
+  const [step, setStep] = useState(1);
+  const [recipientUser, setRecipientUser] = useState<any>(null);
 
   const handleLookup = async () => {
     if (!recipientEmail.trim()) {
@@ -186,7 +190,6 @@ export function SendFundsModal({ open, onOpenChange, nairaBalance, usdtBalance }
     });
   };
 
-    const recipientUser = recipient;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -196,6 +199,9 @@ export function SendFundsModal({ open, onOpenChange, nairaBalance, usdtBalance }
             <Send className="h-5 w-5" />
             Send Funds
           </DialogTitle>
+          <DialogDescription>
+            Send money to other users on the platform
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">

@@ -43,23 +43,25 @@ export default function ChatPage() {
   const { user } = useAuth();
   
   const tradeId = parseInt(params.tradeId || "0");
-  console.log("Chat page - tradeId:", tradeId, "params:", params);
 
   const { data: trade, isLoading, error } = useQuery<EnrichedTrade>({
     queryKey: [`/api/trades/${tradeId}`],
     queryFn: async () => {
-      console.log("Fetching trade for chat:", tradeId);
-      const response = await apiRequest("GET", `/api/trades/${tradeId}`);
-      if (!response.ok) {
-        console.error("Failed to fetch trade for chat:", response.status);
-        throw new Error(`Failed to fetch trade: ${response.status}`);
+      try {
+        const response = await apiRequest("GET", `/api/trades/${tradeId}`);
+        if (!response.ok) {
+          const errorText = await response.text().catch(() => 'Unknown error');
+          throw new Error(`Failed to fetch trade: ${response.status} - ${errorText}`);
+        }
+        const data = await response.json();
+        return data;
+      } catch (error) {
+        console.error("Trade fetch error:", error);
+        throw error;
       }
-      const data = await response.json();
-      console.log("Trade data for chat:", data);
-      return data;
     },
     enabled: !!tradeId && tradeId > 0,
-    retry: 3,
+    retry: 2,
     retryDelay: 1000,
   });
 

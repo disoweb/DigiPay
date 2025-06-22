@@ -408,7 +408,6 @@ export function TradeManagement() {
                               size="sm"
                               className="flex-1 sm:flex-none"
                               onClick={() => {
-                                console.log("Navigating to trade:", trade.id);
                                 setLocation(`/trades/${trade.id}`);
                               }}
                             >
@@ -421,11 +420,10 @@ export function TradeManagement() {
                               size="sm"
                               className="flex-1 sm:flex-none"
                               onClick={() => {
-                                console.log("Navigating to trade chat:", trade.id, "Trade object:", trade);
                                 if (trade && trade.id) {
                                   setLocation(`/chat/${trade.id}`);
                                 } else {
-                                  console.error("Invalid trade data for chat:", trade);
+                                  console.error("Invalid trade data for chat navigation");
                                 }
                               }}
                             >

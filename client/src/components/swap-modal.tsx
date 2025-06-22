@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -70,7 +70,7 @@ export function SwapModal({ open, onOpenChange, nairaBalance, usdtBalance }: Swa
     const inputAmount = parseFloat(amount || "0");
     const fee = inputAmount * 0.01; // 1% fee
     const amountAfterFee = inputAmount - fee;
-    
+
     if (fromCurrency === "NGN") {
       return {
         fee,
@@ -127,6 +127,9 @@ export function SwapModal({ open, onOpenChange, nairaBalance, usdtBalance }: Swa
             <ArrowUpDown className="h-5 w-5" />
             Currency Swap {step === 2 && "- Review"}
           </DialogTitle>
+          <DialogDescription>
+            Exchange between NGN and USDT at current market rates
+          </DialogDescription>
         </DialogHeader>
 
         {step === 1 ? (
@@ -259,7 +262,7 @@ export function SwapModal({ open, onOpenChange, nairaBalance, usdtBalance }: Swa
                       </p>
                     </div>
                   </div>
-                  
+
                   <div className="border-t pt-4 space-y-2 text-sm">
                     <div className="flex justify-between">
                       <span>Exchange Rate:</span>
