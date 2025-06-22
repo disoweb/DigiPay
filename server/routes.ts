@@ -1,4 +1,4 @@
-import type { Express } from "express";
+import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import express from "express";
 import path from "path";
@@ -116,6 +116,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Withdrawal error:", error);
       res.status(500).json({ error: "Withdrawal failed" });
+    }
+  });
+
+  // Check username availability
+  app.get("/api/user/check-username/:username", authenticateToken, async (req: any, res: Response) => {
+    try {
+      const { username } = req.params;
+      const currentUserId = req.user?.id;
+      
+      if (!username || username.length < 3) {
+        return res.json({ available: false, message: "Username must be at least 3 characters long" });
+      }
+      
+      if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+        return res.json({ available: false, message: "Username can only contain letters, numbers, and underscores" });
+      }
+      
+      const existingUser = await storage.getUserByUsername(username);
+      
+      if (existingUser && existingUser.id !== currentUserId) {
+        // Generate suggestions
+        const suggestions = [];
+        for (let i = 1; i <= 3; i++) {
+          const suggestion = `${username}${i}`;
+          const suggestionExists = await storage.getUserByUsername(suggestion);
+          if (!suggestionExists) {
+            suggestions.push(suggestion);
+          }
+        }
+        
+        // Try with random numbers
+        if (suggestions.length < 3) {
+          for (let i = 0; i < 5; i++) {
+            const randomNum = Math.floor(Math.random() * 999) + 1;
+            const suggestion = `${username}${randomNum}`;
+            const suggestionExists = await storage.getUserByUsername(suggestion);
+            if (!suggestionExists && !suggestions.includes(suggestion)) {
+              suggestions.push(suggestion);
+              if (suggestions.length >= 3) break;
+            }
+          }
+        }
+        
+        return res.json({ 
+          available: false, 
+          message: "Username is already taken",
+          suggestions: suggestions.slice(0, 3)
+        });
+      }
+      
+      res.json({ available: true, message: "Username is available" });
+    } catch (error) {
+      console.error("Check username error:", error);
+      res.status(500).json({ error: "Failed to check username availability" });
     }
   });
 

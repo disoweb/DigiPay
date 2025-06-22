@@ -168,6 +168,8 @@ export default function Wallet() {
         setShowProfileCompletion(true);
       }, 1000);
       return () => clearTimeout(timer);
+    } else {
+      setShowProfileCompletion(false);
     }
   }, [user]);
 
