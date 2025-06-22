@@ -848,7 +848,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         );
       }
 
-```text
       res.json({ success: true, message: "Dispute raised successfully" });
     } catch (error) {
       console.error("Dispute error:", error);
