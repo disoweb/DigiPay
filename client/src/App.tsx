@@ -20,6 +20,7 @@ import UserProfile from "@/pages/user-profile";
 import UserSettings from "@/pages/user-settings";
 import NotFound from "@/pages/not-found";
 import ChatPage from "@/pages/chat";
+import AdminKYC from "@/pages/admin-kyc";
 
 const queryClient = new QueryClient();
 
@@ -44,6 +45,7 @@ function App() {
             <ProtectedRoute path="/ratings" component={Ratings} />
             <ProtectedRoute path="/admin" component={Admin} adminOnly />
             <ProtectedRoute path="/admin/approvals" component={AdminApprovals} adminOnly />
+            <ProtectedRoute path="/admin/kyc" component={AdminKYC} adminOnly />
             <ProtectedRoute path="/profile-setup" component={ProfileSetup} />
             <ProtectedRoute path="/create-offer" component={OfferCreation} />
             <Route path="/chat/:tradeId" component={({ params }) => (

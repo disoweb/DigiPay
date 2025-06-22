@@ -23,6 +23,7 @@ import {
   CreditCard,
   Shield
 } from "lucide-react";
+import { KYCProgressIndicator } from "@/components/kyc-progress-indicator";
 
 interface KYCVerificationProps {
   onComplete?: () => void;
@@ -173,35 +174,48 @@ export function KYCVerification({ onComplete }: KYCVerificationProps) {
   const submitKYC = async () => {
     setIsSubmitting(true);
     try {
-      // Here you would typically upload files to a secure storage service
-      // and submit the KYC data to your backend
-      
-      const formData = new FormData();
-      
-      // Add personal info
-      Object.entries(personalInfo).forEach(([key, value]) => {
-        formData.append(key, value);
-      });
-      
-      // Add address info
-      Object.entries(addressInfo).forEach(([key, value]) => {
-        formData.append(key, value);
-      });
-      
-      // Add identity info
-      Object.entries(identityInfo).forEach(([key, value]) => {
-        formData.append(key, value);
-      });
-      
-      // Add documents
-      Object.entries(documents).forEach(([key, file]) => {
-        if (file) {
-          formData.append(key, file);
-        }
+      // First, submit the KYC data
+      const response = await fetch('/api/kyc/submit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('digipay_token')}`
+        },
+        body: JSON.stringify({
+          ...personalInfo,
+          ...addressInfo,
+          ...identityInfo
+        })
       });
 
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to submit KYC data');
+      }
+
+      // Then upload documents if any exist
+      if (documents.idFront || documents.idBack || documents.selfie || documents.proofOfAddress) {
+        const formData = new FormData();
+        
+        Object.entries(documents).forEach(([key, file]) => {
+          if (file) {
+            formData.append(key, file);
+          }
+        });
+
+        const uploadResponse = await fetch('/api/kyc/upload', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('digipay_token')}`
+          },
+          body: formData
+        });
+
+        if (!uploadResponse.ok) {
+          const errorData = await uploadResponse.json();
+          throw new Error(errorData.error || 'Failed to upload documents');
+        }
+      }
 
       setCurrentStep('complete');
       
@@ -213,10 +227,10 @@ export function KYCVerification({ onComplete }: KYCVerificationProps) {
       if (onComplete) {
         onComplete();
       }
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Submission Failed",
-        description: "Please try again or contact support",
+        description: error.message || "Please try again or contact support",
         variant: "destructive",
       });
     } finally {

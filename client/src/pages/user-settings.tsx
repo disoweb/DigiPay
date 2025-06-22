@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { KYCVerification } from "@/components/kyc-verification";
+import { VerificationStatusCard } from "@/components/verification-status-card";
 import { User, Mail, Phone, Shield, CheckCircle, AlertTriangle } from "lucide-react";
 import { UserProfileSection } from "@/components/user-profile-section";
 import { useAuth } from "@/hooks/use-auth";
@@ -157,41 +158,17 @@ export default function UserSettings() {
           <TabsContent value="kyc">
             {showKYCForm ? (
               <KYCVerification 
-                onVerificationComplete={() => {
+                onComplete={() => {
                   setShowKYCForm(false);
                   // Refresh user data
                   queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+                  queryClient.invalidateQueries({ queryKey: ["/api/kyc"] });
                 }} 
               />
             ) : (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Shield className="h-5 w-5" />
-                    Identity Verification (KYC)
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <Alert className="border-yellow-200 bg-yellow-50">
-                    <AlertTriangle className="h-4 w-4 text-yellow-600" />
-                    <AlertDescription className="text-yellow-800">
-                      <div className="flex items-center justify-between">
-                        <span>Complete KYC verification to unlock higher trading limits and enhanced security.</span>
-                        <Badge variant="outline" className="text-yellow-600 border-yellow-600">
-                          Not Verified
-                        </Badge>
-                      </div>
-                    </AlertDescription>
-                  </Alert>
-                  <Button 
-                    onClick={() => setShowKYCForm(true)}
-                    className="w-full bg-blue-600 hover:bg-blue-700"
-                  >
-                    <Shield className="h-4 w-4 mr-2" />
-                    Start KYC Verification
-                  </Button>
-                </CardContent>
-              </Card>
+              <VerificationStatusCard 
+                onStartVerification={() => setShowKYCForm(true)}
+              />
             )}
           </TabsContent>
 

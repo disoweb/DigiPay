@@ -7,6 +7,8 @@ import { youVerifyService } from "./services/youverify";
 import { paystackService } from "./services/paystack";
 import { tronService } from "./services/tron";
 import { emailService, smsService } from "./services/notifications";
+import { kycRoutes } from "./routes/kyc";
+import { kycRoutes } from "./routes/kyc";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   setupJWTAuth(app);
@@ -79,6 +81,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: "Withdrawal failed" });
     }
   });
+
+  // KYC verification routes
+  app.get("/api/kyc", authenticateToken, kycRoutes.getKYCData);
+  app.post("/api/kyc/submit", authenticateToken, kycRoutes.submitKYC);
+  app.post("/api/kyc/upload", authenticateToken, ...kycRoutes.uploadDocuments);
+  app.get("/api/admin/kyc/pending", authenticateToken, kycRoutes.getPendingVerifications);
+  app.post("/api/admin/kyc/:userId/review", authenticateToken, kycRoutes.reviewKYC);
 
   // Market stats endpoint
   app.get("/api/market/stats", async (req, res) => {
