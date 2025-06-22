@@ -1,29 +1,27 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Progress } from "@/components/ui/progress";
+import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
+import { apiRequest } from "@/lib/queryClient";
 import { 
   TrendingUp, 
   TrendingDown, 
   DollarSign, 
-  Clock, 
-  AlertTriangle,
-  CheckCircle,
-  BarChart3,
-  Activity,
-  Users,
+  Users, 
+  Clock,
+  ArrowRight,
+  Plus,
   Shield,
-  Star,
-  MessageCircle
+  AlertTriangle
 } from "lucide-react";
 
 export function TradingDashboard() {
   const { user } = useAuth();
+  const setLocation = useLocation()[1];
 
   const { data: trades = [] } = useQuery({
     queryKey: ['/api/trades'],
@@ -78,8 +76,43 @@ export function TradingDashboard() {
 
   return (
     <div className="space-y-6">
-      {/* Quick Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      {/* KYC Verification Alert */}
+        {!user?.kycVerified && (
+          <Alert className="border-blue-200 bg-blue-50 mb-6">
+            <Shield className="h-4 w-4 text-blue-600" />
+            <AlertDescription className="text-blue-800">
+              <div className="flex items-center justify-between">
+                <div>
+                  <strong>Complete your identity verification</strong>
+                  <p className="text-sm mt-1">Verify your identity to unlock higher trading limits and enhanced security features.</p>
+                </div>
+                <Button 
+                  onClick={() => setLocation("/user-settings")}
+                  size="sm"
+                  className="bg-blue-600 hover:bg-blue-700 ml-4"
+                >
+                  <Shield className="h-4 w-4 mr-2" />
+                  Verify Now
+                </Button>
+              </div>
+            </AlertDescription>
+          </Alert>
+        )}
+
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">USDT Balance</CardTitle>
+              <DollarSign className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{user?.usdtBalance || "0.00"}</div>
+              <p className="text-xs text-muted-foreground">
+                Available for trading
+              </p>
+            </CardContent>
+          </Card>
+
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center space-x-2">
@@ -129,7 +162,7 @@ export function TradingDashboard() {
         </Card>
       </div>
 
-      
+
 
       {/* Active Trading Overview */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

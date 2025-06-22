@@ -1,12 +1,30 @@
-
+import { useState } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { Navbar } from "@/components/navbar";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { KYCVerification } from "@/components/kyc-verification";
+import { User, Mail, Phone, Shield, CheckCircle, AlertTriangle } from "lucide-react";
 import { UserProfileSection } from "@/components/user-profile-section";
 import { useAuth } from "@/hooks/use-auth";
-import { useQuery } from "@tanstack/react-query";
 import { Redirect } from "wouter";
 
+// This is the complete and final code file with all required changes.
 export default function UserSettings() {
-  const { user, isLoading } = useAuth();
+  const { toast } = useToast();
+  const [showKYCForm, setShowKYCForm] = useState(false);
+  const [formData, setFormData] = useState({
+    email: "",
+    phone: "",
+  });
+
+  const { user, isLoading, userData } = useAuth();
 
   const { data: trades = [] } = useQuery({
     queryKey: ['/api/trades'],
@@ -50,6 +68,88 @@ export default function UserSettings() {
           disputedTrades={disputedTrades.length}
           successRate={successRate}
         />
+
+        {/* KYC Verification Section */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Shield className="h-5 w-5" />
+                Identity Verification (KYC)
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {userData?.kycVerified ? (
+                <Alert className="border-green-200 bg-green-50">
+                  <CheckCircle className="h-4 w-4 text-green-600" />
+                  <AlertDescription className="text-green-800">
+                    <div className="flex items-center justify-between">
+                      <span>Your identity has been verified successfully!</span>
+                      <Badge variant="outline" className="text-green-600 border-green-600">
+                        <Shield className="h-3 w-3 mr-1" />
+                        Verified
+                      </Badge>
+                    </div>
+                  </AlertDescription>
+                </Alert>
+              ) : (
+                <div className="space-y-4">
+                  <Alert className="border-yellow-200 bg-yellow-50">
+                    <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                    <AlertDescription className="text-yellow-800">
+                      <div className="flex items-center justify-between">
+                        <span>Complete KYC verification to unlock higher trading limits and enhanced security.</span>
+                        <Badge variant="outline" className="text-yellow-600 border-yellow-600">
+                          Not Verified
+                        </Badge>
+                      </div>
+                    </AlertDescription>
+                  </Alert>
+
+                  {showKYCForm ? (
+                    <div className="mt-4">
+                      <KYCVerification 
+                        onVerificationComplete={() => {
+                          setShowKYCForm(false);
+                          // Refresh user data
+                          queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+                        }} 
+                      />
+                      <Button 
+                        variant="outline" 
+                        onClick={() => setShowKYCForm(false)}
+                        className="mt-4 w-full"
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button 
+                      onClick={() => setShowKYCForm(true)}
+                      className="w-full bg-blue-600 hover:bg-blue-700"
+                    >
+                      <Shield className="h-4 w-4 mr-2" />
+                      Start KYC Verification
+                    </Button>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Security Section */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Shield className="h-5 w-5" />
+                Security Settings
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="text-center py-8 text-gray-500">
+                Security settings coming soon...
+              </div>
+            </CardContent>
+          </Card>
       </div>
     </div>
   );

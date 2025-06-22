@@ -57,7 +57,7 @@ function SimpleOfferCard({ offer, onTrade }: OfferCardProps) {
             <span className="sm:hidden">{new Date(offer.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
           </div>
         </div>
-        
+
         <div className="space-y-2 mb-4">
           <div className="flex justify-between items-center">
             <span className="text-sm text-gray-600">Amount:</span>

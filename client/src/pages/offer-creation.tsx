@@ -216,23 +216,27 @@ export default function OfferCreation() {
                     type="button"
                     variant={offerData.type === "buy" ? "default" : "outline"}
                     onClick={() => handleTypeChange("buy")}
-                    className={`h-16 flex flex-col items-center justify-center space-y-1 ${
-                      offerData.type === "buy" ? "bg-green-600 hover:bg-green-700" : ""
+                    className={`h-16 flex flex-col items-center justify-center space-y-1 font-semibold ${
+                      offerData.type === "buy" 
+                        ? "bg-red-600 hover:bg-red-700 text-white shadow-red-200 shadow-lg" 
+                        : "border-red-600 text-red-600 hover:bg-red-50"
                     }`}
                   >
                     <TrendingUp className="h-5 w-5" />
-                    <span>Buy USDT</span>
+                    <span>🔴 Buy USDT</span>
                   </Button>
                   <Button
                     type="button"
                     variant={offerData.type === "sell" ? "default" : "outline"}
                     onClick={() => handleTypeChange("sell")}
-                    className={`h-16 flex flex-col items-center justify-center space-y-1 ${
-                      offerData.type === "sell" ? "bg-red-600 hover:bg-red-700" : ""
+                    className={`h-16 flex flex-col items-center justify-center space-y-1 font-semibold ${
+                      offerData.type === "sell" 
+                        ? "bg-green-600 hover:bg-green-700 text-white shadow-green-200 shadow-lg" 
+                        : "border-green-600 text-green-600 hover:bg-green-50"
                     }`}
                   >
                     <TrendingDown className="h-5 w-5" />
-                    <span>Sell USDT</span>
+                    <span>🟢 Sell USDT</span>
                   </Button>
                 </div>
               </div>
