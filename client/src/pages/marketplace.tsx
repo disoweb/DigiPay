@@ -1,6 +1,6 @@
 
 import { Navbar } from "@/components/navbar";
-import { EnhancedMarketplace } from "@/components/enhanced-marketplace";
+import { MarketplaceWithStatus } from "@/components/marketplace-with-status";
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
 import { Plus, ArrowLeft } from "lucide-react";
@@ -42,7 +42,7 @@ export default function Marketplace() {
           </div>
         </div>
 
-        <EnhancedMarketplace />
+        <MarketplaceWithStatus />
       </div>
     </div>
   );
