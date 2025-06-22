@@ -317,9 +317,16 @@ export function TradingDashboard() {
                     : "No offers created yet"
                   }
                 </p>
-                <Button size="sm" onClick={() => setLocation('/marketplace')}>
-                  Create Your First Offer
-                </Button>
+                <div className="space-y-2">
+                  <Button size="sm" onClick={() => setLocation('/marketplace')}>
+                    Create Your First Offer
+                  </Button>
+                  {offers.length > 0 && (
+                    <Button size="sm" variant="outline" onClick={() => setLocation('/manage-offers')}>
+                      Manage Offers ({offers.length})
+                    </Button>
+                  )}
+                </div>
               </div>
             ) : (
               <div className="space-y-3">
@@ -355,11 +362,9 @@ export function TradingDashboard() {
                     </div>
                   </div>
                 ))}
-                {activeOffers.length > 3 && (
-                  <Button variant="outline" size="sm" className="w-full" onClick={() => setLocation('/manage-offers')}>
-                    Manage All Offers
-                  </Button>
-                )}
+                <Button variant="outline" size="sm" className="w-full" onClick={() => setLocation('/manage-offers')}>
+                  Manage All Offers ({offers.length})
+                </Button>
               </div>
             )}
           </CardContent>
