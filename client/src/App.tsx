@@ -22,7 +22,6 @@ import NotFound from "@/pages/not-found";
 import ChatPage from "@/pages/chat";
 import AdminKYC from "@/pages/admin-kyc";
 import ManageOffers from "@/pages/manage-offers";
-import { lazy } from "react";
 import DirectTrade from "./pages/trade-direct";
 import UserChatPage from "./pages/user-chat";
 
@@ -58,8 +57,8 @@ function App() {
               </ProtectedRoute>
             )} />
             <Route path="/user/:userId" component={UserProfile} />
-            <Route path="/user-chat/:userId" component={lazy(() => import("./pages/user-chat"))} />
-            <Route path="/trade-direct/:offerId" component={lazy(() => import("./pages/trade-direct"))} />
+            <Route path="/user-chat/:userId" component={UserChatPage} />
+            <Route path="/trade-direct/:offerId" component={DirectTrade} />
             <ProtectedRoute path="/ratings" component={Ratings} />
             <Route path="/settings" component={UserSettings} />
             <ProtectedRoute path="/manage-offers" component={ManageOffers} />

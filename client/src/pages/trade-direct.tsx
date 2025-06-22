@@ -44,7 +44,9 @@ export default function DirectTrade() {
     if (storedOffer) {
       console.log("Found stored offer:", storedOffer);
       try {
-        setSelectedOffer(JSON.parse(storedOffer));
+        const parsed = JSON.parse(storedOffer);
+        console.log("Parsed offer:", parsed);
+        setSelectedOffer(parsed);
         // Clear after use
         sessionStorage.removeItem('selectedOffer');
       } catch (e) {
@@ -106,7 +108,7 @@ export default function DirectTrade() {
     );
   }
 
-  if (!currentOffer) {
+  if (!currentOffer && !isLoading) {
     return (
       <div className="min-h-screen bg-gray-50">
         <Navbar />
