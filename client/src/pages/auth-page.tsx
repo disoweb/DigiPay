@@ -18,6 +18,7 @@ export default function AuthPage() {
     phone: "",
     bvn: "",
   });
+  const [registrationSuccess, setRegistrationSuccess] = useState(false); // New state
 
   // Redirect if already logged in
   React.useEffect(() => {
@@ -35,10 +36,42 @@ export default function AuthPage() {
     loginMutation.mutate(loginForm);
   };
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    registerMutation.mutate(registerForm);
+    try {
+      await registerMutation.mutateAsync(registerForm);
+      // On successful mutation (no error thrown by mutateAsync)
+      setRegistrationSuccess(true);
+    } catch (error) {
+      // Error is already handled by useAuth's toast messages
+      console.error("Registration failed:", error);
+      setRegistrationSuccess(false);
+    }
   };
+
+  if (registrationSuccess) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 p-4">
+        <Card className="w-full max-w-md text-center shadow-xl">
+          <CardContent className="p-8">
+            <div className="mb-4">
+              <svg className="mx-auto h-12 w-12 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-semibold mb-3">Registration Successful!</h2>
+            <p className="text-gray-600 mb-6">
+              Thank you for registering. A verification link has been sent to your email address: <strong>{registerForm.email}</strong>.
+              Please check your inbox (and spam folder) and click the link to activate your account.
+            </p>
+            <Button asChild className="w-full">
+              <a href={`mailto:${registerForm.email}`}>Open Email App</a>
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col lg:flex-row bg-gradient-to-br from-gray-50 to-gray-100">

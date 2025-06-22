@@ -1,8 +1,9 @@
 import { 
-  users, offers, trades, messages, transactions, ratings,
+  users, offers, trades, messages, transactions, ratings, userPaymentMethods, // Added userPaymentMethods
   type User, type InsertUser, type Offer, type InsertOffer,
   type Trade, type InsertTrade, type Message, type InsertMessage,
-  type Transaction, type InsertTransaction, type Rating, type InsertRating
+  type Transaction, type InsertTransaction, type Rating, type InsertRating,
+  type UserPaymentMethod, type InsertUserPaymentMethod // Added UserPaymentMethod types
 } from "@shared/schema";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
@@ -16,6 +17,7 @@ export interface IStorage {
   // User methods
   getUser(id: number): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
+  getUserByEmailVerificationToken(token: string): Promise<User | undefined>; // New method
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: number, updates: Partial<User>): Promise<User | undefined>;
 
@@ -56,6 +58,11 @@ export interface IStorage {
   getUserProfile(id: number): Promise<User | undefined>;
   getUserTrades(id: number): Promise<Trade[]>;
   getUserPublicRatings(id: number): Promise<any[]>;
+
+  // User Payment Methods
+  getUserPaymentMethods(userId: number): Promise<UserPaymentMethod[]>;
+  createUserPaymentMethod(paymentMethod: InsertUserPaymentMethod): Promise<UserPaymentMethod>;
+  deleteUserPaymentMethod(userId: number, methodId: number): Promise<boolean>;
 
   sessionStore: any;
 }
@@ -235,6 +242,11 @@ export class DatabaseStorage implements IStorage {
 
   async getUserByEmail(email: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.email, email));
+    return user || undefined;
+  }
+
+  async getUserByEmailVerificationToken(token: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.emailVerificationToken, token));
     return user || undefined;
   }
 
@@ -459,6 +471,26 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(ratings.createdAt));
   }
 
+  // User Payment Methods
+  async getUserPaymentMethods(userId: number): Promise<UserPaymentMethod[]> {
+    return await db.select().from(userPaymentMethods).where(eq(userPaymentMethods.userId, userId)).orderBy(desc(userPaymentMethods.createdAt));
+  }
+
+  async createUserPaymentMethod(paymentMethodData: InsertUserPaymentMethod): Promise<UserPaymentMethod> {
+    const [newMethod] = await db
+      .insert(userPaymentMethods)
+      .values(paymentMethodData)
+      .returning();
+    return newMethod;
+  }
+
+  async deleteUserPaymentMethod(userId: number, methodId: number): Promise<boolean> {
+    const result = await db
+      .delete(userPaymentMethods)
+      .where(and(eq(userPaymentMethods.userId, userId), eq(userPaymentMethods.id, methodId)))
+      .returning();
+    return result.length > 0;
+  }
 }
 
 export const storage = new DatabaseStorage();

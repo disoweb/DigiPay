@@ -5,11 +5,13 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 
-interface User {
+interface User { // Ensure this matches the structure returned by /api/user or /api/auth/user
   id: number;
   email: string;
-  verified: boolean;
-  kycLevel: number;
+  emailVerified?: boolean; // Added from schema
+  kycVerified?: boolean; // Changed from kycLevel, ensure backend sends this
+  // kycLevel: number; // This was in old, schema has kycVerified (boolean)
+  geographicRegions?: string[]; // Added from schema
   nairaBalance: string;
   usdtBalance: string;
   averageRating: string;

@@ -18,6 +18,7 @@ import ProfileSetup from "@/pages/profile-setup";
 import OfferCreation from "@/pages/offer-creation";
 import Ratings from "@/pages/ratings";
 import NotFound from "@/pages/not-found";
+import VerifyEmailPage from "@/pages/verify-email-page"; // Import the new page
 
 const queryClient = new QueryClient();
 
@@ -29,6 +30,7 @@ function App() {
           <Switch>
             <Route path="/" component={LandingPage} />
             <Route path="/auth" component={AuthPage} />
+            <Route path="/verify-email" component={VerifyEmailPage} /> {/* Add route for verification page */}
             
             <ProtectedRoute path="/dashboard" component={Dashboard} />
             <ProtectedRoute path="/marketplace" component={Marketplace} />

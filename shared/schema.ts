@@ -10,11 +10,28 @@ export const users = pgTable("users", {
   bvn: text("bvn"),
   tronAddress: text("tron_address"),
   kycVerified: boolean("kyc_verified").default(false),
+  emailVerified: boolean("email_verified").default(false),
+  emailVerificationToken: text("email_verification_token").unique(), // New for email verification
+  emailVerificationTokenExpiresAt: timestamp("email_verification_token_expires_at"), // New for email verification
+  preferredPaymentMethods: jsonb("preferred_payment_methods"), // New field - stores array of user_payment_method_ids or Paystack references
+  geographicRegions: jsonb("geographic_regions"), // New field - stores array of strings
   nairaBalance: decimal("naira_balance", { precision: 12, scale: 2 }).default("0"),
   usdtBalance: decimal("usdt_balance", { precision: 12, scale: 8 }).default("0"),
   averageRating: decimal("average_rating", { precision: 3, scale: 2 }).default("0"),
   ratingCount: integer("rating_count").default(0),
   isAdmin: boolean("is_admin").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Renaming existing paymentMethods to userPaymentMethods for clarity as per plan
+export const userPaymentMethods = pgTable("user_payment_methods", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  type: text("type").notNull(), // 'bank_transfer', 'paystack_subaccount', 'digital_wallet'
+  name: text("name").notNull(), // e.g., "GTBank Savings", "My Paystack Wallet"
+  details: jsonb("details").notNull(), // JSON object with account_number, bank_code for bank; Paystack ID for others
+  isVerified: boolean("is_verified").default(false), // Verification status (e.g., by admin or Paystack)
+  isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -107,16 +124,16 @@ export const reports = pgTable("reports", {
 });
 
 // User payment methods
-export const paymentMethods = pgTable("payment_methods", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").references(() => users.id).notNull(),
-  type: text("type").notNull(), // 'bank_transfer', 'mobile_money', 'digital_wallet'
-  name: text("name").notNull(),
-  details: text("details"), // JSON object with account details
-  isVerified: boolean("is_verified").default(false),
-  isActive: boolean("is_active").default(true),
-  createdAt: timestamp("created_at").defaultNow(),
-});
+// export const paymentMethods = pgTable("payment_methods", { // Commenting out old table
+//   id: serial("id").primaryKey(),
+//   userId: integer("user_id").references(() => users.id).notNull(),
+//   type: text("type").notNull(), // 'bank_transfer', 'mobile_money', 'digital_wallet'
+//   name: text("name").notNull(),
+//   details: text("details"), // JSON object with account details
+//   isVerified: boolean("is_verified").default(false),
+//   isActive: boolean("is_active").default(true),
+//   createdAt: timestamp("created_at").defaultNow(),
+// });
 
 // Notifications
 export const notifications = pgTable("notifications", {
@@ -137,11 +154,23 @@ export const insertUserSchema = createInsertSchema(users).omit({
 }).extend({
   tronAddress: z.string().optional(),
   kycVerified: z.boolean().optional(),
+  emailVerified: z.boolean().optional(),
+  emailVerificationToken: z.string().optional(), // New
+  emailVerificationTokenExpiresAt: z.date().optional(), // New
+  preferredPaymentMethods: z.any().optional(), // Using any for now, refine if specific structure for Paystack refs
+  geographicRegions: z.array(z.string()).optional(),
   nairaBalance: z.string().optional(),
   usdtBalance: z.string().optional(),
   averageRating: z.string().optional(),
   ratingCount: z.number().optional(),
   isAdmin: z.boolean().optional(),
+});
+
+export const insertUserPaymentMethodSchema = createInsertSchema(userPaymentMethods).omit({ // New
+  id: true,
+  createdAt: true,
+  isVerified: true,
+  isActive: true,
 });
 
 export const insertOfferSchema = createInsertSchema(offers).omit({
@@ -184,6 +213,8 @@ export const insertRatingSchema = createInsertSchema(ratings).omit({
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
+export type UserPaymentMethod = typeof userPaymentMethods.$inferSelect; // New
+export type InsertUserPaymentMethod = z.infer<typeof insertUserPaymentMethodSchema>; // New
 export type Offer = typeof offers.$inferSelect;
 export type InsertOffer = z.infer<typeof insertOfferSchema>;
 export type Trade = typeof trades.$inferSelect;
