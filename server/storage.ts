@@ -599,6 +599,30 @@ export class DatabaseStorage implements IStorage {
     return tradesResult as EnrichedTrade[];
   }
 
+  // Notification methods
+  async createNotification(notification: {
+    userId: number;
+    type: string;
+    title: string;
+    message: string;
+    data?: string;
+  }) {
+    const [newNotification] = await db
+      .insert(notifications)
+      .values(notification)
+      .returning();
+    return newNotification;
+  }
+
+  async getUserNotifications(userId: number) {
+    return await db
+      .select()
+      .from(notifications)
+      .where(eq(notifications.userId, userId))
+      .orderBy(desc(notifications.createdAt))
+      .limit(50);
+  }
+
 }
 
 export const storage = new DatabaseStorage();

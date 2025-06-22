@@ -33,8 +33,11 @@ import {
   RefreshCw,
   Loader2,
   MessageCircle,
-  UserCheck
+  UserCheck,
+  Send
 } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 
 interface Offer {
   id: number;
@@ -57,6 +60,8 @@ interface Offer {
     ratingCount: number;
     kycVerified?: boolean;
     completedTrades?: number;
+    isOnline?: boolean;
+    lastSeen?: string;
   };
 }
 
@@ -81,6 +86,9 @@ export function EnhancedMarketplace() {
 
   const [selectedOffer, setSelectedOffer] = useState<Offer | null>(null);
   const [showTradeModal, setShowTradeModal] = useState(false);
+  const [showContactModal, setShowContactModal] = useState(false);
+  const [contactOffer, setContactOffer] = useState<Offer | null>(null);
+  const [contactMessage, setContactMessage] = useState('');
   const [activeTab, setActiveTab] = useState<'buy' | 'sell'>('buy');
   const [filters, setFilters] = useState({
     paymentMethod: 'all',
@@ -247,6 +255,70 @@ export function EnhancedMarketplace() {
         amount,
       });
     }
+  };
+
+  const handleContactTrader = (offer: Offer) => {
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to contact traders",
+        variant: "destructive",
+      });
+      return;
+    }
+    setContactOffer(offer);
+    setContactMessage(`Hi! I'm interested in your ${offer.type} offer for ${offer.amount} USDT at ₦${parseFloat(offer.rate).toLocaleString()}. Could we discuss the details?`);
+    setShowContactModal(true);
+  };
+
+  const sendDirectMessage = () => {
+    if (!contactOffer || !contactMessage.trim()) return;
+
+    // Connect to WebSocket and send message
+    const ws = new WebSocket(`ws://${window.location.host}/ws`);
+    
+    ws.onopen = () => {
+      ws.send(JSON.stringify({
+        type: 'user_connect',
+        userId: user?.id
+      }));
+      
+      ws.send(JSON.stringify({
+        type: 'direct_message',
+        recipientId: contactOffer.user?.id,
+        messageText: contactMessage.trim(),
+        offerId: contactOffer.id
+      }));
+    };
+
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      if (data.type === 'message_sent') {
+        if (data.data.success) {
+          toast({
+            title: "Message Sent",
+            description: "Your message has been sent to the trader.",
+          });
+          setShowContactModal(false);
+          setContactMessage('');
+        } else {
+          toast({
+            title: "Message Failed",
+            description: "Failed to send message. Please try again.",
+            variant: "destructive",
+          });
+        }
+        ws.close();
+      }
+    };
+
+    ws.onerror = () => {
+      toast({
+        title: "Connection Error",
+        description: "Failed to send message. Please try again.",
+        variant: "destructive",
+      });
+    };
   };
 
   const getBestRate = (type: 'buy' | 'sell') => {
@@ -612,13 +684,23 @@ export function EnhancedMarketplace() {
                       </div> */}
                     </div>
 
-                    <Button
-                      onClick={() => handleTrade(offer)}
-                      className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 text-base shadow-lg border-0"
-                      disabled={!user}
-                    >
-                      Buy USDT
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={() => handleTrade(offer)}
+                        className="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 text-base shadow-lg border-0"
+                        disabled={!user}
+                      >
+                        Buy USDT
+                      </Button>
+                      <Button
+                        onClick={() => handleContactTrader(offer)}
+                        variant="outline"
+                        className="px-4 py-3 text-base shadow-lg border-0"
+                        disabled={!user}
+                      >
+                        <MessageCircle className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
               ))}
@@ -710,13 +792,23 @@ export function EnhancedMarketplace() {
                       </div> */}
                     </div>
 
-                    <Button
-                      onClick={() => handleTrade(offer)}
-                      className="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-3 text-base shadow-lg border-0"
-                      disabled={!user}
-                    >
-                      Sell USDT
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={() => handleTrade(offer)}
+                        className="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-3 text-base shadow-lg border-0"
+                        disabled={!user}
+                      >
+                        Sell USDT
+                      </Button>
+                      <Button
+                        onClick={() => handleContactTrader(offer)}
+                        variant="outline"
+                        className="px-4 py-3 text-base shadow-lg border-0"
+                        disabled={!user}
+                      >
+                        <MessageCircle className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
               ))}

@@ -155,7 +155,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
               averageRating: user.averageRating || "0.00",
               ratingCount: user.ratingCount || 0,
               kycVerified: user.kycVerified || false,
-              completedTrades: user.completedTrades || 0
+              completedTrades: user.completedTrades || 0,
+              isOnline: user.isOnline || false,
+              lastSeen: user.lastSeen
             } : null,
           };
         })

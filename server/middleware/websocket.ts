@@ -77,6 +77,31 @@ export function setupWebSocket(server: Server) {
             }
             break;
 
+          case 'direct_message':
+            const { recipientId, messageText, offerId } = message;
+            if (currentUserId && recipientId && messageText) {
+              // Send notification to recipient
+              const recipient = userConnections.get(recipientId);
+              if (recipient && recipient.readyState === WebSocket.OPEN) {
+                recipient.send(JSON.stringify({
+                  type: 'direct_message_received',
+                  data: {
+                    senderId: currentUserId,
+                    message: messageText,
+                    offerId: offerId,
+                    timestamp: new Date().toISOString()
+                  }
+                }));
+              }
+              
+              // Confirm to sender
+              ws.send(JSON.stringify({
+                type: 'message_sent',
+                data: { success: true }
+              }));
+            }
+            break;
+
           case 'trade_update':
             if (currentTradeId && tradeConnections.has(currentTradeId)) {
               const connections = tradeConnections.get(currentTradeId);
