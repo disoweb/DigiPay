@@ -40,8 +40,17 @@ function SendUSDTForm({ onClose, userBalance }: { onClose: () => void; userBalan
 
   const sendUSDTMutation = useMutation({
     mutationFn: async (data: { amount: string; to: string }) => {
-      const response = await apiRequest("POST", "/api/tron/send", data);
-      return response.json();
+      try {
+        const response = await apiRequest("POST", "/api/tron/send", data);
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
+          throw new Error(errorData.message || `HTTP ${response.status}`);
+        }
+        return response.json();
+      } catch (error) {
+        console.error('USDT send error:', error);
+        throw error;
+      }
     },
     onSuccess: () => {
       toast({
@@ -49,9 +58,11 @@ function SendUSDTForm({ onClose, userBalance }: { onClose: () => void; userBalan
         description: `${amount} USDT has been sent to ${recipientAddress}`,
       });
       queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
       onClose();
     },
     onError: (error: any) => {
+      console.error('Send USDT mutation error:', error);
       toast({
         title: "Send Failed",
         description: error.message || "Failed to send USDT",
@@ -148,16 +159,23 @@ export default function Wallet() {
   const [showTransactionModal, setShowTransactionModal] = useState(false);
   const { toast } = useToast();
 
-  const { data: transactions = [] } = useQuery<Transaction[]>({
+  const { data: transactions = [], error: transactionsError, isLoading: transactionsLoading } = useQuery<Transaction[]>({
     queryKey: ["/api/transactions"],
     queryFn: async () => {
-      const response = await apiRequest("GET", "/api/transactions");
-      if (!response.ok) {
-        throw new Error(`Failed to fetch transactions: ${response.status}`);
+      try {
+        const response = await apiRequest("GET", "/api/transactions");
+        if (!response.ok) {
+          throw new Error(`Failed to fetch transactions: ${response.status}`);
+        }
+        return response.json();
+      } catch (error) {
+        console.error('Transaction fetch error:', error);
+        throw error;
       }
-      return response.json();
     },
     enabled: !!user?.id,
+    retry: 2,
+    retryDelay: 1000,
   });
 
   if (!user) return null;
@@ -363,13 +381,13 @@ export default function Wallet() {
                     <p className="text-xs text-gray-600 mb-1">Your TRON Address:</p>
                     <div className="flex items-center justify-between">
                       <code className="text-xs text-gray-800 truncate flex-1">
-                        {user.tronAddress || "Generating..."}
+                        {(user as any).tronAddress || "Generating..."}
                       </code>
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => {
-                          navigator.clipboard.writeText(user.tronAddress || "");
+                          navigator.clipboard.writeText((user as any).tronAddress || "");
                           toast({ title: "Address copied to clipboard" });
                         }}
                         className="ml-2 h-6 w-6 p-0"
@@ -502,7 +520,7 @@ export default function Wallet() {
       />
 
       {/* KYC Alert */}
-      {!user.kycVerified && (
+      {!(user as any).kycVerified && (
         <Alert className="mt-6 border-amber-200 bg-amber-50">
           <AlertTriangle className="h-4 w-4 text-amber-600" />
           <AlertDescription className="text-amber-800">
@@ -523,14 +541,14 @@ export default function Wallet() {
                 <label className="text-sm font-medium">Your TRON Wallet Address</label>
                 <div className="flex items-center space-x-2 mt-1">
                   <Input
-                    value={user.tronAddress || "Loading..."}
+                    value={(user as any).tronAddress || "Loading..."}
                     readOnly
                     className="flex-1"
                   />
                   <Button
                     size="sm"
                     onClick={() => {
-                      navigator.clipboard.writeText(user.tronAddress || "");
+                      navigator.clipboard.writeText((user as any).tronAddress || "");
                       toast({ title: "Address copied to clipboard" });
                     }}
                   >
