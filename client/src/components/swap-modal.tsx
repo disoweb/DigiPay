@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { ArrowUpDown, DollarSign, Coins, Loader2, TrendingUp } from "lucide-react";
+import { ArrowUpDown, DollarSign, Coins, Loader2, TrendingUp, ChevronRight, Check } from "lucide-react";
 
 interface SwapModalProps {
   open: boolean;
@@ -19,6 +19,7 @@ interface SwapModalProps {
 const USDT_RATE = 1485; // ₦1485 per USDT
 
 export function SwapModal({ open, onOpenChange, nairaBalance, usdtBalance }: SwapModalProps) {
+  const [step, setStep] = useState(1);
   const [fromCurrency, setFromCurrency] = useState<"NGN" | "USDT">("NGN");
   const [amount, setAmount] = useState("");
   const { toast } = useToast();
@@ -44,7 +45,7 @@ export function SwapModal({ open, onOpenChange, nairaBalance, usdtBalance }: Swa
       queryClient.invalidateQueries({ queryKey: ["/api/user"] });
       queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
       onOpenChange(false);
-      setAmount("");
+      resetModal();
     },
     onError: (error: any) => {
       toast({
@@ -57,11 +58,20 @@ export function SwapModal({ open, onOpenChange, nairaBalance, usdtBalance }: Swa
 
   const calculateOutput = () => {
     const inputAmount = parseFloat(amount || "0");
+    const fee = inputAmount * 0.01; // 1% fee
+    const amountAfterFee = inputAmount - fee;
+    
     if (fromCurrency === "NGN") {
-      return (inputAmount / USDT_RATE).toFixed(6);
+      return (amountAfterFee / USDT_RATE).toFixed(6);
     } else {
-      return (inputAmount * USDT_RATE).toLocaleString();
+      return (amountAfterFee * USDT_RATE).toLocaleString();
     }
+  };
+
+  const calculateFee = () => {
+    const inputAmount = parseFloat(amount || "0");
+    const fee = inputAmount * 0.01;
+    return fee;
   };
 
   const getMaxBalance = () => {
@@ -108,6 +118,28 @@ export function SwapModal({ open, onOpenChange, nairaBalance, usdtBalance }: Swa
   const toggleCurrency = () => {
     setFromCurrency(fromCurrency === "NGN" ? "USDT" : "NGN");
     setAmount("");
+  };
+
+  const goToPreview = () => {
+    if (!amount || parseFloat(amount) <= 0) {
+      toast({
+        title: "Invalid Amount",
+        description: "Please enter a valid amount",
+        variant: "destructive",
+      });
+      return;
+    }
+    setStep(2);
+  };
+
+  const goBack = () => {
+    setStep(1);
+  };
+
+  const resetModal = () => {
+    setStep(1);
+    setAmount("");
+    setFromCurrency("NGN");
   };
 
   return (

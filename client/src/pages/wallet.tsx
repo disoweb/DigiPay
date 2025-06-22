@@ -489,7 +489,8 @@ export default function Wallet() {
       <SendFundsModal
         open={showSendFunds}
         onOpenChange={setShowSendFunds}
-        userBalance={user.nairaBalance || "0"}
+        nairaBalance={user.nairaBalance || "0"}
+        usdtBalance={user.usdtBalance || "0"}
       />
 
       {/* Currency Swap Modal */}

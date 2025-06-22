@@ -1962,9 +1962,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Insufficient balance" });
       }
 
-      // Update balances
-      const newSenderBalance = senderBalance - amount;
-      const newRecipientBalance = parseFloat(recipient.nairaBalance || "0") + amount;
+
+
+      // Apply 1% fee
+      const fee = amount * 0.01;
+      const transferAmount = amount - fee;
+
+      // Update balances with fee deduction
+      const newSenderBalance = senderBalance - amount; // Full amount including fee
+      const newRecipientBalance = parseFloat(recipient.nairaBalance || "0") + transferAmount; // Amount minus fee
 
       await storage.updateUser(senderId, { 
         nairaBalance: newSenderBalance.toString() 
@@ -1979,20 +1985,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         type: "transfer_out",
         amount: amount.toString(),
         status: "completed",
-        adminNotes: `Transfer to ${recipient.email}: ${description}`
+        adminNotes: `Transfer to ${recipient.email}: ${description} (Fee: ₦${fee.toLocaleString()})`
       });
 
       await storage.createTransaction({
         userId: recipientId,
         type: "transfer_in",
-        amount: amount.toString(),
+        amount: transferAmount.toString(),
         status: "completed",
         adminNotes: `Transfer from ${sender.email}: ${description}`
       });
 
       res.json({ 
         success: true, 
-        message: `₦${amount.toLocaleString()} sent successfully to ${recipient.email}` 
+        message: `₦${transferAmount.toLocaleString()} sent successfully to ${recipient.email} (Fee: ₦${fee.toLocaleString()})` 
       });
     } catch (error) {
       console.error("Transfer error:", error);
@@ -2023,10 +2029,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(400).json({ error: "Insufficient NGN balance" });
         }
 
-        const usdtAmount = amount / USDT_RATE;
+        const fee = amount * 0.01; // 1% fee
+        const amountAfterFee = amount - fee;
+        const usdtAmount = amountAfterFee / USDT_RATE;
         newNairaBalance = currentNaira - amount;
         newUsdtBalance = parseFloat(user.usdtBalance || "0") + usdtAmount;
-        transactionNote = `Swapped ₦${amount.toLocaleString()} to ${usdtAmount.toFixed(6)} USDT`;
+        transactionNote = `Swapped ₦${amount.toLocaleString()} to ${usdtAmount.toFixed(6)} USDT (Fee: ₦${fee.toLocaleString()})`;
       } else {
         // USDT to NGN
         const currentUsdt = parseFloat(user.usdtBalance || "0");
@@ -2034,10 +2042,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(400).json({ error: "Insufficient USDT balance" });
         }
 
-        const nairaAmount = amount * USDT_RATE;
+        const fee = amount * 0.01; // 1% fee
+        const amountAfterFee = amount - fee;
+        const nairaAmount = amountAfterFee * USDT_RATE;
         newUsdtBalance = currentUsdt - amount;
         newNairaBalance = parseFloat(user.nairaBalance || "0") + nairaAmount;
-        transactionNote = `Swapped ${amount} USDT to ₦${nairaAmount.toLocaleString()}`;
+        transactionNote = `Swapped ${amount} USDT to ₦${nairaAmount.toLocaleString()} (Fee: ${fee.toFixed(6)} USDT)`;
       }
 
       // Update user balances
