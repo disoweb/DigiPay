@@ -82,31 +82,30 @@ export function TradingDashboard() {
     }
   };
 
-  try {
-    return (
-      <div className="space-y-6">
-        {/* KYC Verification Alert */}
-        {!user?.kycVerified && (
-          <Alert className="border-blue-200 bg-blue-50 mb-6">
-            <Shield className="h-4 w-4 text-blue-600" />
-            <AlertDescription className="text-blue-800">
-              <div className="flex items-center justify-between">
-                <div>
-                  <strong>Complete your identity verification</strong>
-                  <p className="text-sm mt-1">Verify your identity to unlock higher trading limits and enhanced security features.</p>
-                </div>
-                <Button 
-                  onClick={() => setLocation("/user-settings")}
-                  size="sm"
-                  className="bg-blue-600 hover:bg-blue-700 ml-4"
-                >
-                  <Shield className="h-4 w-4 mr-2" />
-                  Verify Now
-                </Button>
+  return (
+    <div className="space-y-6">
+      {/* KYC Verification Alert */}
+      {!user?.kycVerified && (
+        <Alert className="border-blue-200 bg-blue-50 mb-6">
+          <Shield className="h-4 w-4 text-blue-600" />
+          <AlertDescription className="text-blue-800">
+            <div className="flex items-center justify-between">
+              <div>
+                <strong>Complete your identity verification</strong>
+                <p className="text-sm mt-1">Verify your identity to unlock higher trading limits and enhanced security features.</p>
               </div>
-            </AlertDescription>
-          </Alert>
-        )}
+              <Button 
+                onClick={() => setLocation("/user-settings")}
+                size="sm"
+                className="bg-blue-600 hover:bg-blue-700 ml-4"
+              >
+                <Shield className="h-4 w-4 mr-2" />
+                Verify Now
+              </Button>
+            </div>
+          </AlertDescription>
+        </Alert>
+      )}
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
           <Card>
@@ -359,23 +358,4 @@ export function TradingDashboard() {
       )}
     </div>
   );
-  } catch (error) {
-    console.error('TradingDashboard render error:', error);
-    return (
-      <div className="space-y-6">
-        <Card className="border-red-200 bg-red-50">
-          <CardContent className="p-6 text-center">
-            <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Dashboard Error</h3>
-            <p className="text-gray-600 mb-4">
-              There was an error loading the dashboard. Please refresh the page.
-            </p>
-            <Button onClick={() => window.location.reload()} variant="outline">
-              Refresh Page
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 }
