@@ -10,16 +10,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { initializePaystack, PAYSTACK_PUBLIC_KEY } from "@/lib/paystack";
 import { useAuth } from "@/hooks/use-auth";
-
-function apiRequest(method: string, url: string, data?: any) {
-  return fetch(url, {
-    method,
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: data ? JSON.stringify(data) : undefined,
-  });
-}
+import { apiRequest } from "@/lib/queryClient";
 
 interface DepositModalProps {
   open: boolean;
@@ -36,10 +27,6 @@ export function DepositModal({ open, onOpenChange }: DepositModalProps) {
   const initializePaymentMutation = useMutation({
     mutationFn: async (amount: number) => {
       const res = await apiRequest("POST", "/api/payments/initialize", { amount });
-      if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.error || "Failed to initialize payment");
-      }
       return res.json();
     },
     onSuccess: (data) => {
@@ -62,10 +49,6 @@ export function DepositModal({ open, onOpenChange }: DepositModalProps) {
   const verifyPaymentMutation = useMutation({
     mutationFn: async (reference: string) => {
       const res = await apiRequest("POST", "/api/payments/verify", { reference });
-      if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.error || "Failed to verify payment");
-      }
       return res.json();
     },
     onSuccess: (data) => {
