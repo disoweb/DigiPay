@@ -25,6 +25,12 @@ export const offers = pgTable("offers", {
   rate: decimal("rate", { precision: 10, scale: 2 }).notNull(),
   type: text("type").notNull(), // 'buy' or 'sell'
   status: text("status").default("active"), // 'active', 'inactive', 'completed'
+  paymentMethod: text("payment_method").default("bank_transfer"),
+  terms: text("terms"),
+  minAmount: decimal("min_amount", { precision: 12, scale: 8 }),
+  maxAmount: decimal("max_amount", { precision: 12, scale: 8 }),
+  timeLimit: integer("time_limit").default(15), // minutes
+  requiresVerification: boolean("requires_verification").default(false),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

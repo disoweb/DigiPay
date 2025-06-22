@@ -64,14 +64,18 @@ export default function TradeDetail() {
   
   const tradeId = parseInt(params.id || "0");
 
-  const { data: trade, isLoading } = useQuery<EnrichedTrade>({
+  const { data: trade, isLoading, error } = useQuery<EnrichedTrade>({
     queryKey: [`/api/trades/${tradeId}`],
     queryFn: async () => {
       const response = await apiRequest("GET", `/api/trades/${tradeId}`);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch trade: ${response.status}`);
+      }
       return response.json();
     },
-    enabled: !!tradeId,
+    enabled: !!tradeId && tradeId > 0,
     refetchInterval: 5000,
+    retry: 3,
   });
 
   const completeTradeMutation = useMutation({

@@ -523,16 +523,19 @@ export class DatabaseStorage implements IStorage {
     if (!trade) return null;
 
     // Get related data separately
-    const [offer] = await db.select().from(offers).where(eq(offers.id, trade.offerId));
-    const [buyer] = await db.select().from(users).where(eq(users.id, trade.buyerId));
-    const [seller] = await db.select().from(users).where(eq(users.id, trade.sellerId));
+    const [offer] = trade.offerId ? await db.select().from(offers).where(eq(offers.id, trade.offerId)) : [null];
+    const [buyer] = trade.buyerId ? await db.select().from(users).where(eq(users.id, trade.buyerId)) : [null];
+    const [seller] = trade.sellerId ? await db.select().from(users).where(eq(users.id, trade.sellerId)) : [null];
 
     return {
       ...trade,
-      offer: offer ? { id: offer.id, type: offer.type, paymentMethod: offer.paymentMethod } : null,
+      amount: parseFloat(trade.amount),
+      rate: parseFloat(trade.rate),
+      fiatAmount: parseFloat(trade.fiatAmount),
+      offer: offer ? { id: offer.id, type: offer.type } : null,
       buyer: buyer ? { id: buyer.id, email: buyer.email } : null,
       seller: seller ? { id: seller.id, email: seller.email } : null,
-    } as EnrichedTrade;
+    } as unknown as EnrichedTrade;
   }
 
   async getTradesByUser(userId: number): Promise<EnrichedTrade[]> {
