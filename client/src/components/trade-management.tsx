@@ -421,8 +421,12 @@ export function TradeManagement() {
                               size="sm"
                               className="flex-1 sm:flex-none"
                               onClick={() => {
-                                console.log("Navigating to trade chat:", trade.id);
-                                setLocation(`/chat/${trade.id}`);
+                                console.log("Navigating to trade chat:", trade.id, "Trade object:", trade);
+                                if (trade && trade.id) {
+                                  setLocation(`/chat/${trade.id}`);
+                                } else {
+                                  console.error("Invalid trade data for chat:", trade);
+                                }
                               }}
                             >
                               <MessageCircle className="h-3 w-3 mr-1" />

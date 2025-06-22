@@ -43,17 +43,24 @@ export default function ChatPage() {
   const { user } = useAuth();
   
   const tradeId = parseInt(params.tradeId || "0");
+  console.log("Chat page - tradeId:", tradeId, "params:", params);
 
   const { data: trade, isLoading, error } = useQuery<EnrichedTrade>({
     queryKey: [`/api/trades/${tradeId}`],
     queryFn: async () => {
+      console.log("Fetching trade for chat:", tradeId);
       const response = await apiRequest("GET", `/api/trades/${tradeId}`);
       if (!response.ok) {
+        console.error("Failed to fetch trade for chat:", response.status);
         throw new Error(`Failed to fetch trade: ${response.status}`);
       }
-      return response.json();
+      const data = await response.json();
+      console.log("Trade data for chat:", data);
+      return data;
     },
     enabled: !!tradeId && tradeId > 0,
+    retry: 3,
+    retryDelay: 1000,
   });
 
   const getStatusBadge = (status: string) => {
@@ -112,8 +119,16 @@ export default function ChatPage() {
         <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <h1 className="text-2xl font-bold text-gray-900 mb-4">Chat Not Available</h1>
-            <p className="text-gray-600 mb-4">Unable to load trade information</p>
-            <Button onClick={() => setLocation("/trades")}>Back to Trades</Button>
+            <p className="text-gray-600 mb-2">Unable to load trade information</p>
+            <p className="text-sm text-gray-500 mb-4">
+              Trade ID: {tradeId} | Error: {error?.message || "Trade not found"}
+            </p>
+            <div className="space-y-2">
+              <Button onClick={() => setLocation("/trades")}>Back to Trades</Button>
+              <Button variant="outline" onClick={() => window.location.reload()}>
+                Retry Loading
+              </Button>
+            </div>
           </div>
         </div>
       </div>
