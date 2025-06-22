@@ -135,6 +135,7 @@ Changelog:
 - June 22, 2025. Successfully migrated project to Replit environment with PostgreSQL database, fixed chat lazy loading issues, and database schema synchronization
 - June 22, 2025. Redesigned chat interface with modern, mobile-first WhatsApp-style design including gradient message bubbles, connection status indicators, and full-screen mobile layout
 - June 22, 2025. Successfully migrated project from Replit Agent to Replit environment with PostgreSQL setup, enhanced buy/sell button visibility (green for buy, red for sell), and marketplace as default landing page for authenticated users
+- June 22, 2025. Fixed create offer navigation inconsistencies and confirmed wallet balance deduction works correctly - USDT is properly deducted from seller's wallet when trades are initiated
 ```
 
 ## User Preferences

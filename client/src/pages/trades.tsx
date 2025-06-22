@@ -85,7 +85,7 @@ export default function Trades() {
               Browse Offers
             </Button>
             <Button 
-              onClick={() => window.location.href = '/offer-creation'}
+              onClick={() => window.location.href = '/create-offer'}
               variant="outline"
               className="flex-1 flex items-center justify-center gap-2 text-sm"
               size="sm"
