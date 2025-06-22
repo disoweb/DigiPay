@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
@@ -62,7 +63,7 @@ function SendUSDTForm({ onClose, userBalance }: { onClose: () => void; userBalan
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
+    
     const sendAmount = parseFloat(amount);
     if (sendAmount <= 0) {
       toast({
