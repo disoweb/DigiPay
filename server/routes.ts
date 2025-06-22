@@ -108,8 +108,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         totalOffers: activeOffers.length,
         buyOffers: buyOffers.length,
         sellOffers: sellOffers.length,
-        bestBuyRate: buyRates.length ? Math.min(...buyRates) : null,
-        bestSellRate: sellRates.length ? Math.max(...sellRates) : null,
+        bestBuyRate: sellOffers.length ? Math.min(...buyRates) : null,
+        bestSellRate: buyOffers.length ? Math.max(...sellRates) : null,
         totalVolume: totalVolume,
         last24hVolume: last24hTrades.reduce((sum, trade) => {
           return sum + (parseFloat(trade.amount) * parseFloat(trade.rate));

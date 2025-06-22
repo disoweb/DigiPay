@@ -244,20 +244,21 @@ export function EnhancedMarketplace() {
   };
 
   const getBestRate = (type: 'buy' | 'sell') => {
-    try {
-      const relevantOffers = offers.filter(o => o && o.type === type && o.status === 'active');
-      if (relevantOffers.length === 0) return null;
+    // For buy rate, we look at sell offers (what users are selling for)
+    // For sell rate, we look at buy offers (what users are buying for)
+    const relevantOffers = offers.filter(o => 
+      o.type === (type === 'buy' ? 'sell' : 'buy') && 
+      o.status === 'active'
+    );
 
-      const rates = relevantOffers
-        .map(o => parseFloat(o.rate || "0"))
-        .filter(rate => !isNaN(rate) && rate > 0);
+    if (!relevantOffers.length) return null;
 
-      if (rates.length === 0) return null;
-      return type === 'buy' ? Math.min(...rates) : Math.max(...rates);
-    } catch (error) {
-      console.error("Best rate calculation error:", error);
-      return null;
-    }
+    const rates = relevantOffers.map(o => safeParseFloat(o.rate)).filter(rate => !isNaN(rate));
+    if (!rates.length) return null;
+
+    // For buying USDT (looking at sell offers), we want the lowest rate
+    // For selling USDT (looking at buy offers), we want the highest rate
+    return type === 'buy' ? Math.min(...rates) : Math.max(...rates);
   };
 
   const getPaymentMethodIcon = (method: string) => {
