@@ -11,6 +11,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 import { 
   FileText, 
   Upload, 
@@ -175,17 +176,10 @@ export function KYCVerification({ onComplete }: KYCVerificationProps) {
     setIsSubmitting(true);
     try {
       // First, submit the KYC data
-      const response = await fetch('/api/kyc/submit', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('digipay_token')}`
-        },
-        body: JSON.stringify({
-          ...personalInfo,
-          ...addressInfo,
-          ...identityInfo
-        })
+      const response = await apiRequest('POST', '/api/kyc/submit', {
+        ...personalInfo,
+        ...addressInfo,
+        ...identityInfo
       });
 
       if (!response.ok) {
@@ -203,10 +197,12 @@ export function KYCVerification({ onComplete }: KYCVerificationProps) {
           }
         });
 
+        // Use fetch directly for file upload (not apiRequest which sets JSON headers)
+        const token = localStorage.getItem('digipay_token');
         const uploadResponse = await fetch('/api/kyc/upload', {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('digipay_token')}`
+            'Authorization': `Bearer ${token}`
           },
           body: formData
         });

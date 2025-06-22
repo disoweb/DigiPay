@@ -23,13 +23,6 @@ export function VerificationStatusCard({ onStartVerification }: VerificationStat
 
   const { data: kycData, isLoading } = useQuery({
     queryKey: ['/api/kyc'],
-    queryFn: async () => {
-      const response = await apiRequest("GET", "/api/kyc");
-      if (!response.ok) {
-        throw new Error('Failed to fetch KYC data');
-      }
-      return response.json();
-    },
     enabled: !!user?.id,
   });
 

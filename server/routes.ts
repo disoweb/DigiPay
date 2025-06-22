@@ -1,5 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import express from "express";
+import path from "path";
 import { setupJWTAuth, authenticateToken, requireKYC, requireAdmin } from "./auth-jwt";
 import { storage } from "./storage";
 import { insertOfferSchema, insertTradeSchema, insertMessageSchema, insertTransactionSchema, insertRatingSchema } from "@shared/schema";
