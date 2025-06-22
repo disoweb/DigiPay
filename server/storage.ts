@@ -358,13 +358,24 @@ export class DatabaseStorage implements IStorage {
     return offer;
   }
 
-  async updateOffer(id: number, updates: Partial<Offer>): Promise<Offer | undefined> {
+  async updateOffer(id: number, updates: Partial<{
+    amount: string;
+    rate: string;
+    status: string;
+    minAmount: string;
+    maxAmount: string;
+    terms: string;
+  }>): Promise<Offer | undefined> {
     const [offer] = await db
       .update(offers)
       .set(updates)
       .where(eq(offers.id, id))
       .returning();
     return offer || undefined;
+  }
+
+  async deleteOffer(id: number) {
+    await db.delete(offers).where(eq(offers.id, id));
   }
 
   // Trade methods

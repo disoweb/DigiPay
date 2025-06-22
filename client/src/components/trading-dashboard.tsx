@@ -307,7 +307,7 @@ export function TradingDashboard() {
                   </div>
                 ))}
                 {activeOffers.length > 3 && (
-                  <Button variant="outline" size="sm" className="w-full" onClick={() => setLocation('/marketplace')}>
+                  <Button variant="outline" size="sm" className="w-full" onClick={() => setLocation('/manage-offers')}>
                     Manage All Offers
                   </Button>
                 )}

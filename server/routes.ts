@@ -593,7 +593,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/offers/:id", authenticateToken, async (req, res) => {
     try {
       const offerId = parseInt(req.params.id);
-      const { amount, rate, status } = req.body;
+      const { amount, rate, status, minAmount, maxAmount, terms } = req.body;
 
       const offer = await storage.getOffer(offerId);
       if (!offer) {
@@ -608,12 +608,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (amount !== undefined) updates.amount = amount;
       if (rate !== undefined) updates.rate = rate;
       if (status !== undefined) updates.status = status;
+      if (minAmount !== undefined) updates.minAmount = minAmount;
+      if (maxAmount !== undefined) updates.maxAmount = maxAmount;
+      if (terms !== undefined) updates.terms = terms;
 
       const updatedOffer = await storage.updateOffer(offerId, updates);
       res.json(updatedOffer);
     } catch (error) {
       console.error("Update offer error:", error);
       res.status(500).json({ error: "Failed to update offer" });
+    }
+  });
+
+  app.delete("/api/offers/:id", authenticateToken, async (req, res) => {
+    try {
+      const offerId = parseInt(req.params.id);
+
+      const offer = await storage.getOffer(offerId);
+      if (!offer) {
+        return res.status(404).json({ error: "Offer not found" });
+      }
+
+      if (offer.userId !== req.user!.id) {
+        return res.status(403).json({ error: "Can only delete your own offers" });
+      }
+
+      await storage.deleteOffer(offerId);
+      res.json({ message: "Offer deleted successfully" });
+    } catch (error) {
+      console.error("Delete offer error:", error);
+      res.status(500).json({ error: "Failed to delete offer" });
     }
   });
 

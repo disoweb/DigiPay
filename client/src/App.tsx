@@ -21,6 +21,7 @@ import UserSettings from "@/pages/user-settings";
 import NotFound from "@/pages/not-found";
 import ChatPage from "@/pages/chat";
 import AdminKYC from "@/pages/admin-kyc";
+import { lazy } from "react";
 
 const queryClient = new QueryClient();
 
@@ -55,6 +56,7 @@ function App() {
             )} />
             <Route path="/user/:id" component={UserProfile} />
             <Route path="/settings" component={UserSettings} />
+            <Route path="/manage-offers" component={lazy(() => import("./pages/manage-offers"))} />
             <Route component={NotFound} />
           </Switch>
 
