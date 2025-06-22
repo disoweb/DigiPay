@@ -244,200 +244,196 @@ export default function TradeDetail() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
-          {/* Trade Details */}
-          <div className="lg:col-span-2 space-y-4">
+        <div className="space-y-6">
+          {/* Trade Details Section */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <DollarSign className="h-5 w-5" />
+                Trade Details
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-gray-50 p-3 rounded-lg">
+                  <p className="text-xs text-gray-600">Type</p>
+                  <p className="font-semibold text-sm">
+                    {trade.offer?.type === "buy" ? "Buy USDT" : "Sell USDT"}
+                  </p>
+                </div>
+                <div className="bg-gray-50 p-3 rounded-lg">
+                  <p className="text-xs text-gray-600">Amount</p>
+                  <p className="font-semibold text-sm">{parseFloat(trade.amount).toFixed(2)} USDT</p>
+                </div>
+                <div className="bg-gray-50 p-3 rounded-lg">
+                  <p className="text-xs text-gray-600">Rate</p>
+                  <p className="font-semibold text-sm">₦{parseFloat(trade.rate).toLocaleString()}/USDT</p>
+                </div>
+                <div className="bg-gray-50 p-3 rounded-lg">
+                  <p className="text-xs text-gray-600">Total Value</p>
+                  <p className="font-semibold text-sm">
+                    ₦{parseFloat(trade.fiatAmount).toLocaleString()}
+                  </p>
+                </div>
+              </div>
+
+              <Separator />
+
+              <div className="space-y-3 text-sm">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <User className="h-4 w-4 text-gray-600" />
+                    <span className="font-medium">Buyer:</span>
+                  </div>
+                  <span className="truncate max-w-[150px]">{trade.buyer?.email}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <User className="h-4 w-4 text-gray-600" />
+                    <span className="font-medium">Seller:</span>
+                  </div>
+                  <span className="truncate max-w-[150px]">{trade.seller?.email}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4 text-gray-600" />
+                    <span className="font-medium">Created:</span>
+                  </div>
+                  <span className="text-xs">
+                    {new Date(trade.createdAt).toLocaleDateString()}
+                  </span>
+                </div>
+                {trade.escrowAddress && (
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Shield className="h-4 w-4 text-green-600" />
+                      <span className="font-medium">Escrow:</span>
+                    </div>
+                    <span className="font-mono text-xs">{trade.escrowAddress.slice(0, 10)}...</span>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Payment Instructions - Show immediately for buyers or when payment is pending */}
+          {isUserInTrade && (isBuyer || ["payment_pending", "payment_made"].includes(trade.status)) && (
+            <PaymentInstructions
+              trade={trade}
+              userRole={isBuyer ? 'buyer' : 'seller'}
+              onPaymentMarked={() => {
+                queryClient.invalidateQueries({ queryKey: [`/api/trades/${trade.id}`] });
+              }}
+            />
+          )}
+
+          {/* Trade Instructions */}
+          {trade.status === "pending" && isUserInTrade && (
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2 text-lg">
-                  <DollarSign className="h-5 w-5" />
-                  Trade Details
+                  <TrendingUp className="h-5 w-5" />
+                  Next Steps
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-gray-50 p-3 rounded-lg">
-                    <p className="text-xs text-gray-600">Type</p>
-                    <p className="font-semibold text-sm">
-                      {trade.offer?.type === "buy" ? "Buy USDT" : "Sell USDT"}
-                    </p>
-                  </div>
-                  <div className="bg-gray-50 p-3 rounded-lg">
-                    <p className="text-xs text-gray-600">Amount</p>
-                    <p className="font-semibold text-sm">{parseFloat(trade.amount).toFixed(2)} USDT</p>
-                  </div>
-                  <div className="bg-gray-50 p-3 rounded-lg">
-                    <p className="text-xs text-gray-600">Rate</p>
-                    <p className="font-semibold text-sm">₦{parseFloat(trade.rate).toLocaleString()}/USDT</p>
-                  </div>
-                  <div className="bg-gray-50 p-3 rounded-lg">
-                    <p className="text-xs text-gray-600">Total Value</p>
-                    <p className="font-semibold text-sm">
-                      ₦{parseFloat(trade.fiatAmount).toLocaleString()}
-                    </p>
-                  </div>
-                </div>
+              <CardContent>
+                {isBuyer ? (
+                  <Alert>
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertDescription>
+                      <strong>As the buyer:</strong> Send ₦{parseFloat(trade.fiatAmount).toLocaleString()} 
+                      to the payment details shown above, then mark payment as made.
+                    </AlertDescription>
+                  </Alert>
+                ) : (
+                  <Alert>
+                    <Shield className="h-4 w-4" />
+                    <AlertDescription>
+                      <strong>As the seller:</strong> Wait for the buyer to make payment, then confirm receipt to complete the trade.
+                    </AlertDescription>
+                  </Alert>
+                )}
+              </CardContent>
+            </Card>
+          )}
 
-                <Separator />
-
-                <div className="space-y-3 text-sm">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <User className="h-4 w-4 text-gray-600" />
-                      <span className="font-medium">Buyer:</span>
-                    </div>
-                    <span className="truncate max-w-[150px]">{trade.buyer?.email}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <User className="h-4 w-4 text-gray-600" />
-                      <span className="font-medium">Seller:</span>
-                    </div>
-                    <span className="truncate max-w-[150px]">{trade.seller?.email}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4 text-gray-600" />
-                      <span className="font-medium">Created:</span>
-                    </div>
-                    <span className="text-xs">
-                      {new Date(trade.createdAt).toLocaleDateString()}
-                    </span>
-                  </div>
-                  {trade.escrowAddress && (
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Shield className="h-4 w-4 text-green-600" />
-                        <span className="font-medium">Escrow:</span>
-                      </div>
-                      <span className="font-mono text-xs">{trade.escrowAddress.slice(0, 10)}...</span>
-                    </div>
+          {/* Trade Actions */}
+          {isUserInTrade && (
+            <Card>
+              <CardContent className="pt-4">
+                <div className="flex flex-col sm:flex-row gap-3">
+                  {canComplete && (
+                    <Button 
+                      onClick={() => completeTradeMutation.mutate()}
+                      disabled={completeTradeMutation.isPending}
+                      className="flex-1"
+                    >
+                      {completeTradeMutation.isPending ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                          Completing...
+                        </>
+                      ) : (
+                        "Complete Trade"
+                      )}
+                    </Button>
+                  )}
+                  {canCancel && (
+                    <Button 
+                      variant="outline"
+                      onClick={() => cancelTradeMutation.mutate()}
+                      disabled={cancelTradeMutation.isPending}
+                      className="flex-1"
+                    >
+                      {cancelTradeMutation.isPending ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600 mr-2" />
+                          Cancelling...
+                        </>
+                      ) : (
+                        "Cancel Trade"
+                      )}
+                    </Button>
                   )}
                 </div>
               </CardContent>
             </Card>
+          )}
 
-            {/* Payment Instructions */}
-            {isUserInTrade && ["payment_pending", "payment_made"].includes(trade.status) && (
-              <PaymentInstructions
-                trade={trade}
-                userRole={isBuyer ? 'buyer' : 'seller'}
-                onPaymentMarked={() => {
-                  queryClient.invalidateQueries({ queryKey: [`/api/trades/${trade.id}`] });
-                }}
-              />
-            )}
+          {/* Chat Section - Separate from trade details */}
+          {isUserInTrade && (
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <MessageCircle className="h-5 w-5" />
+                  Trade Chat
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div className="h-[400px] p-4">
+                  <TradeChat tradeId={trade.id} />
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
-            {/* Trade Instructions */}
-            {trade.status === "pending" && isUserInTrade && (
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <TrendingUp className="h-5 w-5" />
-                    Next Steps
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {isBuyer ? (
-                    <Alert>
-                      <AlertTriangle className="h-4 w-4" />
-                      <AlertDescription>
-                        <strong>As the buyer:</strong> Wait for the seller to provide payment details, then send 
-                        ₦{parseFloat(trade.fiatAmount).toLocaleString()} as instructed.
-                      </AlertDescription>
-                    </Alert>
-                  ) : (
-                    <Alert>
-                      <Shield className="h-4 w-4" />
-                      <AlertDescription>
-                        <strong>As the seller:</strong> Provide your payment details to the buyer and wait for payment confirmation.
-                      </AlertDescription>
-                    </Alert>
-                  )}
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Trade Actions */}
-            {isUserInTrade && (
-              <Card>
-                <CardContent className="pt-4">
-                  <div className="flex flex-col sm:flex-row gap-3">
-                    {canComplete && (
-                      <Button 
-                        onClick={() => completeTradeMutation.mutate()}
-                        disabled={completeTradeMutation.isPending}
-                        className="flex-1"
-                      >
-                        {completeTradeMutation.isPending ? (
-                          <>
-                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
-                            Completing...
-                          </>
-                        ) : (
-                          "Complete Trade"
-                        )}
-                      </Button>
-                    )}
-                    {canCancel && (
-                      <Button 
-                        variant="outline"
-                        onClick={() => cancelTradeMutation.mutate()}
-                        disabled={cancelTradeMutation.isPending}
-                        className="flex-1"
-                      >
-                        {cancelTradeMutation.isPending ? (
-                          <>
-                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600 mr-2" />
-                            Cancelling...
-                          </>
-                        ) : (
-                          "Cancel Trade"
-                        )}
-                      </Button>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-          </div>
-
-          {/* Chat Section */}
-          <div className="space-y-4">
-            {isUserInTrade && (
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <MessageCircle className="h-5 w-5" />
-                    Trade Chat
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-0">
-                  <div className="h-[400px] p-4">
-                    <TradeChat tradeId={trade.id} />
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Rating Form */}
-            {isCompleted && isUserInTrade && showRating && (
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <Star className="h-5 w-5" />
-                    Rate Trading Partner
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <RatingForm 
-                    tradeId={trade.id}
-                    onSubmit={() => setShowRating(false)}
-                  />
-                </CardContent>
-              </Card>
-            )}
-          </div>
+          {/* Rating Form */}
+          {isCompleted && isUserInTrade && showRating && (
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Star className="h-5 w-5" />
+                  Rate Trading Partner
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <RatingForm 
+                  tradeId={trade.id}
+                  onSubmit={() => setShowRating(false)}
+                />
+              </CardContent>
+            </Card>
+          )}
         </div>
       </main>
     </div>
