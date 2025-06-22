@@ -254,7 +254,7 @@ export function RealTimeChat({ tradeId }: RealTimeChatProps) {
 
       {/* Messages Area */}
       <ScrollArea className="flex-1 p-4">
-        <div className="flex flex-col space-y-4">
+        <div className="space-y-4">
           {messages.length === 0 && pendingMessages.size === 0 ? (
             <div className="text-center py-8">
               <div className="bg-white dark:bg-gray-800 rounded-xl p-4 mx-auto max-w-xs shadow-sm">
