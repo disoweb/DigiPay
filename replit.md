@@ -134,6 +134,7 @@ Changelog:
 - June 21, 2025. Implemented comprehensive P2P trading flow with enhanced marketplace, real-time trading interface, escrow protection, payment tracking, and dispute resolution
 - June 22, 2025. Successfully migrated project to Replit environment with PostgreSQL database, fixed chat lazy loading issues, and database schema synchronization
 - June 22, 2025. Redesigned chat interface with modern, mobile-first WhatsApp-style design including gradient message bubbles, connection status indicators, and full-screen mobile layout
+- June 22, 2025. Successfully migrated project from Replit Agent to Replit environment with PostgreSQL setup, enhanced buy/sell button visibility (green for buy, red for sell), and marketplace as default landing page for authenticated users
 ```
 
 ## User Preferences

@@ -82,7 +82,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           description: "Logged in successfully!",
         });
         // Force page reload to reset auth state
-        window.location.href = data.isAdmin ? "/admin" : "/dashboard";
+        window.location.href = data.isAdmin ? "/admin" : "/marketplace";
       }
     },
     onError: (error: any) => {

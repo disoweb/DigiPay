@@ -602,7 +602,7 @@ export function EnhancedMarketplace() {
 
                     <Button
                       onClick={() => handleTrade(offer)}
-                      className="w-full bg-green-600 hover:bg-green-700 text-sm"
+                      className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 text-base shadow-lg border-0"
                       disabled={!user}
                     >
                       Buy USDT
@@ -700,7 +700,7 @@ export function EnhancedMarketplace() {
 
                     <Button
                       onClick={() => handleTrade(offer)}
-                      className="w-full bg-red-600 hover:bg-red-700 text-sm"
+                      className="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-3 text-base shadow-lg border-0"
                       disabled={!user}
                     >
                       Sell USDT
