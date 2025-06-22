@@ -186,7 +186,12 @@ export function SendFundsModal({ open, onOpenChange, nairaBalance, usdtBalance }
                     <User className="h-4 w-4 text-green-600" />
                   </div>
                   <div className="flex-1">
-                    <p className="font-medium text-green-900">{recipientUser.email}</p>
+                    <p className="font-medium text-green-900">
+                      {recipientUser.username || recipientUser.email}
+                    </p>
+                    {recipientUser.username && (
+                      <p className="text-sm text-green-700">{recipientUser.email}</p>
+                    )}
                     <div className="flex items-center gap-2 mt-1">
                       <Badge variant="outline" className="text-green-600 border-green-600">
                         <Mail className="h-3 w-3 mr-1" />

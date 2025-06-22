@@ -1922,7 +1922,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/users/lookup", authenticateToken, async (req, res) => {
     try {
       const { query } = req.body;
-      const user = await storage.getUserByEmail(query.toLowerCase());
+      let user = await storage.getUserByEmail(query.toLowerCase());
+      
+      // Also try username lookup if email fails
+      if (!user) {
+        const usersByUsername = await db.select().from(users).where(eq(users.username, query.toLowerCase()));
+        if (usersByUsername.length > 0) {
+          user = usersByUsername[0];
+        }
+      }
       
       if (!user) {
         return res.status(404).json({ error: "User not found" });
@@ -1932,6 +1940,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({
         id: user.id,
         email: user.email,
+        username: user.username,
         kycVerified: user.kycVerified
       });
     } catch (error) {
