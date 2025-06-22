@@ -48,6 +48,11 @@ export function TradingDashboard() {
     retry: 1,
   });
 
+  const { data: transactions = [] } = useQuery({
+    queryKey: ['/api/transactions'],
+    enabled: !!user?.id,
+  });
+
   // Force refetch when component mounts and user is available
   useEffect(() => {
     if (user?.id && refetchTrades) {
@@ -430,6 +435,82 @@ export function TradingDashboard() {
                   </div>
                 );
               })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Recent Transactions */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Clock className="h-5 w-5" />
+            Recent Transactions
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {transactions.length === 0 ? (
+            <div className="text-center py-8">
+              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <DollarSign className="h-8 w-8 text-gray-400" />
+              </div>
+              <h3 className="font-medium text-gray-900 mb-2">No transactions yet</h3>
+              <p className="text-gray-500 text-sm">Your transaction history will appear here</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {transactions.slice(0, 5).map((transaction: any) => (
+                <div key={transaction.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 transition-colors">
+                  <div className="flex items-center space-x-3">
+                    <div className={`p-2 rounded-full ${
+                      transaction.type === "deposit" 
+                        ? "bg-green-100" 
+                        : "bg-red-100"
+                    }`}>
+                      {transaction.type === "deposit" ? (
+                        <TrendingUp className="h-4 w-4 text-green-600" />
+                      ) : (
+                        <TrendingDown className="h-4 w-4 text-red-600" />
+                      )}
+                    </div>
+                    <div>
+                      <p className="font-medium">
+                        {transaction.type === "deposit" ? "Deposit" : "Withdrawal"}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        {transaction.createdAt ? new Date(transaction.createdAt).toLocaleString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        }) : "N/A"}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className={`font-semibold ${
+                      transaction.type === "deposit" ? "text-green-600" : "text-red-600"
+                    }`}>
+                      {transaction.type === "deposit" ? "+" : "-"}₦{parseFloat(transaction.amount).toLocaleString()}
+                    </p>
+                    <Badge variant={transaction.status === "completed" ? "default" : "secondary"} className="text-xs">
+                      {transaction.status}
+                    </Badge>
+                  </div>
+                </div>
+              ))}
+              {transactions.length > 5 && (
+                <div className="text-center pt-3">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="text-blue-600 hover:text-blue-700"
+                    onClick={() => setLocation('/wallet')}
+                  >
+                    View All Transactions
+                  </Button>
+                </div>
+              )}
             </div>
           )}
         </CardContent>
