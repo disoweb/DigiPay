@@ -291,7 +291,7 @@ export default function Wallet() {
               <WalletIcon className="h-8 w-8 text-primary" />
               <h1 className="text-2xl font-bold text-gray-900">My Wallet</h1>
             </div>
-            <p className="text-gray-600">Manage your funds and transactions</p>
+            <p className="text-gray-600">Manage your funds, send money, and swap currencies</p>
           </div>
 
           {/* Balance Overview */}
@@ -362,6 +362,26 @@ export default function Wallet() {
                     >
                       <Minus className="mr-1 h-3 w-3" />
                       Withdraw
+                    </Button>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 mt-2">
+                    <Button 
+                      onClick={() => setShowSendFunds(true)} 
+                      size="sm" 
+                      variant="outline" 
+                      className="h-9"
+                    >
+                      <Send className="mr-1 h-3 w-3" />
+                      Send
+                    </Button>
+                    <Button 
+                      onClick={() => setShowSwap(true)} 
+                      size="sm" 
+                      variant="outline" 
+                      className="h-9"
+                    >
+                      <ArrowUpDown className="mr-1 h-3 w-3" />
+                      Swap
                     </Button>
                   </div>
                 </CardContent>
