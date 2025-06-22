@@ -37,13 +37,19 @@ export function SendFundsModal({ open, onOpenChange, userBalance }: SendFundsMod
     },
     onError: () => {
       setRecipientUser(null);
-      toast({
-        title: "User not found",
-        description: "No user found with that email or username",
-        variant: "destructive",
-      });
     },
   });
+
+  // Auto-lookup when user types
+  const handleRecipientChange = (value: string) => {
+    setRecipient(value);
+    setRecipientUser(null);
+    
+    // Auto-lookup if it looks like an email
+    if (value.includes('@') && value.includes('.') && value.length > 5) {
+      lookupMutation.mutate(value.trim());
+    }
+  };
 
   const sendMutation = useMutation({
     mutationFn: async ({ recipientId, amount, description }: { recipientId: number; amount: number; description: string }) => {
@@ -139,7 +145,7 @@ export function SendFundsModal({ open, onOpenChange, userBalance }: SendFundsMod
                 id="recipient"
                 placeholder="Enter email or username"
                 value={recipient}
-                onChange={(e) => setRecipient(e.target.value)}
+                onChange={(e) => handleRecipientChange(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleLookup()}
               />
               <Button 
