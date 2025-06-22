@@ -5,19 +5,30 @@ import { apiRequest } from "@/lib/queryClient";
 import { Navbar } from "@/components/navbar";
 import { DepositModal } from "@/components/deposit-modal";
 import { WithdrawModal } from "@/components/withdraw-modal";
-import { KYCVerification } from "@/components/kyc-verification";
 import { TransactionDetailModal } from "@/components/transaction-detail-modal";
 import { SendFundsModal } from "@/components/send-funds-modal";
 import { SwapModal } from "@/components/swap-modal";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Plus, Minus, DollarSign, Coins, Clock, CheckCircle, XCircle, AlertCircle, TrendingUp, TrendingDown, Wallet as WalletIcon, Copy, Send, ArrowUpDown } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import { 
+  WalletIcon, 
+  TrendingUp, 
+  TrendingDown, 
+  Plus, 
+  Minus, 
+  Copy,
+  AlertTriangle,
+  Coins,
+  Clock,
+  Send,
+  ArrowUpDown,
+  DollarSign
+} from "lucide-react";
 import type { Transaction } from "@shared/schema";
 
 // SendUSDTForm component for handling USDT transfers
@@ -30,25 +41,19 @@ function SendUSDTForm({ onClose, userBalance }: { onClose: () => void; userBalan
   const sendUSDTMutation = useMutation({
     mutationFn: async (data: { amount: string; to: string }) => {
       const response = await apiRequest("POST", "/api/tron/send", data);
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to send USDT");
-      }
       return response.json();
     },
     onSuccess: () => {
       toast({
         title: "USDT Sent Successfully",
-        description: `${amount} USDT has been sent successfully`,
+        description: `${amount} USDT has been sent to ${recipientAddress}`,
       });
-      setAmount("");
-      setRecipientAddress("");
       queryClient.invalidateQueries({ queryKey: ["/api/user"] });
       onClose();
     },
     onError: (error: any) => {
       toast({
-        title: "Transaction Failed",
+        title: "Send Failed",
         description: error.message || "Failed to send USDT",
         variant: "destructive",
       });
@@ -58,26 +63,17 @@ function SendUSDTForm({ onClose, userBalance }: { onClose: () => void; userBalan
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!recipientAddress || !amount) {
-      toast({
-        title: "Invalid Input",
-        description: "Please enter both recipient address and amount",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const amountNum = parseFloat(amount);
-    if (isNaN(amountNum) || amountNum <= 0) {
+    const sendAmount = parseFloat(amount);
+    if (sendAmount <= 0) {
       toast({
         title: "Invalid Amount",
-        description: "Amount must be a valid number greater than 0",
+        description: "Please enter a valid amount greater than 0",
         variant: "destructive",
       });
       return;
     }
 
-    if (amountNum > userBalance) {
+    if (sendAmount > userBalance) {
       toast({
         title: "Insufficient Balance",
         description: "You don't have enough USDT to send this amount",
@@ -99,123 +95,41 @@ function SendUSDTForm({ onClose, userBalance }: { onClose: () => void; userBalan
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 py-2">
-      {/* Available Balance */}
-      <Card className="bg-gradient-to-r from-red-50 to-red-100 border-red-200">
-        <CardContent className="p-4">
-          <div className="text-center space-y-1">
-            <p className="text-sm text-gray-600">Available Balance</p>
-            <p className="text-2xl font-bold text-red-700">{userBalance.toFixed(6)} USDT</p>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Recipient Address */}
-      <div className="space-y-3">
-        <Label htmlFor="recipient" className="text-sm font-medium text-gray-700">
-          Recipient Address
-        </Label>
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <label className="text-sm font-medium">Recipient Address</label>
         <Input
-          id="recipient"
           value={recipientAddress}
           onChange={(e) => setRecipientAddress(e.target.value)}
-          placeholder="TRON address (starting with T...)"
-          className="h-12 font-mono text-sm"
-          required
+          placeholder="T1234567890123456789012345678901234"
+          className="mt-1"
         />
-        <p className="text-xs text-gray-500">
-          Enter the recipient's TRON address (TRC-20)
-        </p>
       </div>
-
-      {/* Amount */}
-      <div className="space-y-3">
-        <Label htmlFor="amount" className="text-sm font-medium text-gray-700">
-          Amount (USDT)
-        </Label>
+      <div>
+        <label className="text-sm font-medium">Amount (USDT)</label>
         <Input
-          id="amount"
           type="number"
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
           placeholder="0.00"
-          min="0"
-          step="0.000001"
+          className="mt-1"
           max={userBalance}
-          className="h-12 text-lg text-center"
-          inputMode="numeric"
-          required
+          step="0.000001"
         />
-        <div className="flex justify-between text-xs text-gray-500">
-          <span>Available: {userBalance.toFixed(6)} USDT</span>
-          <button
-            type="button"
-            onClick={() => setAmount(userBalance.toString())}
-            className="text-red-600 hover:text-red-800 font-medium"
-          >
-            Use Max
-          </button>
-        </div>
+        <p className="text-xs text-gray-500 mt-1">
+          Available: {userBalance.toFixed(6)} USDT
+        </p>
       </div>
-
-      {/* Preview */}
-      {amount && parseFloat(amount) > 0 && (
-        <Card className="bg-gradient-to-r from-gray-50 to-gray-100 border-gray-200">
-          <CardContent className="p-4">
-            <div className="text-center space-y-2">
-              <p className="text-sm text-gray-600">You're sending</p>
-              <p className="text-2xl font-bold text-gray-700">{parseFloat(amount).toFixed(6)} USDT</p>
-              <p className="text-xs text-gray-500">≈ ₦{(parseFloat(amount) * 1485).toLocaleString()}</p>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Warning */}
-      <Card className="bg-red-50 border-red-200">
-        <CardContent className="p-4">
-          <div className="flex items-start gap-3">
-            <div className="p-2 bg-red-100 rounded-lg flex-shrink-0">
-              <AlertCircle className="h-4 w-4 text-red-600" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <h4 className="font-medium text-red-900 text-sm mb-1">Important Warning</h4>
-              <p className="text-xs text-red-700 leading-relaxed">
-                TRON transactions are irreversible. Please verify the recipient 
-                address carefully before sending.
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Action Buttons */}
-      <div className="flex flex-col gap-3 pt-2">
+      <div className="flex gap-2 pt-2">
+        <Button variant="outline" onClick={onClose} className="flex-1">
+          Cancel
+        </Button>
         <Button
           type="submit"
           disabled={sendUSDTMutation.isPending || !amount || !recipientAddress}
-          className="w-full h-12 text-base font-medium bg-red-600 hover:bg-red-700"
-          size="lg"
+          className="flex-1"
         >
-          {sendUSDTMutation.isPending ? (
-            <div className="flex items-center gap-2">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-              Sending...
-            </div>
-          ) : (
-            <>
-              <Send className="h-4 w-4 mr-2" />
-              Send {amount ? `${parseFloat(amount).toFixed(6)} USDT` : "USDT"}
-            </>
-          )}
-        </Button>
-        <Button 
-          type="button" 
-          variant="outline" 
-          onClick={onClose}
-          className="w-full h-11 text-base"
-        >
-          Cancel
+          {sendUSDTMutation.isPending ? "Sending..." : `Send ${amount || "0"} USDT`}
         </Button>
       </div>
     </form>
@@ -232,6 +146,7 @@ export default function Wallet() {
   const [showSwap, setShowSwap] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
   const [showTransactionModal, setShowTransactionModal] = useState(false);
+  const { toast } = useToast();
 
   const { data: transactions = [] } = useQuery<Transaction[]>({
     queryKey: ["/api/transactions"],
@@ -376,77 +291,97 @@ export default function Wallet() {
                 </CardContent>
               </Card>
 
-            {/* USDT Card */}
-            <Card className="border-0 shadow-md hover:shadow-lg transition-shadow">
-              <CardContent className="p-5">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-green-50 rounded-lg">
-                      <Coins className="h-6 w-6 text-green-600" />
+              {/* USDT Card */}
+              <Card className="border-0 shadow-md hover:shadow-lg transition-shadow">
+                <CardContent className="p-5">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-green-50 rounded-lg">
+                        <Coins className="h-6 w-6 text-green-600" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-gray-900">USDT</h3>
+                        <p className="text-xs text-gray-500">Tether (TRC-20)</p>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="font-semibold text-gray-900">USDT</h3>
-                      <p className="text-xs text-gray-500">Tether (TRC-20)</p>
-                    </div>
+                    <Badge variant="secondary" className="bg-green-100 text-green-800 text-xs">
+                      TRC-20
+                    </Badge>
                   </div>
-                  <Badge variant="secondary" className="bg-green-100 text-green-800 text-xs">
-                    TRC-20
-                  </Badge>
-                </div>
 
-                <div className="space-y-2 mb-4">
-                  <p className="text-2xl font-bold text-gray-900">
-                    {parseFloat(user.usdtBalance || "0").toFixed(6)} USDT
-                  </p>
-                  <p className="text-sm text-gray-600">
-                    ≈ ₦{(parseFloat(user.usdtBalance || "0") * 1485).toLocaleString()}
-                  </p>
-                </div>
+                  <div className="space-y-2 mb-4">
+                    <p className="text-2xl font-bold text-gray-900">
+                      {parseFloat(user.usdtBalance || "0").toFixed(6)} USDT
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      ≈ ₦{(parseFloat(user.usdtBalance || "0") * 1485).toLocaleString()}
+                    </p>
+                  </div>
 
-                <div className="grid grid-cols-2 gap-2 mb-4">
-                  <Button 
-                    onClick={() => setShowReceive(true)} 
-                    size="sm" 
-                    className="h-9 bg-green-600 hover:bg-green-700"
-                  >
-                    <Plus className="mr-1 h-3 w-3" />
-                    Receive
-                  </Button>
-                  <Button 
-                    onClick={() => setShowSendUSDT(true)} 
-                    size="sm" 
-                    variant="outline" 
-                    className="h-9 border-green-600 text-green-600 hover:bg-green-50"
-                  >
-                    <Minus className="mr-1 h-3 w-3" />
-                    Send
-                  </Button>
-                </div>
+                  <div className="grid grid-cols-2 gap-2 mb-2">
+                    <Button 
+                      onClick={() => setShowReceive(true)} 
+                      size="sm" 
+                      className="h-9 bg-green-600 hover:bg-green-700"
+                    >
+                      <Plus className="mr-1 h-3 w-3" />
+                      Receive
+                    </Button>
+                    <Button 
+                      onClick={() => setShowSendUSDT(true)} 
+                      size="sm" 
+                      variant="outline" 
+                      className="h-9"
+                    >
+                      <Minus className="mr-1 h-3 w-3" />
+                      Send
+                    </Button>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 mb-4">
+                    <Button 
+                      onClick={() => setShowSendFunds(true)} 
+                      size="sm" 
+                      variant="outline" 
+                      className="h-9"
+                    >
+                      <Send className="mr-1 h-3 w-3" />
+                      Transfer
+                    </Button>
+                    <Button 
+                      onClick={() => setShowSwap(true)} 
+                      size="sm" 
+                      variant="outline" 
+                      className="h-9"
+                    >
+                      <ArrowUpDown className="mr-1 h-3 w-3" />
+                      Swap
+                    </Button>
+                  </div>
 
-                <div className="space-y-2">
-                  <div className="text-xs">
-                    <p className="text-gray-500 mb-1">TRON Address:</p>
-                    <div className="flex items-center gap-2">
-                      <p className="font-mono text-xs bg-gray-100 p-2 rounded flex-1 truncate">
-                        {user.tronAddress}
-                      </p>
+                  {/* TRON Address Display */}
+                  <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+                    <p className="text-xs text-gray-600 mb-1">Your TRON Address:</p>
+                    <div className="flex items-center justify-between">
+                      <code className="text-xs text-gray-800 truncate flex-1">
+                        {user.tronAddress || "Generating..."}
+                      </code>
                       <Button
-                        variant="outline"
+                        variant="ghost"
                         size="sm"
                         onClick={() => {
                           navigator.clipboard.writeText(user.tronAddress || "");
+                          toast({ title: "Address copied to clipboard" });
                         }}
-                        className="h-8 w-8 p-0"
+                        className="ml-2 h-6 w-6 p-0"
                       >
                         <Copy className="h-3 w-3" />
                       </Button>
                     </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </div>
           </div>
-        </div>
 
           {/* Transaction History */}
           <Card className="border-0 shadow-md">
@@ -522,7 +457,6 @@ export default function Wallet() {
                         size="sm" 
                         className="text-blue-600 hover:text-blue-700"
                         onClick={() => {
-                          // Show all transactions in modal or expand view
                           console.log('Show all transactions');
                         }}
                       >
@@ -537,6 +471,7 @@ export default function Wallet() {
         </div>
       </main>
 
+      {/* Modals */}
       <DepositModal open={showDeposit} onOpenChange={setShowDeposit} />
       <WithdrawModal open={showWithdraw} onOpenChange={setShowWithdraw} balance={user.nairaBalance || "0"} />
 
@@ -554,7 +489,8 @@ export default function Wallet() {
       <SendFundsModal
         open={showSendFunds}
         onOpenChange={setShowSendFunds}
-        userBalance={user.nairaBalance || "0"}
+        nairaBalance={user.nairaBalance || "0"}
+        usdtBalance={user.usdtBalance || "0"}
       />
 
       {/* Currency Swap Modal */}
@@ -565,128 +501,68 @@ export default function Wallet() {
         usdtBalance={user.usdtBalance || "0"}
       />
 
-      {/* Receive USDT Modal */}
-      <Dialog open={showReceive} onOpenChange={setShowReceive}>
-        <DialogContent className="w-[95vw] max-w-md mx-auto max-h-[90vh] overflow-y-auto">
-          <DialogHeader className="space-y-3">
-            <DialogTitle className="flex items-center gap-2 text-lg">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <Coins className="h-5 w-5 text-green-600" />
-              </div>
-              Receive USDT (TRC-20)
-            </DialogTitle>
-            <DialogDescription className="text-sm text-gray-600">
-              Share your TRON address to receive USDT payments
-            </DialogDescription>
-          </DialogHeader>
+      {/* KYC Alert */}
+      {!user.kycVerified && (
+        <Alert className="mt-6 border-amber-200 bg-amber-50">
+          <AlertTriangle className="h-4 w-4 text-amber-600" />
+          <AlertDescription className="text-amber-800">
+            Complete KYC verification to unlock full platform features.
+          </AlertDescription>
+        </Alert>
+      )}
 
-          <div className="space-y-6 py-2">
-            {/* QR Code Section */}
-            <Card className="bg-gradient-to-r from-green-50 to-green-100 border-green-200">
-              <CardContent className="p-4">
-                <div className="text-center space-y-3">
-                  <div className="w-32 h-32 mx-auto bg-white rounded-lg flex items-center justify-center border-2 border-dashed border-green-300">
-                    <div className="text-xs text-green-600 text-center font-medium">
-                      QR Code<br />Placeholder
-                    </div>
-                  </div>
-                  <p className="text-sm text-green-700 font-medium">Scan QR code to get address</p>
+      {/* Receive Modal */}
+      {showReceive && (
+        <Dialog open={showReceive} onOpenChange={setShowReceive}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Receive USDT</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium">Your TRON Wallet Address</label>
+                <div className="flex items-center space-x-2 mt-1">
+                  <Input
+                    value={user.tronAddress || "Loading..."}
+                    readOnly
+                    className="flex-1"
+                  />
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      navigator.clipboard.writeText(user.tronAddress || "");
+                      toast({ title: "Address copied to clipboard" });
+                    }}
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
                 </div>
-              </CardContent>
-            </Card>
-
-            {/* Address Section */}
-            <div className="space-y-3">
-              <Label className="text-sm font-medium text-gray-700">
-                Your TRON Address (TRC-20)
-              </Label>
-              <div className="flex items-center space-x-2">
-                <Input
-                  value={user?.tronAddress || ""}
-                  readOnly
-                  className="flex-1 h-12 font-mono text-sm bg-gray-50 text-center"
-                />
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    navigator.clipboard.writeText(user?.tronAddress || "");
-                    alert("Address copied to clipboard!");
-                  }}
-                  className="h-12 w-12 p-0"
-                >
-                  <Copy className="h-4 w-4" />
-                </Button>
               </div>
-              <p className="text-xs text-gray-500">
-                Only send USDT (TRC-20) to this address. Other tokens may be lost permanently.
-              </p>
+              <Alert>
+                <AlertTriangle className="h-4 w-4" />
+                <AlertDescription>
+                  Only send USDT (TRC-20) to this address. Other tokens will be lost permanently.
+                </AlertDescription>
+              </Alert>
             </div>
-
-            {/* Warning Info */}
-            <Card className="bg-amber-50 border-amber-200">
-              <CardContent className="p-4">
-                <div className="flex items-start gap-3">
-                  <div className="p-2 bg-amber-100 rounded-lg flex-shrink-0">
-                    <AlertCircle className="h-4 w-4 text-amber-600" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <h4 className="font-medium text-amber-900 text-sm mb-1">Important Notice</h4>
-                    <p className="text-xs text-amber-700 leading-relaxed">
-                      This address only accepts USDT on the TRON network (TRC-20). 
-                      Sending other cryptocurrencies will result in permanent loss.
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Action Buttons */}
-            <div className="flex flex-col gap-3 pt-2">
-              <Button 
-                onClick={() => {
-                  navigator.clipboard.writeText(user?.tronAddress || "");
-                  alert("Address copied to clipboard!");
-                }}
-                className="w-full h-12 text-base font-medium bg-green-600 hover:bg-green-700"
-                size="lg"
-              >
-                <Copy className="h-4 w-4 mr-2" />
-                Copy Address
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={() => setShowReceive(false)}
-                className="w-full h-11 text-base"
-              >
-                Close
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+          </DialogContent>
+        </Dialog>
+      )}
 
       {/* Send USDT Modal */}
-      <Dialog open={showSendUSDT} onOpenChange={setShowSendUSDT}>
-        <DialogContent className="w-[95vw] max-w-md mx-auto max-h-[90vh] overflow-y-auto">
-          <DialogHeader className="space-y-3">
-            <DialogTitle className="flex items-center gap-2 text-lg">
-              <div className="p-2 bg-red-100 rounded-lg">
-                <Send className="h-5 w-5 text-red-600" />
-              </div>
-              Send USDT (TRC-20)
-            </DialogTitle>
-            <DialogDescription className="text-sm text-gray-600">
-              Transfer USDT to another TRON wallet address
-            </DialogDescription>
-          </DialogHeader>
-
-          <SendUSDTForm 
-            onClose={() => setShowSendUSDT(false)} 
-            userBalance={parseFloat(user?.usdtBalance || "0")} 
-          />
-        </DialogContent>
-      </Dialog>
+      {showSendUSDT && (
+        <Dialog open={showSendUSDT} onOpenChange={setShowSendUSDT}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Send USDT</DialogTitle>
+            </DialogHeader>
+            <SendUSDTForm 
+              onClose={() => setShowSendUSDT(false)} 
+              userBalance={parseFloat(user.usdtBalance || "0")} 
+            />
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }
