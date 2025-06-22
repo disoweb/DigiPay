@@ -1,54 +1,47 @@
 # DigiPay P2P Cryptocurrency Trading Platform
 
 ## Project Overview
-DigiPay is a peer-to-peer cryptocurrency trading platform that enables direct trading between users without intermediaries. The platform includes user authentication, trading functionality, escrow services, and comprehensive security features.
+A comprehensive peer-to-peer cryptocurrency trading platform built with React, Node.js/Express, and PostgreSQL. Features include secure trading, KYC verification, real-time messaging, escrow services, and admin management.
+
+## Architecture Overview
+- **Frontend**: React with TypeScript, Tailwind CSS, Radix UI components
+- **Backend**: Node.js/Express with TypeScript
+- **Database**: PostgreSQL with Drizzle ORM
+- **Real-time**: WebSocket for live chat and notifications
+- **Authentication**: JWT-based auth with session management
+- **Security**: Helmet, rate limiting, input validation
 
 ## Recent Changes
-- **2025-01-22**: Successfully migrated project from Replit Agent to Replit environment
-- **2025-01-22**: Fixed BarChart3 import issue in trading dashboard
-- **2025-01-22**: Updated Buy/Sell tab buttons with improved styling (red outline for Buy, green filled for Sell)
-- **2025-01-22**: Set up PostgreSQL database with complete schema
-- **2025-01-22**: Installed missing dependencies (tsx)
-- **2025-01-22**: Completed full verification flow component with comprehensive KYC system
-- **2025-01-22**: Added KYC database schema, API endpoints, file upload, and admin review system
-- **2025-01-22**: Integrated YouVerify service for BVN verification
-- **2025-01-22**: Created admin KYC management interface with document review capabilities
-- **2025-01-22**: Removed KYC verification alert from dashboard as requested
-- **2025-01-22**: Updated dashboard cards to display in 2x2 grid layout on all screen sizes including mobile
-- **2025-01-22**: Implemented comprehensive CRUD operations for "My Offers" management with edit dialogs, delete confirmations, and real-time updates
-
-## Project Architecture
-- **Frontend**: React with TypeScript, Vite, TailwindCSS
-- **Backend**: Express.js with TypeScript
-- **Database**: PostgreSQL with Drizzle ORM
-- **Authentication**: JWT tokens with session management
-- **Real-time**: WebSocket connections for live updates
-- **Styling**: TailwindCSS with Radix UI components
+- **2025-01-22**: Successfully migrated from Replit Agent to Replit environment
+- **2025-01-22**: Added online status indicators for traders in marketplace
+- **2025-01-22**: Implemented direct messaging feature for trader communication
+- **2025-01-22**: Enhanced WebSocket system for real-time status updates
+- **2025-01-22**: Fixed database schema issues with isOnline/lastSeen columns
 
 ## Key Features
-- User registration and authentication
-- Comprehensive KYC verification system with multi-step flow
-- Document upload and verification with file storage
-- BVN verification integration with YouVerify
-- Admin KYC review and approval system
-- P2P trading marketplace
-- Escrow service for secure transactions
-- Real-time notifications via WebSocket
+- P2P trading with USDT/Naira pairs
+- Real-time marketplace with live offers
+- Secure escrow system with smart contracts
+- KYC verification workflow
+- Admin panel for user and transaction management
+- Real-time chat system for trades
+- Payment integration with Paystack
 - Mobile-responsive design
-- Admin dashboard functionality
+
+## Database Schema
+- Users with KYC status and online tracking
+- Offers with payment methods and terms
+- Trades with escrow and status tracking
+- Messages for trade communication
+- Transactions for deposits/withdrawals
+- Notifications for real-time updates
+
+## Security Features
+- JWT authentication
+- Rate limiting on sensitive endpoints
+- Input validation and sanitization
+- Secure password hashing with bcrypt
+- Admin role-based access control
 
 ## User Preferences
-- User prefers clear, obvious button styling with color coding
-- Buy buttons should be red-themed
-- Sell buttons should be green-themed
-- Mobile-first responsive design approach
-
-## Current Status
-- Application successfully running on port 5000
-- Database schema deployed and seeded
-- All core functionality operational
-- Ready for further development and feature additions
-
-## Environment Variables
-- DATABASE_URL: Configured via Replit's built-in PostgreSQL
-- TronWeb in demo mode for development
+*No specific preferences documented yet*
