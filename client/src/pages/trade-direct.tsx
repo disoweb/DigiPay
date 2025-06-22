@@ -109,7 +109,14 @@ export default function DirectTrade() {
           <Card>
             <CardContent className="p-6 text-center">
               <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-              <p className="text-gray-500 mb-4">Offer not found</p>
+              <div className="space-y-2 mb-4">
+                <p className="text-gray-500">Offer not found</p>
+                <p className="text-sm text-gray-400">Offer ID: {offerId || 'undefined'}</p>
+                <p className="text-sm text-gray-400">Is Loading: {isLoading.toString()}</p>
+                <p className="text-sm text-gray-400">Has Selected Offer: {!!selectedOffer ? 'yes' : 'no'}</p>
+                <p className="text-sm text-gray-400">Query Error: {queryError?.message || 'none'}</p>
+                <p className="text-sm text-gray-400">Error: {error || 'none'}</p>
+              </div>
               <Button onClick={() => setLocation('/dashboard')}>
                 Back to Dashboard
               </Button>
