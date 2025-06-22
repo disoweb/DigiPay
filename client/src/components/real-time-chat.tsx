@@ -195,7 +195,7 @@ export function RealTimeChat({ tradeId }: RealTimeChatProps) {
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [messages, pendingMessages]);
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
@@ -253,7 +253,7 @@ export function RealTimeChat({ tradeId }: RealTimeChatProps) {
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-4">
+      <div className="overflow-y-auto p-4 max-h-[calc(100vh-200px)]">
         {messages.length === 0 && pendingMessages.size === 0 ? (
           <div className="text-center py-8">
             <div className="bg-white dark:bg-gray-800 rounded-xl p-4 mx-auto max-w-xs shadow-sm">
@@ -267,10 +267,17 @@ export function RealTimeChat({ tradeId }: RealTimeChatProps) {
           </div>
         ) : (
           <div className="space-y-4">
-            {[...messages]
-              .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
-              .concat([...Array.from(pendingMessages.values())])
-              .map((msg, index) => {
+            {(() => {
+              // Sort messages by timestamp first
+              const sortedMessages = [...messages].sort((a, b) => 
+                new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+              );
+              
+              // Add pending messages at the end (they should appear as latest)
+              const allMessages = [...sortedMessages, ...Array.from(pendingMessages.values())];
+              
+              return allMessages;
+            })().map((msg, index) => {
                 const isOwnMessage = msg.senderId === user?.id;
                 const isPending = msg.status === 'sending';
                 const isFailed = msg.status === 'failed';
