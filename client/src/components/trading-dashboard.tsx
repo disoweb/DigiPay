@@ -30,6 +30,8 @@ export function TradingDashboard() {
   const { data: trades = [], error: tradesError } = useQuery({
     queryKey: ['/api/trades'],
     refetchInterval: 5000,
+    refetchOnWindowFocus: true,
+    staleTime: 0,
   });
 
   const { data: offers = [], error: offersError } = useQuery({
@@ -212,27 +214,38 @@ export function TradingDashboard() {
               <div className="space-y-3">
                 {activeTrades.slice(0, 3).map((trade: any) => (
                   <div key={trade.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <div>
+                    <div className="flex-1">
                       <p className="font-medium">Trade #{trade.id}</p>
                       <p className="text-sm text-gray-600">
                         ${parseFloat(trade.amount).toFixed(2)} @ ₦{parseFloat(trade.rate).toLocaleString()}
                       </p>
                     </div>
-                    <div className="text-right">
-                      <Badge className={getStatusColor(trade.status)}>
-                        {trade.status.replace('_', ' ').toUpperCase()}
-                      </Badge>
-                      {trade.paymentDeadline && (
-                        <p className="text-xs text-gray-500 mt-1">
-                          <Clock className="h-3 w-3 inline mr-1" />
-                          {new Date(trade.paymentDeadline).toLocaleTimeString()}
-                        </p>
-                      )}
+                    <div className="flex items-center gap-2">
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => setLocation(`/trade/${trade.id}`)}
+                        className="px-2 py-1 h-7"
+                      >
+                        <MessageCircle className="h-3 w-3 mr-1" />
+                        Contact
+                      </Button>
+                      <div className="text-right">
+                        <Badge className={getStatusColor(trade.status)}>
+                          {trade.status.replace('_', ' ').toUpperCase()}
+                        </Badge>
+                        {trade.paymentDeadline && (
+                          <p className="text-xs text-gray-500 mt-1">
+                            <Clock className="h-3 w-3 inline mr-1" />
+                            {new Date(trade.paymentDeadline).toLocaleTimeString()}
+                          </p>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))}
                 {activeTrades.length > 3 && (
-                  <Button variant="outline" size="sm" className="w-full">
+                  <Button variant="outline" size="sm" className="w-full" onClick={() => setLocation('/trades')}>
                     View All Active Trades
                   </Button>
                 )}
