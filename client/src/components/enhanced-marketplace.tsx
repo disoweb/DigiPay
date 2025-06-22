@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -74,7 +73,7 @@ export function EnhancedMarketplace() {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  
+
   const [selectedOffer, setSelectedOffer] = useState<Offer | null>(null);
   const [showTradeModal, setShowTradeModal] = useState(false);
   const [activeTab, setActiveTab] = useState<'buy' | 'sell'>('buy');
@@ -105,35 +104,35 @@ export function EnhancedMarketplace() {
     if (offer.type !== activeTab) return false;
     if (offer.status !== 'active') return false;
     if (offer.userId === user?.id) return false; // Hide own offers
-    
+
     // Payment method filter
     if (filters.paymentMethod !== 'all' && offer.paymentMethod !== filters.paymentMethod) {
       return false;
     }
-    
+
     // Amount filters
     const offerAmount = parseFloat(offer.amount);
     if (filters.minAmount && offerAmount < parseFloat(filters.minAmount)) return false;
     if (filters.maxAmount && offerAmount > parseFloat(filters.maxAmount)) return false;
-    
+
     // Rate filters
     const offerRate = parseFloat(offer.rate);
     if (filters.minRate && offerRate < parseFloat(filters.minRate)) return false;
     if (filters.maxRate && offerRate > parseFloat(filters.maxRate)) return false;
-    
+
     // Verification filter
     if (filters.verifiedOnly && !offer.user.kycVerified) return false;
-    
+
     // Search filter
     if (searchTerm && !offer.user.email.toLowerCase().includes(searchTerm.toLowerCase())) {
       return false;
     }
-    
+
     return true;
   }).sort((a, b) => {
     const aValue = filters.sortBy === 'rate' ? parseFloat(a.rate) : parseFloat(a.amount);
     const bValue = filters.sortBy === 'rate' ? parseFloat(b.rate) : parseFloat(b.amount);
-    
+
     return filters.sortOrder === 'asc' ? aValue - bValue : bValue - aValue;
   });
 
@@ -169,7 +168,7 @@ export function EnhancedMarketplace() {
       });
       return;
     }
-    
+
     setSelectedOffer(offer);
     setShowTradeModal(true);
   };
@@ -186,11 +185,11 @@ export function EnhancedMarketplace() {
   const getBestRate = (type: 'buy' | 'sell') => {
     const relevantOffers = offers.filter(o => o.type === type && o.status === 'active');
     if (relevantOffers.length === 0) return null;
-    
+
     const rates = relevantOffers
       .map(o => parseFloat(o.rate))
       .filter(rate => !isNaN(rate) && rate > 0);
-    
+
     if (rates.length === 0) return null;
     return type === 'buy' ? Math.min(...rates) : Math.max(...rates);
   };
@@ -342,7 +341,7 @@ export function EnhancedMarketplace() {
               />
               <Label htmlFor="verifiedOnly">Verified traders only</Label>
             </div>
-            
+
             <Select value={filters.sortBy} onValueChange={(value) => 
               setFilters(prev => ({ ...prev, sortBy: value }))
             }>
@@ -410,7 +409,10 @@ export function EnhancedMarketplace() {
                             <div className="flex items-center gap-1">
                               <Star className="h-3 w-3 text-yellow-400 fill-current" />
                               <span className="text-xs">
-                                {parseFloat(offer.user.averageRating).toFixed(1)} ({offer.user.ratingCount})
+                                {(() => {
+                                  const rating = parseFloat(offer.user?.averageRating || "0");
+                                  return !isNaN(rating) ? rating.toFixed(1) : '0.0';
+                                })()} ({offer.user?.ratingCount || 0})
                               </span>
                             </div>
                           </div>
@@ -509,7 +511,10 @@ export function EnhancedMarketplace() {
                             <div className="flex items-center gap-1">
                               <Star className="h-3 w-3 text-yellow-400 fill-current" />
                               <span className="text-xs">
-                                {parseFloat(offer.user.averageRating).toFixed(1)} ({offer.user.ratingCount})
+                                {(() => {
+                                  const rating = parseFloat(offer.user?.averageRating || "0");
+                                  return !isNaN(rating) ? rating.toFixed(1) : '0.0';
+                                })()} ({offer.user?.ratingCount || 0})
                               </span>
                             </div>
                           </div>

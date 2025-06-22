@@ -140,8 +140,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
             user: user ? {
               id: user.id,
               email: user.email.replace(/(.{2}).*(@.*)/, '$1***$2'), // Mask email
-              averageRating: user.averageRating,
-              ratingCount: user.ratingCount,
+              averageRating: user.averageRating || "0.00",
+              ratingCount: user.ratingCount || 0,
+              kycVerified: user.kycVerified || false,
+              completedTrades: user.completedTrades || 0
             } : null,
           };
         })
