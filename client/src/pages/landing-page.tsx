@@ -5,26 +5,25 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { 
   Shield, 
-  Users, 
   Zap, 
-  CheckCircle, 
-  Star, 
-  ArrowRight, 
-  TrendingUp,
-  TrendingDown,
-  DollarSign,
-  Lock,
-  Globe,
-  UserCheck,
-  MessageCircle,
+  Globe, 
+  Users, 
+  TrendingUp, 
+  Lock, 
+  CheckCircle,
+  Star,
+  ArrowRight,
   BarChart3,
   Wallet,
-  Eye,
-  Clock,
-  Building2,
+  MessageCircle,
   Award,
-  Smartphone,
-  Phone
+  Phone,
+  Clock,
+  DollarSign,
+  Eye,
+  UserCheck,
+  Building2,
+  Smartphone
 } from "lucide-react";
 
 export default function LandingPage() {
@@ -167,23 +166,24 @@ export default function LandingPage() {
                 and smart contract protection. Your funds are mathematically secured.
               </p>
 
-              {/* Buy and Sell Buttons */}
-              <div className="flex flex-row gap-3 sm:gap-4 mb-6 sm:mb-8 justify-center lg:justify-start">
+              {/* Mobile CTA Buttons */}
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-6 sm:mb-8">
                 <Button 
                   size="lg" 
-                  className="bg-green-600 hover:bg-green-700 text-white text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-4 shadow-xl flex-1 sm:flex-none"
-                  onClick={() => setLocation("/marketplace")}
+                  className="bg-white text-primary hover:bg-gray-50 text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-4 shadow-xl"
+                  onClick={() => setLocation("/auth")}
                 >
-                  <TrendingUp className="mr-2 h-5 w-5" />
-                  Buy
+                  <Smartphone className="mr-2 h-5 w-5" />
+                  Start Trading Now
+                  <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
                 <Button 
                   size="lg" 
-                  className="bg-red-600 hover:bg-red-700 text-white text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-4 shadow-xl flex-1 sm:flex-none"
-                  onClick={() => setLocation("/marketplace")}
+                  variant="outline" 
+                  className="border-2 border-white text-white hover:bg-white hover:text-primary text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-4"
                 >
-                  <TrendingDown className="mr-2 h-5 w-5" />
-                  Sell
+                  <Phone className="mr-2 h-5 w-5" />
+                  Call: +234-800-DIGIPAY
                 </Button>
               </div>
 

@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
 import { useAuth } from "@/hooks/use-auth";
-import { apiRequest } from "@/lib/queryClient";
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -22,12 +22,10 @@ import {
   Star,
   MessageCircle
 } from "lucide-react";
-import { CreateOfferModal } from "./create-offer-modal";
 
 export function TradingDashboard() {
   const { user } = useAuth();
-  const [showCreateModal, setShowCreateModal] = useState(false);
-
+  
   const { data: trades = [] } = useQuery({
     queryKey: ['/api/trades'],
     refetchInterval: 5000,
@@ -49,11 +47,11 @@ export function TradingDashboard() {
     ['pending', 'payment_pending', 'payment_made'].includes(t.status)
   );
   const disputedTrades = trades.filter((t: any) => t.status === 'disputed');
-
+  
   const totalVolume = completedTrades.reduce((sum: number, trade: any) => 
     sum + parseFloat(trade.fiatAmount), 0
   );
-
+  
   const successRate = trades.length > 0 
     ? (completedTrades.length / trades.length) * 100 
     : 0;
@@ -132,6 +130,84 @@ export function TradingDashboard() {
         </Card>
       </div>
 
+      {/* User Profile Summary */}
+      {user && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5" />
+              Trading Profile
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Email:</span>
+                  <span className="font-medium">{user.email}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">KYC Status:</span>
+                  {user.kycVerified ? (
+                    <Badge className="text-green-600 bg-green-100">
+                      <Shield className="h-3 w-3 mr-1" />
+                      Verified
+                    </Badge>
+                  ) : (
+                    <Badge className="text-yellow-600 bg-yellow-100">
+                      Pending
+                    </Badge>
+                  )}
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Rating:</span>
+                  <div className="flex items-center gap-1">
+                    <Star className="h-3 w-3 text-yellow-400 fill-current" />
+                    <span className="font-medium">
+                      {parseFloat(user.averageRating || "0").toFixed(1)} ({user.ratingCount || 0})
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">USDT Balance:</span>
+                  <span className="font-medium">{parseFloat(user.usdtBalance || "0").toFixed(8)} USDT</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Naira Balance:</span>
+                  <span className="font-medium">₦{parseFloat(user.nairaBalance || "0").toLocaleString()}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Completed Trades:</span>
+                  <span className="font-medium">{completedTrades.length}</span>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <h4 className="font-medium text-sm">Trade Performance</h4>
+                <div className="space-y-1">
+                  <div className="flex justify-between text-xs">
+                    <span>Success Rate</span>
+                    <span>{successRate.toFixed(1)}%</span>
+                  </div>
+                  <Progress value={successRate} className="h-2" />
+                </div>
+                {disputedTrades.length > 0 && (
+                  <Alert className="mt-2">
+                    <AlertTriangle className="h-3 w-3" />
+                    <AlertDescription className="text-xs">
+                      {disputedTrades.length} disputed trade(s) need attention
+                    </AlertDescription>
+                  </Alert>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Active Trading Overview */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Active Trades */}
@@ -190,7 +266,7 @@ export function TradingDashboard() {
             {activeOffers.length === 0 ? (
               <div className="text-center py-4">
                 <p className="text-gray-500 mb-2">No active offers</p>
-                <Button size="sm" onClick={() => setShowCreateModal(true)}>
+                <Button size="sm" onClick={() => window.open('/offer-creation', '_blank')}>
                   Create Your First Offer
                 </Button>
               </div>
@@ -247,7 +323,7 @@ export function TradingDashboard() {
               {recentTrades.map((trade: any) => {
                 const isUserBuyer = trade.buyerId === user?.id;
                 const partner = isUserBuyer ? trade.seller : trade.buyer;
-
+                
                 return (
                   <div key={trade.id} className="flex items-center justify-between p-3 border rounded-lg">
                     <div className="flex items-center space-x-3">
@@ -316,10 +392,6 @@ export function TradingDashboard() {
           </CardContent>
         </Card>
       )}
-      <CreateOfferModal 
-        open={showCreateModal} 
-        onOpenChange={setShowCreateModal}
-      />
     </div>
   );
 }
