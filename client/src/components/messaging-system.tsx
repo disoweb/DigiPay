@@ -47,36 +47,66 @@ export function MessagingSystem() {
   const [replyText, setReplyText] = useState('');
   const [isExpanded, setIsExpanded] = useState(false);
 
-  const { data: messages = [], isLoading } = useQuery<Message[]>({
+  const { data: messages = [], isLoading, error } = useQuery<Message[]>({
     queryKey: ['/api/messages'],
     queryFn: async () => {
-      const response = await apiRequest("GET", "/api/messages");
-      if (!response.ok) throw new Error("Failed to fetch messages");
-      return response.json();
+      try {
+        const response = await apiRequest("GET", "/api/messages");
+        if (!response.ok) {
+          console.error("Failed to fetch messages:", response.status);
+          return [];
+        }
+        const data = await response.json();
+        return Array.isArray(data) ? data : [];
+      } catch (error) {
+        console.error("Error fetching messages:", error);
+        return [];
+      }
     },
     refetchInterval: 3000,
+    retry: 3,
+    retryDelay: 1000,
   });
 
   const markAsReadMutation = useMutation({
     mutationFn: async (messageId: number) => {
-      const response = await apiRequest("PATCH", `/api/messages/${messageId}/read`);
-      if (!response.ok) throw new Error("Failed to mark message as read");
-      return response.json();
+      try {
+        const response = await apiRequest("PATCH", `/api/messages/${messageId}/read`);
+        if (!response.ok) {
+          console.error("Failed to mark message as read:", response.status);
+          return null;
+        }
+        return response.json();
+      } catch (error) {
+        console.error("Error marking message as read:", error);
+        return null;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/messages'] });
+    },
+    onError: (error) => {
+      console.error("Mark as read error:", error);
     }
   });
 
   const replyMutation = useMutation({
     mutationFn: async ({ recipientId, messageText, offerId }: { recipientId: number, messageText: string, offerId?: number }) => {
-      const response = await apiRequest("POST", "/api/messages", {
-        recipientId,
-        messageText,
-        offerId
-      });
-      if (!response.ok) throw new Error("Failed to send reply");
-      return response.json();
+      try {
+        const response = await apiRequest("POST", "/api/messages", {
+          recipientId,
+          messageText,
+          offerId
+        });
+        if (!response.ok) {
+          console.error("Failed to send reply:", response.status);
+          throw new Error("Failed to send reply");
+        }
+        return response.json();
+      } catch (error) {
+        console.error("Error sending reply:", error);
+        throw error;
+      }
     },
     onSuccess: () => {
       toast({
@@ -87,7 +117,8 @@ export function MessagingSystem() {
       setSelectedMessage(null);
       queryClient.invalidateQueries({ queryKey: ['/api/messages'] });
     },
-    onError: () => {
+    onError: (error) => {
+      console.error("Reply mutation error:", error);
       toast({
         title: "Failed to Send",
         description: "Could not send your reply. Please try again.",
@@ -125,6 +156,20 @@ export function MessagingSystem() {
             </div>
           </CardContent>
         </Card>
+      </div>
+    );
+  }
+
+  if (error) {
+    console.error("Messages error:", error);
+    return (
+      <div className="fixed bottom-4 right-4 lg:relative lg:bottom-auto lg:right-auto z-50">
+        <Button
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="rounded-full w-14 h-14 bg-red-600 hover:bg-red-700 shadow-lg relative lg:hidden"
+        >
+          <MessageCircle className="h-6 w-6" />
+        </Button>
       </div>
     );
   }

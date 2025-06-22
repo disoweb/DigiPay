@@ -951,7 +951,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Profile setup is now simplified - just mark as completed
       const updates: any = {};
-      
+
       // For now, we'll just update a simple flag to indicate profile completion
       // The actual profile fields would need to be added to the schema
       console.log("Profile setup completed for user:", userId);
@@ -1388,6 +1388,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(transactions);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch transactions" });
+    }
+  });
+
+  // Messages endpoints
+  app.get("/api/messages", authenticateToken, async (req, res) => {
+    try {
+      const messages = await storage.getUserMessages(req.user!.id);
+      res.json(messages || []);
+    } catch (error) {
+      console.error("Error fetching messages:", error);
+      res.json([]);
+    }
+  });
+
+  app.post("/api/messages", authenticateToken, async (req, res) => {
+    try {
+      const { recipientId, messageText, offerId } = req.body;
+      const message = await storage.createDirectMessage({
+        senderId: req.user!.id,
+        recipientId,
+        messageText,
+        offerId
+      });
+      res.json(message);
+    } catch (error) {
+      console.error("Error creating message:", error);
+      res.status(500).json({ error: "Failed to send message" });
+    }
+  });
+
+  app.patch("/api/messages/:id/read", authenticateToken, async (req, res) => {
+    try {
+      const messageId = parseInt(req.params.id);
+      const success = await storage.markMessageAsRead(messageId, req.user!.id);
+      res.json({ success });
+    } catch (error) {
+      console.error("Error marking message as read:", error);
+      res.status(500).json({ error: "Failed to mark message as read" });
     }
   });
 
