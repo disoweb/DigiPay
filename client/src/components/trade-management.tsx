@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -51,6 +52,7 @@ export function TradeManagement() {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [, setLocation] = useLocation();
   const [selectedStatus, setSelectedStatus] = useState<'all' | 'active' | 'completed' | 'disputed'>('all');
 
   const { data: trades = [], isLoading, error, refetch } = useQuery<Trade[]>({
@@ -385,9 +387,7 @@ export function TradeManagement() {
                               variant="outline" 
                               size="sm"
                               className="flex-1 sm:flex-none"
-                              onClick={() => {
-                                window.location.href = `/trades/${trade.id}`;
-                              }}
+                              onClick={() => setLocation(`/trades/${trade.id}`)}
                             >
                               <Eye className="h-3 w-3 mr-1" />
                               View Details
@@ -397,9 +397,7 @@ export function TradeManagement() {
                               variant="outline" 
                               size="sm"
                               className="flex-1 sm:flex-none"
-                              onClick={() => {
-                                window.location.href = `/trades/${trade.id}`;
-                              }}
+                              onClick={() => setLocation(`/trades/${trade.id}`)}
                             >
                               <MessageCircle className="h-3 w-3 mr-1" />
                               Chat
