@@ -5,24 +5,21 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { Send, User, Mail, DollarSign, Loader2, Coins } from "lucide-react";
+import { Send, User, Mail, DollarSign, Loader2 } from "lucide-react";
 
 interface SendFundsModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  nairaBalance: string;
-  usdtBalance: string;
+  userBalance: string;
 }
 
-export function SendFundsModal({ open, onOpenChange, nairaBalance, usdtBalance }: SendFundsModalProps) {
+export function SendFundsModal({ open, onOpenChange, userBalance }: SendFundsModalProps) {
   const [recipient, setRecipient] = useState("");
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
-  const [currency, setCurrency] = useState<"NGN" | "USDT">("NGN");
   const [recipientUser, setRecipientUser] = useState<any>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -55,12 +52,11 @@ export function SendFundsModal({ open, onOpenChange, nairaBalance, usdtBalance }
   };
 
   const sendMutation = useMutation({
-    mutationFn: async ({ recipientId, amount, description, currency }: { recipientId: number; amount: number; description: string; currency: string }) => {
+    mutationFn: async ({ recipientId, amount, description }: { recipientId: number; amount: number; description: string }) => {
       const response = await apiRequest("POST", "/api/transfers/send", {
         recipientId,
         amount,
-        description,
-        currency
+        description
       });
       if (!response.ok) {
         const error = await response.json();
@@ -68,10 +64,10 @@ export function SendFundsModal({ open, onOpenChange, nairaBalance, usdtBalance }
       }
       return response.json();
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       toast({
         title: "Transfer Successful",
-        description: data.message,
+        description: `₦${parseFloat(amount).toLocaleString()} sent successfully`,
       });
       queryClient.invalidateQueries({ queryKey: ["/api/user"] });
       queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
@@ -91,12 +87,7 @@ export function SendFundsModal({ open, onOpenChange, nairaBalance, usdtBalance }
     setRecipient("");
     setAmount("");
     setDescription("");
-    setCurrency("NGN");
     setRecipientUser(null);
-  };
-
-  const getAvailableBalance = () => {
-    return currency === "NGN" ? parseFloat(nairaBalance) : parseFloat(usdtBalance);
   };
 
   const handleLookup = () => {
@@ -108,7 +99,7 @@ export function SendFundsModal({ open, onOpenChange, nairaBalance, usdtBalance }
     if (!recipientUser || !amount) return;
     
     const transferAmount = parseFloat(amount);
-    const balance = getAvailableBalance();
+    const balance = parseFloat(userBalance);
     
     if (transferAmount <= 0) {
       toast({
@@ -122,7 +113,7 @@ export function SendFundsModal({ open, onOpenChange, nairaBalance, usdtBalance }
     if (transferAmount > balance) {
       toast({
         title: "Insufficient Balance",
-        description: `You don't have enough ${currency} for this transfer`,
+        description: "You don't have enough funds for this transfer",
         variant: "destructive",
       });
       return;
@@ -131,8 +122,7 @@ export function SendFundsModal({ open, onOpenChange, nairaBalance, usdtBalance }
     sendMutation.mutate({
       recipientId: recipientUser.id,
       amount: transferAmount,
-      description: description.trim() || "P2P Transfer",
-      currency
+      description: description.trim() || "P2P Transfer"
     });
   };
 
@@ -199,48 +189,11 @@ export function SendFundsModal({ open, onOpenChange, nairaBalance, usdtBalance }
             </Card>
           )}
 
-          {/* Currency Selection */}
-          <div className="space-y-2">
-            <Label>Currency</Label>
-            <Select value={currency} onValueChange={(value: "NGN" | "USDT") => setCurrency(value)}>
-              <SelectTrigger>
-                <SelectValue>
-                  <div className="flex items-center gap-2">
-                    {currency === "NGN" ? (
-                      <DollarSign className="h-4 w-4 text-green-600" />
-                    ) : (
-                      <Coins className="h-4 w-4 text-blue-600" />
-                    )}
-                    {currency} - {currency === "NGN" ? "Nigerian Naira" : "Tether USD"}
-                  </div>
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="NGN">
-                  <div className="flex items-center gap-2">
-                    <DollarSign className="h-4 w-4 text-green-600" />
-                    NGN - Nigerian Naira
-                  </div>
-                </SelectItem>
-                <SelectItem value="USDT">
-                  <div className="flex items-center gap-2">
-                    <Coins className="h-4 w-4 text-blue-600" />
-                    USDT - Tether USD
-                  </div>
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
           {/* Amount Input */}
           <div className="space-y-2">
-            <Label htmlFor="amount">Amount ({currency})</Label>
+            <Label htmlFor="amount">Amount (₦)</Label>
             <div className="relative">
-              {currency === "NGN" ? (
-                <DollarSign className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-              ) : (
-                <Coins className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-              )}
+              <DollarSign className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
               <Input
                 id="amount"
                 type="number"
@@ -249,18 +202,12 @@ export function SendFundsModal({ open, onOpenChange, nairaBalance, usdtBalance }
                 onChange={(e) => setAmount(e.target.value)}
                 className="pl-10"
                 min="1"
-                max={getAvailableBalance()}
-                step={currency === "NGN" ? "1" : "0.000001"}
+                max={userBalance}
               />
             </div>
-            <div className="flex justify-between items-center">
-              <p className="text-sm text-gray-600">
-                Available: {currency === "NGN" ? `₦${parseFloat(nairaBalance).toLocaleString()}` : `${parseFloat(usdtBalance).toFixed(6)} USDT`}
-              </p>
-              <p className="text-xs text-orange-600">
-                1% fee applies
-              </p>
-            </div>
+            <p className="text-sm text-gray-600">
+              Available balance: ₦{parseFloat(userBalance).toLocaleString()}
+            </p>
           </div>
 
           {/* Description */}
