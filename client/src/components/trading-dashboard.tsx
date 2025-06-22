@@ -302,7 +302,7 @@ export function TradingDashboard() {
                       <Button 
                         size="sm" 
                         variant="outline"
-                        onClick={() => setLocation(`/trades/${trade.id}/chat`)}
+                        onClick={() => setLocation(`/chat/${trade.id}`)}
                         className="px-3 py-1 h-7 text-xs ml-auto"
                       >
                         <MessageCircle className="h-3 w-3 mr-1" />

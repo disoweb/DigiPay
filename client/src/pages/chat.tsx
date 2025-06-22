@@ -1,4 +1,3 @@
-
 import { useParams, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Navbar } from "@/components/navbar";
@@ -41,27 +40,42 @@ export default function ChatPage() {
   const params = useParams<{ tradeId: string }>();
   const [, setLocation] = useLocation();
   const { user } = useAuth();
-  
+
   const tradeId = parseInt(params.tradeId || "0");
 
   const { data: trade, isLoading, error } = useQuery<EnrichedTrade>({
     queryKey: [`/api/trades/${tradeId}`],
     queryFn: async () => {
+      console.log("Fetching trade for chat:", tradeId);
       try {
         const response = await apiRequest("GET", `/api/trades/${tradeId}`);
         if (!response.ok) {
           const errorText = await response.text().catch(() => 'Unknown error');
-          throw new Error(`Failed to fetch trade: ${response.status} - ${errorText}`);
+          console.error("Failed to fetch trade for chat:", response.status, errorText);
+          throw new Error(`Trade not found or access denied (${response.status})`);
         }
         const data = await response.json();
+        console.log("Trade data for chat:", data);
+
+        // Validate the trade data
+        if (!data || !data.id) {
+          throw new Error("Invalid trade data received");
+        }
+
         return data;
-      } catch (error) {
-        console.error("Trade fetch error:", error);
-        throw error;
+      } catch (fetchError) {
+        console.error("Trade fetch error:", fetchError);
+        throw fetchError;
       }
     },
-    enabled: !!tradeId && tradeId > 0,
-    retry: 2,
+    enabled: !!tradeId && tradeId > 0 && !!user,
+    retry: (failureCount, error: any) => {
+      // Don't retry if it's a 404 or 403 error
+      if (error?.message?.includes('404') || error?.message?.includes('403')) {
+        return false;
+      }
+      return failureCount < 2;
+    },
     retryDelay: 1000,
   });
 
@@ -201,7 +215,7 @@ export default function ChatPage() {
             ₦{parseFloat(trade.fiatAmount).toLocaleString()}
           </span>
         </div>
-        
+
         {/* Trade Timer */}
         <TradeTimer 
           paymentDeadline={trade.paymentDeadline} 

@@ -420,10 +420,17 @@ export function TradeManagement() {
                               size="sm"
                               className="flex-1 sm:flex-none"
                               onClick={() => {
-                                if (trade && trade.id) {
+                                console.log("Chat button clicked for trade:", trade);
+                                if (trade && trade.id && typeof trade.id === 'number') {
+                                  console.log("Navigating to chat for trade ID:", trade.id);
                                   setLocation(`/chat/${trade.id}`);
                                 } else {
-                                  console.error("Invalid trade data for chat navigation");
+                                  console.error("Invalid trade data for chat navigation:", trade);
+                                  toast({
+                                    title: "Error",
+                                    description: "Unable to open chat - invalid trade data",
+                                    variant: "destructive",
+                                  });
                                 }
                               }}
                             >
