@@ -90,6 +90,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/admin/kyc/pending", authenticateToken, kycRoutes.getPendingVerifications);
   app.post("/api/admin/kyc/:userId/review", authenticateToken, kycRoutes.reviewKYC);
 
+  // Featured offers endpoint
+  app.get("/api/offers/featured", async (req, res) => {
+    try {
+      const featuredOffers = await storage.getFeaturedOffers();
+      
+      // Enrich offers with user data
+      const enrichFeaturedOffers = async (offers: any[]) => {
+        return await Promise.all(
+          offers.map(async (offer) => {
+            const user = await storage.getUser(offer.userId);
+            return {
+              ...offer,
+              user: user ? {
+                id: user.id,
+                email: user.email.replace(/(.{2}).*(@.*)/, '$1***$2'),
+                averageRating: user.averageRating || "0.00",
+                ratingCount: user.ratingCount || 0,
+                kycVerified: user.kycVerified || false,
+                isOnline: user.isOnline || false,
+                lastSeen: user.lastSeen || user.createdAt
+              } : null,
+            };
+          })
+        );
+      };
+
+      const enrichedBuyOffers = await enrichFeaturedOffers(featuredOffers.buyOffers);
+      const enrichedSellOffers = await enrichFeaturedOffers(featuredOffers.sellOffers);
+
+      res.json({
+        buyOffers: enrichedBuyOffers,
+        sellOffers: enrichedSellOffers
+      });
+    } catch (error) {
+      console.error("Featured offers fetch error:", error);
+      res.status(500).json({ error: "Failed to fetch featured offers" });
+    }
+  });
+
   // Market stats endpoint
   app.get("/api/market/stats", async (req, res) => {
     try {

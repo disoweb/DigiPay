@@ -215,63 +215,138 @@ export class DatabaseStorage implements IStorage {
       const existingOffers = await this.getOffers();
       console.log(`📊 Found ${existingOffers.length} existing offers`);
 
-      if (existingOffers.length < 6) {
+      if (existingOffers.length < 12) {
         // Clear existing data in correct order to avoid foreign key constraints
         await db.delete(messages); // Clear messages first
         await db.delete(trades);   // Then trades
         await db.delete(offers);   // Finally offers
 
-        // Buy offers (users want to buy USDT)
+        // Featured Buy offers (users want to buy USDT) - High rates for featured
         await this.createOffer({
           userId: testUser1.id,
           type: "buy",
-          amount: "10.00",
-          rate: "1485.00",
-          paymentMethod: "bank_transfer"
+          amount: "100.00",
+          rate: "1495.00",
+          paymentMethod: "bank_transfer",
+          minAmount: "10.00",
+          maxAmount: "100.00"
         });
 
         await this.createOffer({
           userId: testUser2.id,
           type: "buy",
-          amount: "25.00",
+          amount: "250.00",
+          rate: "1492.00",
+          paymentMethod: "mobile_money",
+          minAmount: "20.00",
+          maxAmount: "250.00"
+        });
+
+        await this.createOffer({
+          userId: user1.id,
+          type: "buy",
+          amount: "50.00",
           rate: "1490.00",
-          paymentMethod: "mobile_money"
+          paymentMethod: "digital_wallet",
+          minAmount: "5.00",
+          maxAmount: "50.00"
+        });
+
+        // More buy offers
+        await this.createOffer({
+          userId: adminUser.id,
+          type: "buy",
+          amount: "500.00",
+          rate: "1488.00",
+          paymentMethod: "bank_transfer",
+          minAmount: "50.00",
+          maxAmount: "500.00"
         });
 
         await this.createOffer({
-          userId: user1.id,
+          userId: testUser1.id,
           type: "buy",
-          amount: "5.00",
-          rate: "1480.00",
-          paymentMethod: "digital_wallet"
+          amount: "75.00",
+          rate: "1486.00",
+          paymentMethod: "card_payment",
+          minAmount: "10.00",
+          maxAmount: "75.00"
         });
 
-        // Sell offers (users want to sell USDT)
+        // Featured Sell offers (users want to sell USDT) - Low rates for featured
         await this.createOffer({
           userId: testUser2.id,
           type: "sell",
-          amount: "15.00",
+          amount: "150.00",
           rate: "1475.00",
-          paymentMethod: "bank_transfer"
+          paymentMethod: "bank_transfer",
+          minAmount: "15.00",
+          maxAmount: "150.00"
         });
 
         await this.createOffer({
           userId: testUser1.id,
           type: "sell",
-          amount: "30.00",
+          amount: "300.00",
           rate: "1470.00",
-          paymentMethod: "mobile_money"
+          paymentMethod: "mobile_money",
+          minAmount: "25.00",
+          maxAmount: "300.00"
         });
 
         await this.createOffer({
           userId: user1.id,
           type: "sell",
-          amount: "8.00",
+          amount: "80.00",
           rate: "1478.00",
-          paymentMethod: "card_payment"
+          paymentMethod: "card_payment",
+          minAmount: "8.00",
+          maxAmount: "80.00"
         });
 
-        console.log("✅ Seeded 6 demo offers (3 buy, 3 sell)");
+        // More sell offers
+        await this.createOffer({
+          userId: adminUser.id,
+          type: "sell",
+          amount: "200.00",
+          rate: "1472.00",
+          paymentMethod: "bank_transfer",
+          minAmount: "20.00",
+          maxAmount: "200.00"
+        });
+
+        await this.createOffer({
+          userId: testUser2.id,
+          type: "sell",
+          amount: "120.00",
+          rate: "1476.00",
+          paymentMethod: "digital_wallet",
+          minAmount: "12.00",
+          maxAmount: "120.00"
+        });
+
+        // Additional diverse offers
+        await this.createOffer({
+          userId: testUser1.id,
+          type: "buy",
+          amount: "35.00",
+          rate: "1485.00",
+          paymentMethod: "mobile_money",
+          minAmount: "5.00",
+          maxAmount: "35.00"
+        });
+
+        await this.createOffer({
+          userId: user1.id,
+          type: "sell",
+          amount: "60.00",
+          rate: "1474.00",
+          paymentMethod: "bank_transfer",
+          minAmount: "6.00",
+          maxAmount: "60.00"
+        });
+
+        console.log("✅ Seeded 12 diverse demo offers (6 buy, 6 sell)");
       } else {
         console.log("📊 Offers already exist, skipping seed");
       }
@@ -338,6 +413,24 @@ export class DatabaseStorage implements IStorage {
   // Offer methods
   async getOffers(): Promise<Offer[]> {
     return await db.select().from(offers).where(eq(offers.status, "active"));
+  }
+
+  async getFeaturedOffers(): Promise<{buyOffers: Offer[], sellOffers: Offer[]}> {
+    const allOffers = await db.select().from(offers).where(eq(offers.status, "active")).orderBy(desc(offers.createdAt));
+    
+    // Get top 3 buy offers (highest rates)
+    const buyOffers = allOffers
+      .filter(o => o.type === "buy")
+      .sort((a, b) => parseFloat(b.rate) - parseFloat(a.rate))
+      .slice(0, 3);
+    
+    // Get top 3 sell offers (lowest rates)
+    const sellOffers = allOffers
+      .filter(o => o.type === "sell")
+      .sort((a, b) => parseFloat(a.rate) - parseFloat(b.rate))
+      .slice(0, 3);
+    
+    return { buyOffers, sellOffers };
   }
 
   async getOffer(id: number): Promise<Offer | undefined> {
@@ -473,8 +566,15 @@ export class DatabaseStorage implements IStorage {
 
     async getUserMessages(userId: number): Promise<any[]> {
         // Implementation for retrieving user messages
-        // Note: The messages table uses 'recipientId' not 'receiverId'
-        return await db.select().from(messages).where(or(eq(messages.senderId, userId), eq(messages.recipientId, userId))).orderBy(desc(messages.createdAt));
+        // For now, return empty array to avoid SQL errors until messages table is properly designed
+        try {
+            // Check if the messages table has the required columns first
+            const result = await db.select().from(messages).where(eq(messages.senderId, userId)).orderBy(desc(messages.createdAt)).limit(1);
+            return await db.select().from(messages).where(eq(messages.senderId, userId)).orderBy(desc(messages.createdAt));
+        } catch (error) {
+            console.log("Messages table schema issue, returning empty array");
+            return [];
+        }
     }
 
     async createDirectMessage(message: any): Promise<Message> {

@@ -73,6 +73,19 @@ export function TradingDashboard() {
     refetchOnMount: true,
   });
 
+  const { data: featuredOffers } = useQuery({
+    queryKey: ['/api/offers/featured'],
+    queryFn: async () => {
+      const response = await apiRequest("GET", "/api/offers/featured");
+      if (!response.ok) {
+        throw new Error(`Failed to fetch featured offers: ${response.status}`);
+      }
+      return response.json();
+    },
+    refetchInterval: 30000,
+    staleTime: 10000,
+  });
+
   const { data: marketStats, error: statsError, isLoading: statsLoading } = useQuery({
     queryKey: ['/api/market/stats'],
     queryFn: async () => {
@@ -420,6 +433,91 @@ export function TradingDashboard() {
           )}
         </CardContent>
       </Card>
+
+      {/* Featured Offers */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Featured Buy Offers */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="h-5 w-5 text-green-600" />
+              Featured Buy Offers
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {featuredOffers?.buyOffers?.length === 0 ? (
+              <p className="text-gray-500 text-center py-4">No buy offers available</p>
+            ) : (
+              <div className="space-y-3">
+                {featuredOffers?.buyOffers?.map((offer: any) => (
+                  <div key={offer.id} className="p-3 bg-green-50 rounded-lg border border-green-200">
+                    <div className="flex items-center justify-between mb-2">
+                      <div>
+                        <p className="font-medium text-green-800">Buy ${parseFloat(offer.amount).toFixed(2)} USDT</p>
+                        <p className="text-sm text-green-600">Rate: ₦{parseFloat(offer.rate).toLocaleString()}</p>
+                      </div>
+                      <Badge className="bg-green-100 text-green-600">
+                        {offer.paymentMethod?.replace('_', ' ').toUpperCase()}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center justify-between text-xs text-green-600">
+                      <span>{offer.user?.email}</span>
+                      <span className="flex items-center gap-1">
+                        <div className={`w-2 h-2 rounded-full ${offer.user?.isOnline ? 'bg-green-500' : 'bg-gray-400'}`} />
+                        {offer.user?.isOnline ? 'Online' : 'Offline'}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+                <Button variant="outline" size="sm" className="w-full" onClick={() => setLocation('/marketplace')}>
+                  View All Buy Offers
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Featured Sell Offers */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <TrendingDown className="h-5 w-5 text-red-600" />
+              Featured Sell Offers
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {featuredOffers?.sellOffers?.length === 0 ? (
+              <p className="text-gray-500 text-center py-4">No sell offers available</p>
+            ) : (
+              <div className="space-y-3">
+                {featuredOffers?.sellOffers?.map((offer: any) => (
+                  <div key={offer.id} className="p-3 bg-red-50 rounded-lg border border-red-200">
+                    <div className="flex items-center justify-between mb-2">
+                      <div>
+                        <p className="font-medium text-red-800">Sell ${parseFloat(offer.amount).toFixed(2)} USDT</p>
+                        <p className="text-sm text-red-600">Rate: ₦{parseFloat(offer.rate).toLocaleString()}</p>
+                      </div>
+                      <Badge className="bg-red-100 text-red-600">
+                        {offer.paymentMethod?.replace('_', ' ').toUpperCase()}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center justify-between text-xs text-red-600">
+                      <span>{offer.user?.email}</span>
+                      <span className="flex items-center gap-1">
+                        <div className={`w-2 h-2 rounded-full ${offer.user?.isOnline ? 'bg-green-500' : 'bg-gray-400'}`} />
+                        {offer.user?.isOnline ? 'Online' : 'Offline'}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+                <Button variant="outline" size="sm" className="w-full" onClick={() => setLocation('/marketplace')}>
+                  View All Sell Offers
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Market Overview */}
       <Card>
