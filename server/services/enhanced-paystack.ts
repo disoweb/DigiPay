@@ -372,6 +372,10 @@ export class EnhancedPaystackService {
         });
         
         console.log(`Balance update sent to ${sentCount} clients`);
+        
+        if (sentCount === 0) {
+          console.log('WARNING: No clients received the balance update - WebSocket connection may be lost');
+        }
       } else {
         console.log('WebSocket server or clients not available for balance update broadcast');
       }

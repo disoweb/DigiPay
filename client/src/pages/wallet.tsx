@@ -168,11 +168,11 @@ export default function Wallet() {
 
   // WebSocket connection for real-time balance updates
   useEffect(() => {
-    if (!user?.id) return;
+    if (!auth.user?.id) return;
 
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsUrl = `${protocol}//${window.location.host}/ws`;
-    console.log('Attempting WebSocket connection to:', wsUrl);
+    console.log('Attempting WebSocket connection to:', wsUrl, 'for user:', auth.user.id);
     const ws = new WebSocket(wsUrl);
 
     ws.onopen = () => {
@@ -180,7 +180,7 @@ export default function Wallet() {
       setWsConnected(true);
       const connectMessage = {
         type: 'user_connect',
-        userId: user.id
+        userId: auth.user.id
       };
       console.log('Sending user connect message:', connectMessage);
       ws.send(JSON.stringify(connectMessage));
@@ -193,35 +193,43 @@ export default function Wallet() {
         
         if (data.type === 'user_connected') {
           console.log('WebSocket user connection confirmed:', data);
-        } else if (data.type === 'balance_updated' && data.userId === user.id) {
-          console.log('Processing balance update for user:', user.id);
+        } else if (data.type === 'connection_established') {
+          console.log('WebSocket connection established:', data);
+        } else if (data.type === 'balance_updated') {
+          console.log('Balance update received for userId:', data.userId, 'current user:', auth.user.id);
           
-          // Force immediate query cache update
-          queryClient.setQueryData(["/api/user"], (oldData: any) => {
-            if (oldData) {
-              console.log('Updating user data in cache:', {
-                old: oldData.nairaBalance,
-                new: data.nairaBalance
-              });
-              return {
-                ...oldData,
-                nairaBalance: data.nairaBalance,
-                usdtBalance: data.usdtBalance
-              };
-            }
-            return oldData;
-          });
-          
-          // Force refetch to ensure UI updates
-          queryClient.invalidateQueries({ queryKey: ["/api/user"] });
-          queryClient.refetchQueries({ queryKey: ["/api/user"] });
-          queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
-          
-          if (data.lastTransaction?.type === 'deposit') {
-            toast({
-              title: "Balance Updated!",
-              description: `₦${parseFloat(data.lastTransaction.amount).toLocaleString()} credited to your wallet`,
+          if (data.userId === auth.user.id) {
+            console.log('Processing balance update for current user');
+            console.log('Old balance will be updated from cache, new balance:', data.nairaBalance);
+            
+            // Force immediate query cache update
+            queryClient.setQueryData(["/api/user"], (oldData: any) => {
+              if (oldData) {
+                console.log('Updating user balance in cache:', {
+                  oldBalance: oldData.nairaBalance,
+                  newBalance: data.nairaBalance
+                });
+                return {
+                  ...oldData,
+                  nairaBalance: data.nairaBalance,
+                  usdtBalance: data.usdtBalance || oldData.usdtBalance
+                };
+              }
+              return oldData;
             });
+            
+            // Force immediate UI refresh
+            queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+            queryClient.refetchQueries({ queryKey: ["/api/user"] });
+            queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
+            
+            // Show success notification
+            if (data.lastTransaction?.type === 'deposit') {
+              toast({
+                title: "Balance Updated!",
+                description: `₦${parseFloat(data.lastTransaction.amount).toLocaleString()} credited to your wallet`,
+              });
+            }
           }
         }
       } catch (error) {
@@ -242,7 +250,7 @@ export default function Wallet() {
     return () => {
       ws.close();
     };
-  }, [user?.id, queryClient, toast]);
+  }, [auth.user?.id, queryClient, toast]);
 
   // Exchange rates
   const USDT_TO_NGN_RATE = 1485;
@@ -281,7 +289,7 @@ export default function Wallet() {
     retryDelay: 1000,
   });
 
-  if (!user) return null;
+  if (!auth.user) return null;
 
   // Portfolio value calculations
   const calculatePortfolioValue = () => {

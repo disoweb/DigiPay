@@ -104,10 +104,12 @@ export function EnhancedDepositModal({ open, onOpenChange, user }: EnhancedDepos
       if (data.success) {
         setPaymentStep('success');
         
-        // Force immediate balance refresh (WebSocket will also handle this)
-        queryClient.invalidateQueries({ queryKey: ["/api/user"] });
-        queryClient.refetchQueries({ queryKey: ["/api/user"] });
-        queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
+        // Force immediate balance refresh - WebSocket should handle this but ensure UI updates
+        setTimeout(() => {
+          queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+          queryClient.refetchQueries({ queryKey: ["/api/user"] });
+          queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
+        }, 500);
         
         // Remove paystack scroll lock to prevent freezing
         document.body.classList.remove('paystack-open');
