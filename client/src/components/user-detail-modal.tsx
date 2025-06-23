@@ -72,18 +72,21 @@ interface UserDetails {
 }
 
 export function UserDetailModal({ isOpen, onClose, userId, userName }: UserDetailModalProps) {
-  const { data: userDetails, isLoading: userLoading } = useQuery<UserDetails>({
+  const { data: userDetails, isLoading: userLoading, refetch } = useQuery<UserDetails>({
     queryKey: [`/api/users/${userId}`],
     queryFn: async () => {
-      const response = await apiRequest("GET", `/api/users/${userId}`);
+      const response = await apiRequest("GET", `/api/users/${userId}?t=${Date.now()}`);
       if (!response.ok) throw new Error("Failed to fetch user details");
       const data = await response.json();
       console.log('User details received:', data);
-      console.log('Naira balance:', data.nairaBalance);
-      console.log('USDT balance:', data.usdtBalance);
+      console.log('Naira balance:', data.nairaBalance, typeof data.nairaBalance);
+      console.log('USDT balance:', data.usdtBalance, typeof data.usdtBalance);
+      console.log('Raw user object keys:', Object.keys(data));
       return data;
     },
     enabled: isOpen && userId > 0,
+    staleTime: 0,
+    cacheTime: 0,
   });
 
   const { data: transactions = [], isLoading: transactionsLoading } = useQuery<Transaction[]>({
@@ -177,9 +180,20 @@ export function UserDetailModal({ isOpen, onClose, userId, userName }: UserDetai
                 <p className="text-xs sm:text-sm text-gray-600 font-normal">User Profile & Activity</p>
               </div>
             </div>
-            <Button variant="ghost" size="sm" onClick={onClose} className="h-8 w-8 p-0">
-              <X className="h-4 w-4" />
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => refetch()} 
+                className="h-8 w-8 p-0"
+                disabled={userLoading}
+              >
+                <RefreshCw className={`h-4 w-4 ${userLoading ? 'animate-spin' : ''}`} />
+              </Button>
+              <Button variant="ghost" size="sm" onClick={onClose} className="h-8 w-8 p-0">
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
           </DialogTitle>
         </DialogHeader>
 
