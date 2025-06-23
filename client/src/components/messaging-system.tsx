@@ -232,7 +232,7 @@ export function MessagingSystem() {
                       onClick={() => handleMessageClick(message)}
                     >
                       <div className="flex items-center gap-2 mb-1">
-                        <div className={`w-2 h-2 rounded-full ${message.sender && message.sender.isOnline ? 'bg-green-400' : 'bg-gray-400'}`} />
+                        <div className={`w-2 h-2 rounded-full ${message.sender?.isOnline || false ? 'bg-green-400' : 'bg-gray-400'}`} />
                         <span className="font-medium text-xs truncate">{message.sender.email}</span>
                         {!message.isRead && (
                           <div className="w-2 h-2 bg-blue-500 rounded-full" />
@@ -287,7 +287,7 @@ export function MessagingSystem() {
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
-                            <div className={`w-2 h-2 rounded-full ${message.sender && message.sender.isOnline ? 'bg-green-400' : 'bg-gray-400'}`} />
+                            <div className={`w-2 h-2 rounded-full ${message.sender?.isOnline || false ? 'bg-green-400' : 'bg-gray-400'}`} />
                             <span className="font-medium text-sm">{message.sender.email}</span>
                             {!message.isRead && (
                               <Badge variant="destructive" className="text-xs">New</Badge>

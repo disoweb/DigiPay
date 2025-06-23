@@ -308,11 +308,11 @@ export function MarketplaceFinal() {
                     <div className="space-y-3">
                       <div className="flex items-start justify-between">
                         <div className="flex items-center gap-3">
-                          <div className={`w-3 h-3 rounded-full ${offer.user && offer.user.isOnline ? 'bg-green-400' : 'bg-gray-400'}`} />
+                          <div className={`w-3 h-3 rounded-full ${offer.user?.isOnline || false ? 'bg-green-400' : 'bg-gray-400'}`} />
                           <div>
                             <div className="flex items-center gap-2">
                               <span className="font-medium">{offer.user?.email?.split('@')[0] || 'Unknown'}</span>
-                              {offer.user && offer.user.isOnline ? (
+                              {offer.user?.isOnline || false ? (
                                 <Badge variant="outline" className="text-green-600 border-green-600 text-xs">
                                   Online
                                 </Badge>
@@ -395,11 +395,11 @@ export function MarketplaceFinal() {
                     <div className="space-y-3">
                       <div className="flex items-start justify-between">
                         <div className="flex items-center gap-3">
-                          <div className={`w-3 h-3 rounded-full ${offer.user && offer.user.isOnline ? 'bg-green-400' : 'bg-gray-400'}`} />
+                          <div className={`w-3 h-3 rounded-full ${offer.user?.isOnline || false ? 'bg-green-400' : 'bg-gray-400'}`} />
                           <div>
                             <div className="flex items-center gap-2">
                               <span className="font-medium">{offer.user?.email?.split('@')[0] || 'Unknown'}</span>
-                              {offer.user && offer.user.isOnline ? (
+                              {offer.user?.isOnline || false ? (
                                 <Badge variant="outline" className="text-green-600 border-green-600 text-xs">
                                   Online
                                 </Badge>
@@ -477,9 +477,9 @@ export function MarketplaceFinal() {
           <div className="space-y-4">
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <div className={`w-2 h-2 rounded-full ${contactOffer?.user && contactOffer.user.isOnline ? 'bg-green-400' : 'bg-gray-400'}`} />
+                <div className={`w-2 h-2 rounded-full ${contactOffer?.user?.isOnline ? 'bg-green-400' : 'bg-gray-400'}`} />
                 <span className="font-medium">{contactOffer?.user?.email || 'Unknown'}</span>
-                {contactOffer?.user && contactOffer.user.isOnline ? (
+                {contactOffer?.user && contactOffer?.user?.isOnline ? (
                   <Badge variant="outline" className="text-green-600 border-green-600">Online</Badge>
                 ) : (
                   <Badge variant="outline" className="text-gray-500 border-gray-300">Offline</Badge>
