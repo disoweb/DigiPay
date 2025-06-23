@@ -3435,11 +3435,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }, 100);
 
-      // Create transaction record
+      // Create transaction record with proper currency indication
+      const transactionAmount = fromCurrency === "USDT" ? `${amount} USDT` : `₦${amount}`;
       await storage.createTransaction({
         userId,
         type: "swap",
-        amount: amount.toString(),
+        amount: transactionAmount,
         status: "completed",
         adminNotes: transactionNote
       });
