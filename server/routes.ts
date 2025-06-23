@@ -2216,6 +2216,142 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Enhanced admin endpoints
+  app.get("/api/admin/users", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      const result = await pool.query(`
+        SELECT 
+          u.id, u.email, u.username, u.first_name, u.last_name, u.phone, 
+          u.kyc_verified, u.kyc_status, u.naira_balance, u.usdt_balance,
+          u.average_rating, u.rating_count, u.is_online, u.last_seen,
+          u.created_at, u.is_admin,
+          COUNT(DISTINCT t.id) as total_trades,
+          COUNT(DISTINCT CASE WHEN t.status = 'completed' THEN t.id END) as completed_trades
+        FROM users u
+        LEFT JOIN trades t ON (t.buyer_id = u.id OR t.seller_id = u.id)
+        GROUP BY u.id
+        ORDER BY u.created_at DESC
+      `);
+      
+      res.json(result.rows);
+    } catch (error) {
+      console.error("Admin users error:", error);
+      res.status(500).json({ error: "Failed to fetch users" });
+    }
+  });
+
+  app.patch("/api/admin/users/:userId/ban", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const { banned, reason } = req.body;
+      
+      await pool.query(
+        "UPDATE users SET is_banned = $1, ban_reason = $2, banned_at = $3 WHERE id = $4",
+        [banned, reason || null, banned ? new Date() : null, userId]
+      );
+      
+      res.json({ message: `User ${banned ? 'banned' : 'unbanned'} successfully` });
+    } catch (error) {
+      console.error("Ban user error:", error);
+      res.status(500).json({ error: "Failed to update user status" });
+    }
+  });
+
+  app.patch("/api/admin/users/:userId/freeze", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const { frozen, reason } = req.body;
+      
+      await pool.query(
+        "UPDATE users SET funds_frozen = $1, freeze_reason = $2, frozen_at = $3 WHERE id = $4",
+        [frozen, reason || null, frozen ? new Date() : null, userId]
+      );
+      
+      res.json({ message: `User funds ${frozen ? 'frozen' : 'unfrozen'} successfully` });
+    } catch (error) {
+      console.error("Freeze funds error:", error);
+      res.status(500).json({ error: "Failed to update user funds status" });
+    }
+  });
+
+  app.get("/api/admin/disputes", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      const result = await pool.query(`
+        SELECT 
+          t.id, t.amount, t.rate, t.status, t.dispute_reason, t.dispute_category,
+          t.dispute_raised_by, t.dispute_evidence, t.dispute_created_at,
+          buyer.email as buyer_email, seller.email as seller_email,
+          o.payment_method
+        FROM trades t
+        LEFT JOIN users buyer ON t.buyer_id = buyer.id
+        LEFT JOIN users seller ON t.seller_id = seller.id
+        LEFT JOIN offers o ON t.offer_id = o.id
+        WHERE t.status = 'disputed'
+        ORDER BY t.dispute_created_at DESC
+      `);
+      
+      res.json(result.rows);
+    } catch (error) {
+      console.error("Admin disputes error:", error);
+      res.status(500).json({ error: "Failed to fetch disputes" });
+    }
+  });
+
+  app.patch("/api/admin/disputes/:tradeId/resolve", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      const tradeId = parseInt(req.params.tradeId);
+      const { resolution, winner, notes } = req.body;
+      
+      const newStatus = resolution === 'release' ? 'completed' : 'cancelled';
+      
+      await pool.query(`
+        UPDATE trades 
+        SET status = $1, dispute_resolution = $2, dispute_winner = $3, 
+            admin_notes = $4, last_admin_update = NOW()
+        WHERE id = $5
+      `, [newStatus, resolution, winner, notes, tradeId]);
+      
+      res.json({ message: "Dispute resolved successfully" });
+    } catch (error) {
+      console.error("Resolve dispute error:", error);
+      res.status(500).json({ error: "Failed to resolve dispute" });
+    }
+  });
+
+  app.patch("/api/admin/transactions/:id/approve", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      const transactionId = parseInt(req.params.id);
+      const { notes } = req.body;
+      
+      await pool.query(
+        "UPDATE transactions SET status = 'approved', admin_notes = $1 WHERE id = $2",
+        [notes || null, transactionId]
+      );
+      
+      res.json({ message: "Transaction approved successfully" });
+    } catch (error) {
+      console.error("Approve transaction error:", error);
+      res.status(500).json({ error: "Failed to approve transaction" });
+    }
+  });
+
+  app.patch("/api/admin/transactions/:id/reject", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      const transactionId = parseInt(req.params.id);
+      const { notes } = req.body;
+      
+      await pool.query(
+        "UPDATE transactions SET status = 'rejected', admin_notes = $1 WHERE id = $2",
+        [notes || null, transactionId]
+      );
+      
+      res.json({ message: "Transaction rejected successfully" });
+    } catch (error) {
+      console.error("Reject transaction error:", error);
+      res.status(500).json({ error: "Failed to reject transaction" });
+    }
+  });
+
   // User lookup for transfers
   app.post("/api/users/lookup", authenticateToken, async (req, res) => {
     try {

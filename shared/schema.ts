@@ -25,6 +25,12 @@ export const users = pgTable("users", {
   isOnline: boolean("is_online").default(false),
   lastSeen: timestamp("last_seen"),
   isAdmin: boolean("is_admin").default(false),
+  isBanned: boolean("is_banned").default(false),
+  banReason: text("ban_reason"),
+  bannedAt: timestamp("banned_at"),
+  fundsFrozen: boolean("funds_frozen").default(false),
+  freezeReason: text("freeze_reason"),
+  frozenAt: timestamp("frozen_at"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
