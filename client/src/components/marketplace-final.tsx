@@ -1,180 +1,192 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/hooks/use-toast";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAuth } from "@/hooks/use-auth";
-import { apiRequest } from "@/lib/queryClient";
-import { BinanceStyleFlow } from "@/components/binance-style-flow";
+import { useLocation } from "wouter";
 import { 
-  TrendingUp, 
+  Search, 
+  Filter, 
   Star, 
   Shield, 
-  DollarSign,
+  MessageCircle, 
+  DollarSign, 
+  TrendingUp, 
+  Clock,
+  Users,
   AlertCircle,
-  Wallet,
-  CreditCard,
-  Building,
-  Smartphone,
-  RefreshCw,
-  Loader2,
-  MessageCircle,
-  Send
+  Zap
 } from "lucide-react";
+import { apiRequest } from "@/lib/queryClient";
+
+interface User {
+  id: number;
+  email: string;
+  averageRating: string;
+  ratingCount: number;
+  completedTrades: number;
+  kycVerified: boolean;
+  isOnline?: boolean;
+}
 
 interface Offer {
   id: number;
   userId: number;
+  type: 'buy' | 'sell';
   amount: string;
   rate: string;
-  type: string;
-  status: string;
   paymentMethod: string;
-  terms?: string;
-  minAmount?: string;
-  maxAmount?: string;
-  timeLimit?: number;
-  requiresVerification?: boolean;
-  createdAt: string;
-  user: {
-    id: number;
-    email: string;
-    averageRating: string;
-    ratingCount: number;
-    kycVerified?: boolean;
-    completedTrades?: number;
-    isOnline?: boolean;
-    lastSeen?: string;
-  };
+  minLimit: string;
+  maxLimit: string;
+  user: User;
 }
 
-const paymentMethodIcons = {
-  bank_transfer: Building,
-  mobile_money: Smartphone,
-  digital_wallet: Wallet,
-  card_payment: CreditCard,
-};
+interface MarketStats {
+  totalOffers: number;
+  onlineTraders: number;
+  buyOffers: number;
+  sellOffers: number;
+  bestBuyRate?: number;
+  bestSellRate?: number;
+}
 
-const paymentMethodLabels = {
-  bank_transfer: "Bank Transfer",
-  mobile_money: "Mobile Money", 
-  digital_wallet: "Digital Wallet",
-  card_payment: "Card Payment",
-};
+function safeParseFloat(value: string | number | undefined): number {
+  if (typeof value === 'number') return value;
+  if (typeof value === 'string') {
+    const parsed = parseFloat(value);
+    return isNaN(parsed) ? 0 : parsed;
+  }
+  return 0;
+}
 
 export function MarketplaceFinal() {
   const { user } = useAuth();
-  const { toast } = useToast();
-  
-  const [selectedOffer, setSelectedOffer] = useState<Offer | null>(null);
+  const [, setLocation] = useLocation();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterType, setFilterType] = useState<"all" | "buy" | "sell">("all");
+  const [paymentMethodFilter, setPaymentMethodFilter] = useState("all");
+  const [minAmount, setMinAmount] = useState("");
+  const [maxAmount, setMaxAmount] = useState("");
   const [showContactModal, setShowContactModal] = useState(false);
   const [contactOffer, setContactOffer] = useState<Offer | null>(null);
-  const [contactMessage, setContactMessage] = useState('');
-  const [activeTab, setActiveTab] = useState<'buy' | 'sell'>('buy');
 
-  const { data: offers = [], isLoading, error, refetch } = useQuery<Offer[]>({
+  const { data: offers = [], isLoading, error, refetch } = useQuery({
     queryKey: ['/api/offers'],
     queryFn: async () => {
       const response = await apiRequest("GET", "/api/offers");
-      if (!response.ok) throw new Error("Failed to fetch offers");
-      const data = await response.json();
-      return Array.isArray(data) ? data : [];
+      if (!response.ok) {
+        throw new Error(`Failed to fetch offers: ${response.status}`);
+      }
+      return response.json();
     },
-    refetchInterval: 10000,
+    refetchInterval: 30000,
+    staleTime: 10000,
+  });
+
+  const { data: marketStats }: { data: MarketStats | undefined } = useQuery({
+    queryKey: ['/api/market/stats'],
+    queryFn: async () => {
+      const response = await apiRequest("GET", "/api/market/stats");
+      if (!response.ok) {
+        throw new Error(`Failed to fetch market stats: ${response.status}`);
+      }
+      return response.json();
+    },
+    refetchInterval: 60000,
   });
 
   const handleContactTrader = (offer: Offer) => {
     if (!user) {
-      toast({
-        title: "Authentication Required",
-        description: "Please log in to contact traders",
-        variant: "destructive",
-      });
+      setLocation('/auth');
       return;
     }
     setContactOffer(offer);
-    setContactMessage(`Hi! I'm interested in your ${offer.type} offer for ${offer.amount} USDT at ₦${parseFloat(offer.rate).toLocaleString()}. Could we discuss the details?`);
     setShowContactModal(true);
   };
 
-  const sendDirectMessage = async () => {
-    if (!contactOffer || !contactMessage.trim()) return;
+  const canContactOffer = (offer: Offer): boolean => {
+    if (!offer || !offer.user) return false;
+    
+    // User must be logged in
+    if (offer.userId === user?.id) return false;
+    
+    // Additional checks can be added here
+    return true;
+  };
 
-    try {
-      const response = await apiRequest("POST", "/api/messages", {
-        recipientId: contactOffer.user?.id,
-        messageText: contactMessage.trim(),
-        offerId: contactOffer.id
-      });
-
-      if (!response.ok) throw new Error("Failed to send message");
-
-      toast({
-        title: "Message Sent",
-        description: `Your message has been sent to ${contactOffer.user?.email}.`,
-      });
-      
+  const handleStartTrade = () => {
+    if (contactOffer) {
+      setLocation(`/trade-direct/${contactOffer.id}`);
       setShowContactModal(false);
-      setContactMessage('');
-    } catch (error) {
-      toast({
-        title: "Message Failed",
-        description: "Failed to send message. Please try again.",
-        variant: "destructive",
-      });
     }
   };
 
-  const getPaymentMethodIcon = (method: string) => {
-    const IconComponent = paymentMethodIcons[method as keyof typeof paymentMethodIcons] || Wallet;
-    return <IconComponent className="h-4 w-4" />;
-  };
+  const filteredOffers = offers.filter((offer: Offer) => {
+    // Search filter
+    if (searchTerm) {
+      const searchLower = searchTerm.toLowerCase();
+      const matchesEmail = offer.user?.email?.toLowerCase().includes(searchLower);
+      const matchesAmount = offer.amount.includes(searchTerm);
+      const matchesRate = offer.rate.includes(searchTerm);
+      
+      if (!matchesEmail && !matchesAmount && !matchesRate) {
+        return false;
+      }
+    }
 
-  const safeParseFloat = (value: string | undefined, fallback: number = 0) => {
-    const parsed = parseFloat(value || "0");
-    return isNaN(parsed) ? fallback : parsed;
-  };
+    // Type filter
+    if (filterType !== "all" && offer.type !== filterType) {
+      return false;
+    }
 
-  // Filter offers based on active tab and exclude user's own offers
-  const filteredOffers = offers.filter(offer => {
-    if (!offer || !offer.user) return false;
-    if (activeTab === 'buy' && offer.type !== 'sell') return false;
-    if (activeTab === 'sell' && offer.type !== 'buy') return false;
-    if (offer.userId === user?.id) return false;
-    if (offer.status !== 'active') return false;
+    // Payment method filter
+    if (paymentMethodFilter !== "all" && offer.paymentMethod !== paymentMethodFilter) {
+      return false;
+    }
+
+    // Amount filters
+    if (minAmount && safeParseFloat(offer.amount) < safeParseFloat(minAmount)) {
+      return false;
+    }
+
+    if (maxAmount && safeParseFloat(offer.amount) > safeParseFloat(maxAmount)) {
+      return false;
+    }
+
     return true;
   });
 
+  const buyOffers = filteredOffers.filter((offer: Offer) => offer.type === 'buy');
+  const sellOffers = filteredOffers.filter((offer: Offer) => offer.type === 'sell');
+
   if (isLoading) {
     return (
-      <Card>
-        <CardContent className="p-8 text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">Loading marketplace...</p>
-        </CardContent>
-      </Card>
+      <div className="space-y-6">
+        <div className="text-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-500">Loading marketplace...</p>
+        </div>
+      </div>
     );
   }
 
   if (error) {
     return (
-      <Card className="border-red-200 bg-red-50">
-        <CardContent className="p-6 text-center">
-          <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">Failed to load marketplace</h3>
-          <p className="text-gray-600 mb-4">Unable to connect to the server</p>
-          <Button onClick={() => refetch()} variant="outline">
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Try Again
-          </Button>
-        </CardContent>
-      </Card>
+      <div className="space-y-6">
+        <Alert>
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            Failed to load marketplace data. Please try refreshing the page.
+          </AlertDescription>
+        </Alert>
+      </div>
     );
   }
 
@@ -190,9 +202,9 @@ export function MarketplaceFinal() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="text-center p-3 bg-green-50 rounded-lg">
-              <p className="text-sm text-gray-600">Active Offers</p>
-              <p className="font-bold text-green-600">{offers.length}</p>
+            <div className="text-center p-3 bg-blue-50 rounded-lg">
+              <p className="text-sm text-gray-600">Total Offers</p>
+              <p className="font-bold text-blue-600">{marketStats?.totalOffers || offers.length}</p>
             </div>
             <div className="text-center p-3 bg-blue-50 rounded-lg">
               <p className="text-sm text-gray-600">Online Traders</p>
@@ -202,25 +214,82 @@ export function MarketplaceFinal() {
             </div>
             <div className="text-center p-3 bg-purple-50 rounded-lg">
               <p className="text-sm text-gray-600">Buy Offers</p>
-              <p className="font-bold text-purple-600">
-                {offers.filter(o => o.type === 'sell' && o.status === 'active' && o.userId !== user?.id).length}
-              </p>
+              <p className="font-bold text-purple-600">{buyOffers.length}</p>
             </div>
-            <div className="text-center p-3 bg-orange-50 rounded-lg">
+            <div className="text-center p-3 bg-green-50 rounded-lg">
               <p className="text-sm text-gray-600">Sell Offers</p>
-              <p className="font-bold text-orange-600">
-                {offers.filter(o => o.type === 'buy' && o.status === 'active' && o.userId !== user?.id).length}
-              </p>
+              <p className="font-bold text-green-600">{sellOffers.length}</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Search and Filters */}
+      <Card>
+        <CardContent className="p-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+            <div className="lg:col-span-2">
+              <Label htmlFor="search">Search</Label>
+              <div className="relative">
+                <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Input
+                  id="search"
+                  placeholder="Search by trader email, amount, or rate..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+            </div>
+            
+            <div>
+              <Label>Type</Label>
+              <Select value={filterType} onValueChange={(value: "all" | "buy" | "sell") => setFilterType(value)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Types</SelectItem>
+                  <SelectItem value="buy">Buy Offers</SelectItem>
+                  <SelectItem value="sell">Sell Offers</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label>Min Amount (USDT)</Label>
+              <Input
+                type="number"
+                placeholder="0"
+                value={minAmount}
+                onChange={(e) => setMinAmount(e.target.value)}
+              />
+            </div>
+
+            <div>
+              <Label>Max Amount (USDT)</Label>
+              <Input
+                type="number"
+                placeholder="∞"
+                value={maxAmount}
+                onChange={(e) => setMaxAmount(e.target.value)}
+              />
             </div>
           </div>
         </CardContent>
       </Card>
 
       {/* Offers Tabs */}
-      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'buy' | 'sell')}>
+      <Tabs defaultValue="buy" className="space-y-4">
         <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="buy">Buy USDT</TabsTrigger>
-          <TabsTrigger value="sell">Sell USDT</TabsTrigger>
+          <TabsTrigger value="buy" className="flex items-center gap-2">
+            <TrendingUp className="h-4 w-4" />
+            Buy USDT ({buyOffers.length})
+          </TabsTrigger>
+          <TabsTrigger value="sell" className="flex items-center gap-2">
+            <DollarSign className="h-4 w-4" />
+            Sell USDT ({sellOffers.length})
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="buy" className="space-y-4">
@@ -239,11 +308,11 @@ export function MarketplaceFinal() {
                     <div className="space-y-3">
                       <div className="flex items-start justify-between">
                         <div className="flex items-center gap-3">
-                          <div className={`w-3 h-3 rounded-full ${offer.user?.isOnline ? 'bg-green-400' : 'bg-gray-400'}`} />
+                          <div className={`w-3 h-3 rounded-full ${offer.user && offer.user.isOnline ? 'bg-green-400' : 'bg-gray-400'}`} />
                           <div>
                             <div className="flex items-center gap-2">
                               <span className="font-medium">{offer.user?.email?.split('@')[0] || 'Unknown'}</span>
-                              {offer.user?.isOnline ? (
+                              {offer.user && offer.user.isOnline ? (
                                 <Badge variant="outline" className="text-green-600 border-green-600 text-xs">
                                   Online
                                 </Badge>
@@ -259,19 +328,25 @@ export function MarketplaceFinal() {
                                 </Badge>
                               )}
                             </div>
-                            <div className="flex items-center gap-2 text-sm text-gray-600">
-                              <Star className="h-3 w-3 text-yellow-400 fill-current" />
-                              <span>{safeParseFloat(offer.user?.averageRating).toFixed(1)}</span>
-                              <span>({offer.user?.ratingCount || 0})</span>
-                              <span>•</span>
+                            <div className="flex items-center gap-4 text-sm text-gray-600 mt-1">
+                              <span className="flex items-center gap-1">
+                                <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                                <span>{safeParseFloat(offer.user?.averageRating).toFixed(1)}</span>
+                                <span>({offer.user?.ratingCount || 0})</span>
+                              </span>
                               <span>{offer.user?.completedTrades || 0} trades</span>
                             </div>
                           </div>
                         </div>
-                        <Badge variant="outline" className="flex items-center gap-1">
-                          {getPaymentMethodIcon(offer.paymentMethod)}
-                          {paymentMethodLabels[offer.paymentMethod as keyof typeof paymentMethodLabels] || offer.paymentMethod}
-                        </Badge>
+
+                        <div className="text-right">
+                          <Badge variant="outline" className="mb-2">
+                            {offer.paymentMethod?.replace('_', ' ').toUpperCase() || 'Bank Transfer'}
+                          </Badge>
+                          <div className="text-2xl font-bold text-green-600">
+                            ₦{safeParseFloat(offer.rate).toLocaleString()}
+                          </div>
+                        </div>
                       </div>
 
                       <div className="grid grid-cols-3 gap-4">
@@ -280,35 +355,21 @@ export function MarketplaceFinal() {
                           <p className="font-semibold">{safeParseFloat(offer.amount).toFixed(2)} USDT</p>
                         </div>
                         <div>
-                          <p className="text-sm text-gray-600">Rate</p>
-                          <p className="font-semibold text-green-600">₦{safeParseFloat(offer.rate).toLocaleString()}</p>
-                        </div>
-                        <div>
                           <p className="text-sm text-gray-600">Limits</p>
-                          <p className="font-semibold text-sm">
-                            {offer.minAmount && offer.maxAmount
-                              ? `${safeParseFloat(offer.minAmount).toFixed(2)} - ${safeParseFloat(offer.maxAmount).toFixed(2)}`
-                              : safeParseFloat(offer.amount).toFixed(2)} USDT
+                          <p className="font-semibold">
+                            ₦{safeParseFloat(offer.minLimit).toLocaleString()} - ₦{safeParseFloat(offer.maxLimit).toLocaleString()}
                           </p>
                         </div>
-                      </div>
-
-                      <div className="flex gap-2">
-                        <Button 
-                          onClick={() => setSelectedOffer(offer)}
-                          className="flex-1 bg-green-600 hover:bg-green-700"
-                          disabled={!user}
-                        >
-                          Buy USDT
-                        </Button>
-                        <Button
-                          onClick={() => handleContactTrader(offer)}
-                          variant="outline"
-                          size="icon"
-                          disabled={!user}
-                        >
-                          <MessageCircle className="h-4 w-4" />
-                        </Button>
+                        <div className="text-right">
+                          <Button
+                            onClick={() => handleContactTrader(offer)}
+                            disabled={!canContactOffer(offer)}
+                            className="w-full"
+                          >
+                            <MessageCircle className="h-4 w-4 mr-2" />
+                            {offer.type === 'buy' ? 'Sell to' : 'Buy from'} Trader
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   </CardContent>
@@ -334,11 +395,11 @@ export function MarketplaceFinal() {
                     <div className="space-y-3">
                       <div className="flex items-start justify-between">
                         <div className="flex items-center gap-3">
-                          <div className={`w-3 h-3 rounded-full ${offer.user?.isOnline ? 'bg-green-400' : 'bg-gray-400'}`} />
+                          <div className={`w-3 h-3 rounded-full ${offer.user && offer.user.isOnline ? 'bg-green-400' : 'bg-gray-400'}`} />
                           <div>
                             <div className="flex items-center gap-2">
                               <span className="font-medium">{offer.user?.email?.split('@')[0] || 'Unknown'}</span>
-                              {offer.user?.isOnline ? (
+                              {offer.user && offer.user.isOnline ? (
                                 <Badge variant="outline" className="text-green-600 border-green-600 text-xs">
                                   Online
                                 </Badge>
@@ -354,56 +415,49 @@ export function MarketplaceFinal() {
                                 </Badge>
                               )}
                             </div>
-                            <div className="flex items-center gap-2 text-sm text-gray-600">
-                              <Star className="h-3 w-3 text-yellow-400 fill-current" />
-                              <span>{safeParseFloat(offer.user?.averageRating).toFixed(1)}</span>
-                              <span>({offer.user?.ratingCount || 0})</span>
-                              <span>•</span>
+                            <div className="flex items-center gap-4 text-sm text-gray-600 mt-1">
+                              <span className="flex items-center gap-1">
+                                <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                                <span>{safeParseFloat(offer.user?.averageRating).toFixed(1)}</span>
+                                <span>({offer.user?.ratingCount || 0})</span>
+                              </span>
                               <span>{offer.user?.completedTrades || 0} trades</span>
                             </div>
                           </div>
                         </div>
-                        <Badge variant="outline" className="flex items-center gap-1">
-                          {getPaymentMethodIcon(offer.paymentMethod)}
-                          {paymentMethodLabels[offer.paymentMethod as keyof typeof paymentMethodLabels] || offer.paymentMethod}
-                        </Badge>
+
+                        <div className="text-right">
+                          <Badge variant="outline" className="mb-2">
+                            {offer.paymentMethod?.replace('_', ' ').toUpperCase() || 'Bank Transfer'}
+                          </Badge>
+                          <div className="text-2xl font-bold text-red-600">
+                            ₦{safeParseFloat(offer.rate).toLocaleString()}
+                          </div>
+                        </div>
                       </div>
 
                       <div className="grid grid-cols-3 gap-4">
                         <div>
-                          <p className="text-sm text-gray-600">Buying</p>
+                          <p className="text-sm text-gray-600">Available</p>
                           <p className="font-semibold">{safeParseFloat(offer.amount).toFixed(2)} USDT</p>
                         </div>
                         <div>
-                          <p className="text-sm text-gray-600">Rate</p>
-                          <p className="font-semibold text-red-600">₦{safeParseFloat(offer.rate).toLocaleString()}</p>
-                        </div>
-                        <div>
                           <p className="text-sm text-gray-600">Limits</p>
-                          <p className="font-semibold text-sm">
-                            {offer.minAmount && offer.maxAmount
-                              ? `${safeParseFloat(offer.minAmount).toFixed(2)} - ${safeParseFloat(offer.maxAmount).toFixed(2)}`
-                              : safeParseFloat(offer.amount).toFixed(2)} USDT
+                          <p className="font-semibold">
+                            ₦{safeParseFloat(offer.minLimit).toLocaleString()} - ₦{safeParseFloat(offer.maxLimit).toLocaleString()}
                           </p>
                         </div>
-                      </div>
-
-                      <div className="flex gap-2">
-                        <Button 
-                          onClick={() => setSelectedOffer(offer)}
-                          className="flex-1 bg-red-600 hover:bg-red-700"
-                          disabled={!user}
-                        >
-                          Sell USDT
-                        </Button>
-                        <Button
-                          onClick={() => handleContactTrader(offer)}
-                          variant="outline"
-                          size="icon"
-                          disabled={!user}
-                        >
-                          <MessageCircle className="h-4 w-4" />
-                        </Button>
+                        <div className="text-right">
+                          <Button
+                            onClick={() => handleContactTrader(offer)}
+                            disabled={!canContactOffer(offer)}
+                            variant="outline"
+                            className="w-full"
+                          >
+                            <MessageCircle className="h-4 w-4 mr-2" />
+                            {offer.type === 'buy' ? 'Sell to' : 'Buy from'} Trader
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   </CardContent>
@@ -414,16 +468,7 @@ export function MarketplaceFinal() {
         </TabsContent>
       </Tabs>
 
-      {/* Trade Modal */}
-      {selectedOffer && (
-        <BinanceStyleFlow
-          isOpen={!!selectedOffer}
-          onClose={() => setSelectedOffer(null)}
-          offer={selectedOffer!}
-        />
-      )}
-
-      {/* Contact Modal */}
+      {/* Contact Trader Modal */}
       <Dialog open={showContactModal} onOpenChange={setShowContactModal}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -432,34 +477,38 @@ export function MarketplaceFinal() {
           <div className="space-y-4">
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <div className={`w-2 h-2 rounded-full ${contactOffer?.user && contactOffer?.user && contactOffer.user.isOnline ? 'bg-green-400' : 'bg-gray-400'}`} />
+                <div className={`w-2 h-2 rounded-full ${contactOffer?.user && contactOffer.user.isOnline ? 'bg-green-400' : 'bg-gray-400'}`} />
                 <span className="font-medium">{contactOffer?.user?.email || 'Unknown'}</span>
-                {contactOffer?.user && contactOffer?.user && contactOffer.user.isOnline ? (
+                {contactOffer?.user && contactOffer.user.isOnline ? (
                   <Badge variant="outline" className="text-green-600 border-green-600">Online</Badge>
                 ) : (
                   <Badge variant="outline" className="text-gray-500 border-gray-300">Offline</Badge>
                 )}
               </div>
-              <p className="text-sm text-gray-600">
-                {contactOffer?.type === 'sell' ? 'Selling' : 'Buying'} {contactOffer?.amount} USDT at ₦{parseFloat(contactOffer?.rate || '0').toLocaleString()}
-              </p>
+              <div className="text-sm text-gray-600">
+                Rate: ₦{safeParseFloat(contactOffer?.rate).toLocaleString()} per USDT
+              </div>
+              <div className="text-sm text-gray-600">
+                Available: {safeParseFloat(contactOffer?.amount).toFixed(2)} USDT
+              </div>
             </div>
+
             <div className="space-y-2">
-              <Label htmlFor="message">Message</Label>
-              <Textarea
-                id="message"
-                placeholder="Type your message here..."
-                value={contactMessage}
-                onChange={(e) => setContactMessage(e.target.value)}
-                rows={4}
-              />
-            </div>
-            <div className="flex gap-2">
-              <Button onClick={() => setShowContactModal(false)} variant="outline" className="flex-1">
-                Cancel
+              <Button onClick={handleStartTrade} className="w-full">
+                <Zap className="h-4 w-4 mr-2" />
+                Start Trade
               </Button>
-              <Button onClick={sendDirectMessage} className="flex-1" disabled={!contactMessage.trim()}>
-                <Send className="h-4 w-4 mr-2" />
+              <Button 
+                variant="outline" 
+                className="w-full"
+                onClick={() => {
+                  if (contactOffer?.user?.id) {
+                    setLocation(`/user-chat/${contactOffer.user.id}`);
+                    setShowContactModal(false);
+                  }
+                }}
+              >
+                <MessageCircle className="h-4 w-4 mr-2" />
                 Send Message
               </Button>
             </div>
