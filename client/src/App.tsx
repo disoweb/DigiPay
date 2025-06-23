@@ -1,4 +1,4 @@
-import React, { lazy } from 'react';
+import React, { lazy, Suspense } from 'react';
 import { Switch, Route } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -56,8 +56,16 @@ function App() {
             <ProtectedRoute path="/admin" component={Admin} adminOnly />
             <ProtectedRoute path="/admin/approvals" component={AdminApprovals} adminOnly />
             <ProtectedRoute path="/admin/kyc" component={AdminKYC} adminOnly />
-            <ProtectedRoute path="/admin/users" component={AdminUsersFixed} adminOnly />
-            <ProtectedRoute path="/admin/disputes" component={AdminDisputesNew} adminOnly />
+            <Route path="/admin/users">
+              <Suspense fallback={<div>Loading...</div>}>
+                <AdminUsersFixed />
+              </Suspense>
+            </Route>
+            <Route path="/admin/disputes">
+              <Suspense fallback={<div>Loading...</div>}>
+                <AdminDisputesNew />
+              </Suspense>
+            </Route>
             <ProtectedRoute path="/profile-setup" component={ProfileSetup} />
             <ProtectedRoute path="/create-offer" component={OfferCreation} />
             <ProtectedRoute path="/chat/:tradeId" component={ChatPage} />
