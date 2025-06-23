@@ -2,27 +2,16 @@ import { useState, useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Progress } from "@/components/ui/progress";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Clock, CheckCircle, AlertTriangle, Copy, ExternalLink, DollarSign, CreditCard } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
-import { 
-  Clock, 
-  Shield, 
-  CheckCircle, 
-  AlertTriangle, 
-  Upload, 
-  MessageCircle,
-  CreditCard,
-  Timer,
-  ArrowRight,
-  Wallet,
-  Star
-} from "lucide-react";
-
+import { DisputeSystem } from "@/components/dispute-system";
 interface Trade {
   id: number;
   offerId: number;
@@ -73,7 +62,7 @@ export function P2PTradingFlow({ tradeId, userRole }: P2PTradingFlowProps) {
         const now = Date.now();
         const remaining = Math.max(0, deadline - now);
         setTimeRemaining(remaining);
-        
+
         if (remaining === 0) {
           clearInterval(interval);
           queryClient.invalidateQueries({ queryKey: [`/api/trades/${tradeId}`] });
@@ -434,70 +423,14 @@ export function P2PTradingFlow({ tradeId, userRole }: P2PTradingFlowProps) {
         </Card>
       )}
 
-      {/* Dispute/Cancel Actions */}
-      {['payment_pending', 'payment_made'].includes(trade.status) && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-red-600">
-              <AlertTriangle className="h-5 w-5" />
-              Need Help?
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="disputeReason">Dispute Reason</Label>
-                <Textarea
-                  id="disputeReason"
-                  placeholder="Describe the issue you're facing..."
-                  value={disputeReason}
-                  onChange={(e) => setDisputeReason(e.target.value)}
-                  rows={3}
-                />
-              </div>
-
-              <div className="flex gap-2">
-                <Button
-                  variant="destructive"
-                  onClick={() => raiseDisputeMutation.mutate()}
-                  disabled={!disputeReason.trim() || raiseDisputeMutation.isPending}
-                  className="flex-1"
-                >
-                  {raiseDisputeMutation.isPending ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
-                      Raising Dispute...
-                    </>
-                  ) : (
-                    <>
-                      <AlertTriangle className="h-4 w-4 mr-2" />
-                      Raise Dispute
-                    </>
-                  )}
-                </Button>
-
-                {trade.status === 'payment_pending' && (
-                  <Button
-                    variant="outline"
-                    onClick={() => cancelTradeMutation.mutate()}
-                    disabled={cancelTradeMutation.isPending}
-                    className="flex-1"
-                  >
-                    {cancelTradeMutation.isPending ? (
-                      <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600 mr-2" />
-                        Cancelling...
-                      </>
-                    ) : (
-                      'Cancel Trade'
-                    )}
-                  </Button>
-                )}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      {/* Dispute System */}
+      <DisputeSystem 
+        trade={trade} 
+        userRole={userRole} 
+        onDisputeUpdated={() => {
+          queryClient.invalidateQueries({ queryKey: [`/api/trades/${tradeId}`] });
+        }} 
+      />
 
       {/* Trade Completed */}
       {trade.status === 'completed' && (

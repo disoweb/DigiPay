@@ -102,6 +102,19 @@ export const trades = pgTable("trades", {
   bankName: text("bank_name"),
   accountNumber: text("account_number"),
   accountName: text("account_name"),
+  // Dispute fields
+  disputeReason: text("dispute_reason"),
+  disputeCategory: text("dispute_category"),
+  disputeRaisedBy: text("dispute_raised_by"),
+  disputeEvidence: text("dispute_evidence"), // JSON array of file paths
+  disputeCreatedAt: timestamp("dispute_created_at"),
+  adminNotes: text("admin_notes"),
+  resolvedBy: integer("resolved_by").references(() => users.id),
+  resolvedAt: timestamp("resolved_at"),
+  lastAdminUpdate: timestamp("last_admin_update"),
+  // Payment tracking
+  paymentMadeAt: timestamp("payment_made_at"),
+  sellerConfirmedAt: timestamp("seller_confirmed_at"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

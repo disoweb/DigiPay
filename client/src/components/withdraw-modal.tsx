@@ -57,13 +57,14 @@ export function WithdrawModal({ open, onOpenChange, balance }: WithdrawModalProp
   const handleConfirmWithdraw = async () => {
     setIsLoading(true);
     try {
-      // Make the API call to process withdrawal
+      const token = localStorage.getItem('digipay_token');
+      
       const response = await fetch('/api/withdraw', {
         method: 'POST',
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           amount: withdrawAmount,
@@ -73,18 +74,23 @@ export function WithdrawModal({ open, onOpenChange, balance }: WithdrawModalProp
         })
       });
 
+      const data = await response.json();
+
       if (response.ok) {
-        setTimeout(() => {
-          setIsLoading(false);
-          handleClose();
-        }, 2000);
+        // Show success message
+        alert(`Withdrawal request submitted successfully! Amount: ₦${finalAmount.toLocaleString()}`);
+        
+        // Close modal and refresh page to update balance
+        handleClose();
+        window.location.reload();
       } else {
-        setIsLoading(false);
-        // Handle error
+        throw new Error(data.error || 'Withdrawal failed');
       }
     } catch (error) {
+      console.error('Withdrawal error:', error);
+      alert(`Withdrawal failed: ${error.message || 'Please try again'}`);
+    } finally {
       setIsLoading(false);
-      // Handle error
     }
   };
 

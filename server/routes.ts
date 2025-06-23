@@ -909,11 +909,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Raise dispute
+  // Enhanced dispute system
   app.post("/api/trades/:id/dispute", authenticateToken, async (req, res) => {
     try {
       const tradeId = parseInt(req.params.id);
-      const { reason, raisedBy } = req.body;
+      const { reason, category, raisedBy } = req.body;
       const trade = await storage.getTrade(tradeId);
 
       if (!trade) {
@@ -928,9 +928,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Cannot dispute this trade" });
       }
 
+      // Handle evidence files if uploaded
+      let evidenceFiles = [];
+      if (req.files) {
+        // Store evidence files (in production, use cloud storage)
+        evidenceFiles = Array.isArray(req.files) ? req.files.map(f => f.filename) : [req.files.filename];
+      }
+
       await storage.updateTrade(tradeId, { 
         status: "disputed",
-        disputeReason: reason
+        disputeReason: reason,
+        disputeCategory: category,
+        disputeRaisedBy: raisedBy,
+        disputeEvidence: evidenceFiles.length > 0 ? JSON.stringify(evidenceFiles) : null,
+        disputeCreatedAt: new Date()
+      });
+
+      // Create dispute notification
+      await storage.createTransaction({
+        userId: req.user!.id,
+        type: "dispute",
+        amount: trade.amount,
+        status: "pending",
+        adminNotes: `Dispute raised: ${category} - ${reason}`,
+        rate: trade.rate
       });
 
       // Notify admins
@@ -939,14 +960,153 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await emailService.sendTradeNotification(
           adminUsers.email,
           tradeId,
-          `Dispute raised by ${raisedBy}. Reason: ${reason}`
+          `URGENT: Dispute raised by ${raisedBy}. Category: ${category}. Trade ID: ${tradeId}`
         );
       }
 
-      res.json({ success: true, message: "Dispute raised successfully" });
+      res.json({ 
+        success: true, 
+        message: "Dispute submitted successfully. An admin will review within 24 hours.",
+        disputeId: `${tradeId}-DISPUTE`
+      });
     } catch (error) {
       console.error("Dispute error:", error);
       res.status(500).json({ error: "Failed to raise dispute" });
+    }
+  });
+
+  // Admin dispute resolution
+  app.post("/api/admin/disputes/:id/resolve", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      const tradeId = parseInt(req.params.id);
+      const { action, adminNotes } = req.body;
+      const adminId = req.user!.id;
+
+      const trade = await storage.getTrade(tradeId);
+      if (!trade) {
+        return res.status(404).json({ error: "Trade not found" });
+      }
+
+      if (trade.status !== "disputed") {
+        return res.status(400).json({ error: "Trade is not under dispute" });
+      }
+
+      const buyer = await storage.getUser(trade.buyerId);
+      const seller = await storage.getUser(trade.sellerId);
+
+      if (!buyer || !seller) {
+        return res.status(404).json({ error: "Trade participants not found" });
+      }
+
+      let newStatus = "completed";
+      let resolutionMessage = "";
+
+      switch (action) {
+        case 'approve_buyer':
+          // Buyer wins - gets USDT, seller gets nothing back
+          const tradeAmount = parseFloat(trade.amount);
+          await storage.updateUser(buyer.id, {
+            usdtBalance: (parseFloat(buyer.usdtBalance || "0") + tradeAmount).toString()
+          });
+          resolutionMessage = "Dispute resolved in favor of buyer";
+          break;
+
+        case 'approve_seller':
+          // Seller wins - gets USDT back and fiat amount
+          const usdtAmount = parseFloat(trade.amount);
+          const fiatAmount = parseFloat(trade.fiatAmount);
+          
+          await storage.updateUser(seller.id, {
+            usdtBalance: (parseFloat(seller.usdtBalance || "0") + usdtAmount).toString(),
+            nairaBalance: (parseFloat(seller.nairaBalance || "0") + fiatAmount).toString()
+          });
+          resolutionMessage = "Dispute resolved in favor of seller";
+          break;
+
+        case 'require_more_info':
+          // Don't change trade status, just add admin notes
+          await storage.updateTrade(tradeId, {
+            adminNotes: adminNotes,
+            lastAdminUpdate: new Date()
+          });
+
+          // Notify both parties
+          await emailService.sendTradeNotification(
+            buyer.email,
+            tradeId,
+            `Admin requires more information: ${adminNotes}`
+          );
+          await emailService.sendTradeNotification(
+            seller.email,
+            tradeId,
+            `Admin requires more information: ${adminNotes}`
+          );
+
+          return res.json({ 
+            success: true, 
+            message: "Additional information requested from parties" 
+          });
+
+        default:
+          return res.status(400).json({ error: "Invalid resolution action" });
+      }
+
+      // Update trade with resolution
+      await storage.updateTrade(tradeId, {
+        status: newStatus,
+        adminNotes: adminNotes,
+        resolvedBy: adminId,
+        resolvedAt: new Date()
+      });
+
+      // Notify both parties of resolution
+      await emailService.sendTradeNotification(
+        buyer.email,
+        tradeId,
+        `Dispute resolved: ${resolutionMessage}. ${adminNotes}`
+      );
+      await emailService.sendTradeNotification(
+        seller.email,
+        tradeId,
+        `Dispute resolved: ${resolutionMessage}. ${adminNotes}`
+      );
+
+      res.json({ 
+        success: true, 
+        message: "Dispute resolved successfully",
+        resolution: resolutionMessage
+      });
+    } catch (error) {
+      console.error("Dispute resolution error:", error);
+      res.status(500).json({ error: "Failed to resolve dispute" });
+    }
+  });
+
+  // Get all disputes for admin
+  app.get("/api/admin/disputes", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      const disputedTrades = await storage.getDisputedTrades();
+
+      // Enrich with user and offer data
+      const enrichedDisputes = await Promise.all(
+        disputedTrades.map(async (trade) => {
+          const buyer = await storage.getUser(trade.buyerId);
+          const seller = await storage.getUser(trade.sellerId);
+          const offer = await storage.getOffer(trade.offerId);
+
+          return {
+            ...trade,
+            buyer: buyer ? { id: buyer.id, email: buyer.email } : null,
+            seller: seller ? { id: seller.id, email: seller.email } : null,
+            offer
+          };
+        })
+      );
+
+      res.json(enrichedDisputes);
+    } catch (error) {
+      console.error("Get disputes error:", error);
+      res.status(500).json({ error: "Failed to fetch disputes" });
     }
   });
 

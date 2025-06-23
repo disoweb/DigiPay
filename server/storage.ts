@@ -777,6 +777,29 @@ export class DatabaseStorage implements IStorage {
     return tradesResult as EnrichedTrade[];
   }
 
+  // Dispute-related methods
+  async getDisputedTrades(): Promise<Trade[]> {
+    return await db
+      .select()
+      .from(trades)
+      .where(eq(trades.status, "disputed"))
+      .orderBy(desc(trades.createdAt));
+  }
+
+  async resolveDispute(tradeId: number, resolution: string, adminId: number): Promise<Trade | undefined> {
+    const [trade] = await db
+      .update(trades)
+      .set({
+        status: resolution === 'buyer_wins' ? 'completed' : 'cancelled',
+        adminNotes: `Dispute resolved: ${resolution}`,
+        resolvedBy: adminId,
+        resolvedAt: new Date()
+      })
+      .where(eq(trades.id, tradeId))
+      .returning();
+    return trade || undefined;
+  }
+
   // Notification methods
   async createNotification(notification: {
     userId: number;
