@@ -585,7 +585,7 @@ export class DatabaseStorage implements IStorage {
                         u.email as sender_email, u.username as sender_username, u.kyc_verified as sender_kyc_verified
                  FROM messages m 
                  LEFT JOIN users u ON m.sender_id = u.id
-                 WHERE m.sender_id = $1 OR m.recipient_id = $1 
+                 WHERE m.recipient_id = $1 
                  ORDER BY m.created_at DESC`,
                 [userId]
             );

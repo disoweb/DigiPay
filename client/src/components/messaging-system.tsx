@@ -138,8 +138,14 @@ export function MessagingSystem() {
 
   const handleReply = () => {
     if (!selectedMessage || !replyText.trim()) return;
+    
+    // Reply to the sender, not to self
+    const recipientId = selectedMessage.senderId === user?.id 
+      ? selectedMessage.receiverId 
+      : selectedMessage.senderId;
+      
     replyMutation.mutate({
-      recipientId: selectedMessage.senderId,
+      recipientId: recipientId,
       messageText: replyText.trim(),
       offerId: selectedMessage.offerId
     });
@@ -233,7 +239,7 @@ export function MessagingSystem() {
                     >
                       <div className="flex items-center gap-2 mb-1">
                         <div className={`w-2 h-2 rounded-full ${message.sender?.isOnline || false ? 'bg-green-400' : 'bg-gray-400'}`} />
-                        <span className="font-medium text-xs truncate">{message.sender?.username || message.sender?.email?.split('@')[0] || 'Unknown'}</span>
+                        <span className="font-medium text-xs truncate">{message.sender?.username || message.sender?.email?.split('@')[0] || 'Unknown Trader'}</span>
                         {!message.isRead && (
                           <div className="w-2 h-2 bg-blue-500 rounded-full" />
                         )}
@@ -288,7 +294,7 @@ export function MessagingSystem() {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
                             <div className={`w-2 h-2 rounded-full ${message.sender?.isOnline || false ? 'bg-green-400' : 'bg-gray-400'}`} />
-                            <span className="font-medium text-sm">{message.sender?.username || message.sender?.email?.split('@')[0] || 'Unknown'}</span>
+                            <span className="font-medium text-sm">{message.sender?.username || message.sender?.email?.split('@')[0] || 'Unknown Trader'}</span>
                             {!message.isRead && (
                               <Badge variant="destructive" className="text-xs">New</Badge>
                             )}
