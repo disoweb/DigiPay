@@ -219,13 +219,21 @@ export function TradingDashboard() {
       <Card className="border-0 shadow-lg overflow-hidden">
         <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-6 text-white">
           <div className="text-center">
-            <h2 className="text-lg font-medium text-white/90 mb-2">Total Portfolio Value</h2>
+            <div className="flex items-center justify-center gap-3 mb-2">
+              <h2 className="text-lg font-medium text-white/90">Total Portfolio Value</h2>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={toggleCurrency}
+                className="h-6 w-auto px-2 bg-white/10 hover:bg-white/20 text-white text-xs"
+              >
+                <RefreshCw className="h-3 w-3 mr-1" />
+                {portfolioCurrency}
+              </Button>
+            </div>
             <div className="text-4xl font-bold mb-6">
               {currencySymbol}{totalPortfolioValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
-             <Button onClick={toggleCurrency} variant="secondary" size="sm">
-              Toggle Currency ({portfolioCurrency})
-            </Button>
             <div className="grid grid-cols-2 gap-8 max-w-md mx-auto">
               <div className="text-center">
                 <p className="text-white/90 text-sm mb-1">NGN</p>
