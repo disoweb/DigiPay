@@ -5,21 +5,27 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-// API request utility
-export async function apiRequest(method: string, url: string, data?: any) {
-  const token = localStorage.getItem('token');
+// API request helper with auth token
+export async function apiRequest(endpoint: string, options: RequestInit = {}) {
+  const token = localStorage.getItem('authToken');
 
-  const options: RequestInit = {
-    method,
+  const config: RequestInit = {
+    ...options,
     headers: {
       'Content-Type': 'application/json',
-      ...(token && { 'Authorization': `Bearer ${token}` })
-    }
+      ...(token && { Authorization: `Bearer ${token}` }),
+      ...options.headers,
+    },
   };
 
-  if (data && method !== 'GET') {
-    options.body = JSON.stringify(data);
+  const response = await fetch(`/api${endpoint}`, config);
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ error: 'Request failed' }));
+    throw new Error(error.error || 'Request failed');
   }
 
-  return fetch(url, options);
+  return response.json();
 }
+
+export { cn };

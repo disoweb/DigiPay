@@ -191,6 +191,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Paystack webhook for automatic transaction processing
+  app.post("/api/paystack/webhook", express.raw({type: 'application/json'}), async (req, res) => {
+    try {
+      const signature = req.headers['x-paystack-signature'] as string;
+      
+      if (!signature) {
+        console.warn('Webhook received without signature');
+        return res.status(400).send('Missing signature');
+      }
+
+      // Parse the raw body
+      const payload = JSON.parse(req.body.toString());
+      
+      await enhancedPaystackService.handleWebhook(payload, signature);
+      
+      console.log('Webhook processed successfully:', payload.event);
+      res.status(200).send('OK');
+      
+    } catch (error: any) {
+      console.error('Webhook processing error:', error.message);
+      res.status(400).send(error.message || 'Webhook processing failed');
+    }
+  });
+
   // Check username availability
   app.get("/api/user/check-username/:username", authenticateToken, async (req: any, res: Response) => {
     try {
