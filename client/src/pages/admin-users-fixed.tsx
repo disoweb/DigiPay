@@ -84,7 +84,7 @@ export default function AdminUsersFixed() {
   const [showActionModal, setShowActionModal] = useState(false);
   const [showUserDetail, setShowUserDetail] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [actionType, setActionType] = useState<"ban" | "freeze" | "view" | "edit">("view");
+  const [actionType, setActionType] = useState<"ban" | "freeze" | "view" | "edit" | "delete">("view");
   const [actionReason, setActionReason] = useState("");
   const [dropdownOpen, setDropdownOpen] = useState<number | null>(null);
 
@@ -216,7 +216,7 @@ export default function AdminUsersFixed() {
     `${user.first_name || ''} ${user.last_name || ''}`.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleAction = (user: User, action: "ban" | "freeze" | "view" | "edit") => {
+  const handleAction = (user: User, action: "ban" | "freeze" | "view" | "edit" | "delete") => {
     setSelectedUser(user);
     setActionType(action);
     if (action === "view") {
@@ -254,6 +254,8 @@ export default function AdminUsersFixed() {
         frozen: !selectedUser.funds_frozen,
         reason: actionReason
       });
+    } else if (actionType === "delete") {
+      deleteUserMutation.mutate(selectedUser.id);
     }
   };
 
@@ -468,9 +470,18 @@ export default function AdminUsersFixed() {
                                       handleAction(user, "ban");
                                       setDropdownOpen(null);
                                     }}
-                                    className="w-full text-left px-4 py-2 hover:bg-gray-100 rounded-b-lg text-red-600"
+                                    className="w-full text-left px-4 py-2 hover:bg-gray-100 text-red-600"
                                   >
                                     {user.is_banned ? 'Unban User' : 'Ban User'}
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      handleAction(user, "delete");
+                                      setDropdownOpen(null);
+                                    }}
+                                    className="w-full text-left px-4 py-2 hover:bg-gray-100 rounded-b-lg text-red-700 font-medium"
+                                  >
+                                    Delete User
                                   </button>
                                 </>
                               )}
@@ -816,25 +827,60 @@ export default function AdminUsersFixed() {
             <DialogHeader className="text-center">
               <DialogTitle className="text-lg">
                 {actionType === "ban" ? (selectedUser?.is_banned ? "Unban User" : "Ban User") : 
-                 actionType === "freeze" ? (selectedUser?.funds_frozen ? "Unfreeze Funds" : "Freeze User Funds") : "User Action"}
+                 actionType === "freeze" ? (selectedUser?.funds_frozen ? "Unfreeze Funds" : "Freeze User Funds") : 
+                 actionType === "delete" ? "Delete User" : "User Action"}
               </DialogTitle>
               <DialogDescription className="text-center">
                 {selectedUser && `Action for: ${selectedUser.email}`}
+                {actionType === "delete" && (
+                  <div className="mt-2 text-red-600 font-medium">
+                    ⚠️ This action cannot be undone!
+                  </div>
+                )}
               </DialogDescription>
             </DialogHeader>
 
             <div className="space-y-4 mt-4">
-              <Textarea
-                placeholder={`Reason for ${actionType}...`}
-                value={actionReason}
-                onChange={(e) => setActionReason(e.target.value)}
-                rows={3}
-                className="text-sm w-full"
-              />
+              {actionType !== "delete" && (
+                <Textarea
+                  placeholder={`Reason for ${actionType}...`}
+                  value={actionReason}
+                  onChange={(e) => setActionReason(e.target.value)}
+                  rows={3}
+                  className="text-sm w-full"
+                />
+              )}
+              {actionType === "delete" && (
+                <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-sm text-red-800 mb-2">
+                    Are you sure you want to delete this user? This will permanently remove:
+                  </p>
+                  <ul className="text-xs text-red-700 list-disc list-inside space-y-1">
+                    <li>User account and profile</li>
+                    <li>All transaction history</li>
+                    <li>All trading records</li>
+                    <li>All messages and communications</li>
+                  </ul>
+                  <Textarea
+                    placeholder="Required: Reason for deletion..."
+                    value={actionReason}
+                    onChange={(e) => setActionReason(e.target.value)}
+                    rows={2}
+                    className="text-sm w-full mt-3"
+                    required
+                  />
+                </div>
+              )}
               <div className="flex flex-col sm:flex-row gap-2">
-                <Button onClick={executeAction} variant="destructive" className="flex-1 w-full">
+                <Button 
+                  onClick={executeAction} 
+                  variant="destructive" 
+                  className="flex-1 w-full"
+                  disabled={actionType === "delete" && !actionReason.trim()}
+                >
                   Confirm {actionType === "ban" ? (selectedUser?.is_banned ? "Unban" : "Ban") : 
-                            actionType === "freeze" ? (selectedUser?.funds_frozen ? "Unfreeze" : "Freeze") : "Action"}
+                            actionType === "freeze" ? (selectedUser?.funds_frozen ? "Unfreeze" : "Freeze") : 
+                            actionType === "delete" ? "Delete" : "Action"}
                 </Button>
                 <Button variant="outline" onClick={() => setShowActionModal(false)} className="flex-1 w-full">
                   Cancel
