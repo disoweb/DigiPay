@@ -382,7 +382,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .where(
           and(
             eq(trades.status, 'completed'),
-            gte(trades.createdAt, oneWeekAgo.toISOString())
+            gte(trades.createdAt, oneWeekAgo)
           )
         );
 
