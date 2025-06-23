@@ -41,6 +41,8 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
   refetchUser: () => void;
+  loginMutation: any;
+  registerMutation: any;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -168,6 +170,57 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const registerMutation = useMutation({
+    mutationFn: async ({ email, password, phone, bvn }: { email: string; password: string; phone: string; bvn: string }) => {
+      try {
+        const res = await apiRequest("POST", "/api/auth/register", { email, password, phone, bvn });
+        const data = await res.json();
+        
+        if (!res.ok) {
+          throw new Error(data.message || `HTTP ${res.status}: Registration failed`);
+        }
+        
+        if (!data.token) {
+          throw new Error("No authentication token received");
+        }
+        
+        return data;
+      } catch (error: any) {
+        console.error("Registration error:", error);
+        throw error;
+      }
+    },
+    onSuccess: (data) => {
+      try {
+        console.log("Registration success, storing token");
+        localStorage.setItem("digipay_token", data.token);
+        queryClient.setQueryData(["user"], data);
+        
+        toast({
+          title: "Registration Successful",
+          description: `Welcome to DigiPay, ${data.firstName || data.username}!`,
+        });
+        
+        navigate("/profile-setup");
+      } catch (error) {
+        console.error("Registration success handler error:", error);
+        toast({
+          title: "Registration Error",
+          description: "Registration succeeded but there was an issue. Please refresh the page.",
+          variant: "destructive",
+        });
+      }
+    },
+    onError: (error: Error) => {
+      console.error("Registration mutation error:", error);
+      toast({
+        title: "Registration Failed",
+        description: error.message || "Registration failed. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const logout = () => {
     try {
       console.log("Logging out user");
@@ -199,6 +252,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.error("Refetch user error:", error);
       }
     },
+    loginMutation,
+    registerMutation,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -3,6 +3,7 @@ import { Switch, Route } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from "@/hooks/use-auth";
+import { ErrorBoundary } from "@/components/error-boundary";
 import { ProtectedRoute } from "@/lib/protected-route";
 // Pages
 import LandingPage from "@/pages/landing-page";
@@ -36,9 +37,10 @@ const queryClient = new QueryClient();
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <div className="min-h-screen bg-white">
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <div className="min-h-screen bg-white">
           <Switch>
             <Route path="/" component={LandingPage} />
             <Route path="/auth" component={AuthPage} />
@@ -81,12 +83,14 @@ function App() {
           <Route path="/admin" component={Admin} />
           <Route path="/admin/approvals" component={AdminApprovalsNew} />
           <Route path="/admin/users" component={AdminUsersFixed} />
+          <Route path="*" component={NotFound} />
         </Switch>
 
           <Toaster />
-        </div>
-      </AuthProvider>
-    </QueryClientProvider>
+          </div>
+        </AuthProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
 
