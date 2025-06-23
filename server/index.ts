@@ -27,14 +27,14 @@ app.use((req, res, next) => {
       "base-uri 'self';"
     );
   }
-  
+
   // CORS headers for development
   if (process.env.NODE_ENV === 'development') {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   }
-  
+
   next();
 });
 
@@ -96,6 +96,27 @@ app.use((req, res, next) => {
   // this serves both the API and the client.
   // It is the only port that is not firewalled.
   const port = 5000;
+
+  // Real-time WebSocket functionality
+  function broadcastToAll(message: any) {
+    wss.clients.forEach(client => {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(JSON.stringify(message));
+      }
+    });
+  }
+
+  function broadcastToUser(userId: number, message: any) {
+    wss.clients.forEach((client: any) => {
+      if (client.readyState === WebSocket.OPEN && client.userId === userId) {
+        client.send(JSON.stringify(message));
+      }
+    });
+  }
+
+  // Make broadcastToUser available globally
+  global.broadcastToUser = broadcastToUser;
+
   server.listen({
     port,
     host: "0.0.0.0",

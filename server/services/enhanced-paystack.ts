@@ -94,7 +94,7 @@ export class EnhancedPaystackService {
 
     try {
       // Create pending transaction record first
-      await storage.createTransaction({
+      const transaction = await storage.createTransaction({
         userId,
         type: 'deposit',
         amount: amount.toString(),
@@ -102,6 +102,8 @@ export class EnhancedPaystackService {
         paystackRef: reference,
         paymentMethod: 'paystack',
       });
+      
+      console.log(`Created pending transaction ${transaction.id} for reference: ${reference}`);
 
       const response = await axios.post(
         `${this.baseUrl}/transaction/initialize`,
@@ -387,6 +389,85 @@ export class EnhancedPaystackService {
     // Handle failed withdrawal transfers
     const { reference } = data;
     console.log(`Transfer failed: ${reference}`);
+  }
+
+  /**
+   * Initiate transfer/withdrawal to bank account
+   */
+  async initiateTransfer(
+    amount: number,
+    accountNumber: string,
+    bankCode: string,
+    accountName: string,
+    reason: string
+  ): Promise<{
+    success: boolean;
+    data?: {
+      transfer_code: string;
+      id: number;
+      amount: number;
+      status: string;
+    };
+    message?: string;
+  }> {
+    if (!this.secretKey) {
+      throw new Error('Transfer service not configured');
+    }
+
+    try {
+      // First create transfer recipient
+      const recipientResponse = await axios.post(
+        `${this.baseUrl}/transferrecipient`,
+        {
+          type: 'nuban',
+          name: accountName,
+          account_number: accountNumber,
+          bank_code: bankCode,
+          currency: 'NGN'
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${this.secretKey}`,
+            'Content-Type': 'application/json'
+          },
+          timeout: 15000
+        }
+      );
+
+      if (!recipientResponse.data.status) {
+        throw new Error('Failed to create transfer recipient');
+      }
+
+      // Then initiate transfer
+      const transferResponse = await axios.post(
+        `${this.baseUrl}/transfer`,
+        {
+          source: 'balance',
+          amount: Math.round(amount * 100), // Convert to kobo
+          recipient: recipientResponse.data.data.recipient_code,
+          reason
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${this.secretKey}`,
+            'Content-Type': 'application/json'
+          },
+          timeout: 15000
+        }
+      );
+
+      return {
+        success: transferResponse.data.status,
+        data: transferResponse.data.data,
+        message: transferResponse.data.message
+      };
+    } catch (error: any) {
+      console.error('Enhanced Paystack transfer error:', error.response?.data || error.message);
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Transfer initiation failed'
+      };
+    }
   }
 
   /**
