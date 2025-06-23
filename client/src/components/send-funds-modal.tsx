@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { Send, User, Mail, DollarSign, Loader2, ArrowUpDown, Coins } from "lucide-react";
+import { Send, User, Mail, DollarSign, Loader2, ArrowUpDown, Coins, CheckCircle, XCircle, Clock, Star } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface SendFundsModalProps {
@@ -30,6 +30,7 @@ export function SendFundsModal({ open, onOpenChange, nairaBalance, usdtBalance }
   const [isLookingUp, setIsLookingUp] = useState(false);
   const [step, setStep] = useState(1);
   const [recipientUser, setRecipientUser] = useState<any>(null);
+  const [lookupTimeout, setLookupTimeout] = useState<NodeJS.Timeout | null>(null);
 
   const handleLookup = async () => {
     if (!recipientEmail.trim()) {
@@ -75,34 +76,63 @@ export function SendFundsModal({ open, onOpenChange, nairaBalance, usdtBalance }
     mutationFn: async (query: string) => {
       const response = await apiRequest("POST", "/api/users/lookup", { query });
       if (!response.ok) {
-        throw new Error("User not found");
+        const errorData = await response.json();
+        throw new Error(errorData.error || "User not found");
       }
       return response.json();
     },
     onSuccess: (data) => {
-      setRecipientUser(data);
+      setRecipient(data);
+      setIsLookingUp(false);
     },
-    onError: () => {
-      setRecipientUser(null);
+    onError: (error: any) => {
+      setRecipient(null);
+      setIsLookingUp(false);
     },
   });
 
-  // Manual lookup function
-  // const handleLookup = () => {
-  //   if (!recipient.trim()) return;
-  //   lookupMutation.mutate(recipient.trim());
-  // };
+  // Debounced lookup function
+  const debouncedLookup = useCallback((query: string) => {
+    if (lookupTimeout) {
+      clearTimeout(lookupTimeout);
+    }
+
+    const timeout = setTimeout(() => {
+      if (query.trim().length >= 3) {
+        setIsLookingUp(true);
+        lookupMutation.mutate(query.trim());
+      } else {
+        setRecipient(null);
+        setIsLookingUp(false);
+      }
+    }, 500);
+
+    setLookupTimeout(timeout);
+  }, [lookupMutation, lookupTimeout]);
 
   // Auto-lookup when user types
   const handleRecipientChange = (value: string) => {
     setRecipientEmail(value);
     setRecipient(null);
-
-    // Auto-lookup if it looks like an email
-    // if (value.includes('@') && value.includes('.') && value.length > 5) {
-    //   lookupMutation.mutate(value.trim());
-    // }
+    
+    if (value.trim().length >= 3) {
+      debouncedLookup(value);
+    } else {
+      setIsLookingUp(false);
+      if (lookupTimeout) {
+        clearTimeout(lookupTimeout);
+      }
+    }
   };
+
+  // Clean up timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (lookupTimeout) {
+        clearTimeout(lookupTimeout);
+      }
+    };
+  }, [lookupTimeout]);
 
   const sendMutation = useMutation({
     mutationFn: async ({ recipientId, amount, description, currency }: { recipientId: number; amount: number; description: string; currency: string }) => {
@@ -232,22 +262,94 @@ export function SendFundsModal({ open, onOpenChange, nairaBalance, usdtBalance }
           {/* Recipient Lookup */}
           <div className="space-y-2">
             <Label htmlFor="recipient">Send to (Email or Username)</Label>
-            <div className="flex gap-2">
+            <div className="relative">
               <Input
                 id="recipient"
-                placeholder="Enter email or username"
+                placeholder="Enter email or username (min 3 characters)"
                 value={recipientEmail}
                 onChange={(e) => handleRecipientChange(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleLookup()}
+                className={`pr-10 ${
+                  recipient 
+                    ? recipient.kycVerified 
+                      ? "border-green-500 focus:border-green-500" 
+                      : "border-yellow-500 focus:border-yellow-500"
+                    : recipientEmail.length >= 3 && !isLookingUp && !recipient
+                    ? "border-red-500 focus:border-red-500"
+                    : ""
+                }`}
               />
-              <Button 
-                variant="outline" 
-                onClick={handleLookup}
-                disabled={!recipientEmail.trim()}
-              >
-                Find
-              </Button>
+              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                {isLookingUp ? (
+                  <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
+                ) : recipient ? (
+                  recipient.kycVerified ? (
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                  ) : (
+                    <Clock className="h-4 w-4 text-yellow-500" />
+                  )
+                ) : recipientEmail.length >= 3 ? (
+                  <XCircle className="h-4 w-4 text-red-500" />
+                ) : null}
+              </div>
             </div>
+            
+            {/* User Details Card */}
+            {recipient && (
+              <Card className="border-l-4 border-l-blue-500">
+                <CardContent className="p-3">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                        <User className="h-5 w-5 text-white" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-sm">
+                          {recipient.firstName && recipient.lastName 
+                            ? `${recipient.firstName} ${recipient.lastName}`
+                            : recipient.username}
+                        </p>
+                        <p className="text-xs text-gray-600">{recipient.email}</p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <Badge 
+                            variant={recipient.kycVerified ? "default" : "secondary"}
+                            className={`text-xs ${
+                              recipient.kycVerified 
+                                ? "bg-green-100 text-green-800 border-green-200" 
+                                : "bg-yellow-100 text-yellow-800 border-yellow-200"
+                            }`}
+                          >
+                            {recipient.kycVerified ? "Verified" : "Unverified"}
+                          </Badge>
+                          {recipient.isOnline && (
+                            <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
+                              Online
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      {recipient.ratingCount > 0 && (
+                        <div className="flex items-center gap-1 text-xs text-gray-600">
+                          <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                          <span>{parseFloat(recipient.averageRating).toFixed(1)}</span>
+                          <span>({recipient.ratingCount})</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  {!recipient.kycVerified && (
+                    <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs text-yellow-800">
+                      This user is not KYC verified. Proceed with caution.
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+            
+            {recipientEmail.length >= 3 && !recipient && !isLookingUp && (
+              <p className="text-xs text-red-600">User not found</p>
+            )}
           </div>
 
           {/* Recipient Display */}

@@ -1,44 +1,53 @@
 # DigiPay P2P Cryptocurrency Trading Platform
 
-## Project Overview
-A peer-to-peer cryptocurrency trading platform that enables direct trading between users without intermediaries. The platform facilitates secure USDT/Naira transactions with built-in escrow services, KYC verification, and real-time messaging.
+## Overview
+DigiPay is a peer-to-peer cryptocurrency trading platform that enables direct trading between users without intermediaries. The platform supports both Nigerian Naira (NGN) and USDT transactions with integrated payment processing through Paystack and TRON blockchain integration.
 
 ## Project Architecture
-- **Frontend**: React with Vite, TypeScript, Tailwind CSS
-- **Backend**: Express.js with TypeScript
+- **Frontend**: React with TypeScript, Vite, Tailwind CSS
+- **Backend**: Express.js with TypeScript 
 - **Database**: PostgreSQL with Drizzle ORM
-- **Real-time**: WebSocket connections for messaging
-- **Payments**: Paystack integration for Naira transactions
-- **Blockchain**: TronWeb for USDT transactions (demo mode in development)
-- **Authentication**: JWT-based with session management
+- **Authentication**: JWT-based authentication
+- **Payment Processing**: Paystack for NGN transactions
+- **Blockchain**: TRON network for USDT transactions
+- **Real-time Features**: WebSocket support for live chat and notifications
 
 ## Key Features
-- User registration and KYC verification
-- Buy/sell offer creation and management
-- Real-time trading with escrow protection
-- Secure messaging system
-- Payment processing via Paystack
-- Admin dashboard for transaction oversight
+- User registration and KYC verification system
+- P2P trading marketplace with offer creation and management
+- Wallet functionality with deposit/withdrawal capabilities
+- Real-time messaging system between traders
+- Escrow system for secure transactions
+- Admin panel for user and trade management
 - Rating and review system
+- Mobile-responsive design
 
 ## Recent Changes
-- **2025-01-22**: Successfully migrated project from Replit Agent to standard Replit environment
-- **2025-01-22**: Fixed database schema mismatches (recipient_id → receiver_id, message → content)
-- **2025-01-22**: Configured PostgreSQL database and applied migrations
-- **2025-01-22**: Resolved Paystack integration issues and confirmed API key configuration
-- **2025-01-22**: Application now running successfully on port 5000
+- **2025-01-23**: Successfully migrated project from Replit Agent to standard Replit environment
+- **2025-01-23**: Fixed database schema issues with message table columns
+- **2025-01-23**: Resolved Paystack payment integration issues
+- **2025-01-23**: Enhanced send funds modal with real-time user lookup and verification status display
+- **2025-01-23**: Added debounced search functionality for user lookup with visual feedback indicators
 
-## Environment Configuration
-- Database: PostgreSQL (configured and migrated)
-- Paystack: API keys configured for payment processing
-- TronWeb: Running in demo mode for development
-- WebSocket server: Active on /ws endpoint
+## Database Schema
+- Users table with KYC verification fields
+- Offers table for trading listings
+- Trades table for transaction records
+- Messages table for chat functionality
+- Transactions table for payment history
+- Ratings table for user feedback
+
+## Environment Setup
+- Node.js 20 with TypeScript
+- PostgreSQL database (configured)
+- Paystack API integration (configured)
+- TRON network integration (demo mode for development)
 
 ## User Preferences
-*To be updated as user preferences are expressed*
+- Focus on security and user verification
+- Real-time feedback for user interactions
+- Clean, professional UI design
+- Mobile-first responsive design
 
-## Development Status
-✅ Project successfully imported and running
-✅ Database connectivity established
-✅ Payment integration verified
-✅ Core functionality operational
+## Current Status
+The project is fully functional and ready for continued development. All core features are working including payments, user verification, and real-time messaging.

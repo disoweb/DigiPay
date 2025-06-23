@@ -2220,22 +2220,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/users/lookup", authenticateToken, async (req, res) => {
     try {
       const { query } = req.body;
-      const user = await storage.getUserByEmail(query.toLowerCase());
+      
+      if (!query || query.trim().length === 0) {
+        return res.status(400).json({ error: "Query parameter is required" });
+      }
+
+      let user = null;
+      const trimmedQuery = query.trim().toLowerCase();
+      
+      // Try to find by email first
+      if (trimmedQuery.includes('@')) {
+        user = await storage.getUserByEmail(trimmedQuery);
+      } else {
+        // Try to find by username
+        user = await storage.getUserByUsername(trimmedQuery);
+      }
 
       if (!user) {
         return res.status(404).json({ error: "User not found" });
       }
 
-      // Return only safe user info
+      // Don't allow sending to self
+      if (user.id === req.user?.id) {
+        return res.status(400).json({ error: "Cannot send funds to yourself" });
+      }
+
+      // Return only safe user info with verification details
       res.json({
         id: user.id,
         email: user.email,
         firstName: user.firstName,
         lastName: user.lastName,
-        username: user.firstName && user.lastName 
+        username: user.username || (user.firstName && user.lastName 
           ? `${user.firstName} ${user.lastName}` 
-          : user.email.split('@')[0],
-        kycVerified: user.kycVerified
+          : user.email.split('@')[0]),
+        kycVerified: user.kycVerified,
+        kycStatus: user.kycStatus,
+        averageRating: user.averageRating || "0",
+        ratingCount: user.ratingCount || 0,
+        isOnline: user.isOnline || false,
+        lastSeen: user.lastSeen
       });
     } catch (error) {
       console.error("User lookup error:", error);
