@@ -38,20 +38,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/users/:userId", authenticateToken, async (req, res) => {
     try {
       const userId = parseInt(req.params.userId);
+      
+      if (isNaN(userId)) {
+        return res.status(400).json({ error: "Invalid user ID" });
+      }
+      
       const user = await storage.getUser(userId);
       if (!user) {
         return res.status(404).json({ error: "User not found" });
       }
 
+      // Calculate completed trades
+      const trades = await storage.getTrades();
+      const userTrades = trades.filter(t => 
+        (t.buyerId === userId || t.sellerId === userId) && t.status === 'completed'
+      );
+
       // Return public profile info only
       const publicProfile = {
         id: user.id,
         email: user.email,
+        username: user.username,
+        firstName: user.firstName,
+        lastName: user.lastName,
         kycVerified: user.kycVerified,
         averageRating: user.averageRating,
         ratingCount: user.ratingCount,
-        completedTrades: 0, // This should be calculated from actual trades
-        isOnline: true // This should be from websocket status
+        completedTrades: userTrades.length,
+        isOnline: user.isOnline || false,
+        lastSeen: user.lastSeen || user.createdAt,
+        createdAt: user.createdAt
       };
 
       res.json(publicProfile);
@@ -267,6 +283,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Market stats error:", error);
       res.status(500).json({ error: "Failed to fetch market stats" });
+    }
+  });
+
+  // Get individual offer by ID
+  app.get("/api/offers/:id", async (req, res) => {
+    try {
+      const offerId = parseInt(req.params.id);
+      const offer = await storage.getOffer(offerId);
+      
+      if (!offer) {
+        return res.status(404).json({ error: "Offer not found" });
+      }
+
+      // Enrich with user data
+      const user = await storage.getUser(offer.userId);
+      const enrichedOffer = {
+        ...offer,
+        user: user ? {
+          id: user.id,
+          email: user.email,
+          username: user.username,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          averageRating: user.averageRating || "0.00",
+          ratingCount: user.ratingCount || 0,
+          kycVerified: user.kycVerified || false,
+          isOnline: user.isOnline || false,
+          lastSeen: user.lastSeen || user.createdAt
+        } : null,
+      };
+
+      res.json(enrichedOffer);
+    } catch (error) {
+      console.error("Get offer error:", error);
+      res.status(500).json({ error: "Failed to fetch offer" });
     }
   });
 

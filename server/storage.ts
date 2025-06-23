@@ -365,13 +365,13 @@ export class DatabaseStorage implements IStorage {
       .insert(users)
       .values({
         ...insertUser,
-        tronAddress: `TRX${Math.random().toString(36).substring(2, 15)}`,
-        kycVerified: false,
-        nairaBalance: "0",
-        usdtBalance: "0",
-        averageRating: "0",
-        ratingCount: 0,
-        isAdmin: false,
+        tronAddress: insertUser.tronAddress || `TRX${Math.random().toString(36).substring(2, 15)}`,
+        kycVerified: insertUser.kycVerified || false,
+        nairaBalance: insertUser.nairaBalance || "0",
+        usdtBalance: insertUser.usdtBalance || "0",
+        averageRating: insertUser.averageRating || "0",
+        ratingCount: insertUser.ratingCount || 0,
+        isAdmin: insertUser.isAdmin || false,
       })
       .returning();
     return user;
@@ -621,6 +621,23 @@ export class DatabaseStorage implements IStorage {
         } catch (error) {
             console.error("Error marking message as read:", error);
             return false;
+        }
+    }
+
+    async getDirectMessages(userId1: number, userId2: number): Promise<Message[]> {
+        try {
+            return await db.select()
+                .from(messages)
+                .where(
+                    or(
+                        and(eq(messages.senderId, userId1), eq(messages.receiverId, userId2)),
+                        and(eq(messages.senderId, userId2), eq(messages.receiverId, userId1))
+                    )
+                )
+                .orderBy(asc(messages.createdAt));
+        } catch (error) {
+            console.error("Error fetching direct messages:", error);
+            return [];
         }
     }
 
