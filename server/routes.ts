@@ -2697,6 +2697,87 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // USDT transfer endpoint (for internal USDT transfers between users)
+  app.post("/api/transfers/send-usdt", authenticateToken, async (req, res) => {
+    try {
+      const { recipientId, amount, description } = req.body;
+      const senderId = req.user!.id;
+
+      if (senderId === recipientId) {
+        return res.status(400).json({ error: "Cannot send USDT to yourself" });
+      }
+
+      const sender = await storage.getUser(senderId);
+      const recipient = await storage.getUser(recipientId);
+
+      if (!sender || !recipient) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      // Check if sender's funds are frozen
+      if (sender.fundsFrozen) {
+        return res.status(403).json({ 
+          error: "Your funds have been frozen. USDT transfers are not allowed.",
+          reason: sender.freezeReason || "Account under review"
+        });
+      }
+
+      // Check if sender is banned
+      if (sender.isBanned) {
+        return res.status(403).json({ 
+          error: "Your account has been suspended. Please contact support.",
+          reason: sender.banReason || "Account suspended"
+        });
+      }
+
+      const senderUsdtBalance = parseFloat(sender.usdtBalance || "0");
+      if (amount > senderUsdtBalance) {
+        return res.status(400).json({ error: "Insufficient USDT balance" });
+      }
+
+      // Apply 1% fee for USDT transfers
+      const fee = amount * 0.01;
+      const transferAmount = amount - fee;
+
+      // Update USDT balances
+      const newSenderBalance = senderUsdtBalance - amount; // Full amount including fee
+      const newRecipientBalance = parseFloat(recipient.usdtBalance || "0") + transferAmount; // Amount minus fee
+
+      await storage.updateUser(senderId, { 
+        usdtBalance: newSenderBalance.toFixed(8)
+      });
+      await storage.updateUser(recipientId, { 
+        usdtBalance: newRecipientBalance.toFixed(8)
+      });
+
+      // Create transaction records
+      await storage.createTransaction({
+        userId: senderId,
+        type: "transfer_out",
+        amount: amount.toString(),
+        status: "completed",
+        adminNotes: `USDT transfer to ${recipient.email}: ${description || 'Internal transfer'} (Fee: ${fee.toFixed(6)} USDT)`
+      });
+
+      await storage.createTransaction({
+        userId: recipientId,
+        type: "transfer_in",
+        amount: transferAmount.toString(),
+        status: "completed",
+        adminNotes: `USDT transfer from ${sender.email}: ${description || 'Internal transfer'}`
+      });
+
+      res.json({ 
+        success: true, 
+        message: `${transferAmount.toFixed(6)} USDT sent successfully to ${recipient.email} (Fee: ${fee.toFixed(6)} USDT)`,
+        txHash: `internal-${Date.now()}-${Math.random().toString(36).substring(2, 15)}`
+      });
+    } catch (error) {
+      console.error("USDT transfer error:", error);
+      res.status(500).json({ error: "USDT transfer failed" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   // Setup WebSocket for real-time features
