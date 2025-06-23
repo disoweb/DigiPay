@@ -88,24 +88,9 @@ export function DepositModal({ open, onOpenChange }: DepositModalProps) {
   const handlePaystackPayment = async (paystackData: any) => {
     try {
       setIsProcessing(true);
-      console.log("Opening Paystack payment...", paystackData);
+      console.log("Setting up seamless Paystack payment...", paystackData);
 
-      // If authorization_url is available, open it directly
-      if (paystackData.authorization_url) {
-        console.log("Opening Paystack URL directly:", paystackData.authorization_url);
-        const paymentWindow = window.open(paystackData.authorization_url, '_blank', 'width=600,height=700');
-
-        // Show manual verification option
-        toast({
-          title: "Payment Window Opened",
-          description: "Complete your payment in the new window, then click 'Verify Payment' below.",
-        });
-
-        setIsProcessing(false);
-        return;
-      }
-
-      // Fallback to inline payment
+      // Use inline payment for seamless experience
       await initializePaystack({
         key: PAYSTACK_PUBLIC_KEY,
         email: user?.email || "",
@@ -115,7 +100,10 @@ export function DepositModal({ open, onOpenChange }: DepositModalProps) {
         callback: async (response: any) => {
           console.log("Paystack callback received:", response);
           if (response.status === "success") {
-            await handlePaymentVerification(response.reference);
+            // Wait a moment for Paystack to process
+            setTimeout(async () => {
+              await handlePaymentVerification(response.reference);
+            }, 2000);
           } else {
             setIsProcessing(false);
             toast({
@@ -133,21 +121,60 @@ export function DepositModal({ open, onOpenChange }: DepositModalProps) {
     } catch (error) {
       console.error("Paystack payment error:", error);
       setIsProcessing(false);
-
-      // If inline payment fails, show the authorization URL as fallback
+      
+      // Fallback to authorization URL if inline fails
       if (paystackData.authorization_url) {
-        toast({
-          title: "Opening Payment Page",
-          description: "Click the link below to complete your payment",
-          action: (
-            <Button 
-              onClick={() => window.open(paystackData.authorization_url, '_blank')}
-              variant="outline"
-              size="sm"
-            >
-              Open Payment
-            </Button>
-          ),
+        // Create an embedded iframe for seamless experience
+        const iframe = document.createElement('iframe');
+        iframe.src = paystackData.authorization_url;
+        iframe.style.cssText = `
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          border: none;
+          z-index: 9999;
+          background: white;
+        `;
+        
+        // Add close button
+        const closeBtn = document.createElement('button');
+        closeBtn.innerHTML = '×';
+        closeBtn.style.cssText = `
+          position: fixed;
+          top: 20px;
+          right: 20px;
+          width: 40px;
+          height: 40px;
+          border: none;
+          background: #ff4444;
+          color: white;
+          font-size: 24px;
+          border-radius: 50%;
+          cursor: pointer;
+          z-index: 10000;
+        `;
+        closeBtn.onclick = () => {
+          document.body.removeChild(iframe);
+          document.body.removeChild(closeBtn);
+          setIsProcessing(false);
+        };
+        
+        document.body.appendChild(iframe);
+        document.body.appendChild(closeBtn);
+        
+        // Listen for payment completion
+        window.addEventListener('message', (event) => {
+          if (event.data.type === 'paystack_payment_complete') {
+            document.body.removeChild(iframe);
+            document.body.removeChild(closeBtn);
+            if (event.data.status === 'success') {
+              setTimeout(async () => {
+                await handlePaymentVerification(event.data.reference);
+              }, 2000);
+            }
+          }
         });
       } else {
         toast({
@@ -160,12 +187,15 @@ export function DepositModal({ open, onOpenChange }: DepositModalProps) {
   };
 
   const handlePaymentVerification = async (reference: string) => {
+    // Prevent double verification
+    if (verifyPaymentMutation.isPending) {
+      console.log("Verification already in progress, skipping...");
+      return;
+    }
+
     try {
       console.log("Verifying payment with reference:", reference);
       setIsProcessing(true);
-
-      // Add a small delay to ensure Paystack has processed the payment
-      await new Promise(resolve => setTimeout(resolve, 2000));
 
       const res = await apiRequest("POST", "/api/payments/verify", { reference });
       const result = await res.json();

@@ -64,23 +64,39 @@ export const loadPaystackScript = (): Promise<void> => {
 };
 
 export const initializePaystack = async (config: PaystackConfig) => {
-  console.log("Loading Paystack script...");
+  console.log("Loading Paystack script for seamless payment...");
   await loadPaystackScript();
   
-  console.log("Paystack script loaded, setting up payment...");
-  console.log("Config:", config);
+  console.log("Paystack script loaded, setting up inline payment...");
   
   if (!window.PaystackPop) {
     throw new Error("PaystackPop is not available after script load");
   }
   
-  const handler = window.PaystackPop.setup(config);
-  console.log("Payment handler created:", handler);
+  // Enhanced config for seamless experience
+  const enhancedConfig = {
+    ...config,
+    container: 'paystack-container', // Try to use container if available
+    onLoad: (response: any) => {
+      console.log("Paystack loaded:", response);
+    },
+    onCancel: () => {
+      console.log("Payment cancelled by user");
+      config.onClose();
+    },
+    onError: (error: any) => {
+      console.error("Paystack error:", error);
+      config.onClose();
+    }
+  };
+  
+  const handler = window.PaystackPop.setup(enhancedConfig);
+  console.log("Payment handler created for seamless experience");
   
   if (!handler || !handler.openIframe) {
     throw new Error("Payment handler setup failed");
   }
   
   handler.openIframe();
-  console.log("Payment iframe opened");
+  console.log("Seamless payment iframe opened");
 };

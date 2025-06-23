@@ -2583,14 +2583,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log(`Verifying payment for user ${userId}, reference: ${reference}`);
 
+      // First check if we already have a completed transaction for this reference
+      const allUserTransactions = await storage.getUserTransactions(userId);
+      const existingCompletedTx = allUserTransactions.find(tx => 
+        tx.paystackRef === reference && tx.status === 'completed'
+      );
+
+      if (existingCompletedTx) {
+        console.log("Transaction already completed, preventing double credit:", existingCompletedTx.id);
+        return res.json({
+          success: true,
+          data: { status: 'success', amount: parseFloat(existingCompletedTx.amount) * 100 },
+          balanceUpdated: false,
+          message: "Payment already processed"
+        });
+      }
+
       const result = await paystackService.verifyPayment(reference);
       console.log("Paystack verification result:", result);
 
       if (result.success && result.data) {
         // Check if payment was successful
         if (result.data.status === 'success') {
-          const transactions = await storage.getUserTransactions(userId);
-          const pendingTx = transactions.find(tx => tx.paystackRef === reference && tx.status === 'pending');
+          const pendingTx = allUserTransactions.find(tx => 
+            tx.paystackRef === reference && tx.status === 'pending'
+          );
 
           console.log("Found pending transaction:", pendingTx);
 
@@ -2631,18 +2648,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
           } else {
             console.log("No pending transaction found for reference:", reference);
-            // Try to find any transaction with this reference, regardless of status
-            const allUserTransactions = await storage.getUserTransactions(userId);
-            const existingTx = allUserTransactions.find(tx => tx.paystackRef === reference);
             
-            if (existingTx && existingTx.status === 'completed') {
-              console.log("Transaction already completed:", existingTx.id);
-              return res.json({
-                ...result,
-                balanceUpdated: false,
-                message: "Payment already processed"
-              });
-            } else if (!existingTx) {
+            // Only create new transaction if none exists for this reference
+            const anyExistingTx = allUserTransactions.find(tx => tx.paystackRef === reference);
+            
+            if (!anyExistingTx) {
               // Create and auto-settle new transaction
               console.log("Creating and auto-settling new transaction for successful payment");
               const depositAmount = result.data.amount / 100;
@@ -2680,6 +2690,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   console.log("Email notification failed:", emailError.message);
                 }
               }
+            } else {
+              console.log("Transaction already exists for this reference, skipping credit");
+              return res.json({
+                ...result,
+                balanceUpdated: false,
+                message: "Payment already processed"
+              });
             }
           }
         } else {
