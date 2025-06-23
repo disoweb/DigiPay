@@ -196,183 +196,186 @@ export function UserDetailModal({ isOpen, onClose, userId, userName }: UserDetai
                 <TabsTrigger value="trades" className="text-xs sm:text-sm px-2 sm:px-4">Trades</TabsTrigger>
               </TabsList>
 
-              <TabsContent value="overview" className="flex-1 overflow-auto px-3 sm:px-6 pb-4 sm:pb-6 space-y-3 sm:space-y-4 mt-2 sm:mt-4 min-h-0">
-                {/* Profile Card */}
-                <Card className="shadow-sm">
+              <TabsContent value="overview" className="flex-1 overflow-auto px-3 sm:px-6 pb-4 sm:pb-6 mt-2 sm:mt-4 min-h-0">
+                <Card className="shadow-sm h-full">
                   <CardHeader className="pb-2 sm:pb-3">
                     <CardTitle className="text-sm flex items-center gap-2">
                       <User className="h-4 w-4" />
                       Profile Information
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-3 sm:space-y-4">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                      <div className="space-y-2 sm:space-y-3">
-                        <div className="flex items-center gap-2">
-                          <Mail className="h-4 w-4 text-gray-500 flex-shrink-0" />
-                          <div className="min-w-0 flex-1">
-                            <p className="text-xs text-gray-600">Email</p>
-                            <p className="text-sm font-medium truncate">{userDetails.email}</p>
+                  <CardContent className="p-0">
+                    <ScrollArea className="h-[300px] sm:h-[400px]">
+                      <div className="space-y-3 sm:space-y-4 p-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                          <div className="space-y-2 sm:space-y-3">
+                            <div className="flex items-center gap-2">
+                              <Mail className="h-4 w-4 text-gray-500 flex-shrink-0" />
+                              <div className="min-w-0 flex-1">
+                                <p className="text-xs text-gray-600">Email</p>
+                                <p className="text-sm font-medium truncate">{userDetails.email}</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <User className="h-4 w-4 text-gray-500 flex-shrink-0" />
+                              <div className="min-w-0 flex-1">
+                                <p className="text-xs text-gray-600">Full Name</p>
+                                <p className="text-sm font-medium">
+                                  {userDetails.firstName && userDetails.lastName 
+                                    ? `${userDetails.firstName} ${userDetails.lastName}`
+                                    : userDetails.username || "Not set"
+                                  }
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Phone className="h-4 w-4 text-gray-500 flex-shrink-0" />
+                              <div className="min-w-0 flex-1">
+                                <p className="text-xs text-gray-600">Phone</p>
+                                <p className="text-sm font-medium">{userDetails.phone && userDetails.phone !== "" ? userDetails.phone : "Not set"}</p>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="space-y-2 sm:space-y-3">
+                            <div className="flex items-center gap-2">
+                              <MapPin className="h-4 w-4 text-gray-500 flex-shrink-0" />
+                              <div className="min-w-0 flex-1">
+                                <p className="text-xs text-gray-600">Location</p>
+                                <p className="text-sm font-medium">{userDetails.location && userDetails.location !== "" ? userDetails.location : "Not set"}</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Shield className="h-4 w-4 text-gray-500 flex-shrink-0" />
+                              <div className="min-w-0 flex-1">
+                                <p className="text-xs text-gray-600">KYC Status</p>
+                                {userDetails.kycVerified ? (
+                                  <Badge className="bg-green-100 text-green-800 text-xs">
+                                    Verified
+                                  </Badge>
+                                ) : (
+                                  <Badge className="bg-yellow-100 text-yellow-800 text-xs">
+                                    Pending
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Star className="h-4 w-4 text-gray-500 flex-shrink-0" />
+                              <div className="min-w-0 flex-1">
+                                <p className="text-xs text-gray-600">Rating</p>
+                                <div className="flex items-center gap-1">
+                                  <Star className="h-3 w-3 text-yellow-400 fill-current" />
+                                  <span className="text-sm font-medium">
+                                    {parseFloat(userDetails.averageRating).toFixed(1)} ({userDetails.ratingCount})
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <User className="h-4 w-4 text-gray-500 flex-shrink-0" />
-                          <div className="min-w-0 flex-1">
-                            <p className="text-xs text-gray-600">Full Name</p>
-                            <p className="text-sm font-medium">
-                              {userDetails.firstName && userDetails.lastName 
-                                ? `${userDetails.firstName} ${userDetails.lastName}`
-                                : userDetails.username || "Not set"
-                              }
-                            </p>
+
+                        {/* Status and Join Date */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 pt-3 sm:pt-4 border-t">
+                          <div>
+                            <p className="text-xs text-gray-600 mb-1">Status</p>
+                            <Badge className={userDetails.isOnline ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}>
+                              {userDetails.isOnline ? "Online" : "Offline"}
+                            </Badge>
+                          </div>
+                          <div>
+                            <p className="text-xs text-gray-600 mb-1">Member Since</p>
+                            <p className="text-sm font-medium">{formatDate(userDetails.createdAt)}</p>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Phone className="h-4 w-4 text-gray-500 flex-shrink-0" />
-                          <div className="min-w-0 flex-1">
-                            <p className="text-xs text-gray-600">Phone</p>
-                            <p className="text-sm font-medium">{userDetails.phone && userDetails.phone !== "" ? userDetails.phone : "Not set"}</p>
+
+                        {/* Trading Stats */}
+                        <div className="pt-3 sm:pt-4 border-t">
+                          <div className="flex items-center gap-2 mb-3">
+                            <Activity className="h-4 w-4" />
+                            <span className="text-sm font-medium">Trading Statistics</span>
                           </div>
-                        </div>
-                      </div>
-                      
-                      <div className="space-y-2 sm:space-y-3">
-                        <div className="flex items-center gap-2">
-                          <MapPin className="h-4 w-4 text-gray-500 flex-shrink-0" />
-                          <div className="min-w-0 flex-1">
-                            <p className="text-xs text-gray-600">Location</p>
-                            <p className="text-sm font-medium">{userDetails.location && userDetails.location !== "" ? userDetails.location : "Not set"}</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Shield className="h-4 w-4 text-gray-500 flex-shrink-0" />
-                          <div className="min-w-0 flex-1">
-                            <p className="text-xs text-gray-600">KYC Status</p>
-                            {userDetails.kycVerified ? (
-                              <Badge className="bg-green-100 text-green-800 text-xs">
-                                Verified
-                              </Badge>
-                            ) : (
-                              <Badge className="bg-yellow-100 text-yellow-800 text-xs">
-                                Pending
-                              </Badge>
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Star className="h-4 w-4 text-gray-500 flex-shrink-0" />
-                          <div className="min-w-0 flex-1">
-                            <p className="text-xs text-gray-600">Rating</p>
-                            <div className="flex items-center gap-1">
-                              <Star className="h-3 w-3 text-yellow-400 fill-current" />
-                              <span className="text-sm font-medium">
-                                {parseFloat(userDetails.averageRating).toFixed(1)} ({userDetails.ratingCount})
-                              </span>
+                          <div className="grid grid-cols-3 gap-2 sm:gap-4">
+                            <div className="text-center p-2 sm:p-4 bg-blue-50 rounded-lg">
+                              <p className="text-lg sm:text-2xl font-bold text-blue-600">{trades.length}</p>
+                              <p className="text-xs sm:text-sm text-blue-700">Total Trades</p>
+                            </div>
+                            <div className="text-center p-2 sm:p-4 bg-green-50 rounded-lg">
+                              <p className="text-lg sm:text-2xl font-bold text-green-600">{completedTrades}</p>
+                              <p className="text-xs sm:text-sm text-green-700">Completed</p>
+                            </div>
+                            <div className="text-center p-2 sm:p-4 bg-purple-50 rounded-lg">
+                              <p className="text-sm sm:text-2xl font-bold text-purple-600">₦{totalVolume.toLocaleString()}</p>
+                              <p className="text-xs sm:text-sm text-purple-700">Total Volume</p>
                             </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-
-                    {/* Status and Join Date */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 pt-3 sm:pt-4 border-t">
-                      <div>
-                        <p className="text-xs text-gray-600 mb-1">Status</p>
-                        <Badge className={userDetails.isOnline ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}>
-                          {userDetails.isOnline ? "Online" : "Offline"}
-                        </Badge>
-                      </div>
-                      <div>
-                        <p className="text-xs text-gray-600 mb-1">Member Since</p>
-                        <p className="text-sm font-medium">{formatDate(userDetails.createdAt)}</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Trading Stats */}
-                <Card className="shadow-sm">
-                  <CardHeader className="pb-2 sm:pb-3">
-                    <CardTitle className="text-sm flex items-center gap-2">
-                      <Activity className="h-4 w-4" />
-                      Trading Statistics
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-3 gap-2 sm:gap-4">
-                      <div className="text-center p-2 sm:p-4 bg-blue-50 rounded-lg">
-                        <p className="text-lg sm:text-2xl font-bold text-blue-600">{trades.length}</p>
-                        <p className="text-xs sm:text-sm text-blue-700">Total Trades</p>
-                      </div>
-                      <div className="text-center p-2 sm:p-4 bg-green-50 rounded-lg">
-                        <p className="text-lg sm:text-2xl font-bold text-green-600">{completedTrades}</p>
-                        <p className="text-xs sm:text-sm text-green-700">Completed</p>
-                      </div>
-                      <div className="text-center p-2 sm:p-4 bg-purple-50 rounded-lg">
-                        <p className="text-sm sm:text-2xl font-bold text-purple-600">₦{totalVolume.toLocaleString()}</p>
-                        <p className="text-xs sm:text-sm text-purple-700">Total Volume</p>
-                      </div>
-                    </div>
+                    </ScrollArea>
                   </CardContent>
                 </Card>
               </TabsContent>
 
-              <TabsContent value="wallet" className="flex-1 overflow-auto px-3 sm:px-6 pb-4 sm:pb-6 space-y-3 sm:space-y-4 mt-2 sm:mt-4 min-h-0">
-                <Card className="shadow-sm">
+              <TabsContent value="wallet" className="flex-1 overflow-auto px-3 sm:px-6 pb-4 sm:pb-6 mt-2 sm:mt-4 min-h-0">
+                <Card className="shadow-sm h-full">
                   <CardHeader className="pb-2 sm:pb-3">
                     <CardTitle className="text-sm flex items-center gap-2">
                       <Wallet className="h-4 w-4" />
                       Wallet Balances
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-3 sm:space-y-4">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      {/* Naira Balance */}
-                      <div className="p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-xl border border-green-200">
-                        <div className="flex items-center justify-between mb-3">
-                          <div className="flex items-center gap-2">
-                            <div className="p-2 bg-green-200 rounded-full">
-                              <DollarSign className="h-4 w-4 text-green-700" />
+                  <CardContent className="p-0">
+                    <ScrollArea className="h-[300px] sm:h-[400px]">
+                      <div className="space-y-3 sm:space-y-4 p-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          {/* Naira Balance */}
+                          <div className="p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-xl border border-green-200">
+                            <div className="flex items-center justify-between mb-3">
+                              <div className="flex items-center gap-2">
+                                <div className="p-2 bg-green-200 rounded-full">
+                                  <DollarSign className="h-4 w-4 text-green-700" />
+                                </div>
+                                <span className="text-sm font-medium text-green-700">Naira Balance</span>
+                              </div>
                             </div>
-                            <span className="text-sm font-medium text-green-700">Naira Balance</span>
+                            <p className="text-2xl sm:text-3xl font-bold text-green-800">
+                              {formatAmount(userDetails.nairaBalance || "0")}
+                            </p>
+                            <p className="text-xs text-green-600 mt-1">Nigerian Naira</p>
+                          </div>
+
+                          {/* USDT Balance */}
+                          <div className="p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200">
+                            <div className="flex items-center justify-between mb-3">
+                              <div className="flex items-center gap-2">
+                                <div className="p-2 bg-blue-200 rounded-full">
+                                  <CreditCard className="h-4 w-4 text-blue-700" />
+                                </div>
+                                <span className="text-sm font-medium text-blue-700">USDT Balance</span>
+                              </div>
+                            </div>
+                            <p className="text-2xl sm:text-3xl font-bold text-blue-800">
+                              {formatUSDTAmount(userDetails.usdtBalance || "0")}
+                            </p>
+                            <p className="text-xs text-blue-600 mt-1">Tether USD</p>
                           </div>
                         </div>
-                        <p className="text-2xl sm:text-3xl font-bold text-green-800">
-                          {formatAmount(userDetails.nairaBalance || "0")}
-                        </p>
-                        <p className="text-xs text-green-600 mt-1">Nigerian Naira</p>
-                      </div>
 
-                      {/* USDT Balance */}
-                      <div className="p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200">
-                        <div className="flex items-center justify-between mb-3">
-                          <div className="flex items-center gap-2">
-                            <div className="p-2 bg-blue-200 rounded-full">
-                              <CreditCard className="h-4 w-4 text-blue-700" />
+                        {/* Total Portfolio Value */}
+                        <div className="p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl border border-purple-200">
+                          <div className="flex items-center gap-2 mb-2">
+                            <div className="p-2 bg-purple-200 rounded-full">
+                              <TrendingUp className="h-4 w-4 text-purple-700" />
                             </div>
-                            <span className="text-sm font-medium text-blue-700">USDT Balance</span>
+                            <span className="text-sm font-medium text-purple-700">Total Portfolio Value</span>
                           </div>
+                          <p className="text-xl sm:text-2xl font-bold text-purple-800">
+                            {formatAmount((parseFloat(userDetails.nairaBalance || "0") + (parseFloat(userDetails.usdtBalance || "0") * 1600)).toString())}
+                          </p>
+                          <p className="text-xs text-purple-600">Estimated at ₦1,600/USDT</p>
                         </div>
-                        <p className="text-2xl sm:text-3xl font-bold text-blue-800">
-                          {formatUSDTAmount(userDetails.usdtBalance || "0")}
-                        </p>
-                        <p className="text-xs text-blue-600 mt-1">Tether USD</p>
                       </div>
-                    </div>
-
-                    {/* Total Portfolio Value */}
-                    <div className="p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl border border-purple-200">
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className="p-2 bg-purple-200 rounded-full">
-                          <TrendingUp className="h-4 w-4 text-purple-700" />
-                        </div>
-                        <span className="text-sm font-medium text-purple-700">Total Portfolio Value</span>
-                      </div>
-                      <p className="text-xl sm:text-2xl font-bold text-purple-800">
-                        {formatAmount((parseFloat(userDetails.nairaBalance || "0") + (parseFloat(userDetails.usdtBalance || "0") * 1600)).toString())}
-                      </p>
-                      <p className="text-xs text-purple-600">Estimated at ₦1,600/USDT</p>
-                    </div>
+                    </ScrollArea>
                   </CardContent>
                 </Card>
               </TabsContent>
