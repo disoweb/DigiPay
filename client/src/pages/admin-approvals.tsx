@@ -47,6 +47,8 @@ interface Transaction {
   user?: {
     id: number;
     email: string;
+    first_name?: string;
+    last_name?: string;
   };
 }
 
@@ -347,9 +349,10 @@ export default function AdminApprovals() {
                   <TableHeader>
                     <TableRow>
                       <TableHead className="w-16 sm:w-20">ID</TableHead>
-                      <TableHead className="min-w-[120px] sm:min-w-[150px]">User</TableHead>
+                      <TableHead className="min-w-[120px] sm:min-w-[150px]">User Details</TableHead>
                       <TableHead className="hidden sm:table-cell w-24">Type</TableHead>
                       <TableHead className="w-20 sm:w-24">Amount</TableHead>
+                      <TableHead className="hidden md:table-cell min-w-[140px]">Bank Details</TableHead>
                       <TableHead className="hidden lg:table-cell w-24">Date</TableHead>
                       <TableHead className="w-20">Status</TableHead>
                       <TableHead className="text-right w-24 sm:w-28">Actions</TableHead>
@@ -363,8 +366,14 @@ export default function AdminApprovals() {
                         </TableCell>
                         <TableCell className="py-2 sm:py-3">
                           <div className="text-xs sm:text-sm">
-                            <div className="font-medium truncate max-w-[100px] sm:max-w-none">
-                              {transaction.user?.email.split('@')[0]}
+                            <div className="font-medium text-gray-900">
+                              {transaction.user?.first_name && transaction.user?.last_name 
+                                ? `${transaction.user.first_name} ${transaction.user.last_name}`
+                                : transaction.user?.email.split('@')[0]
+                              }
+                            </div>
+                            <div className="text-xs text-gray-500 truncate max-w-[120px] sm:max-w-none">
+                              {transaction.user?.email}
                             </div>
                             <div className="text-xs text-gray-500 sm:hidden">
                               {getTypeIcon(transaction.type)}
@@ -390,6 +399,23 @@ export default function AdminApprovals() {
                               day: 'numeric' 
                             })}
                           </div>
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell py-2 sm:py-3">
+                          {transaction.type === 'withdrawal' && transaction.bank_name ? (
+                            <div className="text-xs">
+                              <div className="font-medium text-gray-900 truncate max-w-[100px]">
+                                {transaction.bank_name}
+                              </div>
+                              <div className="text-gray-500 font-mono">
+                                {transaction.account_number}
+                              </div>
+                              <div className="text-gray-500 truncate max-w-[100px]">
+                                {transaction.account_name}
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="text-xs text-gray-400">-</div>
+                          )}
                         </TableCell>
                         <TableCell className="hidden lg:table-cell py-2 sm:py-3">
                           <div className="text-xs sm:text-sm text-gray-500">
