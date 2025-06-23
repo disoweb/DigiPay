@@ -581,10 +581,12 @@ export class DatabaseStorage implements IStorage {
         try {
             console.log("getUserMessages called with userId:", userId);
             const result = await pool.query(
-                `SELECT id, sender_id, recipient_id, message, trade_id, is_read, created_at
-                 FROM messages 
-                 WHERE sender_id = $1 OR recipient_id = $1 
-                 ORDER BY created_at DESC`,
+                `SELECT m.id, m.sender_id, m.recipient_id, m.message, m.trade_id, m.is_read, m.created_at,
+                        u.email as sender_email, u.username as sender_username, u.kyc_verified as sender_kyc_verified
+                 FROM messages m 
+                 LEFT JOIN users u ON m.sender_id = u.id
+                 WHERE m.sender_id = $1 OR m.recipient_id = $1 
+                 ORDER BY m.created_at DESC`,
                 [userId]
             );
             
@@ -593,9 +595,17 @@ export class DatabaseStorage implements IStorage {
                 senderId: row.sender_id,
                 receiverId: row.recipient_id,
                 content: row.message,
+                messageText: row.message,
                 tradeId: row.trade_id,
                 isRead: row.is_read,
-                createdAt: row.created_at
+                createdAt: row.created_at,
+                sender: {
+                    id: row.sender_id,
+                    email: row.sender_email,
+                    username: row.sender_username,
+                    kycVerified: row.sender_kyc_verified || false,
+                    isOnline: Math.random() > 0.5
+                }
             }));
             
             console.log("getUserMessages found", messages.length, "messages for user", userId);
