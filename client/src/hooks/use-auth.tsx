@@ -61,24 +61,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const token = localStorage.getItem("digipay_token") || localStorage.getItem("auth_token");
       if (!token) return null;
 
-      const response = await fetch("/api/user", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      try {
+        const response = await fetch("/api/user", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
-      if (!response.ok) {
-        if (response.status === 401) {
-          localStorage.removeItem("digipay_token");
-          localStorage.removeItem("auth_token");
-          throw new Error("Unauthorized");
+        if (!response.ok) {
+          if (response.status === 401) {
+            localStorage.removeItem("digipay_token");
+            localStorage.removeItem("auth_token");
+            throw new Error("Unauthorized");
+          }
+          throw new Error("Failed to fetch user");
         }
-        throw new Error("Failed to fetch user");
+        const data = await response.json();
+        return data;
+      } catch (err) {
+        console.error("User data fetch error:", err);
+        throw err;
       }
-
-      return response.json();
     },
-    retry: false,
+    retry: (failureCount, error) => {
+      if (error.message === "Unauthorized") {
+        return false;
+      }
+      return failureCount < 2;
+    },
   });
 
   const loginMutation = useMutation({

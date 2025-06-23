@@ -90,10 +90,15 @@ export function DepositModal({ open, onOpenChange }: DepositModalProps) {
       setIsProcessing(true);
       console.log("Setting up seamless Paystack payment...", paystackData);
 
+      // Check if user email is available
+      if (!user?.email) {
+        throw new Error("User email not available. Please refresh and try again.");
+      }
+
       // Use inline payment for seamless experience
       await initializePaystack({
         key: PAYSTACK_PUBLIC_KEY,
-        email: user?.email || "",
+        email: user.email,
         amount: parseFloat(amount) * 100, // Convert to kobo
         currency: "NGN",
         reference: paystackData.reference,
@@ -377,7 +382,12 @@ export function DepositModal({ open, onOpenChange }: DepositModalProps) {
           {/* Action Buttons - Mobile Optimized */}
           <div className="flex flex-col gap-3 pt-2">
             <Button 
-              onClick={handleDeposit} 
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleDeposit();
+              }} 
               disabled={!amount || parseFloat(amount) < 100 || isProcessing || initializePaymentMutation.isPending}
               className="w-full h-12 text-base font-medium bg-green-600 hover:bg-green-700"
               size="lg"
@@ -392,8 +402,16 @@ export function DepositModal({ open, onOpenChange }: DepositModalProps) {
               )}
             </Button>
             <Button 
+              type="button"
               variant="outline" 
-              onClick={() => onOpenChange(false)}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setIsProcessing(false);
+                setShowVerifyButton(false);
+                setPaymentReference("");
+                onOpenChange(false);
+              }}
               className="w-full h-11 text-base"
             >
               Cancel

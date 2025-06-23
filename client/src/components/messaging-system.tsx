@@ -41,6 +41,11 @@ interface Message {
 
 export function MessagingSystem() {
   const { user } = useAuth();
+
+  // Don't render if user data isn't loaded yet
+  if (!user) {
+    return null;
+  }
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
