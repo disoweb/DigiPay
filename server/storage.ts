@@ -691,12 +691,31 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(transactions).where(eq(transactions.userId, userId)).orderBy(desc(transactions.createdAt));
   }
 
-  async createTransaction(insertTransaction: InsertTransaction): Promise<Transaction> {
+  async createTransaction(data: {
+    userId: number;
+    type: "deposit" | "withdrawal" | "transfer";
+    amount: string;
+    status: "pending" | "completed" | "failed" | "cancelled";
+    paymentMethod?: string;
+    rate?: string;
+    adminNotes?: string;
+    bankName?: string;
+    accountNumber?: string;
+    accountName?: string;
+  }): Promise<Transaction> {
     const [transaction] = await db
       .insert(transactions)
       .values({
-        ...insertTransaction,
-        status: "pending",
+        userId: data.userId,
+        type: data.type,
+        amount: data.amount,
+        status: data.status,
+        paymentMethod: data.paymentMethod,
+        rate: data.rate,
+        adminNotes: data.adminNotes,
+        bankName: data.bankName,
+        accountNumber: data.accountNumber,
+        accountName: data.accountName
       })
       .returning();
     return transaction;
