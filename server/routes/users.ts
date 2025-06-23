@@ -28,73 +28,15 @@ export const userRoutes = {
     try {
       const { id } = req.params;
       
-      // Debug: Let's see what columns are available in the users table
-      console.log('Available columns in users table:', Object.keys(users));
-      
-      // Let's also run a direct SQL query to see the exact field names
-      const directQuery = await db.execute(`SELECT * FROM users WHERE id = ${parseInt(id)} LIMIT 1`);
-      console.log('Direct SQL query result:', directQuery);
-      
-      // Let's also check what column names exist
-      const schemaQuery = await db.execute(`PRAGMA table_info(users)`);
-      console.log('Users table schema:', schemaQuery);
-      
-      // And let's see the raw row data
-      if (directQuery.length > 0) {
-        console.log('Raw row data:', directQuery[0]);
-        console.log('Available fields in raw data:', Object.keys(directQuery[0]));
-      }
-      
-      // First, let's get the raw user data to see what's actually in the database
       const [rawUser] = await db.select().from(users).where(eq(users.id, parseInt(id)));
       
       if (!rawUser) {
         return res.status(404).json({ error: 'User not found' });
       }
       
-      console.log('Raw user data from database:', {
-        id: rawUser.id,
-        email: rawUser.email,
-        nairaBalance: rawUser.nairaBalance,
-        usdtBalance: rawUser.usdtBalance,
-        nairaBalanceType: typeof rawUser.nairaBalance,
-        usdtBalanceType: typeof rawUser.usdtBalance
-      });
-      
-      // Now select specific fields and ensure proper mapping
-      // Check all possible field name variations including from direct query
-      let nairaBalance = "0";
-      let usdtBalance = "0";
-      
-      // Try different field name variations
-      if (rawUser.nairaBalance !== undefined && rawUser.nairaBalance !== null) {
-        nairaBalance = rawUser.nairaBalance;
-      } else if ((rawUser as any).naira_balance !== undefined && (rawUser as any).naira_balance !== null) {
-        nairaBalance = (rawUser as any).naira_balance;
-      } else if ((rawUser as any).nairBalance !== undefined && (rawUser as any).nairBalance !== null) {
-        nairaBalance = (rawUser as any).nairBalance;
-      } else if (directQuery.length > 0) {
-        const row = directQuery[0] as any;
-        nairaBalance = row.nairaBalance || row.naira_balance || row.nairBalance || "0";
-      }
-      
-      if (rawUser.usdtBalance !== undefined && rawUser.usdtBalance !== null) {
-        usdtBalance = rawUser.usdtBalance;
-      } else if ((rawUser as any).usdt_balance !== undefined && (rawUser as any).usdt_balance !== null) {
-        usdtBalance = (rawUser as any).usdt_balance;
-      } else if (directQuery.length > 0) {
-        const row = directQuery[0] as any;
-        usdtBalance = row.usdtBalance || row.usdt_balance || "0";
-      }
-      
-      console.log('Field mapping check:', {
-        'rawUser.nairaBalance': rawUser.nairaBalance,
-        'rawUser.naira_balance': (rawUser as any).naira_balance,
-        'rawUser.usdtBalance': rawUser.usdtBalance,
-        'rawUser.usdt_balance': (rawUser as any).usdt_balance,
-        'final nairaBalance': nairaBalance,
-        'final usdtBalance': usdtBalance
-      });
+      // Get balances - based on schema, these should be camelCase
+      const nairaBalance = rawUser.nairaBalance || "0";
+      const usdtBalance = rawUser.usdtBalance || "0";
       
       const userProfile = {
         id: rawUser.id,
@@ -113,13 +55,6 @@ export const userRoutes = {
         lastSeen: rawUser.lastSeen,
         createdAt: rawUser.createdAt
       };
-      
-      console.log('Processed user profile:', {
-        id: userProfile.id,
-        email: userProfile.email,
-        nairaBalance: userProfile.nairaBalance,
-        usdtBalance: userProfile.usdtBalance
-      });
       
       // Set cache-control to prevent caching of this response
       res.set('Cache-Control', 'no-cache, no-store, must-revalidate');

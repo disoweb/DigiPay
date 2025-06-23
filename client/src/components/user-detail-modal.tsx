@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -89,19 +88,19 @@ export function UserDetailModal({ isOpen, onClose, userId, userName }: UserDetai
         usdt_balance: data.usdt_balance
       });
       console.log('Full user object:', JSON.stringify(data, null, 2));
-      
+
       // Ensure we have the correct field names
       const processedData = {
         ...data,
         nairaBalance: data.nairaBalance || data.naira_balance || "0",
         usdtBalance: data.usdtBalance || data.usdt_balance || "0"
       };
-      
+
       console.log('Processed user details:', {
         nairaBalance: processedData.nairaBalance,
         usdtBalance: processedData.usdtBalance
       });
-      
+
       return processedData;
     },
     enabled: isOpen && userId > 0,
@@ -274,7 +273,7 @@ export function UserDetailModal({ isOpen, onClose, userId, userName }: UserDetai
                               </div>
                             </div>
                           </div>
-                          
+
                           <div className="space-y-2 sm:space-y-3">
                             <div className="flex items-center gap-2">
                               <MapPin className="h-4 w-4 text-gray-500 flex-shrink-0" />
