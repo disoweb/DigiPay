@@ -378,106 +378,113 @@ export default function AdminUsersFixed() {
             </Card>
           </div>
 
-          {/* All Users - Clean Simple Layout */}
+          {/* All Users - Simple & Efficient */}
           <Card>
-            <CardHeader className="pb-4">
-              <CardTitle className="text-lg sm:text-xl">All Users ({filteredUsers.length})</CardTitle>
+            <CardHeader>
+              <CardTitle className="text-xl">All Users ({filteredUsers.length})</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
               {filteredUsers.length === 0 ? (
                 <div className="text-center py-12">
                   <Users className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                  <p className="text-gray-500 font-medium">No users found</p>
-                  <p className="text-sm text-gray-400">Try adjusting your search</p>
+                  <p className="text-gray-500">No users found</p>
                 </div>
               ) : (
-                <div className="space-y-1">
-                  {filteredUsers.map((user: User) => (
-                    <div
-                      key={user.id}
-                      className="p-4 border-b border-gray-100 last:border-b-0 hover:bg-gray-50 transition-colors"
-                    >
-                      <div className="flex items-center justify-between">
-                        {/* User Info */}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-3 mb-2">
-                            <div className="font-medium text-gray-900">
-                              {user.first_name && user.last_name 
-                                ? `${user.first_name} ${user.last_name}`
-                                : user.username || 'No Name'
-                              }
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-gray-50 border-b">
+                      <tr>
+                        <th className="text-left p-4 font-medium text-gray-900">User</th>
+                        <th className="text-left p-4 font-medium text-gray-900 hidden sm:table-cell">Balance</th>
+                        <th className="text-left p-4 font-medium text-gray-900 hidden md:table-cell">Status</th>
+                        <th className="text-right p-4 font-medium text-gray-900">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredUsers.map((user: User) => (
+                        <tr key={user.id} className="border-b hover:bg-gray-50">
+                          <td className="p-4">
+                            <div>
+                              <div className="font-medium text-gray-900">
+                                {user.first_name && user.last_name 
+                                  ? `${user.first_name} ${user.last_name}`
+                                  : user.username || 'No Name'
+                                }
+                              </div>
+                              <div className="text-sm text-gray-500">{user.email}</div>
+                              <div className="text-xs text-gray-400">ID: {user.id}</div>
                             </div>
-                            {user.is_admin && (
-                              <Badge className="bg-purple-100 text-purple-700 text-xs">
-                                Admin
-                              </Badge>
-                            )}
-                            {user.kyc_verified && (
-                              <Badge className="bg-green-100 text-green-700 text-xs">
-                                Verified
-                              </Badge>
-                            )}
-                            {user.is_banned && (
-                              <Badge variant="destructive" className="text-xs">
-                                Banned
-                              </Badge>
-                            )}
-                            {user.funds_frozen && (
-                              <Badge className="bg-orange-100 text-orange-700 text-xs">
-                                Frozen
-                              </Badge>
-                            )}
-                          </div>
-                          
-                          <div className="text-sm text-gray-600 mb-1">
-                            {user.email}
-                          </div>
-                          
-                          <div className="flex items-center gap-4 text-xs text-gray-500">
-                            <span>ID: {user.id}</span>
-                            <span>₦{parseFloat(user.naira_balance).toLocaleString()}</span>
-                            <span>{parseFloat(user.usdt_balance).toFixed(2)} USDT</span>
-                            <span className="hidden sm:inline">{user.completed_trades}/{user.total_trades} trades</span>
-                            <span className="hidden sm:inline">⭐ {parseFloat(user.average_rating).toFixed(1)}</span>
-                          </div>
-                        </div>
-
-                        {/* Actions */}
-                        <div className="flex items-center gap-2 ml-4">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleAction(user, "view")}
-                            className="text-xs h-8 px-2"
-                          >
-                            View
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleAction(user, "edit")}
-                            className="text-xs h-8 px-2"
-                          >
-                            Edit
-                          </Button>
-                          {!user.is_admin && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleAction(user, user.is_banned ? "ban" : "ban")}
-                              className={`text-xs h-8 px-2 ${
-                                user.is_banned 
-                                  ? 'text-green-600 hover:text-green-700' 
-                                  : 'text-red-600 hover:text-red-700'
-                              }`}
-                            >
-                              {user.is_banned ? 'Unban' : 'Ban'}
-                            </Button>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                          </td>
+                          <td className="p-4 hidden sm:table-cell">
+                            <div className="text-sm">
+                              <div>₦{parseFloat(user.naira_balance).toLocaleString()}</div>
+                              <div className="text-gray-500">{parseFloat(user.usdt_balance).toFixed(2)} USDT</div>
+                            </div>
+                          </td>
+                          <td className="p-4 hidden md:table-cell">
+                            <div className="flex flex-wrap gap-1">
+                              {user.is_admin && (
+                                <Badge className="bg-purple-100 text-purple-700 text-xs">Admin</Badge>
+                              )}
+                              {user.kyc_verified && (
+                                <Badge className="bg-green-100 text-green-700 text-xs">KYC</Badge>
+                              )}
+                              {user.is_banned && (
+                                <Badge variant="destructive" className="text-xs">Banned</Badge>
+                              )}
+                              {user.funds_frozen && (
+                                <Badge className="bg-orange-100 text-orange-700 text-xs">Frozen</Badge>
+                              )}
+                            </div>
+                          </td>
+                          <td className="p-4">
+                            <div className="flex justify-end gap-1">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => handleAction(user, "view")}
+                                className="h-8 w-8 p-0"
+                                title="View Details"
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => handleAction(user, "edit")}
+                                className="h-8 w-8 p-0"
+                                title="Edit User"
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              {!user.is_admin && (
+                                <>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => handleAction(user, "freeze")}
+                                    className="h-8 w-8 p-0 text-orange-600"
+                                    title={user.funds_frozen ? "Unfreeze Funds" : "Freeze Funds"}
+                                  >
+                                    <Snowflake className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => handleAction(user, "ban")}
+                                    className="h-8 w-8 p-0 text-red-600"
+                                    title={user.is_banned ? "Unban User" : "Ban User"}
+                                  >
+                                    <Ban className="h-4 w-4" />
+                                  </Button>
+                                </>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               )}
             </CardContent>
