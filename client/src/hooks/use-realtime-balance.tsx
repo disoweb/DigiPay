@@ -71,7 +71,7 @@ export function useRealtimeBalance() {
             const data = JSON.parse(event.data);
             
             if (data.type === 'balance_updated' && data.userId === user.id) {
-              console.log('Real-time balance update received:', data.nairaBalance);
+              console.log('Real-time balance update received - NGN:', data.nairaBalance, 'USDT:', data.usdtBalance);
               console.log('Updating balance from', latestBalance, 'to', data.nairaBalance);
               
               // Update local state immediately
@@ -80,11 +80,13 @@ export function useRealtimeBalance() {
               // Update React Query cache
               queryClient.setQueryData(["/api/user"], (oldData: any) => {
                 if (oldData && oldData.id === user.id) {
-                  return {
+                  const updatedData = {
                     ...oldData,
                     nairaBalance: data.nairaBalance,
                     usdtBalance: data.usdtBalance || oldData.usdtBalance
                   };
+                  console.log('Updated user data in cache:', updatedData);
+                  return updatedData;
                 }
                 return oldData;
               });
