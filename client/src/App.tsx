@@ -13,7 +13,7 @@ import Trades from "@/pages/trades";
 import TradeDetail from "@/pages/trade-detail";
 import Wallet from "@/pages/wallet";
 import Admin from "@/pages/admin";
-import AdminApprovals from "@/pages/admin-approvals";
+import AdminApprovalsNew from "@/pages/admin-approvals-new";
 import ProfileSetup from "@/pages/profile-setup";
 import OfferCreation from "@/pages/offer-creation";
 import Ratings from "@/pages/ratings";
@@ -55,7 +55,7 @@ function App() {
             <ProtectedRoute path="/payment-callback" component={PaymentCallback} />
             <ProtectedRoute path="/ratings" component={Ratings} />
             <ProtectedRoute path="/admin" component={Admin} adminOnly />
-            <ProtectedRoute path="/admin/approvals" component={AdminApprovals} adminOnly />
+            <ProtectedRoute path="/admin/approvals" component={AdminApprovalsNew} adminOnly />
             <ProtectedRoute path="/admin/kyc" component={AdminKYC} adminOnly />
             <ProtectedRoute path="/admin/users" component={AdminUsersFixed} adminOnly />
             <ProtectedRoute path="/admin/wallet" component={AdminWallet} adminOnly />
