@@ -11,9 +11,8 @@ export async function apiRequest(method: string, url: string, data?: any) {
   try {
     const token = localStorage.getItem("digipay_token");
 
-    if (!token) {
-      console.log("No auth token found");
-      // Don't redirect immediately, let the component handle it
+    if (!token && !url.includes('/auth/login') && !url.includes('/auth/register')) {
+      console.log("No auth token found for protected route");
       throw new Error("No authentication token");
     }
 
@@ -31,10 +30,13 @@ export async function apiRequest(method: string, url: string, data?: any) {
 
     const response = await fetch(url, config);
 
-    if (response.status === 401) {
-      console.log("Unauthorized, clearing token");
+    if (response.status === 401 && token) {
+      console.log("Token expired, clearing and redirecting");
       localStorage.removeItem("digipay_token");
-      window.location.href = "/auth";
+      // Only redirect if not already on auth page
+      if (!window.location.pathname.includes('/auth')) {
+        window.location.href = "/auth";
+      }
       throw new Error("Unauthorized");
     }
 
@@ -75,15 +77,30 @@ export const queryClient = new QueryClient({
     queries: {
       queryFn: async ({ queryKey }) => {
         const token = localStorage.getItem('digipay_token');
+        const url = queryKey[0] as string;
+        
+        // Skip auth check for non-protected endpoints
+        if (!token && !url.includes('/auth/')) {
+          throw new Error('No authentication token');
+        }
+        
         const headers: Record<string, string> = {};
         if (token) {
           headers["Authorization"] = `Bearer ${token}`;
         }
 
-        const res = await fetch(queryKey[0] as string, {
+        const res = await fetch(url, {
           headers,
           credentials: "include",
         });
+
+        if (res.status === 401 && token) {
+          localStorage.removeItem('digipay_token');
+          if (!window.location.pathname.includes('/auth')) {
+            window.location.href = "/auth";
+          }
+          throw new Error('Authentication expired');
+        }
 
         if (!res.ok) {
           throw new Error(`HTTP error! status: ${res.status}`);
@@ -91,8 +108,14 @@ export const queryClient = new QueryClient({
 
         return res.json();
       },
-      retry: 3,
-      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+      retry: (failureCount, error) => {
+        // Don't retry auth errors
+        if (error.message.includes('authentication') || error.message.includes('401')) {
+          return false;
+        }
+        return failureCount < 2;
+      },
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 5000),
       refetchOnWindowFocus: false,
       staleTime: 30000,
     },

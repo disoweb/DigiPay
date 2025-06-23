@@ -168,7 +168,16 @@ export default function Wallet() {
 
   // WebSocket connection for real-time balance updates
   useEffect(() => {
-    if (!user?.id) return;
+    if (!user?.id) {
+      console.log('No user ID, skipping WebSocket connection');
+      return;
+    }
+
+    const token = localStorage.getItem('digipay_token');
+    if (!token) {
+      console.log('No auth token, skipping WebSocket connection');
+      return;
+    }
 
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';  
     const wsUrl = `${protocol}//${window.location.host}/ws`;
@@ -178,11 +187,12 @@ export default function Wallet() {
     let reconnectAttempts = 0;
     const maxReconnectAttempts = 3;
     let reconnectTimeout: NodeJS.Timeout;
+    let heartbeatInterval: NodeJS.Timeout;
     
     const connect = () => {
       try {
-        if (ws && ws.readyState === WebSocket.OPEN) {
-          console.log('WebSocket already connected, skipping');
+        if (ws && (ws.readyState === WebSocket.CONNECTING || ws.readyState === WebSocket.OPEN)) {
+          console.log('WebSocket already connected/connecting, skipping');
           return;
         }
 
@@ -193,38 +203,62 @@ export default function Wallet() {
           setWsConnected(true);
           reconnectAttempts = 0;
           
-          // Send connection message immediately
+          // Send connection message with auth token
           const connectMessage = {
             type: 'user_connect',
-            userId: user.id
+            userId: user.id,
+            token: token
           };
           ws?.send(JSON.stringify(connectMessage));
-          console.log('📤 Sent user connect message');
+          console.log('📤 Sent authenticated user connect message');
+          
+          // Setup heartbeat
+          heartbeatInterval = setInterval(() => {
+            if (ws?.readyState === WebSocket.OPEN) {
+              ws.send(JSON.stringify({ type: 'ping' }));
+            }
+          }, 30000);
         };
 
         ws.onmessage = (event) => {
           try {
             const data = JSON.parse(event.data);
-            console.log('📨 WebSocket message:', data.type, data);
+            console.log('📨 WebSocket message received:', data.type);
             
             if (data.type === 'balance_updated' && data.userId === user.id) {
-              console.log('💰 Processing balance update:', data.nairaBalance);
+              console.log('💰 Processing balance update:', {
+                old: data.previousBalance,
+                new: data.nairaBalance,
+                deposit: data.depositAmount
+              });
               
-              // Force immediate cache invalidation and refetch
+              // Update cache immediately with new balance
+              queryClient.setQueryData(["/api/user"], (oldData: any) => {
+                if (oldData) {
+                  return {
+                    ...oldData,
+                    nairaBalance: data.nairaBalance,
+                    usdtBalance: data.usdtBalance || oldData.usdtBalance
+                  };
+                }
+                return oldData;
+              });
+              
+              // Force UI refresh
               queryClient.invalidateQueries({ queryKey: ["/api/user"] });
               queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
               
-              // Show notification
+              // Show success notification
               if (data.lastTransaction?.type === 'deposit') {
                 toast({
                   title: "✅ Deposit Successful!",
-                  description: `₦${parseFloat(data.lastTransaction.amount).toLocaleString()} credited to your wallet`,
+                  description: `₦${parseFloat(data.depositAmount || data.lastTransaction.amount).toLocaleString()} credited to your wallet`,
                   className: "border-green-200 bg-green-50 text-green-800",
                 });
               }
             }
           } catch (error) {
-            console.error('❌ WebSocket message error:', error);
+            console.error('❌ WebSocket message parsing error:', error);
           }
         };
 
@@ -232,22 +266,27 @@ export default function Wallet() {
           console.log('🔌 WebSocket closed:', event.code, event.reason);
           setWsConnected(false);
           
-          // Only reconnect if it wasn't a manual close
-          if (event.code !== 1000 && reconnectAttempts < maxReconnectAttempts) {
+          if (heartbeatInterval) {
+            clearInterval(heartbeatInterval);
+          }
+          
+          // Reconnect only if not manually closed and still authenticated
+          const currentToken = localStorage.getItem('digipay_token');
+          if (event.code !== 1000 && currentToken && reconnectAttempts < maxReconnectAttempts) {
             reconnectAttempts++;
             const delay = Math.min(1000 * Math.pow(2, reconnectAttempts), 10000);
-            console.log(`🔄 Reconnecting in ${delay}ms (attempt ${reconnectAttempts})`);
+            console.log(`🔄 Reconnecting WebSocket in ${delay}ms (attempt ${reconnectAttempts})`);
             reconnectTimeout = setTimeout(connect, delay);
           }
         };
 
         ws.onerror = (error) => {
-          console.error('❌ WebSocket error:', error);
+          console.error('❌ WebSocket connection error:', error);
           setWsConnected(false);
         };
 
       } catch (error) {
-        console.error('❌ WebSocket connection failed:', error);
+        console.error('❌ WebSocket setup failed:', error);
         setWsConnected(false);
       }
     };
@@ -257,14 +296,18 @@ export default function Wallet() {
 
     // Cleanup function
     return () => {
-      console.log('🧹 Cleaning up WebSocket connection');
+      console.log('🧹 Cleaning up WebSocket connection for user', user.id);
       if (reconnectTimeout) {
         clearTimeout(reconnectTimeout);
+      }
+      if (heartbeatInterval) {
+        clearInterval(heartbeatInterval);
       }
       if (ws) {
         ws.close(1000, 'Component unmounting');
         ws = null;
       }
+      setWsConnected(false);
     };
   }, [user?.id, queryClient, toast]);
 

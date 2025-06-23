@@ -340,64 +340,67 @@ export class EnhancedPaystackService {
 
       console.log(`Successfully credited ₦${depositAmount.toLocaleString()} to user ${user.id}`);
       
-      // Emit real-time balance update via WebSocket
-      try {
-        const wsServer = (global as any).wsServer;
-        if (wsServer && wsServer.clients && wsServer.clients.size > 0) {
-          const clientCount = wsServer.clients.size;
-          console.log(`📡 Broadcasting balance update to ${clientCount} connected clients for user ${user.id}`);
-          console.log(`💰 Balance updated: ₦${currentBalance.toLocaleString()} → ₦${newBalance.toLocaleString()}`);
-          
-          const updateMessage = {
-            type: 'balance_updated',
-            userId: user.id,
-            nairaBalance: newBalance.toString(),
-            usdtBalance: user.usdtBalance || "0",
-            previousBalance: currentBalance.toString(),
-            depositAmount: depositAmount.toString(),
-            lastTransaction: {
-              id: transaction.id,
-              type: 'deposit',
-              amount: depositAmount.toString(),
-              status: 'completed',
-              timestamp: new Date().toISOString()
-            }
-          };
-          
-          const messageStr = JSON.stringify(updateMessage);
-          console.log('📤 Broadcasting message:', messageStr);
-          
-          let sentCount = 0;
-          let targetUserConnected = false;
-          
-          wsServer.clients.forEach((client: any) => {
-            if (client.readyState === 1) { // WebSocket.OPEN
-              try {
-                client.send(messageStr);
-                sentCount++;
-                
-                // Check if this is the target user's connection
-                if (client.userId === user.id) {
-                  targetUserConnected = true;
-                  console.log(`✅ Target user ${user.id} received the update`);
-                }
-              } catch (sendError) {
-                console.error('❌ Failed to send to client:', sendError);
+      // Emit real-time balance update via WebSocket with retry mechanism
+      setTimeout(async () => {
+        try {
+          const wsServer = (global as any).wsServer;
+          if (wsServer && wsServer.clients && wsServer.clients.size > 0) {
+            const clientCount = wsServer.clients.size;
+            console.log(`📡 Broadcasting balance update to ${clientCount} connected clients for user ${user.id}`);
+            console.log(`💰 Balance updated: ₦${currentBalance.toLocaleString()} → ₦${newBalance.toLocaleString()}`);
+            
+            const updateMessage = {
+              type: 'balance_updated',
+              userId: user.id,
+              nairaBalance: newBalance.toString(),
+              usdtBalance: user.usdtBalance || "0",
+              previousBalance: currentBalance.toString(),
+              depositAmount: depositAmount.toString(),
+              timestamp: new Date().toISOString(),
+              lastTransaction: {
+                id: transaction.id,
+                type: 'deposit',
+                amount: depositAmount.toString(),
+                status: 'completed',
+                timestamp: new Date().toISOString()
               }
+            };
+            
+            const messageStr = JSON.stringify(updateMessage);
+            console.log('📤 Broadcasting balance update message');
+            
+            let sentCount = 0;
+            let targetUserConnected = false;
+            
+            wsServer.clients.forEach((client: any) => {
+              if (client.readyState === 1) { // WebSocket.OPEN
+                try {
+                  client.send(messageStr);
+                  sentCount++;
+                  
+                  // Check if this is the target user's connection
+                  if (client.userId === user.id) {
+                    targetUserConnected = true;
+                    console.log(`✅ Target user ${user.id} is connected and received the update`);
+                  }
+                } catch (sendError) {
+                  console.error('❌ Failed to send WebSocket message to client:', sendError);
+                }
+              }
+            });
+            
+            console.log(`📊 Balance update sent to ${sentCount}/${clientCount} clients`);
+            
+            if (!targetUserConnected) {
+              console.log(`⚠️ User ${user.id} not currently connected via WebSocket`);
             }
-          });
-          
-          console.log(`📊 Message sent to ${sentCount}/${clientCount} clients`);
-          
-          if (!targetUserConnected) {
-            console.log(`⚠️ User ${user.id} not currently connected - update will sync on next refresh`);
+          } else {
+            console.log('📡 No WebSocket server or clients available for broadcast');
           }
-        } else {
-          console.log('📡 No WebSocket clients connected - skipping broadcast');
+        } catch (wsError) {
+          console.error('❌ WebSocket broadcast error:', wsError);
         }
-      } catch (wsError) {
-        console.error('❌ WebSocket broadcast error:', wsError);
-      }
+      }, 100); // Small delay to ensure transaction is committed
       
       return true;
 
