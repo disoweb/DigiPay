@@ -193,6 +193,13 @@ export default function Wallet() {
           };
           console.log('Sending user connect message:', connectMessage);
           ws.send(JSON.stringify(connectMessage));
+          
+          // Refresh wallet data on connection to ensure we have the latest balance
+          setTimeout(() => {
+            console.log('Refreshing wallet data on WebSocket connection');
+            queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+            queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
+          }, 500);
         };
 
         ws.onmessage = (event) => {
@@ -211,22 +218,33 @@ export default function Wallet() {
                 console.log('Processing balance update for current user');
                 console.log('Updating balance from', user.nairaBalance, 'to', data.nairaBalance);
                 
-                // Force immediate query cache update
+                // Update query cache immediately with new data
                 queryClient.setQueryData(["/api/user"], (oldData: any) => {
                   if (oldData) {
-                    console.log('Updating user balance in cache');
-                    return {
+                    console.log('Cache update - Old balance:', oldData.nairaBalance, 'New balance:', data.nairaBalance);
+                    const updatedData = {
                       ...oldData,
                       nairaBalance: data.nairaBalance,
                       usdtBalance: data.usdtBalance || oldData.usdtBalance
                     };
+                    console.log('Cache updated with new data:', updatedData);
+                    return updatedData;
                   }
+                  console.log('No old data found in cache');
                   return oldData;
                 });
                 
-                // Force immediate UI refresh
-                queryClient.invalidateQueries({ queryKey: ["/api/user"] });
-                queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
+                // Verify the cache was updated
+                setTimeout(() => {
+                  const cachedData = queryClient.getQueryData(["/api/user"]);
+                  console.log('Cache verification - Current cached data:', cachedData);
+                }, 50);
+                
+                // Force queries to refetch with updated data
+                setTimeout(() => {
+                  queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+                  queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
+                }, 100);
                 
                 // Show success notification
                 if (data.lastTransaction?.type === 'deposit') {
@@ -236,6 +254,8 @@ export default function Wallet() {
                     className: "border-green-200 bg-green-50 text-green-800",
                   });
                 }
+              } else {
+                console.log('Balance update for different user, ignoring');
               }
             }
           } catch (error) {

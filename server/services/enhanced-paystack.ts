@@ -351,12 +351,15 @@ export class EnhancedPaystackService {
           type: 'balance_updated',
           userId: user.id,
           nairaBalance: newBalance.toString(),
-          usdtBalance: user.usdtBalance,
+          usdtBalance: user.usdtBalance || "0",
+          previousBalance: currentBalance.toString(),
+          depositAmount: depositAmount.toString(),
           lastTransaction: {
             id: transaction.id,
             type: 'deposit',
             amount: depositAmount.toString(),
-            status: 'completed'
+            status: 'completed',
+            timestamp: new Date().toISOString()
           }
         };
         
