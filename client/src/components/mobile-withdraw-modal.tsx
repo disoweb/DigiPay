@@ -42,7 +42,24 @@ export default function MobileWithdrawModal({ isOpen, onClose, availableBalance 
   const total = withdrawAmount + fee;
 
   const withdrawMutation = useMutation({
-    mutationFn: (data: any) => apiRequest("/api/withdraw", "POST", data),
+    mutationFn: async (data: any) => {
+      const token = localStorage.getItem('digipay_token');
+      const response = await fetch('/api/withdraw', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(data)
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Withdrawal failed');
+      }
+      
+      return response.json();
+    },
     onSuccess: (data) => {
       setReference(data.reference || "WD" + Date.now());
       setStep(4);
