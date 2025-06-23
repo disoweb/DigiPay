@@ -93,8 +93,16 @@ export function DepositModal({ open, onOpenChange }: DepositModalProps) {
           description: `₦${depositAmount.toLocaleString()} has been ${data.existing ? 'already' : ''} credited to your account.`,
         });
         
-        // Refresh user data
-        queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+        // Real-time data updates without full refresh
+        queryClient.setQueryData(["/api/user"], (oldData: any) => {
+          if (oldData && data.balanceUpdated) {
+            const updatedBalance = (parseFloat(oldData.nairaBalance || '0') + depositAmount).toString();
+            return { ...oldData, nairaBalance: updatedBalance };
+          }
+          return oldData;
+        });
+        
+        // Invalidate only transactions to show the completed status
         queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
         
         // Close modal after a short delay
@@ -136,6 +144,7 @@ export function DepositModal({ open, onOpenChange }: DepositModalProps) {
         amount: parseFloat(amount) * 100,
         currency: "NGN",
         reference: paystackData.reference,
+        channels: ['card', 'bank', 'ussd', 'qr', 'mobile_money', 'bank_transfer', 'transfer'],
         callback: async (response: any) => {
           console.log("Paystack callback received:", response);
           

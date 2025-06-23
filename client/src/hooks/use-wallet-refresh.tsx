@@ -16,10 +16,15 @@ export function useWalletRefresh() {
     await new Promise(resolve => setTimeout(resolve, 500));
   }, [queryClient]);
 
-  const forceRefresh = useCallback(() => {
-    // Force a hard refresh if needed to prevent freezing
-    window.location.reload();
-  }, []);
+  const forceRefresh = useCallback(async () => {
+    // Use query invalidation instead of page reload
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["/api/user"] }),
+      queryClient.invalidateQueries({ queryKey: ["/api/transactions"] }),
+      queryClient.refetchQueries({ queryKey: ["/api/user"] }),
+      queryClient.refetchQueries({ queryKey: ["/api/transactions"] })
+    ]);
+  }, [queryClient]);
 
   return {
     refreshWalletData,
