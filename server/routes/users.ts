@@ -31,6 +31,10 @@ export const userRoutes = {
       // Debug: Let's see what columns are available in the users table
       console.log('Available columns in users table:', Object.keys(users));
       
+      // Let's also run a direct SQL query to see the exact field names
+      const directQuery = await db.execute(`SELECT * FROM users WHERE id = ${parseInt(id)} LIMIT 1`);
+      console.log('Direct SQL query result:', directQuery);
+      
       // First, let's get the raw user data to see what's actually in the database
       const [rawUser] = await db.select().from(users).where(eq(users.id, parseInt(id)));
       
