@@ -579,32 +579,58 @@ export class DatabaseStorage implements IStorage {
 
     async getUserMessages(userId: number): Promise<any[]> {
         try {
-            return await db.select()
-                .from(messages)
-                .where(
-                    or(
-                        eq(messages.senderId, userId),
-                        eq(messages.receiverId, userId)
-                    )
-                )
-                .orderBy(desc(messages.createdAt));
+            const result = await db.execute({
+                sql: `SELECT id, sender_id, recipient_id, message, trade_id, is_read, created_at
+                      FROM messages 
+                      WHERE sender_id = ? OR recipient_id = ? 
+                      ORDER BY created_at DESC`,
+                args: [userId, userId]
+            });
+            
+            return result.rows.map(row => ({
+                id: row[0],
+                senderId: row[1],
+                receiverId: row[2],
+                content: row[3],
+                tradeId: row[4],
+                isRead: row[5],
+                createdAt: row[6]
+            }));
         } catch (error) {
-            console.log("Messages table schema issue, returning empty array");
+            console.log("Messages table schema issue, returning empty array", error);
             return [];
         }
     }
 
-    async createDirectMessage(message: any): Promise<Message> {
-        const messageData = {
-            senderId: message.senderId,
-            receiverId: message.receiverId || message.recipientId,
-            content: message.content || message.messageText || message.message,
-            tradeId: message.tradeId || null,
-            isRead: false
-        };
-
-        const [newMessage] = await db.insert(messages).values(messageData).returning();
-        return newMessage;
+    async createDirectMessage(message: any): Promise<any> {
+        try {
+            const result = await pool.query(
+                `INSERT INTO messages (sender_id, recipient_id, message, trade_id, is_read, created_at) 
+                 VALUES ($1, $2, $3, $4, $5, NOW()) 
+                 RETURNING id, sender_id, recipient_id, message, trade_id, is_read, created_at`,
+                [
+                    message.senderId,
+                    message.receiverId || message.recipientId,
+                    message.content || message.messageText || message.message,
+                    message.tradeId || null,
+                    false
+                ]
+            );
+            
+            const row = result.rows[0];
+            return {
+                id: row.id,
+                senderId: row.sender_id,
+                receiverId: row.recipient_id,
+                content: row.message,
+                tradeId: row.trade_id,
+                isRead: row.is_read,
+                createdAt: row.created_at
+            };
+        } catch (error) {
+            console.error("Error creating direct message:", error);
+            throw new Error("Failed to create message");
+        }
     }
 
     async markMessageAsRead(messageId: number, userId: number): Promise<boolean> {

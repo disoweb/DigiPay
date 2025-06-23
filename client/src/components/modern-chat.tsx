@@ -77,7 +77,8 @@ export function ModernChat({ chatUserId, onBack }: ModernChatProps) {
         content: messageContent,
       });
       if (!response.ok) {
-        throw new Error("Failed to send message");
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || "Failed to send message");
       }
       return response.json();
     },
