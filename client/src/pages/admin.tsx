@@ -181,19 +181,18 @@ export default function Admin() {
             </p>
           </div>
 
-          {/* Admin Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          {/* Admin Stats - 2x2 Grid */}
+          <div className="grid grid-cols-2 gap-4 sm:gap-6">
             {stats.map((stat, index) => (
               <Card key={index} className="border-0 shadow-lg bg-white/80 backdrop-blur-sm hover:shadow-xl transition-all duration-300">
-                <CardContent className="p-6">
-                  <div className="flex items-center">
-                    <div className={`p-3 ${stat.bgColor} rounded-xl`}>
-                      <stat.icon className={`h-6 w-6 ${stat.color}`} />
+                <CardContent className="p-4 sm:p-6">
+                  <div className="flex items-center space-x-3 sm:space-x-4">
+                    <div className={`p-2 sm:p-3 ${stat.bgColor} rounded-xl flex-shrink-0`}>
+                      <stat.icon className={`h-5 w-5 sm:h-6 sm:w-6 ${stat.color}`} />
                     </div>
-                    <div className="ml-4">
-                      <p className="text-sm font-medium text-gray-600">{stat.title}</p>
-                      <p className="text-3xl font-bold text-gray-900">{stat.value}</p>
-
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">{stat.title}</p>
+                      <p className="text-lg sm:text-2xl lg:text-3xl font-bold text-gray-900 truncate">{stat.value}</p>
                     </div>
                   </div>
                 </CardContent>
