@@ -77,8 +77,11 @@ function App() {
             <Route path="/settings" component={UserSettings} />
             <ProtectedRoute path="/profile" component={ProfilePage} />
             <ProtectedRoute path="/manage-offers" component={ManageOffers} />
-            <Route component={NotFound} />
-          </Switch>
+            <Route path="/admin-guide" component={AdminGuide} />
+          <Route path="/admin" component={Admin} />
+          <Route path="/admin/approvals" component={AdminApprovalsNew} />
+          <Route path="/admin/users" component={AdminUsersFixed} />
+        </Switch>
 
           <Toaster />
         </div>

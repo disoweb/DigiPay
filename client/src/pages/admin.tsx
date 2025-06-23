@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Users, Handshake, AlertTriangle, Shield, Star, TrendingUp, Award, Crown } from "lucide-react";
+import { Users, Handshake, AlertTriangle, Shield, Star, TrendingUp, Award, Crown, RefreshCw, AlertCircle } from "lucide-react";
 import { useLocation } from "wouter";
 import type { Trade } from "@shared/schema";
 
