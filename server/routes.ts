@@ -3907,10 +3907,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Setup WebSocket and store globally for real-time updates
-  const websocketModule = await import("./middleware/websocket.js");
-  const wsServer = websocketModule.setupWebSocket(httpServer);
-  (global as any).wsServer = wsServer;
+  // Setup WebSocket for real-time updates (only if not already setup)
+  if (!(global as any).wsServer) {
+    const websocketModule = await import("./middleware/websocket.js");
+    websocketModule.setupWebSocket(httpServer);
+  }
 
   return httpServer;
 }

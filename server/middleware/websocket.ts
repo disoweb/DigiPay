@@ -5,6 +5,11 @@ import { users } from '@shared/schema';
 import { eq } from 'drizzle-orm';
 
 export function setupWebSocket(server: Server) {
+  // Prevent duplicate WebSocket server setup
+  if ((global as any).wsServer) {
+    console.log('WebSocket server already exists, returning existing instance');
+    return (global as any).wsServer;
+  }
   const wss = new WebSocketServer({ 
     server, 
     path: '/ws',
@@ -35,7 +40,14 @@ export function setupWebSocket(server: Server) {
               .set({ isOnline: true })
               .where(eq(users.id, userId));
             
-            console.log(`User ${userId} connected`);
+            console.log(`User ${userId} connected via WebSocket`);
+            
+            // Send confirmation back to client
+            ws.send(JSON.stringify({
+              type: 'user_connected',
+              userId: userId,
+              message: 'Successfully connected for real-time updates'
+            }));
             break;
 
           case 'join_trade':
@@ -156,5 +168,8 @@ export function setupWebSocket(server: Server) {
   });
 
   console.log('WebSocket server initialized on /ws');
+  
+  // Store globally and return WebSocket server
+  (global as any).wsServer = wss;
   return wss;
 }

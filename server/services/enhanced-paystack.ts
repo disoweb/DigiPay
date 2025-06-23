@@ -341,32 +341,40 @@ export class EnhancedPaystackService {
       console.log(`Successfully credited ₦${depositAmount.toLocaleString()} to user ${user.id}`);
       
       // Emit real-time balance update via WebSocket
-      setTimeout(() => {
-        const wsServer = (global as any).wsServer;
-        if (wsServer && wsServer.clients) {
-          console.log(`Broadcasting balance update to ${wsServer.clients.size} connected clients`);
-          wsServer.clients.forEach((client: any) => {
-            if (client.readyState === 1) { // WebSocket.OPEN
-              const updateMessage = {
-                type: 'balance_updated',
-                userId: user.id,
-                nairaBalance: newBalance.toString(),
-                usdtBalance: user.usdtBalance,
-                lastTransaction: {
-                  id: transaction.id,
-                  type: 'deposit',
-                  amount: depositAmount.toString(),
-                  status: 'completed'
-                }
-              };
-              console.log('Sending balance update:', updateMessage);
+      const wsServer = (global as any).wsServer;
+      if (wsServer && wsServer.clients) {
+        const clientCount = wsServer.clients.size;
+        console.log(`Broadcasting balance update to ${clientCount} connected clients for user ${user.id}`);
+        
+        const updateMessage = {
+          type: 'balance_updated',
+          userId: user.id,
+          nairaBalance: newBalance.toString(),
+          usdtBalance: user.usdtBalance,
+          lastTransaction: {
+            id: transaction.id,
+            type: 'deposit',
+            amount: depositAmount.toString(),
+            status: 'completed'
+          }
+        };
+        
+        let sentCount = 0;
+        wsServer.clients.forEach((client: any) => {
+          if (client.readyState === 1) { // WebSocket.OPEN
+            try {
               client.send(JSON.stringify(updateMessage));
+              sentCount++;
+            } catch (error) {
+              console.error('Failed to send WebSocket message:', error);
             }
-          });
-        } else {
-          console.log('WebSocket server not available for balance update broadcast');
-        }
-      }, 100); // Small delay to ensure WebSocket is ready
+          }
+        });
+        
+        console.log(`Balance update sent to ${sentCount} clients`);
+      } else {
+        console.log('WebSocket server or clients not available for balance update broadcast');
+      }
       
       return true;
 

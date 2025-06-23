@@ -172,15 +172,18 @@ export default function Wallet() {
 
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsUrl = `${protocol}//${window.location.host}/ws`;
+    console.log('Attempting WebSocket connection to:', wsUrl);
     const ws = new WebSocket(wsUrl);
 
     ws.onopen = () => {
-      console.log('WebSocket connected for real-time updates');
+      console.log('WebSocket connected successfully for real-time updates');
       setWsConnected(true);
-      ws.send(JSON.stringify({
+      const connectMessage = {
         type: 'user_connect',
         userId: user.id
-      }));
+      };
+      console.log('Sending user connect message:', connectMessage);
+      ws.send(JSON.stringify(connectMessage));
     };
 
     ws.onmessage = (event) => {
@@ -188,7 +191,9 @@ export default function Wallet() {
         const data = JSON.parse(event.data);
         console.log('WebSocket message received:', data);
         
-        if (data.type === 'balance_updated' && data.userId === user.id) {
+        if (data.type === 'user_connected') {
+          console.log('WebSocket user connection confirmed:', data);
+        } else if (data.type === 'balance_updated' && data.userId === user.id) {
           console.log('Processing balance update for user:', user.id);
           
           // Force immediate query cache update
