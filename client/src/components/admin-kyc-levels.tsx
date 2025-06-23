@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+// import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -272,70 +272,31 @@ export function AdminKYCLevels() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="level1" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="level1" className="relative">
-                Level 1
-                {level1Pending.length > 0 && (
-                  <Badge className="ml-2 bg-red-100 text-red-800 text-xs">
-                    {level1Pending.length}
-                  </Badge>
-                )}
-              </TabsTrigger>
-              <TabsTrigger value="level2" className="relative">
-                Level 2
-                {level2Pending.length > 0 && (
-                  <Badge className="ml-2 bg-red-100 text-red-800 text-xs">
-                    {level2Pending.length}
-                  </Badge>
-                )}
-              </TabsTrigger>
-              <TabsTrigger value="level3" className="relative">
-                Level 3
-                {level3Pending.length > 0 && (
-                  <Badge className="ml-2 bg-red-100 text-red-800 text-xs">
-                    {level3Pending.length}
-                  </Badge>
-                )}
-              </TabsTrigger>
-            </TabsList>
+          <div className="space-y-6">
+            <div className="border-b border-gray-200">
+              <nav className="-mb-px flex space-x-8">
+                <span className="border-b-2 border-blue-500 py-2 px-1 text-sm font-medium text-blue-600">
+                  Level 1 {level1Pending.length > 0 && `(${level1Pending.length})`}
+                </span>
+                <span className="py-2 px-1 text-sm font-medium text-gray-500 hover:text-gray-700">
+                  Level 2 {level2Pending.length > 0 && `(${level2Pending.length})`}
+                </span>
+                <span className="py-2 px-1 text-sm font-medium text-gray-500 hover:text-gray-700">
+                  Level 3 {level3Pending.length > 0 && `(${level3Pending.length})`}
+                </span>
+              </nav>
+            </div>
 
-            <TabsContent value="level1" className="mt-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {level1Pending.length > 0 ? (
-                  level1Pending.map(renderVerificationCard)
-                ) : (
-                  <p className="text-gray-500 col-span-full text-center py-8">
-                    No pending Level 1 verifications
-                  </p>
-                )}
-              </div>
-            </TabsContent>
-
-            <TabsContent value="level2" className="mt-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {level2Pending.length > 0 ? (
-                  level2Pending.map(renderVerificationCard)
-                ) : (
-                  <p className="text-gray-500 col-span-full text-center py-8">
-                    No pending Level 2 verifications
-                  </p>
-                )}
-              </div>
-            </TabsContent>
-
-            <TabsContent value="level3" className="mt-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {level3Pending.length > 0 ? (
-                  level3Pending.map(renderVerificationCard)
-                ) : (
-                  <p className="text-gray-500 col-span-full text-center py-8">
-                    No pending Level 3 verifications
-                  </p>
-                )}
-              </div>
-            </TabsContent>
-          </Tabs>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {level1Pending.length > 0 ? (
+                level1Pending.map(renderVerificationCard)
+              ) : (
+                <p className="text-gray-500 col-span-full text-center py-8">
+                  No pending Level 1 verifications
+                </p>
+              )}
+            </div>
+          </div>
         </CardContent>
       </Card>
 
