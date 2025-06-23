@@ -46,8 +46,8 @@ export default function Admin() {
     enabled: !!user?.isAdmin,
   });
 
-  const { data: adminStats } = useQuery({
-    queryKey: ["/api/admin/stats"],
+  const { data: users = [] } = useQuery({
+    queryKey: ["/api/admin/users"],
     enabled: !!user?.isAdmin,
   });
 
@@ -80,31 +80,36 @@ export default function Admin() {
   const disputedTrades = trades.filter(trade => trade.status === "disputed");
   const activeTrades = trades.filter(trade => trade.status === "pending");
 
+  // Calculate escrow volume from active trades
+  const escrowVolume = activeTrades.reduce((sum, trade) => {
+    return sum + parseFloat(trade.amount || "0");
+  }, 0);
+
   const stats = [
     {
       title: "Total Users",
-      value: adminStats?.totalUsers?.toLocaleString() || "0",
+      value: users.length.toLocaleString(),
       icon: Users,
       color: "text-blue-600",
       bgColor: "bg-blue-50",
     },
     {
       title: "Active Trades",
-      value: adminStats?.activeTrades?.toString() || activeTrades.length.toString(),
+      value: activeTrades.length.toString(),
       icon: Handshake,
       color: "text-green-600",
       bgColor: "bg-green-50",
     },
     {
       title: "Disputes",
-      value: adminStats?.disputedTrades?.toString() || disputedTrades.length.toString(),
+      value: disputedTrades.length.toString(),
       icon: AlertTriangle,
       color: "text-orange-600",
       bgColor: "bg-orange-50",
     },
     {
       title: "Escrow Volume",
-      value: `₦${adminStats?.escrowVolume ? parseFloat(adminStats.escrowVolume).toLocaleString() : "0"}`,
+      value: `₦${escrowVolume.toLocaleString()}`,
       icon: Shield,
       color: "text-red-600",
       bgColor: "bg-red-50",
