@@ -100,19 +100,23 @@ export function EnhancedDepositModal({ open, onOpenChange, user }: EnhancedDepos
     onSuccess: (data) => {
       if (data.success) {
         setPaymentStep('success');
-        queryClient.invalidateQueries({ queryKey: ["user"] });
-        queryClient.invalidateQueries({ queryKey: ["transactions"] });
+        
+        // Comprehensive data refresh to prevent freezing
+        queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
+        queryClient.refetchQueries({ queryKey: ["/api/user"] });
         
         toast({
-          title: "Deposit Successful!",
-          description: `₦${parseFloat(amount).toLocaleString()} has been added to your wallet`,
-          variant: "default",
+          title: "Payment Successful!",
+          description: `₦${parseFloat(amount).toLocaleString()} added to your wallet instantly`,
         });
 
-        // Auto close after success
+        // Auto-close and force refresh to prevent page freezing
         setTimeout(() => {
           onOpenChange(false);
-        }, 3000);
+          queryClient.clear(); // Clear query cache
+          window.location.reload(); // Force refresh to prevent freezing
+        }, 2500);
       } else {
         throw new Error(data.message || 'Payment verification failed');
       }
@@ -167,7 +171,7 @@ export function EnhancedDepositModal({ open, onOpenChange, user }: EnhancedDepos
             hasVerifiedRef.current = true;
             setPaymentStep('verifying');
             
-            // Verify payment
+            // Immediate verification for better UX
             verificationTimeoutRef.current = setTimeout(async () => {
               try {
                 await verifyPaymentMutation.mutateAsync(response.reference);
@@ -177,7 +181,7 @@ export function EnhancedDepositModal({ open, onOpenChange, user }: EnhancedDepos
                 setPaymentStep('error');
                 setErrorMessage("Payment verification failed");
               }
-            }, 1500);
+            }, 300); // Immediate verification for instant crediting
           } else {
             console.log("Payment not successful:", response.status);
             setIsProcessing(false);
@@ -458,10 +462,16 @@ export function EnhancedDepositModal({ open, onOpenChange, user }: EnhancedDepos
                 reference={paymentReference}
                 showAnimation={true}
               />
-              <div className="text-center">
-                <p className="text-sm text-gray-600">
-                  This usually takes a few seconds. Your balance will be updated automatically.
-                </p>
+              <div className="text-center space-y-2">
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <Loader2 className="h-8 w-8 text-blue-600 mx-auto mb-2 animate-spin" />
+                  <p className="text-blue-800 font-medium">
+                    Verifying Payment...
+                  </p>
+                  <p className="text-blue-600 text-sm">
+                    Your balance will be credited automatically in seconds
+                  </p>
+                </div>
               </div>
             </div>
           )}
@@ -476,18 +486,26 @@ export function EnhancedDepositModal({ open, onOpenChange, user }: EnhancedDepos
                 showAnimation={true}
               />
               <div className="text-center space-y-4">
-                <div>
-                  <h3 className="font-semibold text-xl text-green-800">Deposit Successful!</h3>
-                  <p className="text-gray-600">
-                    ₦{parseFloat(amount || '0').toLocaleString()} has been added to your wallet
+                <div className="bg-green-50 border border-green-200 rounded-lg p-6">
+                  <CheckCircle className="h-16 w-16 text-green-600 mx-auto mb-4" />
+                  <h3 className="text-green-800 font-bold text-xl mb-2">
+                    Payment Successful!
+                  </h3>
+                  <p className="text-green-700 text-lg font-medium mb-2">
+                    ₦{parseFloat(amount || '0').toLocaleString()} 
                   </p>
+                  <p className="text-green-600 text-sm mb-4">
+                    has been added to your wallet instantly
+                  </p>
+                  <div className="bg-white rounded-lg p-3 border border-green-200">
+                    <p className="text-green-700 text-sm font-medium mb-2">
+                      Refreshing your wallet...
+                    </p>
+                    <div className="flex justify-center">
+                      <Loader2 className="h-4 w-4 text-green-600 animate-spin" />
+                    </div>
+                  </div>
                 </div>
-                <Button
-                  onClick={() => onOpenChange(false)}
-                  className="w-full bg-green-600 hover:bg-green-700"
-                >
-                  Continue Trading
-                </Button>
               </div>
             </div>
           )}

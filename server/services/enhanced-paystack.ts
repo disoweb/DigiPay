@@ -222,13 +222,13 @@ export class EnhancedPaystackService {
       const paymentData = response.data.data;
       
       if (paymentData.status === 'success') {
-        // Auto-credit user balance
+        // Auto-credit user balance immediately
         const balanceUpdated = await this.creditUserBalance(reference, paymentData);
         
         return {
           success: true,
           data: paymentData,
-          message: 'Payment verified and balance updated',
+          message: 'Payment verified and balance updated automatically',
           balanceUpdated
         };
       }
