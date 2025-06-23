@@ -231,7 +231,7 @@ export function UserDetailModal({ isOpen, onClose, userId, userName }: UserDetai
                           <Phone className="h-4 w-4 text-gray-500 flex-shrink-0" />
                           <div className="min-w-0 flex-1">
                             <p className="text-xs text-gray-600">Phone</p>
-                            <p className="text-sm font-medium">{userDetails.phone || "Not set"}</p>
+                            <p className="text-sm font-medium">{userDetails.phone && userDetails.phone !== "" ? userDetails.phone : "Not set"}</p>
                           </div>
                         </div>
                       </div>
@@ -241,7 +241,7 @@ export function UserDetailModal({ isOpen, onClose, userId, userName }: UserDetai
                           <MapPin className="h-4 w-4 text-gray-500 flex-shrink-0" />
                           <div className="min-w-0 flex-1">
                             <p className="text-xs text-gray-600">Location</p>
-                            <p className="text-sm font-medium">{userDetails.location || "Not set"}</p>
+                            <p className="text-sm font-medium">{userDetails.location && userDetails.location !== "" ? userDetails.location : "Not set"}</p>
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
