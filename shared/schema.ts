@@ -14,7 +14,8 @@ export const users = pgTable("users", {
   bvn: text("bvn"),
   tronAddress: text("tron_address"),
   kycVerified: boolean("kyc_verified").default(false),
-  kycStatus: text("kyc_status").default("not_started"), // 'not_started', 'in_progress', 'submitted', 'under_review', 'approved', 'rejected'
+  kycStatus: text("kyc_status").default("not_started"), // 'not_started', 'level_1_pending', 'level_1_approved', 'level_2_pending', 'level_2_approved', 'level_3_pending', 'level_3_approved', 'rejected'
+  kycLevel: integer("kyc_level").default(0), // 0, 1, 2, 3
   kycSubmittedAt: timestamp("kyc_submitted_at"),
   kycApprovedAt: timestamp("kyc_approved_at"),
   kycRejectionReason: text("kyc_rejection_reason"),
@@ -28,36 +29,59 @@ export const users = pgTable("users", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// KYC verification data table
+// KYC verification data table with 3-level system
 export const kycVerifications = pgTable("kyc_verifications", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").references(() => users.id).notNull().unique(),
 
-  // Personal Information
+  // Level 1: Basic Information
   firstName: text("first_name"),
   lastName: text("last_name"),
   middleName: text("middle_name"),
   dateOfBirth: text("date_of_birth"),
   gender: text("gender"),
+  phone: text("phone"),
 
-  // Address Information
+  // Level 2: Address & Identity
   street: text("street"),
   city: text("city"),
   state: text("state"),
   country: text("country").default("Nigeria"),
   postalCode: text("postal_code"),
   residentialType: text("residential_type"),
-
-  // Identity Information
   idType: text("id_type"),
   idNumber: text("id_number"),
   nin: text("nin"),
+  bvn: text("bvn"),
+
+  // Level 3: Enhanced Verification
+  sourceOfFunds: text("source_of_funds"),
+  employmentStatus: text("employment_status"),
+  employerName: text("employer_name"),
+  monthlyIncome: text("monthly_income"),
+  purposeOfAccount: text("purpose_of_account"),
+  expectedTransactionVolume: text("expected_transaction_volume"),
 
   // Document URLs (stored in secure storage)
   idFrontUrl: text("id_front_url"),
   idBackUrl: text("id_back_url"),
   selfieUrl: text("selfie_url"),
   proofOfAddressUrl: text("proof_of_address_url"),
+  proofOfIncomeUrl: text("proof_of_income_url"),
+  bankStatementUrl: text("bank_statement_url"),
+
+  // KYC Level Information
+  kycLevel: integer("kyc_level").default(0),
+  level1Status: text("level1_status").default("pending"), // pending, approved, rejected
+  level2Status: text("level2_status").default("pending"),
+  level3Status: text("level3_status").default("pending"),
+  level1ApprovedAt: timestamp("level1_approved_at"),
+  level2ApprovedAt: timestamp("level2_approved_at"),
+  level3ApprovedAt: timestamp("level3_approved_at"),
+
+  // Transaction Limits (based on KYC level)
+  dailyLimit: text("daily_limit"),
+  monthlyLimit: text("monthly_limit"),
 
   // Verification status and metadata
   status: text("status").default("pending"), // 'pending', 'approved', 'rejected'
