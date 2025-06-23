@@ -112,12 +112,15 @@ export default function PinSetupModal({ isOpen, onClose, onSuccess }: PinSetupMo
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="w-[95vw] max-w-sm mx-auto">
+      <DialogContent className="w-[95vw] max-w-sm mx-auto" aria-describedby="pin-setup-description">
         <DialogHeader className="text-center">
           <DialogTitle className="flex items-center justify-center gap-2 text-lg">
             <Shield className="h-5 w-5 text-blue-600" />
             Setup Transaction PIN
           </DialogTitle>
+          <p id="pin-setup-description" className="sr-only">
+            Set up a 4-digit PIN to secure your transactions
+          </p>
         </DialogHeader>
 
         <div className="space-y-4">

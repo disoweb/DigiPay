@@ -2,7 +2,7 @@ import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import express from "express";
 import path from "path";
-import { setupJWTAuth, authenticateToken, requireKYC, requireAdmin } from "./auth-jwt";
+import { setupJWTAuth, authenticateToken, requireKYC, requireAdmin, hashPassword, comparePasswords } from "./auth-jwt";
 import { storage } from "./storage";
 import { insertOfferSchema, insertTradeSchema, insertMessageSchema, insertTransactionSchema, insertRatingSchema } from "@shared/schema";
 import { youVerifyService } from "./services/youverify";
