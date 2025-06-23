@@ -1,3 +1,4 @@
+
 import { createContext, useContext, ReactNode, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
@@ -114,15 +115,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const res = await apiRequest("POST", "/api/auth/login", { email, password });
         const data = await res.json();
-
+        
         if (!res.ok) {
           throw new Error(data.message || `HTTP ${res.status}: Login failed`);
         }
-
+        
         if (!data.token) {
           throw new Error("No authentication token received");
         }
-
+        
         return data;
       } catch (error: any) {
         console.error("Login error:", error);
@@ -134,12 +135,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.log("Login success, storing token");
         localStorage.setItem("digipay_token", data.token);
         queryClient.setQueryData(["user"], data);
-
+        
         toast({
           title: "Login Successful",
           description: `Welcome back, ${data.firstName || data.username}!`,
         });
-
+        
         navigate("/dashboard");
       } catch (error) {
         console.error("Login success handler error:", error);
@@ -174,15 +175,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const res = await apiRequest("POST", "/api/auth/register", { email, password, phone, bvn });
         const data = await res.json();
-
+        
         if (!res.ok) {
           throw new Error(data.message || `HTTP ${res.status}: Registration failed`);
         }
-
+        
         if (!data.token) {
           throw new Error("No authentication token received");
         }
-
+        
         return data;
       } catch (error: any) {
         console.error("Registration error:", error);
@@ -194,12 +195,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.log("Registration success, storing token");
         localStorage.setItem("digipay_token", data.token);
         queryClient.setQueryData(["user"], data);
-
+        
         toast({
           title: "Registration Successful",
           description: `Welcome to DigiPay, ${data.firstName || data.username}!`,
         });
-
+        
         navigate("/profile-setup");
       } catch (error) {
         console.error("Registration success handler error:", error);
@@ -227,7 +228,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.removeItem("auth_token");
       queryClient.clear();
       navigate("/auth");
-
+      
       toast({
         title: "Logged Out",
         description: "You have been successfully logged out.",

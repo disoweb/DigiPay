@@ -90,11 +90,10 @@ export function DepositModal({ open, onOpenChange }: DepositModalProps) {
         
         toast({
           title: "Payment Successful!",
-          description: `₦${depositAmount.toLocaleString()} has been automatically credited to your account.`,
+          description: `₦${depositAmount.toLocaleString()} has been ${data.existing ? 'already' : ''} credited to your account.`,
         });
         
-        // Real-time updates will be handled by WebSocket
-        // Still invalidate for immediate refresh
+        // Refresh user data
         queryClient.invalidateQueries({ queryKey: ["/api/user"] });
         queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
         
