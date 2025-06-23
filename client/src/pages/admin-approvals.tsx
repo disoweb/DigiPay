@@ -898,131 +898,241 @@ export default function AdminApprovals() {
 
         {/* Edit Transaction Modal */}
         <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
-          <DialogContent className="max-w-md mx-4 sm:mx-auto">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <Edit className="h-5 w-5 text-blue-600" />
+          <DialogContent className="max-w-lg mx-4 sm:mx-auto max-h-[90vh] overflow-hidden flex flex-col">
+            <DialogHeader className="shrink-0 pb-4">
+              <DialogTitle className="flex items-center gap-2 text-lg">
+                <div className="p-2 bg-blue-100 rounded-full">
+                  <Edit className="h-4 w-4 text-blue-600" />
+                </div>
                 Edit Transaction
               </DialogTitle>
-              <DialogDescription>
-                Transaction #{selectedTransaction?.id} - Modify transaction details
+              <DialogDescription className="text-sm">
+                <div className="flex items-center gap-2 mt-2">
+                  <Badge variant="outline" className="text-xs">
+                    ID: {selectedTransaction?.id}
+                  </Badge>
+                  <Badge variant="secondary" className="text-xs">
+                    ₦{selectedTransaction?.amount && parseFloat(selectedTransaction.amount).toLocaleString()}
+                  </Badge>
+                </div>
               </DialogDescription>
             </DialogHeader>
             
-            <div className="space-y-4 max-h-96 overflow-y-auto">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <Label htmlFor="edit-amount" className="text-sm font-medium">Amount</Label>
-                  <Input
-                    id="edit-amount"
-                    type="number"
-                    step="0.01"
-                    value={editForm.amount}
-                    onChange={(e) => setEditForm(prev => ({ ...prev, amount: e.target.value }))}
-                    className="text-sm"
-                  />
+            <ScrollArea className="flex-1 pr-2">
+              <div className="space-y-4 pb-4">
+                {/* Amount and Status Row */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <Label htmlFor="edit-amount" className="text-sm font-medium flex items-center gap-1">
+                      <DollarSign className="h-3 w-3" />
+                      Amount
+                    </Label>
+                    <div className="relative mt-1">
+                      <Input
+                        id="edit-amount"
+                        type="number"
+                        step="0.01"
+                        value={editForm.amount}
+                        onChange={(e) => setEditForm(prev => ({ ...prev, amount: e.target.value }))}
+                        className="pl-7 h-10"
+                        placeholder="0.00"
+                      />
+                      <span className="absolute left-2.5 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">₦</span>
+                    </div>
+                  </div>
+                  <div>
+                    <Label htmlFor="edit-status" className="text-sm font-medium flex items-center gap-1">
+                      <Clock className="h-3 w-3" />
+                      Status
+                    </Label>
+                    <Select value={editForm.status} onValueChange={(value) => setEditForm(prev => ({ ...prev, status: value }))}>
+                      <SelectTrigger className="mt-1 h-10">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="pending">
+                          <div className="flex items-center gap-2">
+                            <Clock className="h-3 w-3 text-yellow-600" />
+                            Pending
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="completed">
+                          <div className="flex items-center gap-2">
+                            <CheckCircle className="h-3 w-3 text-green-600" />
+                            Completed
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="approved">
+                          <div className="flex items-center gap-2">
+                            <CheckCircle className="h-3 w-3 text-blue-600" />
+                            Approved
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="rejected">
+                          <div className="flex items-center gap-2">
+                            <XCircle className="h-3 w-3 text-red-600" />
+                            Rejected
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="failed">
+                          <div className="flex items-center gap-2">
+                            <XCircle className="h-3 w-3 text-gray-600" />
+                            Failed
+                          </div>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
+
+                {/* Transaction Type */}
                 <div>
-                  <Label htmlFor="edit-status" className="text-sm font-medium">Status</Label>
-                  <Select value={editForm.status} onValueChange={(value) => setEditForm(prev => ({ ...prev, status: value }))}>
-                    <SelectTrigger className="text-sm">
+                  <Label htmlFor="edit-type" className="text-sm font-medium flex items-center gap-1">
+                    <ArrowUpCircle className="h-3 w-3" />
+                    Transaction Type
+                  </Label>
+                  <Select value={editForm.type} onValueChange={(value) => setEditForm(prev => ({ ...prev, type: value }))}>
+                    <SelectTrigger className="mt-1 h-10">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="pending">Pending</SelectItem>
-                      <SelectItem value="completed">Completed</SelectItem>
-                      <SelectItem value="approved">Approved</SelectItem>
-                      <SelectItem value="rejected">Rejected</SelectItem>
-                      <SelectItem value="failed">Failed</SelectItem>
+                      <SelectItem value="deposit">
+                        <div className="flex items-center gap-2">
+                          <ArrowDownCircle className="h-3 w-3 text-green-600" />
+                          Deposit
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="withdrawal">
+                        <div className="flex items-center gap-2">
+                          <ArrowUpCircle className="h-3 w-3 text-red-600" />
+                          Withdrawal
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="credit">
+                        <div className="flex items-center gap-2">
+                          <Plus className="h-3 w-3 text-blue-600" />
+                          Credit
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="debit">
+                        <div className="flex items-center gap-2">
+                          <Minus className="h-3 w-3 text-orange-600" />
+                          Debit
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="transfer_in">Transfer In</SelectItem>
+                      <SelectItem value="transfer_out">Transfer Out</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
-              </div>
 
-              <div>
-                <Label htmlFor="edit-type" className="text-sm font-medium">Type</Label>
-                <Select value={editForm.type} onValueChange={(value) => setEditForm(prev => ({ ...prev, type: value }))}>
-                  <SelectTrigger className="text-sm">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="deposit">Deposit</SelectItem>
-                    <SelectItem value="withdrawal">Withdrawal</SelectItem>
-                    <SelectItem value="credit">Credit</SelectItem>
-                    <SelectItem value="debit">Debit</SelectItem>
-                    <SelectItem value="transfer_in">Transfer In</SelectItem>
-                    <SelectItem value="transfer_out">Transfer Out</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+                {/* Bank Details for Withdrawals */}
+                {editForm.type === "withdrawal" && (
+                  <Card className="p-3 bg-yellow-50 border-yellow-200">
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Building className="h-4 w-4 text-yellow-600" />
+                        <span className="text-sm font-medium text-yellow-800">Bank Details</span>
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="edit-bank-name" className="text-xs font-medium text-yellow-700">Bank Name</Label>
+                        <Input
+                          id="edit-bank-name"
+                          value={editForm.bankName}
+                          onChange={(e) => setEditForm(prev => ({ ...prev, bankName: e.target.value }))}
+                          className="mt-1 h-9 text-sm bg-white/80"
+                          placeholder="Enter bank name"
+                        />
+                      </div>
+                      
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <Label htmlFor="edit-account-number" className="text-xs font-medium text-yellow-700">Account Number</Label>
+                          <Input
+                            id="edit-account-number"
+                            value={editForm.accountNumber}
+                            onChange={(e) => setEditForm(prev => ({ ...prev, accountNumber: e.target.value }))}
+                            className="mt-1 h-9 text-sm bg-white/80"
+                            placeholder="0000000000"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="edit-account-name" className="text-xs font-medium text-yellow-700">Account Name</Label>
+                          <Input
+                            id="edit-account-name"
+                            value={editForm.accountName}
+                            onChange={(e) => setEditForm(prev => ({ ...prev, accountName: e.target.value }))}
+                            className="mt-1 h-9 text-sm bg-white/80"
+                            placeholder="Account holder name"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </Card>
+                )}
 
-              {editForm.type === "withdrawal" && (
-                <div className="space-y-3">
-                  <div>
-                    <Label htmlFor="edit-bank-name" className="text-sm font-medium">Bank Name</Label>
-                    <Input
-                      id="edit-bank-name"
-                      value={editForm.bankName}
-                      onChange={(e) => setEditForm(prev => ({ ...prev, bankName: e.target.value }))}
-                      className="text-sm"
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <Label htmlFor="edit-account-number" className="text-sm font-medium">Account Number</Label>
-                      <Input
-                        id="edit-account-number"
-                        value={editForm.accountNumber}
-                        onChange={(e) => setEditForm(prev => ({ ...prev, accountNumber: e.target.value }))}
-                        className="text-sm"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="edit-account-name" className="text-sm font-medium">Account Name</Label>
-                      <Input
-                        id="edit-account-name"
-                        value={editForm.accountName}
-                        onChange={(e) => setEditForm(prev => ({ ...prev, accountName: e.target.value }))}
-                        className="text-sm"
-                      />
-                    </div>
-                  </div>
+                {/* Admin Notes */}
+                <div>
+                  <Label htmlFor="edit-admin-notes" className="text-sm font-medium flex items-center gap-1">
+                    <User className="h-3 w-3" />
+                    Admin Notes
+                  </Label>
+                  <Textarea
+                    id="edit-admin-notes"
+                    value={editForm.adminNotes}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, adminNotes: e.target.value }))}
+                    rows={3}
+                    className="mt-1 text-sm resize-none"
+                    placeholder="Add admin notes or comments..."
+                  />
                 </div>
-              )}
 
-              <div>
-                <Label htmlFor="edit-admin-notes" className="text-sm font-medium">Admin Notes</Label>
-                <Textarea
-                  id="edit-admin-notes"
-                  value={editForm.adminNotes}
-                  onChange={(e) => setEditForm(prev => ({ ...prev, adminNotes: e.target.value }))}
-                  rows={3}
-                  className="text-sm"
-                />
+                {/* Change Summary */}
+                {(editForm.amount !== selectedTransaction?.amount || 
+                  editForm.status !== selectedTransaction?.status) && (
+                  <Card className="p-3 bg-blue-50 border-blue-200">
+                    <div className="flex items-start gap-2">
+                      <AlertCircle className="h-4 w-4 text-blue-600 mt-0.5 shrink-0" />
+                      <div className="text-sm">
+                        <p className="font-medium text-blue-800 mb-1">Changes Preview</p>
+                        <div className="space-y-1 text-blue-700">
+                          {editForm.amount !== selectedTransaction?.amount && (
+                            <p>Amount: ₦{selectedTransaction?.amount} → ₦{editForm.amount}</p>
+                          )}
+                          {editForm.status !== selectedTransaction?.status && (
+                            <p>Status: {selectedTransaction?.status} → {editForm.status}</p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </Card>
+                )}
               </div>
-              
-              <div className="flex gap-2 pt-4">
-                <Button 
-                  onClick={handleSaveEdit}
-                  disabled={editTransactionMutation.isPending}
-                  className="flex-1 text-sm"
-                >
-                  {editTransactionMutation.isPending ? (
-                    <RefreshCw className="h-4 w-4 animate-spin mr-2" />
-                  ) : (
-                    <Save className="h-4 w-4 mr-2" />
-                  )}
-                  Save Changes
-                </Button>
-                <Button 
-                  variant="outline" 
-                  onClick={() => setShowEditModal(false)} 
-                  className="flex-1 text-sm"
-                  disabled={editTransactionMutation.isPending}
-                >
-                  Cancel
-                </Button>
-              </div>
+            </ScrollArea>
+
+            {/* Action Buttons */}
+            <div className="shrink-0 flex gap-2 pt-4 border-t">
+              <Button 
+                onClick={handleSaveEdit}
+                disabled={editTransactionMutation.isPending}
+                className="flex-1 h-10 bg-blue-600 hover:bg-blue-700"
+              >
+                {editTransactionMutation.isPending ? (
+                  <RefreshCw className="h-4 w-4 animate-spin mr-2" />
+                ) : (
+                  <Save className="h-4 w-4 mr-2" />
+                )}
+                Save Changes
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => setShowEditModal(false)} 
+                className="px-6 h-10"
+                disabled={editTransactionMutation.isPending}
+              >
+                Cancel
+              </Button>
             </div>
           </DialogContent>
         </Dialog>
