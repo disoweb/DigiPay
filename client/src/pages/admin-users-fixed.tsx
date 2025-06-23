@@ -150,12 +150,46 @@ export default function AdminUsersFixed() {
       if (!response.ok) throw new Error("Failed to update user");
       return response.json();
     },
+    onMutate: async ({ userId, data }) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ["/api/admin/users"] });
+      
+      // Snapshot the previous value
+      const previousUsers = queryClient.getQueryData(["/api/admin/users"]);
+      
+      // Optimistically update the cache
+      queryClient.setQueryData(["/api/admin/users"], (oldUsers: User[] | undefined) => {
+        if (!oldUsers) return oldUsers;
+        return oldUsers.map(user => 
+          user.id === userId 
+            ? { 
+                ...user, 
+                email: data.email || user.email,
+                username: data.username || user.username,
+                first_name: data.firstName || user.first_name,
+                last_name: data.lastName || user.last_name,
+                phone: data.phone || user.phone,
+                naira_balance: data.nairaBalance || user.naira_balance,
+                usdt_balance: data.usdtBalance || user.usdt_balance,
+                is_admin: data.isAdmin !== undefined ? data.isAdmin : user.is_admin,
+                kyc_verified: data.kycVerified !== undefined ? data.kycVerified : user.kyc_verified
+              }
+            : user
+        );
+      });
+      
+      return { previousUsers };
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
       toast({ title: "Success", description: "User updated successfully" });
       setShowEditModal(false);
     },
-    onError: () => {
+    onError: (err, variables, context) => {
+      // Rollback on error
+      if (context?.previousUsers) {
+        queryClient.setQueryData(["/api/admin/users"], context.previousUsers);
+      }
       toast({ title: "Error", description: "Failed to update user", variant: "destructive" });
     },
   });
@@ -166,13 +200,29 @@ export default function AdminUsersFixed() {
       if (!response.ok) throw new Error("Failed to update user status");
       return response.json();
     },
+    onMutate: async ({ userId, banned }) => {
+      await queryClient.cancelQueries({ queryKey: ["/api/admin/users"] });
+      const previousUsers = queryClient.getQueryData(["/api/admin/users"]);
+      
+      queryClient.setQueryData(["/api/admin/users"], (oldUsers: User[] | undefined) => {
+        if (!oldUsers) return oldUsers;
+        return oldUsers.map(user => 
+          user.id === userId ? { ...user, is_banned: banned } : user
+        );
+      });
+      
+      return { previousUsers };
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
       toast({ title: "Success", description: "User status updated successfully" });
       setShowActionModal(false);
       setActionReason("");
     },
-    onError: () => {
+    onError: (err, variables, context) => {
+      if (context?.previousUsers) {
+        queryClient.setQueryData(["/api/admin/users"], context.previousUsers);
+      }
       toast({ title: "Error", description: "Failed to update user status", variant: "destructive" });
     },
   });
@@ -183,13 +233,29 @@ export default function AdminUsersFixed() {
       if (!response.ok) throw new Error("Failed to update user funds");
       return response.json();
     },
+    onMutate: async ({ userId, frozen }) => {
+      await queryClient.cancelQueries({ queryKey: ["/api/admin/users"] });
+      const previousUsers = queryClient.getQueryData(["/api/admin/users"]);
+      
+      queryClient.setQueryData(["/api/admin/users"], (oldUsers: User[] | undefined) => {
+        if (!oldUsers) return oldUsers;
+        return oldUsers.map(user => 
+          user.id === userId ? { ...user, funds_frozen: frozen } : user
+        );
+      });
+      
+      return { previousUsers };
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
       toast({ title: "Success", description: "User funds status updated successfully" });
       setShowActionModal(false);
       setActionReason("");
     },
-    onError: () => {
+    onError: (err, variables, context) => {
+      if (context?.previousUsers) {
+        queryClient.setQueryData(["/api/admin/users"], context.previousUsers);
+      }
       toast({ title: "Error", description: "Failed to update user funds status", variant: "destructive" });
     },
   });
@@ -200,12 +266,27 @@ export default function AdminUsersFixed() {
       if (!response.ok) throw new Error("Failed to delete user");
       return response.json();
     },
+    onMutate: async (userId: number) => {
+      await queryClient.cancelQueries({ queryKey: ["/api/admin/users"] });
+      const previousUsers = queryClient.getQueryData(["/api/admin/users"]);
+      
+      queryClient.setQueryData(["/api/admin/users"], (oldUsers: User[] | undefined) => {
+        if (!oldUsers) return oldUsers;
+        return oldUsers.filter(user => user.id !== userId);
+      });
+      
+      return { previousUsers };
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
       toast({ title: "Success", description: "User deleted successfully" });
       setShowActionModal(false);
+      setActionReason("");
     },
-    onError: () => {
+    onError: (err, variables, context) => {
+      if (context?.previousUsers) {
+        queryClient.setQueryData(["/api/admin/users"], context.previousUsers);
+      }
       toast({ title: "Error", description: "Failed to delete user", variant: "destructive" });
     },
   });
