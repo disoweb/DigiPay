@@ -51,6 +51,8 @@ export function ModernChat({ chatUserId, onBack }: ModernChatProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
 
+  console.log("ModernChat rendered with chatUserId:", chatUserId, "type:", typeof chatUserId);
+
   const { data: chatUser, isLoading: userLoading } = useQuery({
     queryKey: [`/api/users/${chatUserId}`],
     queryFn: async () => {

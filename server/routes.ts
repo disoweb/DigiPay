@@ -1773,12 +1773,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = parseInt(req.params.userId);
       const currentUserId = req.user!.id;
 
-      // Get messages between current user and specified user
-      const messages = await storage.getUserMessages(currentUserId)
-        .then(allMessages => allMessages.filter(msg => 
-          (msg.senderId === currentUserId && msg.receiverId === userId) ||
-          (msg.senderId === userId && msg.receiverId === currentUserId)
-        ));;
+      if (isNaN(userId)) {
+        return res.status(400).json({ error: "Invalid user ID" });
+      }
+
+      // Get messages between current user and specified user using direct SQL
+      const result = await pool.query(
+        `SELECT id, sender_id, recipient_id, message, trade_id, is_read, created_at
+         FROM messages 
+         WHERE (sender_id = $1 AND recipient_id = $2) 
+            OR (sender_id = $2 AND recipient_id = $1)
+         ORDER BY created_at ASC`,
+        [currentUserId, userId]
+      );
+      
+      const messages = result.rows.map(row => ({
+        id: row.id,
+        senderId: row.sender_id,
+        receiverId: row.recipient_id,
+        content: row.message,
+        tradeId: row.trade_id,
+        isRead: row.is_read,
+        createdAt: row.created_at
+      }));
 
       res.json(messages);
     } catch (error) {
