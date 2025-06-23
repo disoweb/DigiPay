@@ -579,7 +579,20 @@ export default function Wallet() {
                           <p className={`font-semibold text-lg ${
                             transaction.type === "deposit" ? "text-green-600" : "text-red-600"
                           }`}>
-                            {transaction.type === "deposit" ? "+" : "-"}₦{parseFloat(transaction.amount || "0").toLocaleString()}
+                            {(() => {
+                              const amount = transaction.amount || "0";
+                              const sign = transaction.type === "deposit" ? "+" : "-";
+                              
+                              // Check if amount already contains currency symbols
+                              if (amount.includes("USDT")) {
+                                return `${sign}${amount}`;
+                              } else if (amount.includes("₦")) {
+                                return `${sign}${amount}`;
+                              } else {
+                                // Default to NGN formatting for legacy amounts
+                                return `${sign}₦${parseFloat(amount).toLocaleString()}`;
+                              }
+                            })()}
                           </p>
                           <p className="text-xs text-gray-500 mt-1">
                             {transaction.createdAt ? new Date(transaction.createdAt).toLocaleDateString('en-NG', {

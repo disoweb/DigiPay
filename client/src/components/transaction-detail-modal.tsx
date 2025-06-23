@@ -129,7 +129,16 @@ export function TransactionDetailModal({ transaction, isOpen, onClose }: Transac
                 <span className="text-sm">Amount</span>
               </div>
               <span className="text-sm font-medium">
-                ₦{parseFloat(transaction.amount).toLocaleString()}
+                {(() => {
+                  const amount = transaction.amount || "0";
+                  // Check if amount already contains currency symbols
+                  if (amount.includes("USDT") || amount.includes("₦")) {
+                    return amount;
+                  } else {
+                    // Default to NGN formatting for legacy amounts
+                    return `₦${parseFloat(amount).toLocaleString()}`;
+                  }
+                })()}
               </span>
             </div>
 
