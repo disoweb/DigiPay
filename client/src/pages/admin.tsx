@@ -6,9 +6,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Users, Handshake, AlertTriangle, Shield, Star, TrendingUp, Award, Crown, RefreshCw, AlertCircle } from "lucide-react";
+import { Users, Handshake, AlertTriangle, Shield, Star, TrendingUp, Award, Crown, RefreshCw, AlertCircle, Search, Filter, ChevronRight, Mail, Phone, CheckCircle, XCircle, MoreVertical, Eye, Edit, UserX } from "lucide-react";
 import { useLocation } from "wouter";
 import { UserDetailModal } from "@/components/user-detail-modal";
 import type { Trade } from "@shared/schema";
@@ -26,6 +29,8 @@ export default function Admin() {
   const [selectedUserId, setSelectedUserId] = useState<number>(0);
   const [selectedUserName, setSelectedUserName] = useState<string>("");
   const [showUserModal, setShowUserModal] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
 
   // Show loading while checking auth
   if (isLoading) {
@@ -117,6 +122,23 @@ export default function Admin() {
   const escrowVolume = activeTrades.reduce((sum, trade) => {
     return sum + parseFloat(trade.amount || "0");
   }, 0);
+
+  // Filter users based on search and status
+  const filteredUsers = users.filter((user: any) => {
+    const matchesSearch = searchTerm === "" || 
+      user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.lastName?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesStatus = statusFilter === "all" ||
+      (statusFilter === "verified" && user.kycVerified) ||
+      (statusFilter === "unverified" && !user.kycVerified) ||
+      (statusFilter === "admin" && user.isAdmin) ||
+      (statusFilter === "active" && parseFloat(user.nairaBalance || "0") > 0);
+    
+    return matchesSearch && matchesStatus;
+  });
 
   const stats = [
     {
@@ -358,6 +380,205 @@ export default function Admin() {
                       </CardContent>
                     </Card>
                   ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* All Users Section - Modern Mobile-Optimized */}
+          <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+            <CardHeader className="pb-4 border-b border-gray-100">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                  <CardTitle className="flex items-center gap-2 text-xl">
+                    <Users className="h-6 w-6 text-blue-600" />
+                    All Users
+                  </CardTitle>
+                  <p className="text-sm text-gray-600 mt-1">
+                    {filteredUsers.length} of {users.length} users shown
+                  </p>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
+                  <div className="relative flex-1 sm:flex-none">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                    <Input
+                      placeholder="Search users..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-10 h-9 sm:w-64"
+                    />
+                  </div>
+                  <Select value={statusFilter} onValueChange={setStatusFilter}>
+                    <SelectTrigger className="h-9 w-full sm:w-32">
+                      <Filter className="h-4 w-4 mr-2" />
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All</SelectItem>
+                      <SelectItem value="verified">Verified</SelectItem>
+                      <SelectItem value="unverified">Unverified</SelectItem>
+                      <SelectItem value="admin">Admins</SelectItem>
+                      <SelectItem value="active">Active</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="p-0">
+              {usersLoading ? (
+                <div className="text-center py-12">
+                  <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-3 text-blue-600" />
+                  <p className="text-gray-600">Loading users...</p>
+                </div>
+              ) : usersError ? (
+                <div className="text-center py-12">
+                  <AlertCircle className="h-8 w-8 mx-auto mb-3 text-red-500" />
+                  <p className="text-red-600 mb-2">Error loading users</p>
+                  <p className="text-sm text-gray-500">{usersError.message}</p>
+                </div>
+              ) : filteredUsers.length === 0 ? (
+                <div className="text-center py-12">
+                  <Users className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                  <p className="text-gray-500 font-medium">No users found</p>
+                  <p className="text-sm text-gray-400">Try adjusting your search or filters</p>
+                </div>
+              ) : (
+                <div className="divide-y divide-gray-100">
+                  {filteredUsers.slice(0, 20).map((user: any) => (
+                    <div
+                      key={user.id}
+                      className="p-4 hover:bg-gray-50 transition-colors cursor-pointer"
+                      onClick={() => {
+                        setSelectedUserId(user.id);
+                        setSelectedUserName(
+                          user.firstName && user.lastName 
+                            ? `${user.firstName} ${user.lastName}`
+                            : user.username || user.email
+                        );
+                        setShowUserModal(true);
+                      }}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3 flex-1 min-w-0">
+                          {/* Avatar */}
+                          <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+                            user.isAdmin ? 'bg-red-100' : 
+                            user.kycVerified ? 'bg-green-100' : 'bg-gray-100'
+                          }`}>
+                            <Users className={`w-5 h-5 ${
+                              user.isAdmin ? 'text-red-600' : 
+                              user.kycVerified ? 'text-green-600' : 'text-gray-600'
+                            }`} />
+                          </div>
+
+                          {/* User Info */}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <p className="text-sm font-medium text-gray-900 truncate">
+                                {user.firstName && user.lastName 
+                                  ? `${user.firstName} ${user.lastName}`
+                                  : user.username || 'No Name'
+                                }
+                              </p>
+                              {user.isAdmin && (
+                                <Badge className="bg-red-100 text-red-700 text-xs px-2 py-0.5">
+                                  Admin
+                                </Badge>
+                              )}
+                              {user.kycVerified && (
+                                <CheckCircle className="w-4 h-4 text-green-500" />
+                              )}
+                            </div>
+                            
+                            <div className="flex items-center gap-2 text-xs text-gray-500">
+                              <Mail className="w-3 h-3" />
+                              <span className="truncate">{user.email}</span>
+                            </div>
+                            
+                            {user.phone && (
+                              <div className="flex items-center gap-2 text-xs text-gray-500 mt-1">
+                                <Phone className="w-3 h-3" />
+                                <span>{user.phone}</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Balances & Actions */}
+                        <div className="flex items-center space-x-3">
+                          {/* Balance Info - Hidden on mobile */}
+                          <div className="hidden sm:block text-right">
+                            <div className="text-sm font-medium text-gray-900">
+                              ₦{parseFloat(user.nairaBalance || "0").toLocaleString()}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              ${parseFloat(user.usdtBalance || "0").toFixed(2)} USDT
+                            </div>
+                          </div>
+
+                          {/* Mobile: Show total balance */}
+                          <div className="sm:hidden text-right">
+                            <div className="text-sm font-medium text-gray-900">
+                              ₦{parseFloat(user.nairaBalance || "0").toLocaleString()}
+                            </div>
+                          </div>
+
+                          {/* Action Button */}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="p-2"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedUserId(user.id);
+                              setSelectedUserName(
+                                user.firstName && user.lastName 
+                                  ? `${user.firstName} ${user.lastName}`
+                                  : user.username || user.email
+                              );
+                              setShowUserModal(true);
+                            }}
+                          >
+                            <ChevronRight className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* Mobile: Additional Info */}
+                      <div className="sm:hidden mt-3 pt-3 border-t border-gray-100">
+                        <div className="flex justify-between items-center">
+                          <div className="text-xs text-gray-500">
+                            USDT: ${parseFloat(user.usdtBalance || "0").toFixed(2)}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {user.kycVerified ? (
+                              <Badge className="bg-green-100 text-green-700 text-xs">
+                                Verified
+                              </Badge>
+                            ) : (
+                              <Badge className="bg-gray-100 text-gray-700 text-xs">
+                                Unverified
+                              </Badge>
+                            )}
+                            <span className="text-xs text-gray-500">
+                              ID: {user.id}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  
+                  {filteredUsers.length > 20 && (
+                    <div className="p-4 text-center border-t border-gray-100">
+                      <p className="text-sm text-gray-500">
+                        Showing first 20 of {filteredUsers.length} users
+                      </p>
+                      <Button variant="outline" size="sm" className="mt-2">
+                        Load More
+                      </Button>
+                    </div>
+                  )}
                 </div>
               )}
             </CardContent>
