@@ -338,12 +338,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Featured users endpoint - Top 6 sellers by weekly volume
+  // Featured users endpoint - Smart selection with fallback criteria
   app.get("/api/admin/featured-users", authenticateToken, async (req, res) => {
     try {
       const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
-      // Get all completed trades from the last week where user was a seller
+      // First, check for manually featured users (admin-selected)
+      const manuallyFeatured = await db
+        .select({
+          id: users.id,
+          email: users.email,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          username: users.username,
+          averageRating: users.averageRating,
+          ratingCount: users.ratingCount,
+          kycVerified: users.kycVerified,
+          nairaBalance: users.nairaBalance,
+          usdtBalance: users.usdtBalance,
+          featuredPriority: users.featuredPriority
+        })
+        .from(users)
+        .where(eq(users.isFeatured, true))
+        .orderBy(desc(users.featuredPriority || 0));
+
+      // Get weekly trading volume for all users
       const weeklyTrades = await db
         .select({
           sellerId: trades.sellerId,
@@ -354,7 +373,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           sellerUsername: users.username,
           sellerAverageRating: users.averageRating,
           sellerRatingCount: users.ratingCount,
-          sellerKycVerified: users.kycVerified
+          sellerKycVerified: users.kycVerified,
+          sellerNairaBalance: users.nairaBalance,
+          sellerUsdtBalance: users.usdtBalance
         })
         .from(trades)
         .innerJoin(users, eq(trades.sellerId, users.id))
@@ -365,7 +386,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           )
         );
 
-      // Group by seller and calculate total volume
+      // Group traders by volume
       const sellerVolumes = new Map<number, {
         sellerId: number;
         totalVolume: number;
@@ -378,6 +399,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           averageRating: string;
           ratingCount: number;
           kycVerified: boolean;
+          nairaBalance: string;
+          usdtBalance: string;
         };
       }>();
 
@@ -401,25 +424,136 @@ export async function registerRoutes(app: Express): Promise<Server> {
               username: trade.sellerUsername || undefined,
               averageRating: trade.sellerAverageRating || "0.00",
               ratingCount: trade.sellerRatingCount || 0,
-              kycVerified: trade.sellerKycVerified || false
+              kycVerified: trade.sellerKycVerified || false,
+              nairaBalance: trade.sellerNairaBalance || "0",
+              usdtBalance: trade.sellerUsdtBalance || "0"
             }
           });
         }
       });
 
-      // Sort by volume and get top 6
-      const topSellers = Array.from(sellerVolumes.values())
+      // Convert manually featured users to expected format
+      const manuallyFeaturedUsers = manuallyFeatured.map(user => ({
+        sellerId: user.id,
+        totalVolume: 0, // Will be marked as admin-selected
+        tradeCount: 0,
+        isManuallyFeatured: true,
+        featuredPriority: user.featuredPriority || 0,
+        user: {
+          email: user.email,
+          firstName: user.firstName || undefined,
+          lastName: user.lastName || undefined,
+          username: user.username || undefined,
+          averageRating: user.averageRating || "0.00",
+          ratingCount: user.ratingCount || 0,
+          kycVerified: user.kycVerified || false,
+          nairaBalance: user.nairaBalance || "0",
+          usdtBalance: user.usdtBalance || "0"
+        }
+      }));
+
+      // Get top traders by volume (excluding manually featured ones)
+      const manuallyFeaturedIds = new Set(manuallyFeatured.map(u => u.id));
+      const topTraders = Array.from(sellerVolumes.values())
+        .filter(seller => !manuallyFeaturedIds.has(seller.sellerId))
         .sort((a, b) => b.totalVolume - a.totalVolume)
-        .slice(0, 6)
         .map(seller => ({
           ...seller,
-          totalVolume: parseFloat(seller.totalVolume.toFixed(2))
+          totalVolume: parseFloat(seller.totalVolume.toFixed(2)),
+          isManuallyFeatured: false,
+          featuredPriority: 0
         }));
 
-      res.json(topSellers);
+      // If we don't have enough traders with volume, get users with highest portfolio value
+      let needMoreUsers = 6 - manuallyFeaturedUsers.length - topTraders.length;
+      let portfolioUsers: any[] = [];
+
+      if (needMoreUsers > 0) {
+        const excludeIds = new Set([
+          ...manuallyFeaturedIds,
+          ...topTraders.map(t => t.sellerId)
+        ]);
+
+        const usersWithPortfolio = await db
+          .select({
+            id: users.id,
+            email: users.email,
+            firstName: users.firstName,
+            lastName: users.lastName,
+            username: users.username,
+            averageRating: users.averageRating,
+            ratingCount: users.ratingCount,
+            kycVerified: users.kycVerified,
+            nairaBalance: users.nairaBalance,
+            usdtBalance: users.usdtBalance
+          })
+          .from(users)
+          .where(eq(users.isBanned, false));
+
+        portfolioUsers = usersWithPortfolio
+          .filter(user => !excludeIds.has(user.id))
+          .map(user => {
+            const nairaValue = parseFloat(user.nairaBalance || "0");
+            const usdtValue = parseFloat(user.usdtBalance || "0") * 1600; // Approximate NGN rate
+            const totalPortfolioValue = nairaValue + usdtValue;
+            
+            return {
+              sellerId: user.id,
+              totalVolume: 0,
+              tradeCount: 0,
+              portfolioValue: totalPortfolioValue,
+              isManuallyFeatured: false,
+              isPortfolioBased: true,
+              featuredPriority: 0,
+              user: {
+                email: user.email,
+                firstName: user.firstName || undefined,
+                lastName: user.lastName || undefined,
+                username: user.username || undefined,
+                averageRating: user.averageRating || "0.00",
+                ratingCount: user.ratingCount || 0,
+                kycVerified: user.kycVerified || false,
+                nairaBalance: user.nairaBalance || "0",
+                usdtBalance: user.usdtBalance || "0"
+              }
+            };
+          })
+          .sort((a, b) => b.portfolioValue - a.portfolioValue)
+          .slice(0, needMoreUsers);
+      }
+
+      // Combine all featured users with priority order
+      const allFeaturedUsers = [
+        ...manuallyFeaturedUsers.sort((a, b) => b.featuredPriority - a.featuredPriority),
+        ...topTraders,
+        ...portfolioUsers
+      ].slice(0, 6);
+
+      res.json(allFeaturedUsers);
     } catch (error) {
       console.error("Featured users error:", error);
       res.status(500).json({ error: "Failed to fetch featured users" });
+    }
+  });
+
+  // Admin endpoint to manually feature/unfeature users
+  app.post("/api/admin/users/:userId/feature", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const { featured, priority = 0 } = req.body;
+
+      await db
+        .update(users)
+        .set({ 
+          isFeatured: featured,
+          featuredPriority: featured ? priority : null 
+        })
+        .where(eq(users.id, userId));
+
+      res.json({ success: true, message: `User ${featured ? 'featured' : 'unfeatured'} successfully` });
+    } catch (error) {
+      console.error("Feature user error:", error);
+      res.status(500).json({ error: "Failed to update user feature status" });
     }
   });
 

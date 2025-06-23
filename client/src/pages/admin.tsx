@@ -186,7 +186,7 @@ export default function Admin() {
                 <Crown className="h-6 w-6 text-yellow-600" />
                 Featured Users - Top Sellers (This Week)
               </CardTitle>
-              <p className="text-sm text-gray-600">Top 6 users with highest sell volume in the past 7 days</p>
+              <p className="text-sm text-gray-600">Admin-selected users, top traders by volume, or users with highest portfolios</p>
             </CardHeader>
             <CardContent>
               {featuredUsers.length === 0 ? (
@@ -246,14 +246,42 @@ export default function Admin() {
                             </Badge>
                           )}
 
+                          {/* Featured Badge */}
+                          {seller.isManuallyFeatured && (
+                            <Badge className="bg-purple-100 text-purple-700 text-xs mb-2">
+                              Admin Featured
+                            </Badge>
+                          )}
+                          {seller.isPortfolioBased && (
+                            <Badge className="bg-blue-100 text-blue-700 text-xs mb-2">
+                              High Portfolio
+                            </Badge>
+                          )}
+
                           {/* Stats */}
                           <div className="space-y-1">
-                            <div className="flex justify-between items-center">
-                              <span className="text-xs text-gray-600">Volume</span>
-                              <span className="text-sm font-bold text-green-600">
-                                ₦{seller.totalVolume.toLocaleString()}
-                              </span>
-                            </div>
+                            {seller.isManuallyFeatured ? (
+                              <div className="flex justify-between items-center">
+                                <span className="text-xs text-gray-600">Status</span>
+                                <span className="text-sm font-bold text-purple-600">
+                                  Admin Selected
+                                </span>
+                              </div>
+                            ) : seller.isPortfolioBased ? (
+                              <div className="flex justify-between items-center">
+                                <span className="text-xs text-gray-600">Portfolio</span>
+                                <span className="text-sm font-bold text-blue-600">
+                                  ₦{seller.portfolioValue?.toLocaleString() || "0"}
+                                </span>
+                              </div>
+                            ) : (
+                              <div className="flex justify-between items-center">
+                                <span className="text-xs text-gray-600">Volume</span>
+                                <span className="text-sm font-bold text-green-600">
+                                  ₦{seller.totalVolume.toLocaleString()}
+                                </span>
+                              </div>
+                            )}
                             <div className="flex justify-between items-center">
                               <span className="text-xs text-gray-600">Trades</span>
                               <span className="text-sm font-medium">{seller.tradeCount}</span>
