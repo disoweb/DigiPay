@@ -107,6 +107,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "User not found" });
       }
 
+      // Check if user's funds are frozen
+      if (user.fundsFrozen) {
+        return res.status(403).json({ 
+          error: "Your funds have been frozen. Withdrawals are not allowed.",
+          reason: user.freezeReason || "Account under review"
+        });
+      }
+
+      // Check if user is banned
+      if (user.isBanned) {
+        return res.status(403).json({ 
+          error: "Your account has been suspended. Please contact support.",
+          reason: user.banReason || "Account suspended"
+        });
+      }
+
       const availableBalance = parseFloat(user.nairaBalance || "0");
       if (withdrawAmount > availableBalance) {
         return res.status(400).json({ error: "Insufficient balance" });
@@ -404,6 +420,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = req.user!;
       const { type, amount, rate, paymentMethod, terms, minAmount, maxAmount, timeLimit } = req.body;
 
+      // Check if user's funds are frozen
+      if (user.fundsFrozen) {
+        return res.status(403).json({ 
+          error: "Your funds have been frozen. You cannot create offers.",
+          reason: user.freezeReason || "Account under review"
+        });
+      }
+
+      // Check if user is banned
+      if (user.isBanned) {
+        return res.status(403).json({ 
+          error: "Your account has been suspended. Please contact support.",
+          reason: user.banReason || "Account suspended"
+        });
+      }
+
       // Validate required fields
       if (!type || !amount || !rate) {
         return res.status(400).json({ error: "Missing required fields: type, amount, rate" });
@@ -507,6 +539,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const offer = await storage.getOffer(offerId);
       const user = req.user!;
+
+      // Check if user's funds are frozen
+      if (user.fundsFrozen) {
+        return res.status(403).json({ 
+          error: "Your funds have been frozen. You cannot initiate trades.",
+          reason: user.freezeReason || "Account under review"
+        });
+      }
+
+      // Check if user is banned
+      if (user.isBanned) {
+        return res.status(403).json({ 
+          error: "Your account has been suspended. Please contact support.",
+          reason: user.banReason || "Account suspended"
+        });
+      }
 
       if (!offer || offer.status !== "active") {
         console.log("Offer not found or inactive:", { offerId, offer });
@@ -2463,6 +2511,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (!sender || !recipient) {
         return res.status(404).json({ error: "User not found" });
+      }
+
+      // Check if sender's funds are frozen
+      if (sender.fundsFrozen) {
+        return res.status(403).json({ 
+          error: "Your funds have been frozen. Please contact support for assistance.",
+          reason: sender.freezeReason || "Account under review"
+        });
+      }
+
+      // Check if sender is banned
+      if (sender.isBanned) {
+        return res.status(403).json({ 
+          error: "Your account has been suspended. Please contact support.",
+          reason: sender.banReason || "Account suspended"
+        });
       }
 
       const senderBalance = parseFloat(sender.nairaBalance || "0");
