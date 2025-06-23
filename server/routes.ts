@@ -2556,6 +2556,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log("Payment verification result:", result.success ? "success" : "failed");
       
+      // If verification succeeded but balance wasn't updated, try manual crediting
+      if (result.success && !result.balanceUpdated && result.data?.status === 'success') {
+        console.log("Attempting manual balance credit for unmatched transaction");
+        try {
+          const amount = result.data.amount / 100;
+          const user = await storage.getUser(userId);
+          if (user) {
+            const currentBalance = parseFloat(user.nairaBalance || '0');
+            const newBalance = currentBalance + amount;
+            
+            await storage.updateUserBalance(userId, { 
+              nairaBalance: newBalance.toString() 
+            });
+            
+            // Create a transaction record
+            await storage.createTransaction({
+              userId,
+              type: 'deposit',
+              amount: amount.toString(),
+              status: 'completed',
+              paystackRef: reference,
+              paymentMethod: 'paystack',
+              adminNotes: `Manual credit for verified payment - ₦${amount.toLocaleString()}`
+            });
+            
+            result.balanceUpdated = true;
+            console.log(`Manually credited ₦${amount.toLocaleString()} to user ${userId}`);
+          }
+        } catch (manualError) {
+          console.error("Manual crediting failed:", manualError);
+        }
+      }
+      
       // Include balance update status in response
       res.json({
         ...result,

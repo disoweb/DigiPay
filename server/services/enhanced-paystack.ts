@@ -263,11 +263,53 @@ export class EnhancedPaystackService {
    * Credit user balance after successful payment with duplicate prevention
    */
   private async creditUserBalance(reference: string, paymentData: any): Promise<boolean> {
-    const transaction = await storage.getTransactionByReference(reference);
+    // Try to find transaction by the reference we created vs what Paystack returns
+    let transaction = await storage.getTransactionByReference(reference);
+    
+    // If not found, search by pending deposits with matching amount and recent timestamp
+    if (!transaction) {
+      const allTransactions = await storage.getAllTransactions();
+      const targetAmount = (paymentData.amount / 100).toString();
+      const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
+      
+      transaction = allTransactions.find(t => 
+        t.status === 'pending' && 
+        t.type === 'deposit' && 
+        t.amount === targetAmount &&
+        t.createdAt && new Date(t.createdAt) > twoHoursAgo
+      ) || null;
+      
+      if (transaction) {
+        console.log(`Found matching transaction by amount: ${targetAmount} for reference: ${reference}`);
+        // Update the transaction with the correct Paystack reference
+        await storage.updateTransaction(transaction.id, {
+          paystackRef: reference
+        });
+      }
+    }
     
     if (!transaction) {
-      console.error('Transaction not found for reference:', reference);
-      return false;
+      console.error('Transaction not found for reference:', reference, 'amount:', paymentData.amount / 100);
+      // Create a new transaction record for this successful payment
+      try {
+        const userId = paymentData.metadata?.userId || paymentData.customer?.id;
+        if (!userId) {
+          console.error('No user ID available for creating transaction');
+          return false;
+        }
+        
+        transaction = await storage.createTransaction({
+          userId: parseInt(userId),
+          type: 'deposit',
+          amount: (paymentData.amount / 100).toString(),
+          status: 'pending',
+          paystackRef: reference,
+          paymentMethod: 'paystack'
+        });
+      } catch (error) {
+        console.error('Failed to create transaction for payment:', error);
+        return false;
+      }
     }
 
     if (transaction.status === 'completed') {

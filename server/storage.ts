@@ -751,6 +751,14 @@ export class DatabaseStorage implements IStorage {
     return result[0] || null;
   }
 
+  async deleteTransactionByReference(reference: string): Promise<void> {
+    await db.delete(transactions).where(eq(transactions.paystackRef, reference));
+  }
+
+  async updateUserBalance(userId: number, updates: { nairaBalance?: string; usdtBalance?: string }): Promise<void> {
+    await db.update(users).set(updates).where(eq(users.id, userId));
+  }
+
   async getUserPendingDeposit(userId: number): Promise<Transaction | null> {
     const result = await db.select()
       .from(transactions)
