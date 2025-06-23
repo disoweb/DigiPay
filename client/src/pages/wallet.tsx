@@ -186,12 +186,18 @@ export default function Wallet() {
     ws.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
+        console.log('WebSocket message received:', data);
         
         if (data.type === 'balance_updated' && data.userId === user.id) {
-          console.log('Real-time balance update received:', data);
+          console.log('Processing balance update for user:', user.id);
           
+          // Force immediate query cache update
           queryClient.setQueryData(["/api/user"], (oldData: any) => {
             if (oldData) {
+              console.log('Updating user data in cache:', {
+                old: oldData.nairaBalance,
+                new: data.nairaBalance
+              });
               return {
                 ...oldData,
                 nairaBalance: data.nairaBalance,
@@ -201,6 +207,9 @@ export default function Wallet() {
             return oldData;
           });
           
+          // Force refetch to ensure UI updates
+          queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+          queryClient.refetchQueries({ queryKey: ["/api/user"] });
           queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
           
           if (data.lastTransaction?.type === 'deposit') {

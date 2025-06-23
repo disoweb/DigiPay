@@ -2585,24 +2585,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
             console.log(`Manually credited ₦${amount.toLocaleString()} to user ${userId}`);
             
             // Emit real-time balance update via WebSocket
-            const wsServerGlobal = (global as any).wsServer;
-            if (wsServerGlobal) {
-              wsServerGlobal.clients.forEach((client: any) => {
-                if (client.readyState === 1) { // WebSocket.OPEN
-                  client.send(JSON.stringify({
-                    type: 'balance_updated',
-                    userId: userId,
-                    nairaBalance: newBalance.toString(),
-                    usdtBalance: user.usdtBalance,
-                    lastTransaction: {
-                      type: 'deposit',
-                      amount: amount.toString(),
-                      status: 'completed'
-                    }
-                  }));
-                }
-              });
-            }
+            setTimeout(() => {
+              const wsServerGlobal = (global as any).wsServer;
+              if (wsServerGlobal && wsServerGlobal.clients) {
+                console.log(`Broadcasting manual balance update to ${wsServerGlobal.clients.size} connected clients`);
+                wsServerGlobal.clients.forEach((client: any) => {
+                  if (client.readyState === 1) { // WebSocket.OPEN
+                    const updateMessage = {
+                      type: 'balance_updated',
+                      userId: userId,
+                      nairaBalance: newBalance.toString(),
+                      usdtBalance: user.usdtBalance,
+                      lastTransaction: {
+                        type: 'deposit',
+                        amount: amount.toString(),
+                        status: 'completed'
+                      }
+                    };
+                    console.log('Sending manual balance update:', updateMessage);
+                    client.send(JSON.stringify(updateMessage));
+                  }
+                });
+              }
+            }, 100); // Small delay to ensure WebSocket is ready
           }
         } catch (manualError) {
           console.error("Manual crediting failed:", manualError);
@@ -3901,6 +3906,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: "Failed to confirm payment" });
     }
   });
+
+  // Setup WebSocket and store globally for real-time updates
+  const websocketModule = await import("./middleware/websocket.js");
+  const wsServer = websocketModule.setupWebSocket(httpServer);
+  (global as any).wsServer = wsServer;
 
   return httpServer;
 }
