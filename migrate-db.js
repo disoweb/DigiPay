@@ -1,5 +1,5 @@
 
-const { db } = require('./server/db.js');
+import { db } from './server/db.ts';
 
 async function migrate() {
   try {
