@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -33,29 +34,61 @@ export function DepositModal({ open, onOpenChange }: DepositModalProps) {
       setIsProcessing(false);
       setShowVerifyButton(false);
       setPaymentReference("");
-      // Don't reset amount here so user doesn't lose their input
     }
   }, [open]);
 
+  // Force cleanup any stuck states
+  useEffect(() => {
+    const cleanup = () => {
+      if (isProcessing) {
+        console.log("Forcing cleanup of stuck processing state");
+        setIsProcessing(false);
+      }
+    };
+
+    const timer = setTimeout(cleanup, 30000); // 30 seconds max
+    return () => clearTimeout(timer);
+  }, [isProcessing]);
+
   const initializePaymentMutation = useMutation({
     mutationFn: async (amount: number) => {
-      const res = await apiRequest("POST", "/api/payments/initialize", { amount });
-      return res.json();
+      try {
+        const res = await apiRequest("POST", "/api/payments/initialize", { amount });
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.message || `HTTP ${res.status}: Payment initialization failed`);
+        }
+        return data;
+      } catch (error) {
+        console.error("Payment initialization error:", error);
+        throw error;
+      }
     },
     onSuccess: (data) => {
-      if (data.success && data.data) {
-        setPaymentReference(data.data.reference);
-        setShowVerifyButton(true);
-        handlePaystackPayment(data.data);
-      } else {
-        throw new Error(data.message || "Payment initialization failed");
+      try {
+        if (data.success && data.data) {
+          setPaymentReference(data.data.reference);
+          setShowVerifyButton(true);
+          handlePaystackPayment(data.data);
+        } else {
+          throw new Error(data.message || "Payment initialization failed");
+        }
+      } catch (error) {
+        console.error("Payment success handler error:", error);
+        setIsProcessing(false);
+        toast({
+          title: "Payment Setup Failed",
+          description: "Unable to setup payment. Please try again.",
+          variant: "destructive",
+        });
       }
     },
     onError: (error: Error) => {
+      console.error("Payment initialization mutation error:", error);
       setIsProcessing(false);
       toast({
         title: "Payment Initialization Failed",
-        description: error.message,
+        description: error.message || "Unable to initialize payment. Please try again.",
         variant: "destructive",
       });
     },
@@ -63,8 +96,17 @@ export function DepositModal({ open, onOpenChange }: DepositModalProps) {
 
   const verifyPaymentMutation = useMutation({
     mutationFn: async (reference: string) => {
-      const res = await apiRequest("POST", "/api/payments/verify", { reference });
-      return res.json();
+      try {
+        const res = await apiRequest("POST", "/api/payments/verify", { reference });
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.message || `HTTP ${res.status}: Payment verification failed`);
+        }
+        return data;
+      } catch (error) {
+        console.error("Payment verification error:", error);
+        throw error;
+      }
     },
     onSuccess: (data) => {
       setIsProcessing(false);
@@ -76,6 +118,8 @@ export function DepositModal({ open, onOpenChange }: DepositModalProps) {
         queryClient.invalidateQueries({ queryKey: ["/api/user"] });
         queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
         setAmount("");
+        setShowVerifyButton(false);
+        setPaymentReference("");
         onOpenChange(false);
       } else {
         toast({
@@ -86,10 +130,11 @@ export function DepositModal({ open, onOpenChange }: DepositModalProps) {
       }
     },
     onError: (error: Error) => {
+      console.error("Payment verification mutation error:", error);
       setIsProcessing(false);
       toast({
         title: "Payment Verification Failed",
-        description: error.message,
+        description: error.message || "Unable to verify payment. Please contact support.",
         variant: "destructive",
       });
     },
@@ -97,10 +142,8 @@ export function DepositModal({ open, onOpenChange }: DepositModalProps) {
 
   const handlePaystackPayment = async (paystackData: any) => {
     try {
-      setIsProcessing(true);
-      console.log("Setting up seamless Paystack payment...", paystackData);
+      console.log("Setting up Paystack payment...", paystackData);
 
-      // Check if user email is available
       if (!user?.email) {
         throw new Error("User email not available. Please refresh and try again.");
       }
@@ -109,23 +152,27 @@ export function DepositModal({ open, onOpenChange }: DepositModalProps) {
       await initializePaystack({
         key: PAYSTACK_PUBLIC_KEY,
         email: user.email,
-        amount: parseFloat(amount) * 100, // Convert to kobo
+        amount: parseFloat(amount) * 100,
         currency: "NGN",
         reference: paystackData.reference,
         callback: async (response: any) => {
           console.log("Paystack callback received:", response);
-          if (response.status === "success") {
-            // Wait a moment for Paystack to process
-            setTimeout(async () => {
-              await handlePaymentVerification(response.reference);
-            }, 2000);
-          } else {
+          try {
+            if (response.status === "success") {
+              setTimeout(async () => {
+                await handlePaymentVerification(response.reference);
+              }, 2000);
+            } else {
+              setIsProcessing(false);
+              toast({
+                title: "Payment Failed",
+                description: "Payment was not completed successfully",
+                variant: "destructive",
+              });
+            }
+          } catch (error) {
+            console.error("Paystack callback error:", error);
             setIsProcessing(false);
-            toast({
-              title: "Payment Failed",
-              description: "Payment was not completed successfully",
-              variant: "destructive",
-            });
           }
         },
         onClose: () => {
@@ -137,60 +184,9 @@ export function DepositModal({ open, onOpenChange }: DepositModalProps) {
       console.error("Paystack payment error:", error);
       setIsProcessing(false);
       
-      // Fallback to authorization URL if inline fails
+      // Fallback to authorization URL
       if (paystackData.authorization_url) {
-        // Create an embedded iframe for seamless experience
-        const iframe = document.createElement('iframe');
-        iframe.src = paystackData.authorization_url;
-        iframe.style.cssText = `
-          position: fixed;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          border: none;
-          z-index: 9999;
-          background: white;
-        `;
-        
-        // Add close button
-        const closeBtn = document.createElement('button');
-        closeBtn.innerHTML = '×';
-        closeBtn.style.cssText = `
-          position: fixed;
-          top: 20px;
-          right: 20px;
-          width: 40px;
-          height: 40px;
-          border: none;
-          background: #ff4444;
-          color: white;
-          font-size: 24px;
-          border-radius: 50%;
-          cursor: pointer;
-          z-index: 10000;
-        `;
-        closeBtn.onclick = () => {
-          document.body.removeChild(iframe);
-          document.body.removeChild(closeBtn);
-          setIsProcessing(false);
-        };
-        
-        document.body.appendChild(iframe);
-        document.body.appendChild(closeBtn);
-        
-        // Listen for payment completion
-        window.addEventListener('message', (event) => {
-          if (event.data.type === 'paystack_payment_complete') {
-            document.body.removeChild(iframe);
-            document.body.removeChild(closeBtn);
-            if (event.data.status === 'success') {
-              setTimeout(async () => {
-                await handlePaymentVerification(event.data.reference);
-              }, 2000);
-            }
-          }
-        });
+        window.open(paystackData.authorization_url, '_blank');
       } else {
         toast({
           title: "Payment Error",
@@ -202,7 +198,6 @@ export function DepositModal({ open, onOpenChange }: DepositModalProps) {
   };
 
   const handlePaymentVerification = async (reference: string) => {
-    // Prevent double verification
     if (verifyPaymentMutation.isPending) {
       console.log("Verification already in progress, skipping...");
       return;
@@ -218,14 +213,13 @@ export function DepositModal({ open, onOpenChange }: DepositModalProps) {
       console.log("Payment verification result:", result);
 
       if (result.success && result.data?.status === 'success') {
-        const depositAmount = result.data.amount / 100; // Convert from kobo to naira
+        const depositAmount = result.data.amount / 100;
 
         toast({
           title: "Payment Successful!",
           description: `₦${depositAmount.toLocaleString()} has been automatically credited to your account.`,
         });
 
-        // Refresh user data and close modal
         await queryClient.invalidateQueries({ queryKey: ["user"] });
         await queryClient.invalidateQueries({ queryKey: ["transactions"] });
         setAmount("");
@@ -247,12 +241,13 @@ export function DepositModal({ open, onOpenChange }: DepositModalProps) {
     }
   };
 
-  const handleDeposit = async (e?: React.MouseEvent) => {
-    if (e) {
-      e.preventDefault();
-      e.stopPropagation();
+  const handleDeposit = async () => {
+    // Prevent multiple clicks
+    if (isProcessing || initializePaymentMutation.isPending) {
+      console.log("Deposit already in progress");
+      return;
     }
-    
+
     const depositAmount = parseFloat(amount);
     if (depositAmount < 100) {
       toast({
@@ -263,9 +258,19 @@ export function DepositModal({ open, onOpenChange }: DepositModalProps) {
       return;
     }
 
+    if (!user?.email) {
+      toast({
+        title: "User Error",
+        description: "Please refresh the page and try again",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       setIsProcessing(true);
-      initializePaymentMutation.mutate(depositAmount);
+      console.log("Initiating deposit for amount:", depositAmount);
+      await initializePaymentMutation.mutateAsync(depositAmount);
     } catch (error) {
       console.error("Deposit error:", error);
       setIsProcessing(false);
@@ -274,12 +279,30 @@ export function DepositModal({ open, onOpenChange }: DepositModalProps) {
 
   const quickAmounts = [1000, 5000, 10000, 20000];
 
+  const resetModal = () => {
+    setIsProcessing(false);
+    setShowVerifyButton(false);
+    setPaymentReference("");
+    setAmount("");
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange} modal={true}>
+    <Dialog 
+      open={open} 
+      onOpenChange={(newOpen) => {
+        if (!newOpen) {
+          resetModal();
+        }
+        onOpenChange(newOpen);
+      }}
+    >
       <DialogContent 
         className="w-[95vw] max-w-md mx-auto max-h-[90vh] overflow-y-auto"
-        onPointerDownOutside={(e) => e.preventDefault()}
-        onInteractOutside={(e) => e.preventDefault()}
+        onEscapeKeyDown={(e) => {
+          if (isProcessing) {
+            e.preventDefault();
+          }
+        }}
       >
         <DialogHeader className="space-y-3">
           <DialogTitle className="flex items-center gap-2 text-lg">
@@ -294,7 +317,7 @@ export function DepositModal({ open, onOpenChange }: DepositModalProps) {
         </DialogHeader>
 
         <div className="space-y-6 py-2">
-          {/* Quick Amount Selection - Mobile Optimized */}
+          {/* Quick Amount Selection */}
           <div>
             <Label className="text-sm font-medium text-gray-700 mb-3 block">Quick Select</Label>
             <div className="grid grid-cols-2 gap-2">
@@ -304,11 +327,8 @@ export function DepositModal({ open, onOpenChange }: DepositModalProps) {
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    setAmount(quickAmount.toString());
-                  }}
+                  onClick={() => setAmount(quickAmount.toString())}
+                  disabled={isProcessing}
                   className="h-12 text-sm font-medium hover:bg-green-50 hover:border-green-300"
                 >
                   ₦{quickAmount.toLocaleString()}
@@ -317,7 +337,7 @@ export function DepositModal({ open, onOpenChange }: DepositModalProps) {
             </div>
           </div>
 
-          {/* Custom Amount Input - Mobile Optimized */}
+          {/* Custom Amount Input */}
           <div className="space-y-3">
             <Label htmlFor="amount" className="text-sm font-medium text-gray-700">
               Custom Amount (NGN)
@@ -329,6 +349,7 @@ export function DepositModal({ open, onOpenChange }: DepositModalProps) {
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               min="100"
+              disabled={isProcessing}
               className="h-12 text-lg text-center"
               inputMode="numeric"
             />
@@ -389,8 +410,9 @@ export function DepositModal({ open, onOpenChange }: DepositModalProps) {
                     After completing payment, click verify to update your balance.
                   </p>
                   <Button
+                    type="button"
                     onClick={() => handlePaymentVerification(paymentReference)}
-                    disabled={verifyPaymentMutation.isPending}
+                    disabled={verifyPaymentMutation.isPending || isProcessing}
                     className="w-full h-10 bg-amber-600 hover:bg-amber-700"
                     size="sm"
                   >
@@ -408,7 +430,7 @@ export function DepositModal({ open, onOpenChange }: DepositModalProps) {
             </Card>
           )}
 
-          {/* Action Buttons - Mobile Optimized */}
+          {/* Action Buttons */}
           <div className="flex flex-col gap-3 pt-2">
             <Button 
               type="button"
@@ -429,15 +451,8 @@ export function DepositModal({ open, onOpenChange }: DepositModalProps) {
             <Button 
               type="button"
               variant="outline" 
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                // Reset all states
-                setIsProcessing(false);
-                setShowVerifyButton(false);
-                setPaymentReference("");
-                setAmount("");
-                // Close modal
+              onClick={() => {
+                resetModal();
                 onOpenChange(false);
               }}
               className="w-full h-11 text-base"
