@@ -27,7 +27,12 @@ import {
   ArrowUpDown,
   Eye,
   ChevronDown,
-  RefreshCw
+  RefreshCw,
+  TrendingDown,
+  Smartphone,
+  Wallet,
+  CreditCard,
+  Timer
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 
@@ -88,91 +93,133 @@ function OfferCard({ offer, onContact, canContact }: {
   const isBuyOffer = offer.type === 'buy';
   
   return (
-    <Card className="hover:shadow-lg transition-all duration-200 border border-gray-200 hover:border-gray-300">
-      <CardContent className="p-4">
-        <div className="flex flex-col gap-4">
-          {/* Header with trader info */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3 min-w-0 flex-1">
-              <div className={`w-3 h-3 rounded-full flex-shrink-0 ${offer.user?.isOnline ? 'bg-green-400 animate-pulse' : 'bg-gray-400'}`} />
+    <Card className="hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-gray-200 bg-white rounded-2xl overflow-hidden">
+      <CardContent className="p-0">
+        {/* Mobile-First Header */}
+        <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-4 border-b border-gray-100">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-3 flex-1 min-w-0">
+              <div className={`w-4 h-4 rounded-full flex-shrink-0 ${offer.user?.isOnline ? 'bg-green-400 shadow-lg shadow-green-200 animate-pulse' : 'bg-gray-400'}`} />
               <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-semibold text-gray-900 truncate">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="font-bold text-gray-900 truncate text-lg">
                     {offer.user?.email?.split('@')[0] || 'Unknown'}
                   </span>
                   {offer.user?.kycVerified && (
-                    <Badge variant="secondary" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
+                    <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-300 px-2 py-1">
                       <Shield className="h-3 w-3 mr-1" />
                       Verified
                     </Badge>
                   )}
                 </div>
-                <div className="flex items-center gap-3 mt-1">
+                <div className="flex items-center gap-3">
                   <div className="flex items-center gap-1">
-                    <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                    <span className="text-sm text-gray-600">
-                      {safeParseFloat(offer.user?.averageRating).toFixed(1)} ({offer.user?.ratingCount || 0})
+                    <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                    <span className="text-sm font-medium text-gray-700">
+                      {safeParseFloat(offer.user?.averageRating).toFixed(1)}
+                    </span>
+                    <span className="text-sm text-gray-500">
+                      ({offer.user?.ratingCount || 0})
                     </span>
                   </div>
-                  <span className="text-sm text-gray-500">
-                    {offer.user?.completedTrades || 0} trades
-                  </span>
+                  <div className="flex items-center gap-1">
+                    <Users className="h-4 w-4 text-gray-400" />
+                    <span className="text-sm text-gray-600 font-medium">
+                      {offer.user?.completedTrades || 0} trades
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
             <Badge 
               variant="outline" 
-              className={`text-xs ${offer.user?.isOnline ? 'border-green-200 text-green-700 bg-green-50' : 'border-gray-200 text-gray-500'}`}
+              className={`text-xs font-medium px-3 py-1 ${
+                offer.user?.isOnline 
+                  ? 'border-green-300 text-green-700 bg-green-50' 
+                  : 'border-gray-300 text-gray-500 bg-gray-50'
+              }`}
             >
               {offer.user?.isOnline ? 'Online' : 'Offline'}
             </Badge>
           </div>
+        </div>
 
-          {/* Main offer details */}
+        {/* Main Content */}
+        <div className="p-4 space-y-4">
+          {/* Rate & Amount - Mobile Optimized */}
           <div className="grid grid-cols-2 gap-4">
-            <div className="bg-gray-50 rounded-lg p-3">
-              <div className="text-xs text-gray-500 mb-1">Rate</div>
-              <div className={`text-lg font-bold ${isBuyOffer ? 'text-green-600' : 'text-red-600'}`}>
+            <div className="text-center bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-4 border border-gray-200">
+              <div className="text-xs text-gray-500 mb-2 font-medium uppercase tracking-wide">Rate per USDT</div>
+              <div className={`text-2xl font-black mb-1 ${isBuyOffer ? 'text-green-600' : 'text-red-600'}`}>
                 {formatCurrency(safeParseFloat(offer.rate))}
               </div>
-              <div className="text-xs text-gray-500">per USDT</div>
+              <div className="flex items-center justify-center gap-1">
+                {isBuyOffer ? (
+                  <TrendingUp className="h-3 w-3 text-green-500" />
+                ) : (
+                  <TrendingDown className="h-3 w-3 text-red-500" />
+                )}
+                <span className="text-xs text-gray-500 font-medium">Best Rate</span>
+              </div>
             </div>
             
-            <div className="bg-gray-50 rounded-lg p-3">
-              <div className="text-xs text-gray-500 mb-1">Available</div>
-              <div className="text-lg font-bold text-gray-900">
+            <div className="text-center bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4 border border-blue-200">
+              <div className="text-xs text-blue-600 mb-2 font-medium uppercase tracking-wide">Available</div>
+              <div className="text-2xl font-black text-blue-700 mb-1">
                 {safeParseFloat(offer.amount).toFixed(2)}
               </div>
-              <div className="text-xs text-gray-500">USDT</div>
-            </div>
-          </div>
-
-          {/* Payment method and limits */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <div className="flex flex-col">
-              <div className="text-xs text-gray-500 mb-1">Payment Method</div>
-              <Badge variant="outline" className="w-fit">
-                {offer.paymentMethod?.replace('_', ' ').toUpperCase() || 'Bank Transfer'}
-              </Badge>
-            </div>
-            
-            <div className="flex flex-col sm:text-right">
-              <div className="text-xs text-gray-500 mb-1">Limits</div>
-              <div className="text-sm font-medium text-gray-700">
-                {formatCurrency(safeParseFloat(offer.minLimit))} - {formatCurrency(safeParseFloat(offer.maxLimit))}
+              <div className="flex items-center justify-center gap-1">
+                <Wallet className="h-3 w-3 text-blue-500" />
+                <span className="text-xs text-blue-600 font-medium">USDT</span>
               </div>
             </div>
           </div>
 
-          {/* Action button */}
+          {/* Payment & Limits - Mobile Card Layout */}
+          <div className="space-y-3">
+            <div className="bg-gray-50 rounded-xl p-3 border border-gray-200">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <CreditCard className="h-4 w-4 text-gray-500" />
+                  <span className="text-xs text-gray-500 font-medium">Payment Method</span>
+                </div>
+                <Badge variant="outline" className="bg-white border-gray-300 text-gray-700 font-medium">
+                  {offer.paymentMethod?.replace('_', ' ').toUpperCase() || 'Bank Transfer'}
+                </Badge>
+              </div>
+            </div>
+            
+            <div className="bg-gray-50 rounded-xl p-3 border border-gray-200">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <DollarSign className="h-4 w-4 text-gray-500" />
+                  <span className="text-xs text-gray-500 font-medium">Trading Limits</span>
+                </div>
+                <div className="text-right">
+                  <div className="text-sm font-bold text-gray-900">
+                    {formatCurrency(safeParseFloat(offer.minLimit))}
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    to {formatCurrency(safeParseFloat(offer.maxLimit))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Mobile Action Button */}
           <Button
             onClick={() => onContact(offer)}
             disabled={!canContact(offer)}
-            className={`w-full ${isBuyOffer ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'}`}
+            className={`w-full h-14 text-lg font-bold rounded-xl shadow-lg transition-all duration-200 ${
+              isBuyOffer 
+                ? 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 shadow-green-200' 
+                : 'bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 shadow-red-200'
+            } ${!canContact(offer) ? 'opacity-50 cursor-not-allowed' : 'active:scale-95'}`}
             size="lg"
           >
-            <MessageCircle className="h-4 w-4 mr-2" />
-            {isBuyOffer ? 'Sell to' : 'Buy from'} Trader
+            <MessageCircle className="h-5 w-5 mr-3" />
+            {isBuyOffer ? 'Sell USDT Now' : 'Buy USDT Now'}
           </Button>
         </div>
       </CardContent>
@@ -303,91 +350,112 @@ export function MarketplaceFinal() {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
-        <p className="text-gray-500 text-lg">Loading marketplace...</p>
-        <p className="text-gray-400 text-sm">Finding the best rates for you</p>
+      <div className="flex flex-col items-center justify-center py-16 px-6">
+        <div className="relative">
+          <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-200 border-t-blue-600 mb-6"></div>
+          <div className="absolute inset-0 rounded-full bg-blue-50 opacity-20"></div>
+        </div>
+        <h3 className="text-xl font-bold text-gray-900 mb-2">Loading Marketplace</h3>
+        <p className="text-gray-500 text-center max-w-sm leading-relaxed">
+          Finding the best USDT rates from verified traders...
+        </p>
+        <div className="flex items-center gap-2 mt-4 text-sm text-gray-400">
+          <Timer className="h-4 w-4 animate-pulse" />
+          <span>Real-time data loading</span>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="space-y-6">
-        <Alert className="border-red-200 bg-red-50">
-          <AlertCircle className="h-4 w-4 text-red-600" />
-          <AlertDescription className="text-red-800">
-            Failed to load marketplace data. Please try refreshing the page.
+      <div className="space-y-6 p-6">
+        <Alert className="border-red-200 bg-red-50 rounded-xl">
+          <AlertCircle className="h-5 w-5 text-red-600" />
+          <AlertDescription className="text-red-800 font-medium">
+            Unable to load marketplace data. Please check your connection and try again.
           </AlertDescription>
         </Alert>
-        <Button onClick={() => refetch()} variant="outline" className="w-full">
-          <RefreshCw className="h-4 w-4 mr-2" />
-          Retry
+        <Button 
+          onClick={() => refetch()} 
+          variant="outline" 
+          className="w-full h-12 rounded-xl font-medium"
+          size="lg"
+        >
+          <RefreshCw className="h-5 w-5 mr-2" />
+          Retry Loading
         </Button>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {/* Market Overview - Mobile Optimized */}
-      <Card className="bg-gradient-to-r from-blue-50 to-purple-50 border-0 shadow-sm">
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <TrendingUp className="h-5 w-5 text-blue-600" />
-            Live Market Stats
+    <div className="space-y-6 pb-6">
+      {/* Mobile-First Market Overview */}
+      <Card className="bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 border-0 shadow-lg rounded-2xl overflow-hidden">
+        <CardHeader className="pb-4">
+          <CardTitle className="flex items-center gap-3 text-xl font-bold">
+            <div className="p-2 bg-blue-100 rounded-lg">
+              <TrendingUp className="h-6 w-6 text-blue-600" />
+            </div>
+            <div>
+              <span className="text-gray-900">Live Market</span>
+              <div className="text-sm font-normal text-gray-600">Real-time trading data</div>
+            </div>
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            <div className="text-center p-3 bg-white rounded-lg border border-blue-100">
-              <p className="text-xs text-gray-500 mb-1">Total Offers</p>
-              <p className="font-bold text-lg text-blue-600">{marketStats?.totalOffers || offers.length}</p>
+        <CardContent className="pb-6">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="text-center p-4 bg-white/80 backdrop-blur-sm rounded-xl border border-white shadow-sm">
+              <div className="text-2xl font-black text-blue-600 mb-1">{marketStats?.totalOffers || offers.length}</div>
+              <div className="text-xs text-gray-600 font-medium">Total Offers</div>
             </div>
-            <div className="text-center p-3 bg-white rounded-lg border border-green-100">
-              <p className="text-xs text-gray-500 mb-1">Online Now</p>
-              <p className="font-bold text-lg text-green-600">
+            <div className="text-center p-4 bg-white/80 backdrop-blur-sm rounded-xl border border-white shadow-sm">
+              <div className="text-2xl font-black text-green-600 mb-1">
                 {offers.filter(o => o.user && o.user.isOnline).length}
-              </p>
+              </div>
+              <div className="text-xs text-gray-600 font-medium">Online Now</div>
             </div>
-            <div className="text-center p-3 bg-white rounded-lg border border-purple-100">
-              <p className="text-xs text-gray-500 mb-1">Buy Orders</p>
-              <p className="font-bold text-lg text-purple-600">{buyOffers.length}</p>
+          </div>
+          <div className="grid grid-cols-2 gap-4 mt-4">
+            <div className="text-center p-4 bg-white/80 backdrop-blur-sm rounded-xl border border-white shadow-sm">
+              <div className="text-2xl font-black text-purple-600 mb-1">{buyOffers.length}</div>
+              <div className="text-xs text-gray-600 font-medium">Buy Orders</div>
             </div>
-            <div className="text-center p-3 bg-white rounded-lg border border-orange-100">
-              <p className="text-xs text-gray-500 mb-1">Sell Orders</p>
-              <p className="font-bold text-lg text-orange-600">{sellOffers.length}</p>
+            <div className="text-center p-4 bg-white/80 backdrop-blur-sm rounded-xl border border-white shadow-sm">
+              <div className="text-2xl font-black text-orange-600 mb-1">{sellOffers.length}</div>
+              <div className="text-xs text-gray-600 font-medium">Sell Orders</div>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Search and Quick Filters */}
-      <Card className="border-0 shadow-sm">
-        <CardContent className="p-4">
+      {/* Mobile Search & Filters */}
+      <Card className="border-0 shadow-lg rounded-2xl">
+        <CardContent className="p-6">
           <div className="space-y-4">
-            {/* Search */}
+            {/* Enhanced Search */}
             <div className="relative">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+              <Search className="absolute left-4 top-4 h-5 w-5 text-gray-400" />
               <Input
                 placeholder="Search traders, amounts, or rates..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 border-gray-200 focus:border-blue-400"
+                className="pl-12 h-12 text-base border-gray-200 focus:border-blue-400 rounded-xl"
               />
             </div>
             
-            {/* Quick filters row */}
-            <div className="flex items-center gap-2 overflow-x-auto pb-2">
+            {/* Mobile-Optimized Filter Bar */}
+            <div className="flex items-center gap-3 overflow-x-auto pb-2">
               <Button
                 variant={showFilters ? "default" : "outline"}
                 size="sm"
                 onClick={() => setShowFilters(!showFilters)}
-                className="flex-shrink-0"
+                className="flex-shrink-0 rounded-xl font-medium"
               >
                 <Filter className="h-4 w-4 mr-2" />
                 Filters
-                <ChevronDown className={`h-4 w-4 ml-1 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
+                <ChevronDown className={`h-4 w-4 ml-2 transition-transform duration-200 ${showFilters ? 'rotate-180' : ''}`} />
               </Button>
               
               <Button
@@ -397,7 +465,7 @@ export function MarketplaceFinal() {
                   setSortBy('rate');
                   setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
                 }}
-                className="flex-shrink-0"
+                className="flex-shrink-0 rounded-xl font-medium"
               >
                 Rate
                 <ArrowUpDown className="h-3 w-3 ml-1" />
@@ -410,48 +478,52 @@ export function MarketplaceFinal() {
                   setSortBy('amount');
                   setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
                 }}
-                className="flex-shrink-0"
+                className="flex-shrink-0 rounded-xl font-medium"
               >
                 Amount
                 <ArrowUpDown className="h-3 w-3 ml-1" />
               </Button>
             </div>
 
-            {/* Advanced Filters - Collapsible */}
+            {/* Advanced Filters */}
             {showFilters && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pt-4 border-t border-gray-100">
-                <div>
-                  <Label className="text-sm">Type</Label>
-                  <Select value={filterType} onValueChange={(value: "all" | "buy" | "sell") => setFilterType(value)}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Types</SelectItem>
-                      <SelectItem value="buy">Buy Offers</SelectItem>
-                      <SelectItem value="sell">Sell Offers</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+              <div className="grid grid-cols-1 gap-4 pt-4 border-t border-gray-100">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Type</Label>
+                    <Select value={filterType} onValueChange={(value: "all" | "buy" | "sell") => setFilterType(value)}>
+                      <SelectTrigger className="h-12 rounded-xl">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Types</SelectItem>
+                        <SelectItem value="buy">Buy Offers</SelectItem>
+                        <SelectItem value="sell">Sell Offers</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-                <div>
-                  <Label className="text-sm">Min Amount (USDT)</Label>
-                  <Input
-                    type="number"
-                    placeholder="0"
-                    value={minAmount}
-                    onChange={(e) => setMinAmount(e.target.value)}
-                  />
-                </div>
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Min Amount (USDT)</Label>
+                    <Input
+                      type="number"
+                      placeholder="0"
+                      value={minAmount}
+                      onChange={(e) => setMinAmount(e.target.value)}
+                      className="h-12 rounded-xl"
+                    />
+                  </div>
 
-                <div>
-                  <Label className="text-sm">Max Amount (USDT)</Label>
-                  <Input
-                    type="number"
-                    placeholder="∞"
-                    value={maxAmount}
-                    onChange={(e) => setMaxAmount(e.target.value)}
-                  />
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Max Amount (USDT)</Label>
+                    <Input
+                      type="number"
+                      placeholder="∞"
+                      value={maxAmount}
+                      onChange={(e) => setMaxAmount(e.target.value)}
+                      className="h-12 rounded-xl"
+                    />
+                  </div>
                 </div>
               </div>
             )}
@@ -459,44 +531,49 @@ export function MarketplaceFinal() {
         </CardContent>
       </Card>
 
-      {/* Enhanced Tabs */}
-      <Tabs defaultValue="buy" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-2 bg-gray-100 p-1 h-12">
+      {/* Enhanced Mobile Tabs */}
+      <Tabs defaultValue="buy" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-2 bg-gray-100 p-2 h-16 rounded-2xl">
           <TabsTrigger 
             value="buy" 
-            className="flex items-center gap-2 data-[state=active]:bg-green-600 data-[state=active]:text-white text-sm font-medium"
+            className="flex items-center gap-3 data-[state=active]:bg-gradient-to-r data-[state=active]:from-green-600 data-[state=active]:to-green-700 data-[state=active]:text-white text-base font-bold rounded-xl transition-all duration-200"
           >
-            <TrendingUp className="h-4 w-4" />
-            <span className="hidden sm:inline">Buy USDT</span>
-            <span className="sm:hidden">Buy</span>
-            <Badge variant="secondary" className="ml-1 bg-green-100 text-green-800 text-xs">
-              {buyOffers.length}
-            </Badge>
+            <TrendingUp className="h-5 w-5" />
+            <div className="text-left">
+              <div className="text-sm font-bold">Buy USDT</div>
+              <div className="text-xs opacity-80">{buyOffers.length} offers</div>
+            </div>
           </TabsTrigger>
           <TabsTrigger 
             value="sell" 
-            className="flex items-center gap-2 data-[state=active]:bg-red-600 data-[state=active]:text-white text-sm font-medium"
+            className="flex items-center gap-3 data-[state=active]:bg-gradient-to-r data-[state=active]:from-red-600 data-[state=active]:to-red-700 data-[state=active]:text-white text-base font-bold rounded-xl transition-all duration-200"
           >
-            <DollarSign className="h-4 w-4" />
-            <span className="hidden sm:inline">Sell USDT</span>
-            <span className="sm:hidden">Sell</span>
-            <Badge variant="secondary" className="ml-1 bg-red-100 text-red-800 text-xs">
-              {sellOffers.length}
-            </Badge>
+            <DollarSign className="h-5 w-5" />
+            <div className="text-left">
+              <div className="text-sm font-bold">Sell USDT</div>
+              <div className="text-xs opacity-80">{sellOffers.length} offers</div>
+            </div>
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="buy" className="space-y-4 mt-6">
+        <TabsContent value="buy" className="space-y-4 mt-8">
           {buyOffers.length === 0 ? (
-            <div className="text-center py-12 bg-gray-50 rounded-lg">
-              <Eye className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No Buy Offers Found</h3>
-              <p className="text-gray-500 mb-4">
+            <div className="text-center py-16 bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl border border-green-100">
+              <div className="p-4 bg-green-100 rounded-full w-20 h-20 mx-auto mb-6 flex items-center justify-center">
+                <Eye className="h-10 w-10 text-green-600" />
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-3">No Buy Offers Available</h3>
+              <p className="text-gray-600 mb-6 max-w-sm mx-auto leading-relaxed">
                 {filteredOffers.length === 0 && offers.length > 0 
                   ? "Try adjusting your filters to see more offers" 
-                  : "Be the first to create a buy offer"}
+                  : "Be the first to create a buy offer and start trading"}
               </p>
-              <Button onClick={() => setLocation('/create-offer')} className="bg-green-600 hover:bg-green-700">
+              <Button 
+                onClick={() => setLocation('/create-offer')} 
+                className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-bold px-8 py-3 rounded-xl shadow-lg"
+                size="lg"
+              >
+                <TrendingUp className="h-5 w-5 mr-2" />
                 Create Buy Offer
               </Button>
             </div>
@@ -514,17 +591,24 @@ export function MarketplaceFinal() {
           )}
         </TabsContent>
 
-        <TabsContent value="sell" className="space-y-4 mt-6">
+        <TabsContent value="sell" className="space-y-4 mt-8">
           {sellOffers.length === 0 ? (
-            <div className="text-center py-12 bg-gray-50 rounded-lg">
-              <Eye className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No Sell Offers Found</h3>
-              <p className="text-gray-500 mb-4">
+            <div className="text-center py-16 bg-gradient-to-br from-red-50 to-pink-50 rounded-2xl border border-red-100">
+              <div className="p-4 bg-red-100 rounded-full w-20 h-20 mx-auto mb-6 flex items-center justify-center">
+                <Eye className="h-10 w-10 text-red-600" />
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-3">No Sell Offers Available</h3>
+              <p className="text-gray-600 mb-6 max-w-sm mx-auto leading-relaxed">
                 {filteredOffers.length === 0 && offers.length > 0 
                   ? "Try adjusting your filters to see more offers" 
-                  : "Be the first to create a sell offer"}
+                  : "Be the first to create a sell offer and start trading"}
               </p>
-              <Button onClick={() => setLocation('/create-offer')} className="bg-red-600 hover:bg-red-700">
+              <Button 
+                onClick={() => setLocation('/create-offer')} 
+                className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-bold px-8 py-3 rounded-xl shadow-lg"
+                size="lg"
+              >
+                <DollarSign className="h-5 w-5 mr-2" />
                 Create Sell Offer
               </Button>
             </div>
@@ -543,47 +627,53 @@ export function MarketplaceFinal() {
         </TabsContent>
       </Tabs>
 
-      {/* Enhanced Contact Modal */}
+      {/* Enhanced Mobile Contact Modal */}
       <Dialog open={showContactModal} onOpenChange={setShowContactModal}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <MessageCircle className="h-5 w-5" />
+        <DialogContent className="sm:max-w-md mx-4 rounded-2xl">
+          <DialogHeader className="text-center pb-4">
+            <DialogTitle className="flex items-center justify-center gap-3 text-xl font-bold">
+              <div className="p-2 bg-blue-100 rounded-full">
+                <MessageCircle className="h-6 w-6 text-blue-600" />
+              </div>
               Contact Trader
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-6">
             {contactOffer && (
               <>
-                <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+                <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-2xl p-4 space-y-4 border border-gray-200">
                   <div className="flex items-center gap-3">
-                    <div className={`w-3 h-3 rounded-full ${contactOffer?.user?.isOnline ? 'bg-green-400' : 'bg-gray-400'}`} />
-                    <span className="font-semibold">{contactOffer?.user?.email || 'Unknown'}</span>
-                    <Badge variant={contactOffer?.user?.isOnline ? "default" : "secondary"} className="text-xs">
+                    <div className={`w-4 h-4 rounded-full ${contactOffer?.user?.isOnline ? 'bg-green-400 shadow-lg shadow-green-200' : 'bg-gray-400'}`} />
+                    <span className="font-bold text-lg">{contactOffer?.user?.email?.split('@')[0] || 'Unknown'}</span>
+                    <Badge variant={contactOffer?.user?.isOnline ? "default" : "secondary"} className="text-xs font-medium">
                       {contactOffer?.user?.isOnline ? "Online" : "Offline"}
                     </Badge>
                   </div>
                   
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <span className="text-gray-500">Rate:</span>
-                      <div className="font-semibold">{formatCurrency(safeParseFloat(contactOffer?.rate))}</div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="text-center bg-white rounded-xl p-3 border border-gray-200">
+                      <div className="text-xs text-gray-500 mb-1 font-medium">Rate</div>
+                      <div className="font-black text-lg">{formatCurrency(safeParseFloat(contactOffer?.rate))}</div>
                     </div>
-                    <div>
-                      <span className="text-gray-500">Available:</span>
-                      <div className="font-semibold">{safeParseFloat(contactOffer?.amount).toFixed(2)} USDT</div>
+                    <div className="text-center bg-white rounded-xl p-3 border border-gray-200">
+                      <div className="text-xs text-gray-500 mb-1 font-medium">Available</div>
+                      <div className="font-black text-lg">{safeParseFloat(contactOffer?.amount).toFixed(2)} USDT</div>
                     </div>
                   </div>
                 </div>
 
                 <div className="space-y-3">
-                  <Button onClick={handleStartTrade} className="w-full" size="lg">
-                    <Zap className="h-4 w-4 mr-2" />
+                  <Button 
+                    onClick={handleStartTrade} 
+                    className="w-full h-14 text-lg font-bold bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 rounded-xl shadow-lg active:scale-95 transition-all duration-200" 
+                    size="lg"
+                  >
+                    <Zap className="h-5 w-5 mr-3" />
                     Start Trade Now
                   </Button>
                   <Button 
                     variant="outline" 
-                    className="w-full"
+                    className="w-full h-12 font-medium rounded-xl border-2"
                     onClick={() => {
                       if (contactOffer?.user?.id) {
                         setLocation(`/user-chat/${contactOffer.user.id}`);
