@@ -78,6 +78,7 @@ export function authenticateToken(req: Request, res: Response, next: NextFunctio
     try {
       const user = await storage.getUser(decoded.userId);
       if (!user) {
+        console.log("User not found for ID:", decoded.userId);
         return res.status(401).json({ error: "User not found" });
       }
       req.user = user;
@@ -212,7 +213,28 @@ export function setupJWTAuth(app: Express) {
         return res.status(400).json({ error: "Email and password are required" });
       }
 
-      const user = await storage.getUserByEmail(email.toLowerCase());
+      let user = await storage.getUserByEmail(email.toLowerCase());
+      
+      // For demo - auto-create admin user if logging in with admin email and user doesn't exist
+      if (email.toLowerCase() === "admin@digipay.com" && !user) {
+        console.log("Creating admin user for demo");
+        const hashedPassword = await hashPassword(password);
+        user = await storage.createUser({
+          email: email.toLowerCase(),
+          password: hashedPassword,
+          phone: null,
+          bvn: null,
+          tronAddress: "demo-admin-address",
+          kycVerified: true,
+          nairaBalance: "0",
+          usdtBalance: "0",
+          averageRating: "0",
+          ratingCount: 0,
+          isAdmin: true,
+        });
+        console.log("Admin user created:", user.id);
+      }
+
       if (!user) {
         return res.status(401).json({ error: "Invalid email or password" });
       }
@@ -222,25 +244,16 @@ export function setupJWTAuth(app: Express) {
         return res.status(401).json({ error: "Invalid email or password" });
       }
 
-      // For demo - auto-create admin user if logging in with admin email
-      if (email === "admin@digipay.com" && !user) {
-        user = await storage.createUser({
-          email,
-          password: await bcrypt.hash(password, 10),
-          firstName: "Admin",
-          lastName: "User",
-          isAdmin: true
-        });
-      }
-
       // Ensure admin@digipay.com always has admin privileges
-      if (email === "admin@digipay.com" && user && !user.isAdmin) {
+      if (email.toLowerCase() === "admin@digipay.com" && user && !user.isAdmin) {
         await storage.updateUser(user.id, { isAdmin: true });
         user.isAdmin = true;
       }
 
       const token = generateToken(user);
       const { password: _, ...userWithoutPassword } = user;
+
+      console.log("Login successful for user:", user.email);
 
       // Return token in response for client-side storage (development approach)
       res.json({ 
@@ -259,6 +272,15 @@ export function setupJWTAuth(app: Express) {
   });
 
   app.get("/api/auth/user", authenticateToken, (req: Request, res: Response) => {
+    if (req.user) {
+      const { password: _, ...userWithoutPassword } = req.user;
+      res.json(userWithoutPassword);
+    } else {
+      res.status(401).json({ error: "Not authenticated" });
+    }
+  });
+
+  app.get("/api/user", authenticateToken, (req: Request, res: Response) => {
     if (req.user) {
       const { password: _, ...userWithoutPassword } = req.user;
       res.json(userWithoutPassword);

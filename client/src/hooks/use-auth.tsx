@@ -59,7 +59,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const { data: user, isLoading } = useQuery({
     queryKey: ["/api/user"],
     queryFn: async () => {
-      const token = localStorage.getItem("digipay_token");
+      const token = localStorage.getItem("digipay_token") || localStorage.getItem("auth_token");
       if (!token) return null;
 
       const response = await fetch("/api/user", {
@@ -71,6 +71,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!response.ok) {
         if (response.status === 401) {
           localStorage.removeItem("digipay_token");
+          localStorage.removeItem("auth_token");
           throw new Error("Unauthorized");
         }
         throw new Error("Failed to fetch user");

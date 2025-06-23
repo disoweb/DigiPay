@@ -26,7 +26,7 @@ export default function QuickAdmin() {
 
       if (response.ok) {
         const data = await response.json();
-        localStorage.setItem("auth_token", data.token);
+        localStorage.setItem("digipay_token", data.token);
         window.location.href = "/admin";
       } else {
         toast({
@@ -45,6 +45,7 @@ export default function QuickAdmin() {
   };
 
   const handleLogout = () => {
+    localStorage.removeItem("digipay_token");
     localStorage.removeItem("auth_token");
     window.location.href = "/auth";
   };
