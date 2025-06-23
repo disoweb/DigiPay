@@ -28,33 +28,46 @@ export const userRoutes = {
     try {
       const { id } = req.params;
       
-      const [user] = await db.select({
-        id: users.id,
-        email: users.email,
-        username: users.username,
-        firstName: users.firstName,
-        lastName: users.lastName,
-        phone: users.phone,
-        location: users.location,
-        nairaBalance: users.nairaBalance,
-        usdtBalance: users.usdtBalance,
-        averageRating: users.averageRating,
-        ratingCount: users.ratingCount,
-        kycVerified: users.kycVerified,
-        isOnline: users.isOnline,
-        lastSeen: users.lastSeen,
-        createdAt: users.createdAt
-      }).from(users).where(eq(users.id, parseInt(id)));
+      // First, let's get the raw user data to see what's actually in the database
+      const [rawUser] = await db.select().from(users).where(eq(users.id, parseInt(id)));
       
-      if (!user) {
+      if (!rawUser) {
         return res.status(404).json({ error: 'User not found' });
       }
       
-      console.log('User profile data:', {
-        id: user.id,
-        email: user.email,
-        nairaBalance: user.nairaBalance,
-        usdtBalance: user.usdtBalance
+      console.log('Raw user data from database:', {
+        id: rawUser.id,
+        email: rawUser.email,
+        nairaBalance: rawUser.nairaBalance,
+        usdtBalance: rawUser.usdtBalance,
+        nairaBalanceType: typeof rawUser.nairaBalance,
+        usdtBalanceType: typeof rawUser.usdtBalance
+      });
+      
+      // Now select specific fields and ensure proper mapping
+      const userProfile = {
+        id: rawUser.id,
+        email: rawUser.email,
+        username: rawUser.username,
+        firstName: rawUser.firstName,
+        lastName: rawUser.lastName,
+        phone: rawUser.phone,
+        location: rawUser.location,
+        nairaBalance: rawUser.nairaBalance?.toString() || "0",
+        usdtBalance: rawUser.usdtBalance?.toString() || "0",
+        averageRating: rawUser.averageRating?.toString() || "0",
+        ratingCount: rawUser.ratingCount || 0,
+        kycVerified: rawUser.kycVerified,
+        isOnline: rawUser.isOnline,
+        lastSeen: rawUser.lastSeen,
+        createdAt: rawUser.createdAt
+      };
+      
+      console.log('Processed user profile:', {
+        id: userProfile.id,
+        email: userProfile.email,
+        nairaBalance: userProfile.nairaBalance,
+        usdtBalance: userProfile.usdtBalance
       });
       
       // Set cache-control to prevent caching of this response
@@ -62,7 +75,7 @@ export const userRoutes = {
       res.set('Pragma', 'no-cache');
       res.set('Expires', '0');
       
-      res.json(user);
+      res.json(userProfile);
     } catch (error) {
       console.error('Get user profile error:', error);
       res.status(500).json({ error: 'Failed to fetch user profile' });

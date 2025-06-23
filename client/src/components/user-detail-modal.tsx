@@ -82,7 +82,26 @@ export function UserDetailModal({ isOpen, onClose, userId, userName }: UserDetai
       console.log('Naira balance:', data.nairaBalance, typeof data.nairaBalance);
       console.log('USDT balance:', data.usdtBalance, typeof data.usdtBalance);
       console.log('Raw user object keys:', Object.keys(data));
-      return data;
+      console.log('All balance-related fields:', {
+        nairaBalance: data.nairaBalance,
+        usdtBalance: data.usdtBalance,
+        naira_balance: data.naira_balance,
+        usdt_balance: data.usdt_balance
+      });
+      
+      // Ensure we have the correct field names
+      const processedData = {
+        ...data,
+        nairaBalance: data.nairaBalance || data.naira_balance || "0",
+        usdtBalance: data.usdtBalance || data.usdt_balance || "0"
+      };
+      
+      console.log('Processed user details:', {
+        nairaBalance: processedData.nairaBalance,
+        usdtBalance: processedData.usdtBalance
+      });
+      
+      return processedData;
     },
     enabled: isOpen && userId > 0,
     staleTime: 0,
@@ -360,6 +379,10 @@ export function UserDetailModal({ isOpen, onClose, userId, userName }: UserDetai
                               {formatAmount(userDetails.nairaBalance || "0")}
                             </p>
                             <p className="text-xs text-green-600 mt-1">Nigerian Naira</p>
+                            {/* Debug info */}
+                            <p className="text-xs text-gray-500 mt-1">
+                              Raw: {userDetails.nairaBalance} ({typeof userDetails.nairaBalance})
+                            </p>
                           </div>
 
                           {/* USDT Balance */}
@@ -376,6 +399,10 @@ export function UserDetailModal({ isOpen, onClose, userId, userName }: UserDetai
                               {formatUSDTAmount(userDetails.usdtBalance || "0")}
                             </p>
                             <p className="text-xs text-blue-600 mt-1">Tether USD</p>
+                            {/* Debug info */}
+                            <p className="text-xs text-gray-500 mt-1">
+                              Raw: {userDetails.usdtBalance} ({typeof userDetails.usdtBalance})
+                            </p>
                           </div>
                         </div>
 
