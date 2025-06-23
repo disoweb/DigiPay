@@ -1,13 +1,13 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { Navbar } from "@/components/navbar";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Users, Handshake, AlertTriangle, Shield } from "lucide-react";
+import { Users, Handshake, AlertTriangle, Shield, Star, TrendingUp, Award, Crown } from "lucide-react";
 import { useLocation } from "wouter";
 import type { Trade } from "@shared/schema";
 
@@ -46,6 +46,17 @@ export default function Admin() {
     enabled: !!user?.isAdmin,
   });
 
+  const { data: adminStats } = useQuery({
+    queryKey: ["/api/admin/stats"],
+    enabled: !!user?.isAdmin,
+  });
+
+  const { data: featuredUsers = [] } = useQuery({
+    queryKey: ["/api/admin/featured-users"],
+    enabled: !!user?.isAdmin,
+    refetchInterval: 300000, // Refresh every 5 minutes
+  });
+
   const resolveTradeMutation = useMutation({
     mutationFn: async ({ tradeId, action }: { tradeId: number; action: "release" | "refund" }) => {
       await apiRequest("PATCH", `/api/admin/trades/${tradeId}/resolve`, { action });
@@ -72,28 +83,28 @@ export default function Admin() {
   const stats = [
     {
       title: "Total Users",
-      value: "1,234",
+      value: adminStats?.totalUsers?.toLocaleString() || "0",
       icon: Users,
       color: "text-blue-600",
       bgColor: "bg-blue-50",
     },
     {
       title: "Active Trades",
-      value: activeTrades.length.toString(),
+      value: adminStats?.activeTrades?.toString() || activeTrades.length.toString(),
       icon: Handshake,
       color: "text-green-600",
       bgColor: "bg-green-50",
     },
     {
       title: "Disputes",
-      value: disputedTrades.length.toString(),
+      value: adminStats?.disputedTrades?.toString() || disputedTrades.length.toString(),
       icon: AlertTriangle,
       color: "text-orange-600",
       bgColor: "bg-orange-50",
     },
     {
       title: "Escrow Volume",
-      value: "15,678 USDT",
+      value: `₦${adminStats?.escrowVolume ? parseFloat(adminStats.escrowVolume).toLocaleString() : "0"}`,
       icon: Shield,
       color: "text-red-600",
       bgColor: "bg-red-50",
@@ -150,6 +161,118 @@ export default function Admin() {
               </Card>
             ))}
           </div>
+
+          {/* Featured Users - Top Sellers */}
+          <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center gap-2 text-xl">
+                <Crown className="h-6 w-6 text-yellow-600" />
+                Featured Users - Top Sellers (This Week)
+              </CardTitle>
+              <p className="text-sm text-gray-600">Top 6 users with highest sell volume in the past 7 days</p>
+            </CardHeader>
+            <CardContent>
+              {featuredUsers.length === 0 ? (
+                <div className="text-center py-8">
+                  <TrendingUp className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                  <p className="text-gray-500 font-medium">No trading activity this week</p>
+                  <p className="text-sm text-gray-400">Featured users will appear when trades are completed</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {featuredUsers.map((seller: any, index: number) => (
+                    <Card key={seller.sellerId} className="relative overflow-hidden border border-gray-200 hover:shadow-md transition-all duration-200">
+                      <CardContent className="p-4">
+                        {/* Rank Badge */}
+                        <div className="absolute top-2 right-2">
+                          <Badge className={`text-xs font-bold ${
+                            index === 0 ? 'bg-yellow-100 text-yellow-800' :
+                            index === 1 ? 'bg-gray-100 text-gray-700' :
+                            index === 2 ? 'bg-orange-100 text-orange-700' :
+                            'bg-blue-100 text-blue-700'
+                          }`}>
+                            #{index + 1}
+                          </Badge>
+                        </div>
+
+                        {/* User Info */}
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <div className={`p-2 rounded-full ${
+                              index === 0 ? 'bg-yellow-100' :
+                              index === 1 ? 'bg-gray-100' :
+                              index === 2 ? 'bg-orange-100' :
+                              'bg-blue-100'
+                            }`}>
+                              <Users className={`h-4 w-4 ${
+                                index === 0 ? 'text-yellow-600' :
+                                index === 1 ? 'text-gray-600' :
+                                index === 2 ? 'text-orange-600' :
+                                'text-blue-600'
+                              }`} />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-sm truncate">
+                                {seller.user.firstName && seller.user.lastName 
+                                  ? `${seller.user.firstName} ${seller.user.lastName}`
+                                  : seller.user.username || seller.user.email
+                                }
+                              </p>
+                              <p className="text-xs text-gray-500 truncate">{seller.user.email}</p>
+                            </div>
+                          </div>
+
+                          {/* KYC Status */}
+                          {seller.user.kycVerified && (
+                            <Badge className="bg-green-100 text-green-700 text-xs">
+                              KYC Verified
+                            </Badge>
+                          )}
+
+                          {/* Stats */}
+                          <div className="space-y-1">
+                            <div className="flex justify-between items-center">
+                              <span className="text-xs text-gray-600">Volume</span>
+                              <span className="text-sm font-bold text-green-600">
+                                ₦{seller.totalVolume.toLocaleString()}
+                              </span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <span className="text-xs text-gray-600">Trades</span>
+                              <span className="text-sm font-medium">{seller.tradeCount}</span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <span className="text-xs text-gray-600">Rating</span>
+                              <div className="flex items-center gap-1">
+                                <Star className="h-3 w-3 text-yellow-500 fill-current" />
+                                <span className="text-sm font-medium">
+                                  {parseFloat(seller.user.averageRating).toFixed(1)}
+                                </span>
+                                <span className="text-xs text-gray-500">
+                                  ({seller.user.ratingCount})
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Award Icon for Top 3 */}
+                          {index < 3 && (
+                            <div className="flex justify-center pt-2">
+                              <Award className={`h-5 w-5 ${
+                                index === 0 ? 'text-yellow-500' :
+                                index === 1 ? 'text-gray-500' :
+                                'text-orange-500'
+                              }`} />
+                            </div>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
           {/* Disputes Table */}
           <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
