@@ -1269,8 +1269,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin endpoints for transaction approval
-  app.get("/api/admin/transactions", authenticateToken, requireAdmin, async (req, res) => {
+  app.get("/api/admin/transactions", authenticateToken, async (req, res) => {
     try {
+      // Check admin status from database (in case JWT is outdated)
+      const currentUser = await storage.getUser(req.user!.id);
+      if (!currentUser?.isAdmin) {
+        return res.status(403).json({ error: "Admin access required" });
+      }
+
       const allTransactions = await storage.getAllTransactions();
 
       // Enrich with user data
@@ -1291,12 +1297,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.json(enrichedTransactions);
     } catch (error) {
+      console.error("Admin transactions error:", error);
       res.status(500).json({ error: "Failed to fetch transactions" });
     }
   });
 
-  app.post("/api/admin/transactions/:id/approve", authenticateToken, requireAdmin, async (req, res) => {
+  app.post("/api/admin/transactions/:id/approve", authenticateToken, async (req, res) => {
     try {
+      // Check admin status from database
+      const currentUser = await storage.getUser(req.user!.id);
+      if (!currentUser?.isAdmin) {
+        return res.status(403).json({ error: "Admin access required" });
+      }
+
       const transactionId = parseInt(req.params.id);
       const { notes } = req.body;
       const adminId = req.user!.id;
@@ -1315,7 +1328,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // For deposits, add to user balance
       if (transaction.type === "deposit") {
-        const user = await storage.getUser(transaction.id);
+        const user = await storage.getUser(transaction.userId);
         if (!user) {
           return res.status(404).json({ error: "User not found" });
         }
@@ -1342,8 +1355,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/admin/transactions/:id/reject", authenticateToken, requireAdmin, async (req, res) => {
+  app.post("/api/admin/transactions/:id/reject", authenticateToken, async (req, res) => {
     try {
+      // Check admin status from database
+      const currentUser = await storage.getUser(req.user!.id);
+      if (!currentUser?.isAdmin) {
+        return res.status(403).json({ error: "Admin access required" });
+      }
+
       const transactionId = parseInt(req.params.id);
       const { notes } = req.body;
       const adminId = req.user!.id;
