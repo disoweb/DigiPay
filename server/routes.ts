@@ -307,6 +307,122 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin dashboard stats endpoint
+  app.get("/api/admin/stats", authenticateToken, async (req, res) => {
+    try {
+      // Get all users count
+      const allUsers = await db.select().from(users);
+      const totalUsers = allUsers.length;
+
+      // Get active trades
+      const allTrades = await storage.getTrades();
+      const activeTrades = allTrades.filter(trade => trade.status === 'pending');
+      const disputedTrades = allTrades.filter(trade => trade.status === 'disputed');
+
+      // Calculate total escrow volume (sum of active trades)
+      const escrowVolume = activeTrades.reduce((sum, trade) => {
+        return sum + parseFloat(trade.amount || "0");
+      }, 0);
+
+      const stats = {
+        totalUsers,
+        activeTrades: activeTrades.length,
+        disputedTrades: disputedTrades.length,
+        escrowVolume: escrowVolume.toFixed(2)
+      };
+
+      res.json(stats);
+    } catch (error) {
+      console.error("Admin stats error:", error);
+      res.status(500).json({ error: "Failed to fetch admin stats" });
+    }
+  });
+
+  // Featured users endpoint - Top 6 sellers by weekly volume
+  app.get("/api/admin/featured-users", authenticateToken, async (req, res) => {
+    try {
+      const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
+      // Get all completed trades from the last week where user was a seller
+      const weeklyTrades = await db
+        .select({
+          sellerId: trades.sellerId,
+          amount: trades.amount,
+          sellerEmail: users.email,
+          sellerFirstName: users.firstName,
+          sellerLastName: users.lastName,
+          sellerUsername: users.username,
+          sellerAverageRating: users.averageRating,
+          sellerRatingCount: users.ratingCount,
+          sellerKycVerified: users.kycVerified
+        })
+        .from(trades)
+        .innerJoin(users, eq(trades.sellerId, users.id))
+        .where(
+          and(
+            eq(trades.status, 'completed'),
+            gte(trades.createdAt, oneWeekAgo.toISOString())
+          )
+        );
+
+      // Group by seller and calculate total volume
+      const sellerVolumes = new Map<number, {
+        sellerId: number;
+        totalVolume: number;
+        tradeCount: number;
+        user: {
+          email: string;
+          firstName?: string;
+          lastName?: string;
+          username?: string;
+          averageRating: string;
+          ratingCount: number;
+          kycVerified: boolean;
+        };
+      }>();
+
+      weeklyTrades.forEach(trade => {
+        const sellerId = trade.sellerId;
+        const amount = parseFloat(trade.amount || "0");
+        
+        if (sellerVolumes.has(sellerId)) {
+          const existing = sellerVolumes.get(sellerId)!;
+          existing.totalVolume += amount;
+          existing.tradeCount += 1;
+        } else {
+          sellerVolumes.set(sellerId, {
+            sellerId,
+            totalVolume: amount,
+            tradeCount: 1,
+            user: {
+              email: trade.sellerEmail,
+              firstName: trade.sellerFirstName || undefined,
+              lastName: trade.sellerLastName || undefined,
+              username: trade.sellerUsername || undefined,
+              averageRating: trade.sellerAverageRating || "0.00",
+              ratingCount: trade.sellerRatingCount || 0,
+              kycVerified: trade.sellerKycVerified || false
+            }
+          });
+        }
+      });
+
+      // Sort by volume and get top 6
+      const topSellers = Array.from(sellerVolumes.values())
+        .sort((a, b) => b.totalVolume - a.totalVolume)
+        .slice(0, 6)
+        .map(seller => ({
+          ...seller,
+          totalVolume: parseFloat(seller.totalVolume.toFixed(2))
+        }));
+
+      res.json(topSellers);
+    } catch (error) {
+      console.error("Featured users error:", error);
+      res.status(500).json({ error: "Failed to fetch featured users" });
+    }
+  });
+
   // Get individual offer by ID
   app.get("/api/offers/:id", async (req, res) => {
     try {
