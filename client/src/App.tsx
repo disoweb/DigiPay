@@ -22,8 +22,6 @@ import ProfilePage from "@/pages/profile";
 import NotFound from "@/pages/not-found";
 import ChatPage from "@/pages/chat";
 import AdminKYC from "@/pages/admin-kyc";
-import AdminKYCLevelsPage from "@/pages/admin-kyc-levels";
-import KYCLevels from "@/pages/kyc-levels";
 import ManageOffers from "@/pages/manage-offers";
 import DirectTrade from "./pages/trade-direct";
 import UserChatPage from "./pages/user-chat-new";
@@ -54,8 +52,6 @@ function App() {
             <ProtectedRoute path="/admin" component={Admin} adminOnly />
             <ProtectedRoute path="/admin/approvals" component={AdminApprovals} adminOnly />
             <ProtectedRoute path="/admin/kyc" component={AdminKYC} adminOnly />
-            <ProtectedRoute path="/admin/kyc-levels" component={AdminKYCLevelsPage} adminOnly />
-            <ProtectedRoute path="/kyc-levels" component={KYCLevels} />
             <ProtectedRoute path="/profile-setup" component={ProfileSetup} />
             <ProtectedRoute path="/create-offer" component={OfferCreation} />
             <ProtectedRoute path="/chat/:tradeId" component={ChatPage} />

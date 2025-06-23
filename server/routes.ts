@@ -10,7 +10,6 @@ import { paystackService } from "./services/paystack";
 import { tronService } from "./services/tron";
 import { emailService, smsService } from "./services/notifications";
 import { kycRoutes } from "./routes/kyc";
-import { kycLevelRoutes } from "./routes/kyc-levels";
 import { db, pool } from "./db";
 import { eq, desc, or, and, asc } from "drizzle-orm";
 import { 
@@ -190,21 +189,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // KYC verification routes (legacy)
+  // KYC verification routes
   app.get("/api/kyc", authenticateToken, kycRoutes.getKYCData);
   app.post("/api/kyc/submit", authenticateToken, kycRoutes.submitKYC);
   app.post("/api/kyc/upload", authenticateToken, ...kycRoutes.uploadDocuments);
   app.get("/api/admin/kyc/pending", authenticateToken, kycRoutes.getPendingVerifications);
   app.post("/api/admin/kyc/:userId/review", authenticateToken, kycRoutes.reviewKYC);
-
-  // 3-Level KYC System Routes
-  app.get("/api/kyc/status", authenticateToken, kycLevelRoutes.getKYCStatus);
-  app.post("/api/kyc/level1/submit", authenticateToken, kycLevelRoutes.submitLevel1);
-  app.post("/api/kyc/level2/submit", authenticateToken, ...kycLevelRoutes.submitLevel2);
-  app.post("/api/kyc/level3/submit", authenticateToken, ...kycLevelRoutes.submitLevel3);
-  app.post("/api/admin/kyc/:userId/level/:level/review", authenticateToken, kycLevelRoutes.reviewKYCLevel);
-  app.get("/api/admin/kyc/pending/level/:level", authenticateToken, kycLevelRoutes.getPendingByLevel);
-  app.get("/api/admin/kyc/stats", authenticateToken, kycLevelRoutes.getKYCStats);
 
   // Featured offers endpoint
   app.get("/api/offers/featured", async (req, res) => {

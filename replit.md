@@ -13,14 +13,13 @@ DigiPay is a peer-to-peer cryptocurrency trading platform that enables direct tr
 - **Real-time Features**: WebSocket support for live chat and notifications
 
 ## Key Features
-- User registration and 3-level KYC verification system
+- User registration and KYC verification system
 - P2P trading marketplace with offer creation and management
 - Wallet functionality with deposit/withdrawal capabilities
 - Real-time messaging system between traders
 - Escrow system for secure transactions
 - Admin panel for user and trade management
 - Rating and review system
-- Progressive transaction limits based on KYC level
 - Mobile-responsive design
 
 ## Recent Changes
@@ -29,7 +28,6 @@ DigiPay is a peer-to-peer cryptocurrency trading platform that enables direct tr
 - **2025-01-23**: Resolved Paystack payment integration issues
 - **2025-01-23**: Enhanced send funds modal with real-time user lookup and verification status display
 - **2025-01-23**: Added debounced search functionality for user lookup with visual feedback indicators
-- **2025-01-23**: Implemented robust 3-level KYC verification system with progressive limits and enhanced security
 
 ## Database Schema
 - Users table with KYC verification fields
@@ -52,12 +50,4 @@ DigiPay is a peer-to-peer cryptocurrency trading platform that enables direct tr
 - Mobile-first responsive design
 
 ## Current Status
-The project is fully functional and ready for continued development. All core features are working including:
-- Payments with Paystack integration (working)
-- 3-level KYC verification system (implemented and operational)
-- Real-time user lookup with verification status (working)
-- P2P trading marketplace (working)
-- Real-time messaging system (working)
-- Database messaging issue resolved
-
-The application is running successfully on port 5000 with all new KYC features integrated.
+The project is fully functional and ready for continued development. All core features are working including payments, user verification, and real-time messaging.
