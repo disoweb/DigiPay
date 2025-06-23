@@ -31,6 +31,7 @@ export function SendFundsModal({ open, onOpenChange, nairaBalance, usdtBalance }
   const [step, setStep] = useState(1);
   const [recipientUser, setRecipientUser] = useState<any>(null);
   const [lookupTimeout, setLookupTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [transactionPin, setTransactionPin] = useState("");
 
   const handleLookup = async () => {
     if (!recipientEmail.trim()) {
@@ -174,6 +175,8 @@ export function SendFundsModal({ open, onOpenChange, nairaBalance, usdtBalance }
     setDescription("");
     setRecipient(null);
     setCurrency("NGN");
+    setTransactionPin("");
+    setStep(1);
   };
 
   const getUserBalance = () => {
@@ -427,27 +430,91 @@ export function SendFundsModal({ open, onOpenChange, nairaBalance, usdtBalance }
             />
           </div>
 
+          {step === 3 && (
+            <>
+              {/* Transfer Summary */}
+              <Card className="border-blue-200">
+                <CardContent className="p-4">
+                  <div className="text-center space-y-2">
+                    <h4 className="font-medium">Transfer Summary</h4>
+                    <div className="text-2xl font-bold text-blue-600">
+                      {getCurrencySymbol()}{parseFloat(amount || "0").toLocaleString()} {getCurrencyLabel()}
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      To {recipient?.firstName} {recipient?.lastName} • {recipient?.email}
+                    </div>
+                    {description && (
+                      <div className="text-sm text-gray-500">
+                        "{description}"
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Transaction PIN */}
+              <div className="space-y-2">
+                <Label htmlFor="pin">Transaction PIN</Label>
+                <Input
+                  id="pin"
+                  type="password"
+                  placeholder="Enter 4-digit PIN"
+                  value={transactionPin}
+                  onChange={(e) => setTransactionPin(e.target.value)}
+                  maxLength={4}
+                  className="text-center text-lg tracking-widest"
+                />
+              </div>
+            </>
+          )}
+
           {/* Action Buttons */}
           <div className="flex gap-2 pt-2">
-            <Button
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              className="flex-1"
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleSend}
-              disabled={!recipient || !amount || sendMutation.isPending}
-              className="flex-1"
-            >
-              {sendMutation.isPending ? (
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
-              ) : (
-                <Send className="h-4 w-4 mr-2" />
-              )}
-              Send {getCurrencySymbol()}{amount ? parseFloat(amount).toLocaleString() : "0"} {getCurrencyLabel()}
-            </Button>
+            {step === 3 ? (
+              <>
+                <Button
+                  variant="outline"
+                  onClick={() => setStep(2)}
+                  className="flex-1"
+                >
+                  Back
+                </Button>
+                <Button
+                  onClick={handleConfirmSend}
+                  disabled={!transactionPin || sendMutation.isPending}
+                  className="flex-1"
+                >
+                  {sendMutation.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  ) : (
+                    <Send className="h-4 w-4 mr-2" />
+                  )}
+                  Confirm Transfer
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button
+                  variant="outline"
+                  onClick={() => onOpenChange(false)}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleSend}
+                  disabled={!recipient || !amount || sendMutation.isPending}
+                  className="flex-1"
+                >
+                  {sendMutation.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  ) : (
+                    <Send className="h-4 w-4 mr-2" />
+                  )}
+                  Send {getCurrencySymbol()}{amount ? parseFloat(amount).toLocaleString() : "0"} {getCurrencyLabel()}
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </DialogContent>

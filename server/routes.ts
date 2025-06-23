@@ -3183,7 +3183,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Send funds between users
   app.post("/api/transfers/send", authenticateToken, async (req, res) => {
     try {
-      const { recipientId, amount, description } = req.body;
+      const { recipientId, amount, description, transactionPin } = req.body;
       const senderId = req.user!.id;
 
       if (senderId === recipientId) {
@@ -3195,6 +3195,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (!sender || !recipient) {
         return res.status(404).json({ error: "User not found" });
+      }
+
+      // Check if sender has setup PIN
+      if (!sender.pinSetupCompleted || !sender.transactionPin) {
+        return res.status(400).json({ error: "Please setup your transaction PIN first" });
+      }
+
+      // Verify transaction PIN
+      if (!transactionPin) {
+        return res.status(400).json({ error: "Transaction PIN is required" });
+      }
+
+      const isPinValid = await comparePasswords(transactionPin, sender.transactionPin);
+      if (!isPinValid) {
+        return res.status(400).json({ error: "Invalid transaction PIN" });
       }
 
       // Check if sender's funds are frozen
