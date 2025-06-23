@@ -284,9 +284,14 @@ export function MarketplaceFinal() {
   };
 
   const handleStartTrade = () => {
-    if (contactOffer) {
+    if (contactOffer && contactOffer.id) {
+      console.log("Starting trade with offer:", contactOffer);
+      // Store the offer data in sessionStorage to ensure it's available on the trade page
+      sessionStorage.setItem('selectedOffer', JSON.stringify(contactOffer));
       setLocation(`/trade-direct/${contactOffer.id}`);
       setShowContactModal(false);
+    } else {
+      console.error("No contact offer or offer ID available:", contactOffer);
     }
   };
 
@@ -686,6 +691,7 @@ export function MarketplaceFinal() {
                     onClick={handleStartTrade} 
                     className="w-full h-14 text-lg font-bold bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 rounded-xl shadow-lg active:scale-95 transition-all duration-200" 
                     size="lg"
+                    disabled={!contactOffer?.id}
                   >
                     <Zap className="h-5 w-5 mr-3" />
                     Start Trade Now

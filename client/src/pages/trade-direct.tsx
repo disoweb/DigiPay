@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -136,11 +135,11 @@ export default function DirectTrade() {
 
   const handleCreateTrade = async () => {
     if (!user || !currentOffer || !amount) return;
-    
+
     const tradeAmount = parseFloat(amount);
     const minAmount = parseFloat(currentOffer.minAmount || "0");
     const maxAmount = parseFloat(currentOffer.maxAmount || currentOffer.amount);
-    
+
     if (tradeAmount < minAmount || tradeAmount > maxAmount) {
       setError(`Amount must be between ${minAmount} and ${maxAmount} USDT`);
       return;
@@ -328,7 +327,7 @@ export default function DirectTrade() {
                 </>
               )}
             </Button>
-            
+
             {currentOffer.userId === user?.id && (
               <p className="text-center text-sm text-gray-500 mt-2">
                 You cannot trade with your own offer
