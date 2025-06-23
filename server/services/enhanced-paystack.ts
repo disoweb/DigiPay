@@ -229,7 +229,15 @@ export class EnhancedPaystackService {
       );
 
       if (!response.data.status) {
-        throw new Error(response.data.message || 'Payment verification failed');
+        // Check if this is a test transaction that was never paid
+        if (existingTransaction && existingTransaction.status === 'pending') {
+          // Mark as failed/abandoned
+          await storage.updateTransaction(existingTransaction.id, {
+            status: 'failed',
+            adminNotes: 'Payment abandoned - not completed within time limit'
+          });
+        }
+        throw new Error(response.data.message || 'Payment abandoned. Please try again or contact support.');
       }
 
       const paymentData = response.data.data;
@@ -244,6 +252,14 @@ export class EnhancedPaystackService {
           message: 'Payment verified and balance updated',
           balanceUpdated
         };
+      }
+
+      // Handle other payment statuses
+      if (existingTransaction) {
+        await storage.updateTransaction(existingTransaction.id, {
+          status: 'failed',
+          adminNotes: `Payment ${paymentData.status} via Paystack`
+        });
       }
 
       return {

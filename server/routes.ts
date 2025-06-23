@@ -11,6 +11,7 @@ import { tronService } from "./services/tron";
 import { emailService, smsService } from "./services/notifications";
 import { kycRoutes } from "./routes/kyc.js";
 import { registerPaymentRoutes } from "./routes/payments.js";
+import { registerTestPaymentRoutes } from "./routes/test-payments.js";
 import * as crypto from "crypto";
 import { db, pool } from "./db";
 import { eq, desc, or, and, asc, gte } from "drizzle-orm";
@@ -2543,6 +2544,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Payment routes
   registerPaymentRoutes(app);
+  
+  // Test payment routes (for demo/testing)
+  registerTestPaymentRoutes(app);
 
   // Get user transactions
   app.get("/api/transactions", authenticateToken, async (req, res) => {
