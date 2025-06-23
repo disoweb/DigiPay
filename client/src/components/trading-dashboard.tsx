@@ -355,30 +355,6 @@ export function TradingDashboard() {
                       </Button>
                     </div>
                   </div>
-                ))}-500">
-                          <Clock className="h-3 w-3 inline mr-1" />
-                          {new Date(trade.paymentDeadline).toLocaleTimeString()}
-                        </p>
-                      )}
-                      <Button 
-                        size="sm" 
-                        variant="outline"
-                        onClick={() => {
-                          console.log("Chat button clicked for trade:", trade);
-                          if (trade && trade.id && typeof trade.id === 'number') {
-                            console.log("Navigating to chat with trade ID:", trade.id);
-                            setLocation(`/chat/${trade.id}`);
-                          } else {
-                            console.error("Invalid trade data for chat navigation:", trade);
-                          }
-                        }}
-                        className="px-3 py-1 h-7 text-xs ml-auto"
-                      >
-                        <MessageCircle className="h-3 w-3 mr-1" />
-                        Chat
-                      </Button>
-                    </div>
-                  </div>
                 ))}
                 {activeTrades.length > 3 && (
                   <Button variant="outline" size="sm" className="w-full" onClick={() => setLocation('/trades')}>
