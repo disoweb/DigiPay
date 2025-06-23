@@ -1,3 +1,4 @@
+import React, { lazy } from 'react';
 import { Switch, Route } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -26,7 +27,6 @@ import ManageOffers from "@/pages/manage-offers";
 import DirectTrade from "./pages/trade-direct";
 import UserChatPage from "./pages/user-chat-new";
 import PaymentCallback from "./pages/payment-callback";
-import { lazy } from "react";
 
 const AdminUsersFixed = lazy(() => import('./pages/admin-users-fixed'));
 const AdminDisputesNew = lazy(() => import('./pages/admin-disputes-new'));

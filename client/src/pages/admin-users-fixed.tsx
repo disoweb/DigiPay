@@ -31,6 +31,12 @@ export default function AdminUsersFixed() {
 
   const { data: users = [], isLoading, error } = useQuery({
     queryKey: ["/api/admin/users"],
+    onError: (err) => {
+      console.error("Failed to fetch admin users:", err);
+    },
+    onSuccess: (data) => {
+      console.log("Admin users data:", data);
+    }
   });
 
   const banUserMutation = useMutation({
