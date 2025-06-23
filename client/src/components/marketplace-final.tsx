@@ -87,9 +87,10 @@ function formatCurrency(amount: number): string {
   }).format(amount).replace('NGN', '₦');
 }
 
-function OfferCard({ offer, onContact, canContact }: { 
+function OfferCard({ offer, onStartTrade, onMessage, canContact }: { 
   offer: Offer; 
-  onContact: (offer: Offer) => void; 
+  onStartTrade: (offer: Offer) => void;
+  onMessage: (offer: Offer) => void;
   canContact: (offer: Offer) => boolean;
 }) {
   const isBuyOffer = offer.type === 'buy';
@@ -209,20 +210,32 @@ function OfferCard({ offer, onContact, canContact }: {
             </div>
           </div>
 
-          {/* Mobile Action Button */}
-          <Button
-            onClick={() => onContact(offer)}
-            disabled={!canContact(offer)}
-            className={`w-full h-14 text-lg font-bold rounded-xl shadow-lg transition-all duration-200 ${
-              isBuyOffer 
-                ? 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 shadow-green-200' 
-                : 'bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 shadow-red-200'
-            } ${!canContact(offer) ? 'opacity-50 cursor-not-allowed' : 'active:scale-95'}`}
-            size="lg"
-          >
-            <MessageCircle className="h-5 w-5 mr-3" />
-            {isBuyOffer ? 'Sell USDT Now' : 'Buy USDT Now'}
-          </Button>
+          {/* Action Buttons */}
+          <div className="flex gap-3">
+            <Button
+              onClick={() => onStartTrade(offer)}
+              disabled={!canContact(offer)}
+              className={`flex-1 h-14 text-lg font-bold rounded-xl shadow-lg transition-all duration-200 ${
+                isBuyOffer 
+                  ? 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 shadow-green-200' 
+                  : 'bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 shadow-red-200'
+              } ${!canContact(offer) ? 'opacity-50 cursor-not-allowed' : 'active:scale-95'}`}
+              size="lg"
+            >
+              <Zap className="h-5 w-5 mr-2" />
+              {isBuyOffer ? 'Sell USDT' : 'Buy USDT'}
+            </Button>
+            
+            <Button
+              onClick={() => onMessage(offer)}
+              disabled={!canContact(offer)}
+              variant="outline"
+              className="h-14 px-4 rounded-xl border-2 hover:bg-gray-50 transition-all duration-200 active:scale-95"
+              size="lg"
+            >
+              <MessageCircle className="h-5 w-5" />
+            </Button>
+          </div>
         </div>
       </CardContent>
     </Card>
@@ -237,8 +250,7 @@ export function MarketplaceFinal() {
   const [paymentMethodFilter, setPaymentMethodFilter] = useState("all");
   const [minAmount, setMinAmount] = useState("");
   const [maxAmount, setMaxAmount] = useState("");
-  const [showContactModal, setShowContactModal] = useState(false);
-  const [contactOffer, setContactOffer] = useState<Offer | null>(null);
+
   const [showFilters, setShowFilters] = useState(false);
   const [sortBy, setSortBy] = useState<"rate" | "amount" | "rating">("rate");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
@@ -268,13 +280,31 @@ export function MarketplaceFinal() {
     refetchInterval: 60000,
   });
 
-  const handleContactTrader = (offer: Offer) => {
+  const handleStartTrade = (offer: Offer) => {
     if (!user) {
       setLocation('/auth');
       return;
     }
-    setContactOffer(offer);
-    setShowContactModal(true);
+    
+    if (!canContactOffer(offer)) {
+      return;
+    }
+
+    console.log("Starting trade with offer:", offer);
+    // Store the offer data in sessionStorage to ensure it's available on the trade page
+    sessionStorage.setItem('selectedOffer', JSON.stringify(offer));
+    setLocation(`/trade-direct/${offer.id}`);
+  };
+
+  const handleMessageTrader = (offer: Offer) => {
+    if (!user) {
+      setLocation('/auth');
+      return;
+    }
+    
+    if (offer?.user?.id) {
+      setLocation(`/user-chat/${offer.user.id}`);
+    }
   };
 
   const canContactOffer = (offer: Offer): boolean => {
@@ -283,17 +313,7 @@ export function MarketplaceFinal() {
     return true;
   };
 
-  const handleStartTrade = () => {
-    if (contactOffer && contactOffer.id) {
-      console.log("Starting trade with offer:", contactOffer);
-      // Store the offer data in sessionStorage to ensure it's available on the trade page
-      sessionStorage.setItem('selectedOffer', JSON.stringify(contactOffer));
-      setLocation(`/trade-direct/${contactOffer.id}`);
-      setShowContactModal(false);
-    } else {
-      console.error("No contact offer or offer ID available:", contactOffer);
-    }
-  };
+
 
   const sortOffers = (offersList: Offer[]) => {
     return [...offersList].sort((a, b) => {
@@ -590,7 +610,8 @@ export function MarketplaceFinal() {
                 <OfferCard
                   key={offer.id}
                   offer={offer}
-                  onContact={handleContactTrader}
+                  onStartTrade={handleStartTrade}
+                  onMessage={handleMessageTrader}
                   canContact={canContactOffer}
                 />
               ))}
@@ -625,7 +646,8 @@ export function MarketplaceFinal() {
                 <OfferCard
                   key={offer.id}
                   offer={offer}
-                  onContact={handleContactTrader}
+                  onStartTrade={handleStartTrade}
+                  onMessage={handleMessageTrader}
                   canContact={canContactOffer}
                 />
               ))}
@@ -634,87 +656,7 @@ export function MarketplaceFinal() {
         </TabsContent>
       </Tabs>
 
-      {/* Enhanced Mobile Contact Modal */}
-      <Dialog open={showContactModal} onOpenChange={setShowContactModal}>
-        <DialogContent className="sm:max-w-md mx-4 rounded-2xl">
-          <DialogHeader className="text-center pb-4">
-            <DialogTitle className="flex items-center justify-center gap-3 text-xl font-bold">
-              <div className="p-2 bg-blue-100 rounded-full">
-                <MessageCircle className="h-6 w-6 text-blue-600" />
-              </div>
-              Contact Trader
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-6">
-            {contactOffer && (
-              <>
-                <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-2xl p-4 space-y-4 border border-gray-200">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-4 h-4 rounded-full ${contactOffer?.user?.isOnline ? 'bg-green-400 shadow-lg shadow-green-200' : 'bg-gray-400'}`} />
-                    <span className="font-bold text-lg">{contactOffer?.user?.email?.split('@')[0] || 'Unknown'}</span>
-                    <Badge variant={contactOffer?.user?.isOnline ? "default" : "secondary"} className="text-xs font-medium">
-                      {contactOffer?.user?.isOnline ? "Online" : "Offline"}
-                    </Badge>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="text-center bg-white rounded-xl p-3 border border-gray-200">
-                      <div className="text-xs text-gray-500 mb-1 font-medium">Rate</div>
-                      <div className="font-black text-lg">{formatCurrency(safeParseFloat(contactOffer?.rate))}</div>
-                    </div>
-                    <div className="text-center bg-white rounded-xl p-3 border border-gray-200">
-                      <div className="text-xs text-gray-500 mb-1 font-medium">Available</div>
-                      <div className="font-black text-lg">{safeParseFloat(contactOffer?.amount).toFixed(2)} USDT</div>
-                    </div>
-                  </div>
-                  
-                  <div className="bg-blue-50 rounded-xl p-3 border border-blue-200">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <DollarSign className="h-4 w-4 text-blue-500" />
-                        <span className="text-xs text-blue-600 font-medium">Trading Limits</span>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-sm font-bold text-blue-900">
-                          {safeParseFloat(contactOffer?.minLimit || contactOffer?.minAmount).toFixed(2)} USDT
-                        </div>
-                        <div className="text-xs text-blue-600">
-                          to {safeParseFloat(contactOffer?.maxLimit || contactOffer?.maxAmount).toFixed(2)} USDT
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
 
-                <div className="space-y-3">
-                  <Button 
-                    onClick={handleStartTrade} 
-                    className="w-full h-14 text-lg font-bold bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 rounded-xl shadow-lg active:scale-95 transition-all duration-200" 
-                    size="lg"
-                    disabled={!contactOffer?.id}
-                  >
-                    <Zap className="h-5 w-5 mr-3" />
-                    Start Trade Now
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    className="w-full h-12 font-medium rounded-xl border-2"
-                    onClick={() => {
-                      if (contactOffer?.user?.id) {
-                        setLocation(`/user-chat/${contactOffer.user.id}`);
-                        setShowContactModal(false);
-                      }
-                    }}
-                  >
-                    <MessageCircle className="h-4 w-4 mr-2" />
-                    Send Message First
-                  </Button>
-                </div>
-              </>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
