@@ -215,24 +215,25 @@ function OfferCard({ offer, onStartTrade, onMessage, canContact }: {
             <Button
               onClick={() => onStartTrade(offer)}
               disabled={!canContact(offer)}
-              className={`flex-1 h-12 text-base font-semibold rounded-full transition-all duration-200 border-0 ${
+              className={`flex-1 h-14 text-lg font-bold rounded-xl shadow-lg transition-all duration-200 ${
                 isBuyOffer 
-                  ? 'bg-white text-black hover:bg-gray-50 shadow-sm' 
-                  : 'bg-gray-600 text-white hover:bg-gray-700 shadow-sm'
+                  ? 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 shadow-green-200' 
+                  : 'bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 shadow-red-200'
               } ${!canContact(offer) ? 'opacity-50 cursor-not-allowed' : 'active:scale-95'}`}
               size="lg"
             >
-              {isBuyOffer ? 'Buy USDT' : 'Sell USDT'}
+              <Zap className="h-5 w-5 mr-2" />
+              {isBuyOffer ? 'Sell USDT' : 'Buy USDT'}
             </Button>
             
             <Button
               onClick={() => onMessage(offer)}
               disabled={!canContact(offer)}
               variant="outline"
-              className="h-12 px-4 rounded-full border border-gray-300 hover:bg-gray-50 transition-all duration-200 active:scale-95"
+              className="h-14 px-4 rounded-xl border-2 hover:bg-gray-50 transition-all duration-200 active:scale-95"
               size="lg"
             >
-              <MessageCircle className="h-4 w-4" />
+              <MessageCircle className="h-5 w-5" />
             </Button>
           </div>
         </div>
