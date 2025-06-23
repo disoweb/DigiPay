@@ -91,27 +91,6 @@ export class EnhancedPaystackService {
     }
 
     const reference = this.generateReference(userId);
-    
-    // Check for existing pending transaction and clean up old ones
-    const existingTransaction = await storage.getUserPendingDeposit(userId);
-    if (existingTransaction) {
-      // Check if the pending transaction is older than 5 minutes, if so cancel it
-      const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
-      if (existingTransaction.createdAt && new Date(existingTransaction.createdAt) < fiveMinutesAgo) {
-        await storage.updateTransaction(existingTransaction.id, {
-          status: 'cancelled',
-          adminNotes: 'Auto-cancelled due to timeout'
-        });
-        console.log(`Auto-cancelled expired pending deposit for user ${userId}`);
-      } else {
-        // Don't block, just log the existing transaction
-        console.log(`User ${userId} has recent pending deposit, but allowing new attempt`);
-        await storage.updateTransaction(existingTransaction.id, {
-          status: 'cancelled',
-          adminNotes: 'Replaced by new deposit attempt'
-        });
-      }
-    }
 
     try {
       // Create pending transaction record first
