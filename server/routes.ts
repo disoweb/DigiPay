@@ -140,7 +140,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         amount: withdrawAmount.toString(),
         type: "withdrawal",
         status: "pending",
-        description: `Withdrawal request to ${bankName}`,
         bankName,
         accountNumber,
         accountName
@@ -1279,12 +1278,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const allTransactions = await storage.getAllTransactions();
 
-      // Enrich with user data
+      // Enrich with user data and map field names properly
       const enrichedTransactions = await Promise.all(
         allTransactions.map(async (transaction) => {
           const user = await storage.getUser(transaction.userId);
           return {
             ...transaction,
+            created_at: transaction.createdAt, // Ensure proper field mapping
+            bank_name: transaction.bankName,
+            account_number: transaction.accountNumber,
+            account_name: transaction.accountName,
+            paystack_ref: transaction.paystackRef,
+            admin_notes: transaction.adminNotes,
             user: user ? { 
               id: user.id, 
               email: user.email, 

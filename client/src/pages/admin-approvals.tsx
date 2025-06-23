@@ -183,37 +183,36 @@ export default function AdminApprovals() {
   };
 
   const formatDate = (dateString: string) => {
-    try {
-      const date = new Date(dateString);
-      if (isNaN(date.getTime())) {
-        return "Invalid Date";
-      }
-      return date.toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-    } catch (error) {
-      return "Invalid Date";
-    }
+    if (!dateString || isNaN(new Date(dateString).getTime())) return 'Invalid Date';
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
   };
 
   const formatDateShort = (dateString: string) => {
-    try {
-      const date = new Date(dateString);
-      if (isNaN(date.getTime())) {
-        return "Invalid";
-      }
-      return date.toLocaleDateString('en-US', { 
-        month: 'short', 
-        day: 'numeric' 
-      });
-    } catch (error) {
-      return "Invalid";
-    }
+    if (!dateString || isNaN(new Date(dateString).getTime())) return 'Invalid Date';
+    return new Date(dateString).toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric' 
+    });
   };
+
+  const formatDateTime = (dateString: string) => {
+    if (!dateString || isNaN(new Date(dateString).getTime())) return 'Invalid Date';
+    return new Date(dateString).toLocaleString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+
+
+
 
   if (isLoading) {
     return (
@@ -431,16 +430,16 @@ export default function AdminApprovals() {
                           </div>
                         </TableCell>
                         <TableCell className="hidden md:table-cell py-2 sm:py-3">
-                          {transaction.type === 'withdrawal' && transaction.bank_name ? (
+                          {transaction.type === 'withdrawal' ? (
                             <div className="text-xs">
                               <div className="font-medium text-gray-900 truncate max-w-[100px]">
-                                {transaction.bank_name}
+                                {transaction.bank_name || 'Not provided'}
                               </div>
                               <div className="text-gray-500 font-mono">
-                                {transaction.account_number}
+                                {transaction.account_number || 'Not provided'}
                               </div>
                               <div className="text-gray-500 truncate max-w-[100px]">
-                                {transaction.account_name}
+                                {transaction.account_name || 'Not provided'}
                               </div>
                             </div>
                           ) : (
@@ -556,7 +555,7 @@ export default function AdminApprovals() {
                         <label className="font-medium text-gray-700">Created</label>
                         <div className="flex items-center gap-2">
                           <Calendar className="h-4 w-4 text-gray-400" />
-                          <span className="text-xs">{formatDate(selectedTransaction.created_at)}</span>
+                          <span className="text-xs">{formatDateTime(selectedTransaction.created_at)}</span>
                         </div>
                       </div>
                       <div>
@@ -584,7 +583,7 @@ export default function AdminApprovals() {
                 </Card>
 
                 {/* Bank Details (for withdrawals) */}
-                {selectedTransaction.type === 'withdrawal' && selectedTransaction.bank_name && (
+                {selectedTransaction.type === 'withdrawal' && (
                   <Card>
                     <CardHeader className="pb-3">
                       <CardTitle className="text-sm flex items-center gap-2">
@@ -596,15 +595,15 @@ export default function AdminApprovals() {
                       <div className="grid grid-cols-1 gap-3 text-sm">
                         <div>
                           <label className="font-medium text-gray-700">Bank Name</label>
-                          <p className="text-gray-600">{selectedTransaction.bank_name}</p>
+                          <p className="text-gray-600">{selectedTransaction.bank_name || 'Not provided'}</p>
                         </div>
                         <div>
                           <label className="font-medium text-gray-700">Account Number</label>
-                          <p className="text-gray-600 font-mono">{selectedTransaction.account_number}</p>
+                          <p className="text-gray-600 font-mono">{selectedTransaction.account_number || 'Not provided'}</p>
                         </div>
                         <div>
                           <label className="font-medium text-gray-700">Account Name</label>
-                          <p className="text-gray-600">{selectedTransaction.account_name}</p>
+                          <p className="text-gray-600">{selectedTransaction.account_name || 'Not provided'}</p>
                         </div>
                       </div>
                     </CardContent>
