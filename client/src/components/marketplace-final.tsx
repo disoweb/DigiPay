@@ -53,8 +53,10 @@ interface Offer {
   amount: string;
   rate: string;
   paymentMethod: string;
-  minLimit: string;
-  maxLimit: string;
+  minLimit?: string;
+  maxLimit?: string;
+  minAmount?: string;
+  maxAmount?: string;
   user: User;
 }
 
@@ -197,10 +199,10 @@ function OfferCard({ offer, onContact, canContact }: {
                 </div>
                 <div className="text-right">
                   <div className="text-sm font-bold text-gray-900">
-                    {safeParseFloat(offer.minLimit).toFixed(2)} USDT
+                    {safeParseFloat(offer.minLimit || offer.minAmount).toFixed(2)} USDT
                   </div>
                   <div className="text-xs text-gray-500">
-                    to {safeParseFloat(offer.maxLimit).toFixed(2)} USDT
+                    to {safeParseFloat(offer.maxLimit || offer.maxAmount).toFixed(2)} USDT
                   </div>
                 </div>
               </div>
@@ -669,10 +671,10 @@ export function MarketplaceFinal() {
                       </div>
                       <div className="text-right">
                         <div className="text-sm font-bold text-blue-900">
-                          {safeParseFloat(contactOffer?.minLimit).toFixed(2)} USDT
+                          {safeParseFloat(contactOffer?.minLimit || contactOffer?.minAmount).toFixed(2)} USDT
                         </div>
                         <div className="text-xs text-blue-600">
-                          to {safeParseFloat(contactOffer?.maxLimit).toFixed(2)} USDT
+                          to {safeParseFloat(contactOffer?.maxLimit || contactOffer?.maxAmount).toFixed(2)} USDT
                         </div>
                       </div>
                     </div>
