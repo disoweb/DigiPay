@@ -147,7 +147,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.createTransaction({
         userId,
         amount: withdrawAmount.toString(),
+        type: "withdrawal",
+        status: "pending",
+        bankName,
+        accountNumber,
+        accountName
+      });
 
+      res.json({ 
+        success: true, 
+        message: "Withdrawal request submitted. Awaiting admin approval.",
+        amount: withdrawAmount.toFixed(2)
+      });
+    } catch (error) {
+      console.error("Withdrawal error:", error);
+      res.status(500).json({ error: "Withdrawal failed" });
+    }
+  });
 
   // Paystack webhook for automatic transaction processing
   app.post("/api/paystack/webhook", express.raw({type: 'application/json'}), async (req, res) => {
@@ -170,24 +186,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error('Webhook processing error:', error.message);
       res.status(400).send(error.message || 'Webhook processing failed');
-    }
-  });
-
-        type: "withdrawal",
-        status: "pending",
-        bankName,
-        accountNumber,
-        accountName
-      });
-
-      res.json({ 
-        success: true, 
-        message: "Withdrawal request submitted. Awaiting admin approval.",
-        amount: withdrawAmount.toFixed(2)
-      });
-    } catch (error) {
-      console.error("Withdrawal error:", error);
-      res.status(500).json({ error: "Withdrawal failed" });
     }
   });
 
