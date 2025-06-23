@@ -173,85 +173,106 @@ export default function Wallet() {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsUrl = `${protocol}//${window.location.host}/ws`;
     console.log('Attempting WebSocket connection to:', wsUrl, 'for user:', user.id);
-    const ws = new WebSocket(wsUrl);
-
-    ws.onopen = () => {
-      console.log('WebSocket connected successfully for real-time updates');
-      setWsConnected(true);
-      const connectMessage = {
-        type: 'user_connect',
-        userId: user.id
-      };
-      console.log('Sending user connect message:', connectMessage);
-      ws.send(JSON.stringify(connectMessage));
-    };
-
-    ws.onmessage = (event) => {
+    
+    let ws: WebSocket;
+    let reconnectAttempts = 0;
+    const maxReconnectAttempts = 5;
+    
+    const connect = () => {
       try {
-        const data = JSON.parse(event.data);
-        console.log('WebSocket message received:', data);
-        
-        if (data.type === 'user_connected') {
-          console.log('WebSocket user connection confirmed:', data);
-        } else if (data.type === 'connection_established') {
-          console.log('WebSocket connection established:', data);
-        } else if (data.type === 'balance_updated') {
-          console.log('Balance update received for userId:', data.userId, 'current user:', user.id);
+        ws = new WebSocket(wsUrl);
+
+        ws.onopen = () => {
+          console.log('WebSocket connected successfully for real-time updates');
+          setWsConnected(true);
+          reconnectAttempts = 0;
           
-          if (data.userId === user.id) {
-            console.log('Processing balance update for current user');
-            console.log('Old balance will be updated from cache, new balance:', data.nairaBalance);
+          const connectMessage = {
+            type: 'user_connect',
+            userId: user.id
+          };
+          console.log('Sending user connect message:', connectMessage);
+          ws.send(JSON.stringify(connectMessage));
+        };
+
+        ws.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            console.log('WebSocket message received:', data);
             
-            // Force immediate query cache update
-            queryClient.setQueryData(["/api/user"], (oldData: any) => {
-              if (oldData) {
-                console.log('Updating user balance in cache:', {
-                  oldBalance: oldData.nairaBalance,
-                  newBalance: data.nairaBalance
+            if (data.type === 'user_connected') {
+              console.log('WebSocket user connection confirmed:', data);
+            } else if (data.type === 'connection_established') {
+              console.log('WebSocket connection established:', data);
+            } else if (data.type === 'balance_updated') {
+              console.log('Balance update received for userId:', data.userId, 'current user:', user.id);
+              
+              if (data.userId === user.id) {
+                console.log('Processing balance update for current user');
+                console.log('Updating balance from', user.nairaBalance, 'to', data.nairaBalance);
+                
+                // Force immediate query cache update
+                queryClient.setQueryData(["/api/user"], (oldData: any) => {
+                  if (oldData) {
+                    console.log('Updating user balance in cache');
+                    return {
+                      ...oldData,
+                      nairaBalance: data.nairaBalance,
+                      usdtBalance: data.usdtBalance || oldData.usdtBalance
+                    };
+                  }
+                  return oldData;
                 });
-                return {
-                  ...oldData,
-                  nairaBalance: data.nairaBalance,
-                  usdtBalance: data.usdtBalance || oldData.usdtBalance
-                };
+                
+                // Force immediate UI refresh
+                queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+                queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
+                
+                // Show success notification
+                if (data.lastTransaction?.type === 'deposit') {
+                  toast({
+                    title: "💰 Deposit Successful!",
+                    description: `₦${parseFloat(data.lastTransaction.amount).toLocaleString()} has been credited to your wallet`,
+                    className: "border-green-200 bg-green-50 text-green-800",
+                  });
+                }
               }
-              return oldData;
-            });
-            
-            // Force immediate UI refresh
-            queryClient.invalidateQueries({ queryKey: ["/api/user"] });
-            queryClient.refetchQueries({ queryKey: ["/api/user"] });
-            queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
-            
-            // Show success notification with enhanced styling
-            if (data.lastTransaction?.type === 'deposit') {
-              toast({
-                title: "💰 Deposit Successful!",
-                description: `₦${parseFloat(data.lastTransaction.amount).toLocaleString()} has been credited to your wallet`,
-                className: "border-green-200 bg-green-50 text-green-800",
-              });
             }
-          } else {
-            console.log('Balance update for different user, ignoring');
+          } catch (error) {
+            console.error('WebSocket message parsing error:', error);
           }
-        }
+        };
+
+        ws.onclose = (event) => {
+          console.log('WebSocket disconnected. Code:', event.code, 'Reason:', event.reason);
+          setWsConnected(false);
+          
+          // Attempt to reconnect
+          if (reconnectAttempts < maxReconnectAttempts) {
+            reconnectAttempts++;
+            console.log(`Attempting to reconnect... (${reconnectAttempts}/${maxReconnectAttempts})`);
+            setTimeout(connect, 2000 * reconnectAttempts); // Exponential backoff
+          } else {
+            console.log('Max reconnection attempts reached');
+          }
+        };
+
+        ws.onerror = (error) => {
+          console.error('WebSocket error:', error);
+          setWsConnected(false);
+        };
       } catch (error) {
-        console.error('WebSocket message parsing error:', error);
+        console.error('Failed to create WebSocket connection:', error);
+        setWsConnected(false);
       }
     };
 
-    ws.onclose = () => {
-      console.log('WebSocket disconnected');
-      setWsConnected(false);
-    };
-
-    ws.onerror = (error) => {
-      console.error('WebSocket error:', error);
-      setWsConnected(false);
-    };
+    connect();
 
     return () => {
-      ws.close();
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.close();
+      }
     };
   }, [user?.id, queryClient, toast]);
 
@@ -349,12 +370,27 @@ export default function Wallet() {
             <div className="flex items-center justify-center gap-2 mb-2">
               <WalletIcon className="h-8 w-8 text-primary" />
               <h1 className="text-2xl font-bold text-gray-900">My Wallet</h1>
-              {wsConnected && (
-                <div className="flex items-center gap-1 px-2 py-1 bg-green-100 rounded-full text-xs text-green-700">
-                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                  Live
-                </div>
-              )}
+              <div className="flex items-center gap-2">
+                {wsConnected && (
+                  <div className="flex items-center gap-1 px-2 py-1 bg-green-100 rounded-full text-xs text-green-700">
+                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                    Live
+                  </div>
+                )}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    console.log('Manual wallet refresh triggered');
+                    queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+                    queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
+                    toast({ title: "Wallet refreshed" });
+                  }}
+                  className="h-6 w-6 p-0"
+                >
+                  <RefreshCw className="h-3 w-3" />
+                </Button>
+              </div>
             </div>
             <p className="text-gray-600">Manage your funds, send money, and swap currencies</p>
           </div>

@@ -344,7 +344,8 @@ export class EnhancedPaystackService {
       const wsServer = (global as any).wsServer;
       if (wsServer && wsServer.clients) {
         const clientCount = wsServer.clients.size;
-        console.log(`Broadcasting balance update to ${clientCount} connected clients for user ${user.id}`);
+        console.log(`📡 Broadcasting balance update to ${clientCount} connected clients for user ${user.id}`);
+        console.log(`💰 Balance updated: ₦${currentBalance.toLocaleString()} → ₦${newBalance.toLocaleString()}`);
         
         const updateMessage = {
           type: 'balance_updated',
@@ -359,6 +360,8 @@ export class EnhancedPaystackService {
           }
         };
         
+        console.log('📤 Sending WebSocket message:', JSON.stringify(updateMessage, null, 2));
+        
         let sentCount = 0;
         let targetUserConnected = false;
         
@@ -371,20 +374,23 @@ export class EnhancedPaystackService {
               // Check if this is the target user's connection
               if (client.userId === user.id) {
                 targetUserConnected = true;
+                console.log(`✅ Target user ${user.id} is connected and received the update`);
               }
             } catch (error) {
-              console.error('Failed to send WebSocket message:', error);
+              console.error('❌ Failed to send WebSocket message:', error);
             }
           }
         });
         
-        console.log(`Balance update sent to ${sentCount} clients (target user ${targetUserConnected ? 'connected' : 'not connected'})`);
+        console.log(`📊 Balance update sent to ${sentCount} clients (target user ${targetUserConnected ? 'connected' : 'not connected'})`);
         
         if (!targetUserConnected) {
-          console.log(`User ${user.id} not connected via WebSocket - they will see the update on next page refresh`);
+          console.log(`⚠️ User ${user.id} not connected via WebSocket - they will see the update on next page refresh`);
         }
       } else {
-        console.log('WebSocket server or clients not available for balance update broadcast');
+        console.log('❌ WebSocket server or clients not available for balance update broadcast');
+        console.log('WebSocket server exists:', !!wsServer);
+        console.log('WebSocket clients exist:', !!(wsServer && wsServer.clients));
       }
       
       return true;
