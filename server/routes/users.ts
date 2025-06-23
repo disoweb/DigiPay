@@ -38,8 +38,6 @@ export const userRoutes = {
         location: users.location,
         nairaBalance: users.nairaBalance,
         usdtBalance: users.usdtBalance,
-        naira_balance: users.nairaBalance,
-        usdt_balance: users.usdtBalance,
         averageRating: users.averageRating,
         ratingCount: users.ratingCount,
         kycVerified: users.kycVerified,
