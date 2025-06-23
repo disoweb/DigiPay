@@ -579,25 +579,29 @@ export class DatabaseStorage implements IStorage {
 
     async getUserMessages(userId: number): Promise<any[]> {
         try {
-            const result = await db.execute({
-                sql: `SELECT id, sender_id, recipient_id, message, trade_id, is_read, created_at
-                      FROM messages 
-                      WHERE sender_id = ? OR recipient_id = ? 
-                      ORDER BY created_at DESC`,
-                args: [userId, userId]
-            });
+            console.log("getUserMessages called with userId:", userId);
+            const result = await pool.query(
+                `SELECT id, sender_id, recipient_id, message, trade_id, is_read, created_at
+                 FROM messages 
+                 WHERE sender_id = $1 OR recipient_id = $1 
+                 ORDER BY created_at DESC`,
+                [userId]
+            );
             
-            return result.rows.map(row => ({
-                id: row[0],
-                senderId: row[1],
-                receiverId: row[2],
-                content: row[3],
-                tradeId: row[4],
-                isRead: row[5],
-                createdAt: row[6]
+            const messages = result.rows.map(row => ({
+                id: row.id,
+                senderId: row.sender_id,
+                receiverId: row.recipient_id,
+                content: row.message,
+                tradeId: row.trade_id,
+                isRead: row.is_read,
+                createdAt: row.created_at
             }));
+            
+            console.log("getUserMessages found", messages.length, "messages for user", userId);
+            return messages;
         } catch (error) {
-            console.log("Messages table schema issue, returning empty array", error);
+            console.error("Error in getUserMessages:", error);
             return [];
         }
     }

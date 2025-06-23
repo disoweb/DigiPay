@@ -10,7 +10,7 @@ import { paystackService } from "./services/paystack";
 import { tronService } from "./services/tron";
 import { emailService, smsService } from "./services/notifications";
 import { kycRoutes } from "./routes/kyc";
-import { db } from "./db";
+import { db, pool } from "./db";
 import { eq, desc, or, and, asc } from "drizzle-orm";
 import { 
   users, offers, trades, messages, transactions, ratings,
@@ -1773,7 +1773,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = parseInt(req.params.userId);
       const currentUserId = req.user!.id;
 
+      console.log("API: /api/messages/user/:userId called with:", {
+        userId,
+        currentUserId,
+        rawUserId: req.params.userId
+      });
+
       if (isNaN(userId)) {
+        console.log("Invalid userId:", req.params.userId);
         return res.status(400).json({ error: "Invalid user ID" });
       }
 
@@ -1797,6 +1804,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         createdAt: row.created_at
       }));
 
+      console.log("Found", messages.length, "messages between users", currentUserId, "and", userId);
       res.json(messages);
     } catch (error) {
       console.error("Error fetching user messages:", error);

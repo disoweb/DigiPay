@@ -62,14 +62,23 @@ export function ModernChat({ chatUserId, onBack }: ModernChatProps) {
     enabled: !!chatUserId,
   });
 
-  const { data: messages = [], isLoading: messagesLoading } = useQuery({
+  const { data: messages = [], isLoading: messagesLoading, error: messagesError } = useQuery({
     queryKey: [`/api/messages/user/${chatUserId}`],
     queryFn: async () => {
+      console.log("Fetching messages for chatUserId:", chatUserId);
       const response = await apiRequest("GET", `/api/messages/user/${chatUserId}`);
-      return response.json();
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Failed to fetch messages:", response.status, errorText);
+        throw new Error(`Failed to fetch messages: ${response.status}`);
+      }
+      const data = await response.json();
+      console.log("Received messages data:", data);
+      return data;
     },
     enabled: !!chatUserId && !!user,
     refetchInterval: 3000, // Poll every 3 seconds for new messages
+    retry: 1,
   });
 
   const sendMessageMutation = useMutation({
@@ -113,6 +122,18 @@ export function ModernChat({ chatUserId, onBack }: ModernChatProps) {
     return (
       <div className="flex items-center justify-center h-screen bg-gray-50">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (messagesError) {
+    console.error("Messages error:", messagesError);
+    return (
+      <div className="flex items-center justify-center h-screen bg-gray-50">
+        <div className="text-center">
+          <p className="text-red-500 mb-2">Failed to load messages</p>
+          <p className="text-gray-500 text-sm">{messagesError.message}</p>
+        </div>
       </div>
     );
   }
