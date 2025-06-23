@@ -57,7 +57,7 @@ export const initializeEnhancedPaystack = async (config: PaystackConfig) => {
     throw new Error("Paystack not available");
   }
 
-  // Setup and open payment
+  // Setup and open payment with enhanced styling
   const handler = window.PaystackPop.setup({
     key: config.key,
     email: config.email,
@@ -70,7 +70,29 @@ export const initializeEnhancedPaystack = async (config: PaystackConfig) => {
     onClose: config.onClose
   });
   
+  // Open iframe and ensure it's clickable
   handler.openIframe();
+  
+  // Fix iframe styling after opening
+  setTimeout(() => {
+    const paystackIframes = document.querySelectorAll('iframe[src*="paystack"]');
+    paystackIframes.forEach((iframe: any) => {
+      iframe.style.zIndex = '999999';
+      iframe.style.pointerEvents = 'auto';
+      iframe.style.position = 'fixed';
+      iframe.style.top = '0';
+      iframe.style.left = '0';
+      iframe.style.width = '100%';
+      iframe.style.height = '100%';
+    });
+    
+    // Also check for overlay elements
+    const overlays = document.querySelectorAll('[class*="paystack"]');
+    overlays.forEach((overlay: any) => {
+      overlay.style.zIndex = '999999';
+      overlay.style.pointerEvents = 'auto';
+    });
+  }, 100);
 };
 
 export const detectMobileDevice = (): boolean => {

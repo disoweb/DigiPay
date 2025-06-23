@@ -146,55 +146,92 @@ export function EnhancedDepositModal({ open, onOpenChange, user }: EnhancedDepos
         throw new Error("User email not available. Please refresh and try again.");
       }
 
-      // Check if Paystack script is loaded
+      // Ensure Paystack is available
       if (!window.PaystackPop) {
         throw new Error("Payment system not ready. Please refresh the page.");
       }
 
-      const config = {
+      console.log("Setting up Paystack payment with reference:", paystackData.reference);
+
+      // Use direct Paystack popup without custom wrapper
+      const handler = window.PaystackPop.setup({
         key: PAYSTACK_PUBLIC_KEY,
         email: user.email,
-        amount: parseFloat(amount) * 100, // Convert to kobo
+        amount: parseFloat(amount) * 100,
         currency: "NGN",
         reference: paystackData.reference,
         channels: ['card', 'bank', 'ussd', 'qr'],
         metadata: {
-          source: 'enhanced_mobile_deposit',
-          userId: user.id
+          source: 'mobile_deposit',
+          userId: user.id.toString()
         },
-        callback: (response: any) => {
-          console.log("Paystack callback:", response);
+        callback: function(response: any) {
+          console.log("Payment completed:", response);
           
-          if (hasVerifiedRef.current) return;
+          if (hasVerifiedRef.current) {
+            console.log("Already processing verification");
+            return;
+          }
           
           if (response.status === "success") {
             hasVerifiedRef.current = true;
             setPaymentStep('verifying');
             
+            // Verify payment
             verificationTimeoutRef.current = setTimeout(async () => {
               try {
                 await verifyPaymentMutation.mutateAsync(response.reference);
               } catch (error) {
-                console.error("Verification error:", error);
+                console.error("Verification failed:", error);
                 hasVerifiedRef.current = false;
+                setPaymentStep('error');
+                setErrorMessage("Payment verification failed");
               }
-            }, 2000);
+            }, 1500);
           } else {
+            console.log("Payment not successful:", response.status);
             setIsProcessing(false);
             setPaymentStep('error');
-            setErrorMessage("Payment was not completed successfully");
+            setErrorMessage("Payment was not completed");
           }
         },
-        onClose: () => {
-          console.log("Payment modal closed");
+        onClose: function() {
+          console.log("Payment popup closed");
           if (!hasVerifiedRef.current) {
             setIsProcessing(false);
             setPaymentStep('amount');
           }
         }
-      };
+      });
 
-      const handler = window.PaystackPop.setup(config);
+      // Ensure iframe is properly positioned and clickable with multiple checks
+      const ensureClickability = () => {
+        const iframes = document.querySelectorAll('iframe[src*="paystack"], iframe[src*="checkout.paystack.com"]');
+        const overlays = document.querySelectorAll('div[id*="paystack"], div[class*="paystack"]');
+        
+        [...iframes, ...overlays].forEach((element: any) => {
+          element.style.zIndex = '2147483647';
+          element.style.pointerEvents = 'auto';
+          element.style.position = 'fixed';
+          if (element.tagName === 'IFRAME') {
+            element.style.top = '0';
+            element.style.left = '0';
+            element.style.width = '100vw';
+            element.style.height = '100vh';
+            element.style.border = 'none';
+          }
+        });
+        
+        // Add class to body to prevent scrolling
+        document.body.classList.add('paystack-open');
+      };
+      
+      // Run immediately and also with delays to catch dynamically loaded content
+      ensureClickability();
+      setTimeout(ensureClickability, 100);
+      setTimeout(ensureClickability, 500);
+      setTimeout(ensureClickability, 1000);
+
       handler.openIframe();
 
     } catch (error: any) {

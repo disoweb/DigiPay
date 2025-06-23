@@ -2,6 +2,55 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Paystack Modal Fixes for Button Clickability */
+iframe[src*="paystack"],
+iframe[src*="checkout.paystack.com"] {
+  z-index: 2147483647 !important;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  border: none !important;
+  background: transparent !important;
+  pointer-events: auto !important;
+}
+
+/* Paystack overlay and container fixes */
+div[id*="paystack"],
+div[class*="paystack"],
+.paystack-overlay,
+.paystack-modal,
+.paystack-container {
+  z-index: 2147483647 !important;
+  pointer-events: auto !important;
+  position: fixed !important;
+}
+
+/* Ensure all interactive elements are clickable */
+iframe[src*="paystack"] *,
+iframe[src*="checkout.paystack.com"] * {
+  pointer-events: auto !important;
+  cursor: pointer !important;
+}
+
+/* Override any conflicting styles */
+body.paystack-open {
+  overflow: hidden !important;
+}
+
+/* Button and form element fixes within Paystack */
+iframe[src*="paystack"] button,
+iframe[src*="paystack"] input,
+iframe[src*="paystack"] select,
+iframe[src*="checkout.paystack.com"] button,
+iframe[src*="checkout.paystack.com"] input,
+iframe[src*="checkout.paystack.com"] select {
+  pointer-events: auto !important;
+  cursor: pointer !important;
+  z-index: inherit !important;
+}
+
 :root {
   --background: hsl(0, 0%, 100%);
   --foreground: hsl(20, 14.3%, 4.1%);
