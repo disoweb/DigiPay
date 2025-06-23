@@ -146,6 +146,9 @@ export const transactions = pgTable("transactions", {
   adminNotes: text("admin_notes"),
   paymentMethod: text("payment_method"),
   rate: text("rate"),
+  bankName: text("bank_name"), // For withdrawals
+  accountNumber: text("account_number"), // For withdrawals
+  accountName: text("account_name"), // For withdrawals
   createdAt: timestamp("created_at").defaultNow(),
 });
 

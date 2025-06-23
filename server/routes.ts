@@ -128,6 +128,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Insufficient balance" });
       }
 
+      // Deduct from user balance immediately
+      const newBalance = availableBalance - withdrawAmount;
+      await storage.updateUser(userId, {
+        nairaBalance: newBalance.toString()
+      });
+
       // Create withdrawal request (pending admin approval)
       await storage.createTransaction({
         userId,
@@ -1304,24 +1310,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Transaction is not pending" });
       }
 
-      // For withdrawals, deduct from user balance
-      if (transaction.type === "withdrawal") {
-        const user = await storage.getUser(transaction.userId);
-        if (!user) {
-          return res.status(404).json({ error: "User not found" });
-        }
-
-        const availableBalance = parseFloat(user.nairaBalance || "0");
-        const withdrawAmount = parseFloat(transaction.amount);
-
-        if (availableBalance < withdrawAmount) {
-          return res.status(400).json({ error: "Insufficient user balance" });
-        }
-
-        await storage.updateUser(transaction.userId, {
-          nairaBalance: (availableBalance - withdrawAmount).toString()
-        });
-      }
+      // For withdrawals, balance was already deducted when request was created
+      // Just mark as approved - no additional balance changes needed
 
       // For deposits, add to user balance
       if (transaction.type === "deposit") {
@@ -1365,6 +1355,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (transaction.status !== "pending") {
         return res.status(400).json({ error: "Transaction is not pending" });
+      }
+
+      // For rejected withdrawals, refund the user's balance
+      if (transaction.type === "withdrawal") {
+        const user = await storage.getUser(transaction.userId);
+        if (user) {
+          const currentBalance = parseFloat(user.nairaBalance || "0");
+          const withdrawAmount = parseFloat(transaction.amount);
+          
+          await storage.updateUser(transaction.userId, {
+            nairaBalance: (currentBalance + withdrawAmount).toString()
+          });
+        }
       }
 
       await storage.updateTransaction(transactionId, {
