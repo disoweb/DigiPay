@@ -70,16 +70,19 @@ export default function AdminApprovals() {
       }
       return response.json();
     },
+    refetchInterval: 5000, // Auto-refresh every 5 seconds for real-time updates
+    refetchIntervalInBackground: true,
   });
 
   const approveTransactionMutation = useMutation({
-    mutationFn: async ({ transactionId, notes }: { transactionId: number; notes: string }) => {
-      const response = await apiRequest("PATCH", `/api/admin/transactions/${transactionId}/approve`, { notes });
+    mutationFn: async ({ transactionId, notes }: { transactionId: number; notes?: string }) => {
+      const response = await apiRequest("PATCH", `/api/admin/transactions/${transactionId}/approve`, { notes: notes || "" });
       if (!response.ok) throw new Error("Failed to approve transaction");
       return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/transactions"] });
+      refetch(); // Force immediate refetch for real-time update
       toast({ title: "Success", description: "Transaction approved successfully" });
       setShowActionModal(false);
       setActionNotes("");
@@ -97,6 +100,7 @@ export default function AdminApprovals() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/transactions"] });
+      refetch(); // Force immediate refetch for real-time update
       toast({ title: "Success", description: "Transaction rejected successfully" });
       setShowActionModal(false);
       setActionNotes("");
@@ -131,16 +135,26 @@ export default function AdminApprovals() {
 
   const executeAction = () => {
     if (!selectedTransaction) return;
+    
+    // For rejections, require a reason. For approvals, notes are optional
+    if (actionType === "reject" && !actionNotes.trim()) {
+      toast({
+        title: "Rejection Reason Required",
+        description: "Please provide a reason for rejection",
+        variant: "destructive",
+      });
+      return;
+    }
 
     if (actionType === "approve") {
       approveTransactionMutation.mutate({
         transactionId: selectedTransaction.id,
-        notes: actionNotes
+        notes: actionNotes.trim()
       });
     } else {
       rejectTransactionMutation.mutate({
         transactionId: selectedTransaction.id,
-        notes: actionNotes
+        notes: actionNotes.trim()
       });
     }
   };
@@ -204,27 +218,37 @@ export default function AdminApprovals() {
       <main className="max-w-7xl mx-auto py-4 px-4 sm:py-8 sm:px-6 lg:px-8">
         <div className="space-y-6">
           {/* Header - Mobile Optimized */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-2">
-                <CheckCircle className="h-6 w-6 sm:h-8 sm:w-8 text-green-600" />
-                Transaction Approvals
-              </h1>
-              <p className="text-gray-600 text-sm sm:text-base">Review and approve pending transactions</p>
+          <div className="space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 flex items-center gap-2">
+                  <CheckCircle className="h-5 w-5 sm:h-6 sm:w-6 lg:h-8 lg:w-8 text-green-600" />
+                  Transaction Approvals
+                </h1>
+                <p className="text-gray-600 text-xs sm:text-sm lg:text-base">Review and approve pending transactions</p>
+              </div>
+              <div className="flex justify-end">
+                <Button onClick={() => refetch()} variant="outline" size="sm" className="text-xs">
+                  <RefreshCw className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                  <span className="hidden sm:inline">Refresh</span>
+                </Button>
+              </div>
             </div>
-            <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
-              <div className="relative">
+            
+            {/* Search and Filters - Stack on Mobile */}
+            <div className="space-y-3 sm:space-y-0 sm:flex sm:items-center sm:gap-4">
+              <div className="relative flex-1 sm:max-w-xs">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <Input
                   placeholder="Search transactions..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 w-full sm:w-64"
+                  className="pl-10 text-sm"
                 />
               </div>
-              <div className="flex gap-2">
+              <div className="grid grid-cols-2 gap-2 sm:flex sm:gap-2">
                 <Select value={filterType} onValueChange={setFilterType}>
-                  <SelectTrigger className="w-32">
+                  <SelectTrigger className="text-xs sm:text-sm">
                     <SelectValue placeholder="Type" />
                   </SelectTrigger>
                   <SelectContent>
@@ -236,7 +260,7 @@ export default function AdminApprovals() {
                   </SelectContent>
                 </Select>
                 <Select value={filterStatus} onValueChange={setFilterStatus}>
-                  <SelectTrigger className="w-32">
+                  <SelectTrigger className="text-xs sm:text-sm">
                     <SelectValue placeholder="Status" />
                   </SelectTrigger>
                   <SelectContent>
@@ -248,10 +272,6 @@ export default function AdminApprovals() {
                   </SelectContent>
                 </Select>
               </div>
-              <Button onClick={() => refetch()} variant="outline" size="sm">
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Refresh
-              </Button>
             </div>
           </div>
 
@@ -322,63 +342,74 @@ export default function AdminApprovals() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="overflow-x-auto">
-                <Table>
+              <div className="overflow-x-auto -mx-4 sm:mx-0">
+                <Table className="text-xs sm:text-sm">
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="min-w-[100px]">ID</TableHead>
-                      <TableHead className="min-w-[150px]">User</TableHead>
-                      <TableHead className="hidden sm:table-cell">Type</TableHead>
-                      <TableHead>Amount</TableHead>
-                      <TableHead className="hidden md:table-cell">Date</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
+                      <TableHead className="w-16 sm:w-20">ID</TableHead>
+                      <TableHead className="min-w-[120px] sm:min-w-[150px]">User</TableHead>
+                      <TableHead className="hidden sm:table-cell w-24">Type</TableHead>
+                      <TableHead className="w-20 sm:w-24">Amount</TableHead>
+                      <TableHead className="hidden lg:table-cell w-24">Date</TableHead>
+                      <TableHead className="w-20">Status</TableHead>
+                      <TableHead className="text-right w-24 sm:w-28">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filteredTransactions.map((transaction: Transaction) => (
-                      <TableRow key={transaction.id}>
-                        <TableCell>
-                          <div className="font-medium">#{transaction.id}</div>
+                      <TableRow key={transaction.id} className="hover:bg-gray-50/50">
+                        <TableCell className="py-2 sm:py-3">
+                          <div className="font-medium text-xs sm:text-sm">#{transaction.id}</div>
                         </TableCell>
-                        <TableCell>
-                          <div className="text-sm">
-                            {transaction.user?.email.split('@')[0]}
-                            <div className="text-xs text-gray-500">
+                        <TableCell className="py-2 sm:py-3">
+                          <div className="text-xs sm:text-sm">
+                            <div className="font-medium truncate max-w-[100px] sm:max-w-none">
+                              {transaction.user?.email.split('@')[0]}
+                            </div>
+                            <div className="text-xs text-gray-500 sm:hidden">
+                              {getTypeIcon(transaction.type)}
+                            </div>
+                            <div className="text-xs text-gray-500 hidden sm:block">
                               ID: {transaction.userId}
                             </div>
                           </div>
                         </TableCell>
-                        <TableCell className="hidden sm:table-cell">
-                          <div className="flex items-center gap-2">
+                        <TableCell className="hidden sm:table-cell py-2 sm:py-3">
+                          <div className="flex items-center gap-1 sm:gap-2">
                             {getTypeIcon(transaction.type)}
-                            <span className="text-sm capitalize">{transaction.type.replace('_', ' ')}</span>
+                            <span className="text-xs sm:text-sm capitalize">{transaction.type.replace('_', ' ')}</span>
                           </div>
                         </TableCell>
-                        <TableCell>
-                          <div className="font-medium">
+                        <TableCell className="py-2 sm:py-3">
+                          <div className="font-medium text-xs sm:text-sm">
                             ₦{parseFloat(transaction.amount).toLocaleString()}
                           </div>
+                          <div className="text-xs text-gray-500 lg:hidden">
+                            {new Date(transaction.created_at).toLocaleDateString('en-US', { 
+                              month: 'short', 
+                              day: 'numeric' 
+                            })}
+                          </div>
                         </TableCell>
-                        <TableCell className="hidden md:table-cell">
-                          <div className="text-sm text-gray-500">
+                        <TableCell className="hidden lg:table-cell py-2 sm:py-3">
+                          <div className="text-xs sm:text-sm text-gray-500">
                             {new Date(transaction.created_at).toLocaleDateString()}
                           </div>
                         </TableCell>
-                        <TableCell>
-                          <Badge className={`text-xs ${getStatusColor(transaction.status)}`}>
+                        <TableCell className="py-2 sm:py-3">
+                          <Badge className={`text-xs ${getStatusColor(transaction.status)} px-1 py-0.5`}>
                             {transaction.status}
                           </Badge>
                         </TableCell>
-                        <TableCell>
-                          <div className="flex gap-1 justify-end">
+                        <TableCell className="py-2 sm:py-3">
+                          <div className="flex gap-0.5 sm:gap-1 justify-end">
                             <Button
                               size="sm"
                               variant="outline"
                               onClick={() => handleViewTransaction(transaction)}
-                              className="h-8 w-8 p-0"
+                              className="h-6 w-6 sm:h-8 sm:w-8 p-0"
                             >
-                              <Eye className="h-3 w-3" />
+                              <Eye className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                             </Button>
                             {transaction.status === 'pending' && (
                               <>
@@ -386,17 +417,17 @@ export default function AdminApprovals() {
                                   size="sm"
                                   variant="outline"
                                   onClick={() => handleAction(transaction, "approve")}
-                                  className="h-8 w-8 p-0 text-green-600 hover:text-green-700"
+                                  className="h-6 w-6 sm:h-8 sm:w-8 p-0 text-green-600 hover:text-green-700"
                                 >
-                                  <CheckCircle className="h-3 w-3" />
+                                  <CheckCircle className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                                 </Button>
                                 <Button
                                   size="sm"
                                   variant="outline"
                                   onClick={() => handleAction(transaction, "reject")}
-                                  className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                                  className="h-6 w-6 sm:h-8 sm:w-8 p-0 text-red-600 hover:text-red-700"
                                 >
-                                  <XCircle className="h-3 w-3" />
+                                  <XCircle className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                                 </Button>
                               </>
                             )}
@@ -609,30 +640,38 @@ export default function AdminApprovals() {
             
             <div className="space-y-4">
               <div>
-                <Label htmlFor="notes" className="text-sm font-medium">Admin Notes</Label>
+                <Label htmlFor="notes" className="text-sm font-medium">
+                  Admin Notes {actionType === "reject" && <span className="text-red-500">*</span>}
+                  {actionType === "approve" && <span className="text-xs text-gray-500">(Optional)</span>}
+                </Label>
                 <Textarea
                   id="notes"
-                  placeholder={`Reason for ${actionType}...`}
+                  placeholder={actionType === "approve" ? "Optional notes..." : "Required reason for rejection..."}
                   value={actionNotes}
                   onChange={(e) => setActionNotes(e.target.value)}
                   rows={3}
                   className="mt-1 text-sm"
                 />
+                {actionType === "reject" && (
+                  <p className="text-xs text-red-500 mt-1">
+                    Please provide a reason for rejection
+                  </p>
+                )}
               </div>
               
-              <div className="flex gap-2 pt-4">
+              <div className="flex flex-col sm:flex-row gap-2 pt-4">
                 <Button 
                   onClick={executeAction}
                   variant={actionType === "approve" ? "default" : "destructive"} 
-                  className="flex-1"
-                  disabled={!actionNotes.trim()}
+                  className="flex-1 text-sm"
+                  disabled={actionType === "reject" && !actionNotes.trim()}
                 >
                   {actionType === "approve" ? "Approve Transaction" : "Reject Transaction"}
                 </Button>
                 <Button 
                   variant="outline" 
                   onClick={() => setShowActionModal(false)} 
-                  className="flex-1"
+                  className="flex-1 text-sm"
                 >
                   Cancel
                 </Button>
