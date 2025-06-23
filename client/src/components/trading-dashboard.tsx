@@ -341,7 +341,8 @@ export function TradingDashboard() {
                         variant="outline"
                         onClick={() => {
                           if (trade && trade.id) {
-                            setLocation(`/chat/${trade.id}`);
+                            console.log("Navigating to trade detail for trade ID:", trade.id);
+                            setLocation(`/trades/${trade.id}`);
                           } else {
                             console.error("Invalid trade data for chat navigation:", trade);
                           }
