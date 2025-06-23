@@ -3,7 +3,7 @@ import {
   type User, type InsertUser, type Offer, type InsertOffer,
   type Trade, type InsertTrade, type Message, type InsertMessage,
   type Transaction, type InsertTransaction, type Rating, type InsertRating
-} from "@shared/schema";
+} from "../shared/schema.js";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 import { db, pool } from "./db";
