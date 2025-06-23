@@ -3250,6 +3250,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
         nairaBalance: newRecipientBalance.toString() 
       });
 
+      // Send real-time balance updates via WebSocket
+      const wss = (req as any).wss;
+      if (wss) {
+        // Update sender's balance
+        wss.clients.forEach((client: any) => {
+          if (client.userId === senderId && client.readyState === 1) {
+            client.send(JSON.stringify({
+              type: 'BALANCE_UPDATE',
+              data: {
+                nairaBalance: newSenderBalance.toString(),
+                usdtBalance: sender.usdtBalance
+              }
+            }));
+          }
+          // Update recipient's balance
+          if (client.userId === recipientId && client.readyState === 1) {
+            client.send(JSON.stringify({
+              type: 'BALANCE_UPDATE',
+              data: {
+                nairaBalance: newRecipientBalance.toString(),
+                usdtBalance: recipient.usdtBalance
+              }
+            }));
+          }
+        });
+      }
+
       // Create transaction records
       await storage.createTransaction({
         userId: senderId,
