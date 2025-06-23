@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -26,6 +26,16 @@ export function DepositModal({ open, onOpenChange }: DepositModalProps) {
 
   const [paymentReference, setPaymentReference] = useState("");
   const [showVerifyButton, setShowVerifyButton] = useState(false);
+
+  // Cleanup when modal closes
+  useEffect(() => {
+    if (!open) {
+      setIsProcessing(false);
+      setShowVerifyButton(false);
+      setPaymentReference("");
+      // Don't reset amount here so user doesn't lose their input
+    }
+  }, [open]);
 
   const initializePaymentMutation = useMutation({
     mutationFn: async (amount: number) => {
@@ -237,7 +247,12 @@ export function DepositModal({ open, onOpenChange }: DepositModalProps) {
     }
   };
 
-  const handleDeposit = async () => {
+  const handleDeposit = async (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    
     const depositAmount = parseFloat(amount);
     if (depositAmount < 100) {
       toast({
@@ -248,15 +263,24 @@ export function DepositModal({ open, onOpenChange }: DepositModalProps) {
       return;
     }
 
-    setIsProcessing(true);
-    initializePaymentMutation.mutate(depositAmount);
+    try {
+      setIsProcessing(true);
+      initializePaymentMutation.mutate(depositAmount);
+    } catch (error) {
+      console.error("Deposit error:", error);
+      setIsProcessing(false);
+    }
   };
 
   const quickAmounts = [1000, 5000, 10000, 20000];
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[95vw] max-w-md mx-auto max-h-[90vh] overflow-y-auto">
+    <Dialog open={open} onOpenChange={onOpenChange} modal={true}>
+      <DialogContent 
+        className="w-[95vw] max-w-md mx-auto max-h-[90vh] overflow-y-auto"
+        onPointerDownOutside={(e) => e.preventDefault()}
+        onInteractOutside={(e) => e.preventDefault()}
+      >
         <DialogHeader className="space-y-3">
           <DialogTitle className="flex items-center gap-2 text-lg">
             <div className="p-2 bg-green-100 rounded-lg">
@@ -277,9 +301,14 @@ export function DepositModal({ open, onOpenChange }: DepositModalProps) {
               {quickAmounts.map((quickAmount) => (
                 <Button
                   key={quickAmount}
+                  type="button"
                   variant="outline"
                   size="sm"
-                  onClick={() => setAmount(quickAmount.toString())}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setAmount(quickAmount.toString());
+                  }}
                   className="h-12 text-sm font-medium hover:bg-green-50 hover:border-green-300"
                 >
                   ₦{quickAmount.toLocaleString()}
@@ -383,13 +412,9 @@ export function DepositModal({ open, onOpenChange }: DepositModalProps) {
           <div className="flex flex-col gap-3 pt-2">
             <Button 
               type="button"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                handleDeposit();
-              }} 
+              onClick={handleDeposit}
               disabled={!amount || parseFloat(amount) < 100 || isProcessing || initializePaymentMutation.isPending}
-              className="w-full h-12 text-base font-medium bg-green-600 hover:bg-green-700"
+              className="w-full h-12 text-base font-medium bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
               size="lg"
             >
               {isProcessing || initializePaymentMutation.isPending ? (
@@ -407,12 +432,16 @@ export function DepositModal({ open, onOpenChange }: DepositModalProps) {
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
+                // Reset all states
                 setIsProcessing(false);
                 setShowVerifyButton(false);
                 setPaymentReference("");
+                setAmount("");
+                // Close modal
                 onOpenChange(false);
               }}
               className="w-full h-11 text-base"
+              disabled={false}
             >
               Cancel
             </Button>
