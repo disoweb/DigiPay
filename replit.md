@@ -28,6 +28,8 @@ DigiPay is a peer-to-peer cryptocurrency trading platform that enables direct tr
 - **2025-01-23**: Resolved Paystack payment integration issues
 - **2025-01-23**: Enhanced send funds modal with real-time user lookup and verification status display
 - **2025-01-23**: Added debounced search functionality for user lookup with visual feedback indicators
+- **2025-01-23**: Improved marketplace flow by removing contact modal and making buy/sell buttons navigate directly to trade page
+- **2025-01-23**: Added message buttons beside buy/sell buttons for better user experience
 
 ## Database Schema
 - Users table with KYC verification fields
