@@ -24,6 +24,9 @@ export function DepositModal({ open, onOpenChange }: DepositModalProps) {
   const queryClient = useQueryClient();
   const { user } = useAuth();
 
+  const [paymentReference, setPaymentReference] = useState("");
+  const [showVerifyButton, setShowVerifyButton] = useState(false);
+
   const initializePaymentMutation = useMutation({
     mutationFn: async (amount: number) => {
       const res = await apiRequest("POST", "/api/payments/initialize", { amount });
@@ -31,6 +34,8 @@ export function DepositModal({ open, onOpenChange }: DepositModalProps) {
     },
     onSuccess: (data) => {
       if (data.success && data.data) {
+        setPaymentReference(data.data.reference);
+        setShowVerifyButton(true);
         handlePaystackPayment(data.data);
       } else {
         throw new Error(data.message || "Payment initialization failed");
@@ -85,6 +90,22 @@ export function DepositModal({ open, onOpenChange }: DepositModalProps) {
       setIsProcessing(true);
       console.log("Opening Paystack payment...", paystackData);
 
+      // If authorization_url is available, open it directly
+      if (paystackData.authorization_url) {
+        console.log("Opening Paystack URL directly:", paystackData.authorization_url);
+        const paymentWindow = window.open(paystackData.authorization_url, '_blank', 'width=600,height=700');
+        
+        // Show manual verification option
+        toast({
+          title: "Payment Window Opened",
+          description: "Complete your payment in the new window, then click 'Verify Payment' below.",
+        });
+        
+        setIsProcessing(false);
+        return;
+      }
+
+      // Fallback to inline payment
       await initializePaystack({
         key: PAYSTACK_PUBLIC_KEY,
         email: user?.email || "",
@@ -112,11 +133,29 @@ export function DepositModal({ open, onOpenChange }: DepositModalProps) {
     } catch (error) {
       console.error("Paystack payment error:", error);
       setIsProcessing(false);
-      toast({
-        title: "Payment Error",
-        description: "Failed to open payment interface",
-        variant: "destructive",
-      });
+      
+      // If inline payment fails, show the authorization URL as fallback
+      if (paystackData.authorization_url) {
+        toast({
+          title: "Opening Payment Page",
+          description: "Click the link below to complete your payment",
+          action: (
+            <Button 
+              onClick={() => window.open(paystackData.authorization_url, '_blank')}
+              variant="outline"
+              size="sm"
+            >
+              Open Payment
+            </Button>
+          ),
+        });
+      } else {
+        toast({
+          title: "Payment Error",
+          description: "Failed to initialize payment. Please try again.",
+          variant: "destructive",
+        });
+      }
     }
   };
 
@@ -270,6 +309,38 @@ export function DepositModal({ open, onOpenChange }: DepositModalProps) {
               You'll be redirected to Paystack's secure payment page to complete your transaction.
             </AlertDescription>
           </Alert>
+
+          {/* Manual Verification Section */}
+          {showVerifyButton && paymentReference && (
+            <Card className="bg-amber-50 border-amber-200">
+              <CardContent className="p-4">
+                <div className="space-y-3">
+                  <h4 className="font-medium text-amber-900 text-sm">Payment Reference</h4>
+                  <p className="text-xs text-amber-800 font-mono bg-amber-100 p-2 rounded">
+                    {paymentReference}
+                  </p>
+                  <p className="text-xs text-amber-700">
+                    After completing payment, click verify to update your balance.
+                  </p>
+                  <Button
+                    onClick={() => handlePaymentVerification(paymentReference)}
+                    disabled={verifyPaymentMutation.isPending}
+                    className="w-full h-10 bg-amber-600 hover:bg-amber-700"
+                    size="sm"
+                  >
+                    {verifyPaymentMutation.isPending ? (
+                      <div className="flex items-center gap-2">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Verifying...
+                      </div>
+                    ) : (
+                      "Verify Payment"
+                    )}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Action Buttons - Mobile Optimized */}
           <div className="flex flex-col gap-3 pt-2">
