@@ -157,7 +157,7 @@ export function EnhancedDepositModal({ open, onOpenChange, user }: EnhancedDepos
           source: 'enhanced_mobile_deposit',
           userId: user.id
         },
-        callback: async (response: any) => {
+        callback: (response: any) => {
           console.log("Paystack callback received:", response);
           
           // Prevent duplicate verification

@@ -72,20 +72,37 @@ export const initializeEnhancedPaystack = async (config: PaystackConfig) => {
     throw new Error("PaystackPop is not available after script load");
   }
 
-  // Enhanced config with mobile optimization
+  // Ensure callback is a function
+  if (typeof config.callback !== 'function') {
+    throw new Error("Callback must be a valid function");
+  }
+
+  // Enhanced config with mobile optimization and proper callback handling
   const enhancedConfig = {
-    ...config,
+    key: config.key,
+    email: config.email,
+    amount: config.amount,
+    currency: config.currency,
+    reference: config.reference,
     channels: config.channels || ['card', 'bank', 'ussd', 'qr', 'mobile_money', 'bank_transfer'],
-    onLoad: (response: any) => {
-      console.log("Paystack payment interface loaded:", response);
+    metadata: config.metadata || {},
+    callback: (response: any) => {
+      console.log("Payment callback triggered:", response);
+      try {
+        config.callback(response);
+      } catch (error) {
+        console.error("Callback execution error:", error);
+      }
     },
-    onCancel: () => {
-      console.log("Payment cancelled by user");
-      config.onClose();
-    },
-    onError: (error: any) => {
-      console.error("Enhanced Paystack error:", error);
-      config.onClose();
+    onClose: () => {
+      console.log("Payment modal closed");
+      try {
+        if (config.onClose) {
+          config.onClose();
+        }
+      } catch (error) {
+        console.error("OnClose execution error:", error);
+      }
     }
   };
 
