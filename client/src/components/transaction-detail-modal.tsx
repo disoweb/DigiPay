@@ -132,7 +132,11 @@ export function TransactionDetailModal({ transaction, isOpen, onClose }: Transac
                 {(() => {
                   const amount = transaction.amount || "0";
                   // Check if amount already contains currency symbols
-                  if (amount.includes("$") || amount.includes("USDT") || amount.includes("₦")) {
+                  if (amount.includes("USDT")) {
+                    // Replace USDT with $ and position it correctly
+                    const numericAmount = amount.replace(" USDT", "").replace("USDT", "");
+                    return `$${numericAmount}`;
+                  } else if (amount.includes("$") || amount.includes("₦")) {
                     return amount;
                   } else {
                     // Default to NGN formatting for legacy amounts

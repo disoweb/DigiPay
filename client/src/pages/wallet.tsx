@@ -584,7 +584,11 @@ export default function Wallet() {
                               const sign = transaction.type === "deposit" ? "+" : "-";
                               
                               // Check if amount already contains currency symbols
-                              if (amount.includes("USDT") || amount.includes("$")) {
+                              if (amount.includes("USDT")) {
+                                // Replace USDT with $ and position it correctly
+                                const numericAmount = amount.replace(" USDT", "").replace("USDT", "");
+                                return `${sign}$${numericAmount}`;
+                              } else if (amount.includes("$")) {
                                 return `${sign}${amount}`;
                               } else if (amount.includes("₦")) {
                                 return `${sign}${amount}`;
