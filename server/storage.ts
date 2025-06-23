@@ -632,21 +632,17 @@ export class DatabaseStorage implements IStorage {
     }
 
     async markMessageAsRead(messageId: number, userId: number): Promise<boolean> {
-        try {
-            await db.update(messages)
-                .set({ isRead: true })
-                .where(
-                    and(
-                        eq(messages.id, messageId),
-                        eq(messages.receiverId, userId)
-                    )
-                );
-            return true;
-        } catch (error) {
-            console.error("Error marking message as read:", error);
-            return false;
-        }
+    try {
+      const result = await pool.query(
+        "UPDATE messages SET is_read = true WHERE id = $1 AND recipient_id = $2",
+        [messageId, userId]
+      );
+      return result.rowCount > 0;
+    } catch (error) {
+      console.error("Error marking message as read:", error);
+      return false;
     }
+  }
 
     async getDirectMessages(userId1: number, userId2: number): Promise<Message[]> {
         try {

@@ -2608,7 +2608,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
           } else {
             console.log("No pending transaction found for reference:", reference);
-            console.log("Available transactions:", transactions.map(t => ({ id: t.id, ref: t.paystackRef, status: t.status })));
+            // Try to find any transaction with this reference, regardless of status
+            const allUserTransactions = await storage.getUserTransactions(userId);
+            const existingTx = allUserTransactions.find(tx => tx.paystackRef === reference);
+            
+            if (existingTx && existingTx.status === 'completed') {
+              console.log("Transaction already completed:", existingTx.id);
+              return res.json({
+                ...result,
+                balanceUpdated: false,
+                message: "Payment already processed"
+              });
+            } else if (!existingTx) {
+              // Create new transaction if none exists
+              console.log("Creating new transaction for successful payment");
+              const depositAmount = result.data.amount / 100;
+              
+              await storage.createTransaction({
+                userId,
+                type: "deposit",
+                amount: depositAmount.toString(),
+                status: "completed",
+                paystackRef: reference,
+              });
+
+              // Update user balance
+              const user = await storage.getUser(userId);
+              if (user) {
+                const currentBalance = parseFloat(user.nairaBalance || "0");
+                const newBalance = currentBalance + depositAmount;
+                
+                await storage.updateUser(user.id, { 
+                  nairaBalance: newBalance.toString() 
+                });
+                
+                console.log(`User ${user.id} balance updated to ₦${newBalance}`);
+              }
+            }
           }
         } else {
           console.log("Payment not successful, status:", result.data.status);

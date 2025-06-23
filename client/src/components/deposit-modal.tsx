@@ -80,29 +80,85 @@ export function DepositModal({ open, onOpenChange }: DepositModalProps) {
     },
   });
 
-  const handlePaystackPayment = async (paymentData: any) => {
-    if (!paymentData.authorization_url) {
+  const handlePaystackPayment = async (paystackData: any) => {
+    try {
+      setIsProcessing(true);
+      console.log("Opening Paystack payment...", paystackData);
+
+      await initializePaystack({
+        key: PAYSTACK_PUBLIC_KEY,
+        email: user?.email || "",
+        amount: parseFloat(amount) * 100, // Convert to kobo
+        currency: "NGN",
+        reference: paystackData.reference,
+        callback: async (response: any) => {
+          console.log("Paystack callback received:", response);
+          if (response.status === "success") {
+            await handlePaymentVerification(response.reference);
+          } else {
+            setIsProcessing(false);
+            toast({
+              title: "Payment Failed",
+              description: "Payment was not completed successfully",
+              variant: "destructive",
+            });
+          }
+        },
+        onClose: () => {
+          console.log("Paystack payment closed");
+          setIsProcessing(false);
+        },
+      });
+    } catch (error) {
+      console.error("Paystack payment error:", error);
+      setIsProcessing(false);
       toast({
         title: "Payment Error",
-        description: "Invalid payment data received",
+        description: "Failed to open payment interface",
         variant: "destructive",
       });
-      setIsProcessing(false);
-      return;
     }
+  };
 
-    // Store payment reference for verification when user returns
-    localStorage.setItem('pending_payment_reference', paymentData.reference);
-    
-    toast({
-      title: "Redirecting to Payment",
-      description: "You will be redirected to Paystack to complete your payment",
-    });
+  const handlePaymentVerification = async (reference: string) => {
+    try {
+      console.log("Verifying payment with reference:", reference);
+      setIsProcessing(true);
 
-    // Add a small delay to show the toast, then redirect
-    setTimeout(() => {
-      window.location.href = paymentData.authorization_url;
-    }, 1500);
+      // Add a small delay to ensure Paystack has processed the payment
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      const res = await apiRequest("POST", "/api/payments/verify", { reference });
+      const result = await res.json();
+
+      console.log("Payment verification result:", result);
+
+      if (result.success && result.data?.status === 'success') {
+        const depositAmount = result.data.amount / 100; // Convert from kobo to naira
+
+        toast({
+          title: "Payment Successful!",
+          description: `₦${depositAmount.toLocaleString()} has been added to your account.`,
+        });
+
+        // Refresh user data and close modal
+        await queryClient.invalidateQueries({ queryKey: ["user"] });
+        await queryClient.invalidateQueries({ queryKey: ["transactions"] });
+        setAmount("");
+        onOpenChange(false);
+      } else {
+        throw new Error(result.message || "Payment verification failed");
+      }
+    } catch (error: any) {
+      console.error("Payment verification error:", error);
+      toast({
+        title: "Verification Failed", 
+        description: error.message || "Please contact support if amount was deducted",
+        variant: "destructive",
+      });
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const handleDeposit = async () => {
