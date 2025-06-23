@@ -3405,6 +3405,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
         usdtBalance: newUsdtBalance.toFixed(2)
       });
 
+      // Send real-time balance update via WebSocket (same pattern as deposit)
+      setTimeout(() => {
+        const wsServerGlobal = (global as any).wsServer;
+        if (wsServerGlobal && wsServerGlobal.clients) {
+          console.log(`Broadcasting swap balance update to ${wsServerGlobal.clients.size} connected clients`);
+          
+          const updateMessage = {
+            type: 'balance_updated',
+            userId: userId,
+            nairaBalance: newNairaBalance.toString(),
+            usdtBalance: newUsdtBalance.toFixed(2),
+            previousBalance: fromCurrency === "NGN" ? user.nairaBalance : user.usdtBalance,
+            lastTransaction: {
+              type: 'swap',
+              amount: amount.toString(),
+              status: 'completed',
+              fromCurrency,
+              toCurrency: fromCurrency === "NGN" ? "USDT" : "NGN"
+            }
+          };
+          
+          wsServerGlobal.clients.forEach((client: any) => {
+            if (client.readyState === 1 && client.userId === userId) { // WebSocket.OPEN
+              console.log('Sending swap balance update to user:', userId);
+              client.send(JSON.stringify(updateMessage));
+            }
+          });
+        }
+      }, 100);
+
       // Create transaction record
       await storage.createTransaction({
         userId,
