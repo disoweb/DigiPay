@@ -30,6 +30,11 @@ export default function Admin() {
 
   const { data: trades = [] } = useQuery<EnrichedTrade[]>({
     queryKey: ["/api/admin/trades"],
+    queryFn: async () => {
+      const response = await apiRequest("GET", "/api/admin/trades");
+      if (!response.ok) throw new Error("Failed to fetch trades");
+      return response.json();
+    },
   });
 
   const resolveTradeMutation = useMutation({

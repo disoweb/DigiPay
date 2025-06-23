@@ -26,6 +26,10 @@ import ManageOffers from "@/pages/manage-offers";
 import DirectTrade from "./pages/trade-direct";
 import UserChatPage from "./pages/user-chat-new";
 import PaymentCallback from "./pages/payment-callback";
+import { lazy } from "react";
+
+const AdminUsers = lazy(() => import('./pages/admin-users'));
+const AdminDisputes = lazy(() => import('./pages/admin-disputes'));
 
 const queryClient = new QueryClient();
 
@@ -52,8 +56,8 @@ function App() {
             <ProtectedRoute path="/admin" component={Admin} adminOnly />
             <ProtectedRoute path="/admin/approvals" component={AdminApprovals} adminOnly />
             <ProtectedRoute path="/admin/kyc" component={AdminKYC} adminOnly />
-            <ProtectedRoute path="/admin/users" component={() => import('./pages/admin-users')} adminOnly />
-            <ProtectedRoute path="/admin/disputes" component={() => import('./pages/admin-disputes')} adminOnly />
+            <ProtectedRoute path="/admin/users" component={AdminUsers} adminOnly />
+            <ProtectedRoute path="/admin/disputes" component={AdminDisputes} adminOnly />
             <ProtectedRoute path="/profile-setup" component={ProfileSetup} />
             <ProtectedRoute path="/create-offer" component={OfferCreation} />
             <ProtectedRoute path="/chat/:tradeId" component={ChatPage} />

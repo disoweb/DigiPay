@@ -29,17 +29,10 @@ export default function AdminApprovals() {
   const { data: transactions = [], isLoading } = useQuery<EnrichedTransaction[]>({
     queryKey: ["/api/admin/transactions"],
     queryFn: async () => {
-      const response = await fetch("/api/admin/transactions", {
-        credentials: 'include',
-        headers: {
-          "Authorization": `Bearer ${localStorage.getItem("auth_token")}`,
-        },
-      });
-      
+      const response = await apiRequest("GET", "/api/admin/transactions");
       if (!response.ok) {
         throw new Error("Failed to load transactions");
       }
-      
       return response.json();
     },
     refetchInterval: 30000, // Refresh every 30 seconds

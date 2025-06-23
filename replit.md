@@ -30,6 +30,9 @@ DigiPay is a peer-to-peer cryptocurrency trading platform that enables direct tr
 - **2025-01-23**: Added debounced search functionality for user lookup with visual feedback indicators
 - **2025-01-23**: Improved marketplace flow by removing contact modal and making buy/sell buttons navigate directly to trade page
 - **2025-01-23**: Added message buttons beside buy/sell buttons for better user experience
+- **2025-01-23**: Implemented comprehensive admin panel with extensive moderation capabilities
+- **2025-01-23**: Added admin user management with ban/freeze functionality and dispute resolution system
+- **2025-01-23**: Fixed admin authentication and JWT token handling for secure admin access
 
 ## Database Schema
 - Users table with KYC verification fields

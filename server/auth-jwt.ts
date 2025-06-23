@@ -62,9 +62,8 @@ function generateToken(user: SelectUser): string {
 
 export function authenticateToken(req: Request, res: Response, next: NextFunction) {
   // Try to get token from cookie first, then Authorization header
-  const token = req.cookies?.token || (req.headers['authorization']?.split(' ')[1]);
-
-
+  const authHeader = req.headers.authorization;
+  const token = req.cookies?.token || (authHeader && authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null);
 
   if (!token) {
     return res.status(401).json({ error: "Access token required" });
@@ -72,6 +71,7 @@ export function authenticateToken(req: Request, res: Response, next: NextFunctio
 
   jwt.verify(token, JWT_SECRET, async (err: any, decoded: any) => {
     if (err) {
+      console.log("JWT verification error:", err.message);
       return res.status(403).json({ error: "Invalid or expired token" });
     }
 
@@ -83,6 +83,7 @@ export function authenticateToken(req: Request, res: Response, next: NextFunctio
       req.user = user;
       next();
     } catch (error) {
+      console.log("User lookup error:", error);
       return res.status(500).json({ error: "Authentication error" });
     }
   });
