@@ -92,10 +92,20 @@ export class EnhancedPaystackService {
 
     const reference = this.generateReference(userId);
     
-    // Check for existing pending transaction
+    // Check for existing pending transaction and clean up old ones
     const existingTransaction = await storage.getUserPendingDeposit(userId);
     if (existingTransaction) {
-      throw new Error('You have a pending deposit. Please complete or cancel it before starting a new one.');
+      // Check if the pending transaction is older than 30 minutes, if so cancel it
+      const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
+      if (existingTransaction.createdAt && new Date(existingTransaction.createdAt) < thirtyMinutesAgo) {
+        await storage.updateTransaction(existingTransaction.id, {
+          status: 'cancelled',
+          adminNotes: 'Auto-cancelled due to timeout'
+        });
+        console.log(`Auto-cancelled expired pending deposit for user ${userId}`);
+      } else {
+        throw new Error('You have a pending deposit from the last 30 minutes. Please wait for it to complete or try again later.');
+      }
     }
 
     try {

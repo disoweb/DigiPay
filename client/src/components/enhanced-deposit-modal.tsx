@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { initializeEnhancedPaystack, PAYSTACK_PUBLIC_KEY, getMobileOptimizedChannels, validatePaymentAmount } from "@/lib/enhanced-paystack";
 import { CreditCard, Shield, Clock, CheckCircle, AlertCircle, Loader2, Smartphone, ArrowRight } from "lucide-react";
 import { PaymentStatusIndicator } from "./payment-status-indicator";
+import { PendingDepositAlert } from "./pending-deposit-alert";
 
 interface EnhancedDepositModalProps {
   open: boolean;
@@ -32,6 +33,18 @@ export function EnhancedDepositModal({ open, onOpenChange, user }: EnhancedDepos
   const queryClient = useQueryClient();
   const hasVerifiedRef = useRef(false);
   const verificationTimeoutRef = useRef<NodeJS.Timeout>();
+
+  // Check for pending deposits
+  const { data: pendingData } = useQuery({
+    queryKey: ["pending-deposits"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/payments/pending");
+      if (!res.ok) throw new Error('Failed to fetch pending deposits');
+      return res.json();
+    },
+    enabled: open,
+    refetchInterval: open ? 5000 : false,
+  });
 
   // Reset state when modal opens/closes
   useEffect(() => {
@@ -263,6 +276,16 @@ export function EnhancedDepositModal({ open, onOpenChange, user }: EnhancedDepos
         </DialogHeader>
 
         <div className="space-y-6">
+          {/* Pending deposit alert */}
+          {pendingData?.pendingDeposit && (
+            <PendingDepositAlert 
+              pendingDeposit={pendingData.pendingDeposit}
+              onCancelled={() => {
+                queryClient.invalidateQueries({ queryKey: ["pending-deposits"] });
+              }}
+            />
+          )}
+
           {/* Progress indicator */}
           <div className="flex justify-center space-x-2">
             {(['amount', 'processing', 'verifying', 'success'] as PaymentStep[]).map((step, index) => (

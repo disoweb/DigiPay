@@ -9,7 +9,8 @@ import { youVerifyService } from "./services/youverify";
 import { enhancedPaystackService } from "./services/enhanced-paystack.js";
 import { tronService } from "./services/tron";
 import { emailService, smsService } from "./services/notifications";
-import { kycRoutes } from "./routes/kyc";
+import { kycRoutes } from "./routes/kyc.js";
+import { registerPaymentRoutes } from "./routes/payments.js";
 import * as crypto from "crypto";
 import { db, pool } from "./db";
 import { eq, desc, or, and, asc, gte } from "drizzle-orm";
@@ -2539,6 +2540,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
+
+  // Payment routes
+  registerPaymentRoutes(app);
 
   // Get user transactions
   app.get("/api/transactions", authenticateToken, async (req, res) => {
