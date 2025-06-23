@@ -2,20 +2,29 @@ import { useParams, useLocation } from "wouter";
 import { ModernChat } from "@/components/modern-chat";
 
 export default function UserChat() {
-  const { userId } = useParams();
+  const params = useParams();
   const [, setLocation] = useLocation();
-
-  console.log("UserChat params:", { userId });
+  
+  // Extract userId from params with detailed debugging
+  const userId = params.userId;
+  
+  console.log("UserChat - Full params object:", params);
+  console.log("UserChat - Extracted userId:", userId);
+  console.log("UserChat - Current location:", window.location.pathname);
 
   const handleBack = () => {
     setLocation('/dashboard');
   };
 
-  if (!userId) {
-    console.log("No userId found in params");
+  if (!userId || userId === '') {
+    console.log("No userId found in params. Params:", params);
     return (
       <div className="flex items-center justify-center h-screen bg-gray-50">
-        <p className="text-gray-500">Invalid user ID</p>
+        <div className="text-center">
+          <p className="text-gray-500">Invalid user ID</p>
+          <p className="text-sm text-gray-400 mt-2">Debug: {JSON.stringify(params)}</p>
+          <p className="text-sm text-gray-400">Path: {window.location.pathname}</p>
+        </div>
       </div>
     );
   }
