@@ -43,6 +43,9 @@ export class PaystackService {
 
   constructor() {
     this.secretKey = process.env.PAYSTACK_SECRET_KEY || '';
+    if (!this.secretKey) {
+      console.warn('PAYSTACK_SECRET_KEY not found in environment variables');
+    }
   }
 
   async initializePayment(

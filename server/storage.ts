@@ -581,11 +581,11 @@ export class DatabaseStorage implements IStorage {
         try {
             console.log("getUserMessages called with userId:", userId);
             const result = await pool.query(
-                `SELECT m.id, m.sender_id, m.recipient_id, m.message, m.trade_id, m.is_read, m.created_at,
+                `SELECT m.id, m.sender_id, m.receiver_id, m.content, m.trade_id, m.is_read, m.created_at,
                         u.email as sender_email, u.username as sender_username, u.kyc_verified as sender_kyc_verified
                  FROM messages m 
                  LEFT JOIN users u ON m.sender_id = u.id
-                 WHERE m.recipient_id = $1 
+                 WHERE m.receiver_id = $1 
                  ORDER BY m.created_at DESC`,
                 [userId]
             );
@@ -593,9 +593,9 @@ export class DatabaseStorage implements IStorage {
             const messages = result.rows.map(row => ({
                 id: row.id,
                 senderId: row.sender_id,
-                receiverId: row.recipient_id,
-                content: row.message,
-                messageText: row.message,
+                receiverId: row.receiver_id,
+                content: row.content,
+                messageText: row.content,
                 tradeId: row.trade_id,
                 isRead: row.is_read,
                 createdAt: row.created_at,
