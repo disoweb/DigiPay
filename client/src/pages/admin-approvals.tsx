@@ -14,6 +14,8 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useAuth } from "@/hooks/use-auth";
+import { Redirect } from "wouter";
 import { 
   CheckCircle,
   XCircle,
@@ -58,6 +60,7 @@ interface Transaction {
 }
 
 export default function AdminApprovals() {
+  const { user, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState("all");
@@ -335,6 +338,22 @@ export default function AdminApprovals() {
 
 
 
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Redirect to="/auth" />;
+  }
+
+  if (!user.isAdmin) {
+    return <Redirect to="/dashboard" />;
+  }
 
   if (isLoading) {
     return (
