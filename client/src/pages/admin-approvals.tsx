@@ -36,7 +36,8 @@ import {
   Trash2,
   Save,
   Plus,
-  Minus
+  Minus,
+  AlertCircle
 } from "lucide-react";
 
 interface Transaction {
@@ -308,31 +309,49 @@ export default function AdminApprovals() {
   };
 
   const formatDate = (dateString: string) => {
-    if (!dateString || isNaN(new Date(dateString).getTime())) return 'Invalid Date';
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
+    try {
+      if (!dateString) return 'Invalid Date';
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return 'Invalid Date';
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
+    } catch (error) {
+      return 'Invalid Date';
+    }
   };
 
   const formatDateShort = (dateString: string) => {
-    if (!dateString || isNaN(new Date(dateString).getTime())) return 'Invalid Date';
-    return new Date(dateString).toLocaleDateString('en-US', { 
-      month: 'short', 
-      day: 'numeric' 
-    });
+    try {
+      if (!dateString) return 'Invalid';
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return 'Invalid';
+      return date.toLocaleDateString('en-US', { 
+        month: 'short', 
+        day: 'numeric' 
+      });
+    } catch (error) {
+      return 'Invalid';
+    }
   };
 
   const formatDateTime = (dateString: string) => {
-    if (!dateString || isNaN(new Date(dateString).getTime())) return 'Invalid Date';
-    return new Date(dateString).toLocaleString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    try {
+      if (!dateString) return 'Invalid Date';
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return 'Invalid Date';
+      return date.toLocaleString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch (error) {
+      return 'Invalid Date';
+    }
   };
 
 
@@ -375,7 +394,9 @@ export default function AdminApprovals() {
         <Navbar />
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
+            <AlertCircle className="h-8 w-8 text-red-500 mx-auto mb-2" />
             <p className="text-red-600 mb-2">Error loading transactions</p>
+            <p className="text-sm text-gray-500 mb-4">{error?.message || "Unknown error"}</p>
             <Button onClick={() => refetch()} variant="outline">
               <RefreshCw className="h-4 w-4 mr-2" />
               Retry
