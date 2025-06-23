@@ -222,7 +222,7 @@ export function SendFundsModal({ open, onOpenChange, nairaBalance, usdtBalance }
                 <SelectItem value="USDT">
                   <div className="flex items-center gap-2">
                     <Coins className="h-4 w-4" />
-                    USDT ({parseFloat(usdtBalance).toFixed(6)})
+                    USDT ({parseFloat(usdtBalance).toFixed(2)})
                   </div>
                 </SelectItem>
               </SelectContent>

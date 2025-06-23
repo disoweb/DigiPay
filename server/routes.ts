@@ -2153,7 +2153,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Update user balances
       await storage.updateUser(userId, {
         nairaBalance: newNairaBalance.toString(),
-        usdtBalance: newUsdtBalance.toFixed(6)
+        usdtBalance: newUsdtBalance.toFixed(2)
       });
 
       // Create transaction record
@@ -2170,7 +2170,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         message: transactionNote,
         newBalances: {
           nairaBalance: newNairaBalance.toString(),
-          usdtBalance: newUsdtBalance.toFixed(6)
+          usdtBalance: newUsdtBalance.toFixed(2)
         }
       });
     } catch (error) {

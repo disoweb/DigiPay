@@ -128,10 +128,10 @@ function SendUSDTForm({ onClose, userBalance }: { onClose: () => void; userBalan
           placeholder="0.00"
           className="mt-1"
           max={userBalance}
-          step="0.000001"
+          step="0.01"
         />
         <p className="text-xs text-gray-500 mt-1">
-          Available: {userBalance.toFixed(6)} USDT
+          Available: {userBalance.toFixed(2)} USDT
         </p>
       </div>
       <div className="flex gap-2 pt-2">
@@ -295,7 +295,7 @@ export default function Wallet() {
                     </div>
                     <div className="text-center">
                       <p className="text-blue-100">USDT (TRON)</p>
-                      <p className="font-semibold">{parseFloat(user.usdtBalance || "0").toFixed(6)} USDT</p>
+                      <p className="font-semibold">{parseFloat(user.usdtBalance || "0").toFixed(2)} USDT</p>
                       {portfolioCurrency === "NGN" && (
                         <p className="text-xs text-blue-200">
                           ≈ ₦{(parseFloat(user.usdtBalance || "0") * USDT_TO_NGN_RATE).toLocaleString()}
@@ -396,10 +396,10 @@ export default function Wallet() {
 
                   <div className="space-y-2 mb-4">
                     <p className="text-2xl font-bold text-gray-900">
-                      {parseFloat(user.usdtBalance || "0").toFixed(6)} USDT
+                      {parseFloat(user.usdtBalance || "0").toFixed(2)} USDT
                     </p>
                     <p className="text-sm text-gray-600">
-                      ≈ ₦{(parseFloat(user.usdtBalance || "0") * 1485).toLocaleString()}
+                      ≈ ₦{(parseFloat(user.usdtBalance || "0") * 1485).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </p>
                   </div>
 

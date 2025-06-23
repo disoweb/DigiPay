@@ -653,8 +653,8 @@ export function TradingDashboard() {
                               <p className="text-xs text-gray-600">Limits</p>
                               <p className="font-semibold text-xs sm:text-sm">
                                 {offer.minAmount && offer.maxAmount
-                                  ? `${parseFloat(offer.minAmount).toFixed(0)}-${parseFloat(offer.maxAmount).toFixed(0)}`
-                                  : parseFloat(offer.amount || "0").toFixed(0)}
+                                  ? `${parseFloat(offer.minAmount).toFixed(2)}-${parseFloat(offer.maxAmount).toFixed(2)}`
+                                  : parseFloat(offer.amount || "0").toFixed(2)}
                               </p>
                               <p className="text-xs text-gray-500">USDT</p>
                             </div>
@@ -768,8 +768,8 @@ export function TradingDashboard() {
                               <p className="text-xs text-gray-600">Limits</p>
                               <p className="font-semibold text-xs sm:text-sm">
                                 {offer.minAmount && offer.maxAmount
-                                  ? `${parseFloat(offer.minAmount).toFixed(0)}-${parseFloat(offer.maxAmount).toFixed(0)}`
-                                  : parseFloat(offer.amount || "0").toFixed(0)}
+                                  ? `${parseFloat(offer.minAmount).toFixed(2)}-${parseFloat(offer.maxAmount).toFixed(2)}`
+                                  : parseFloat(offer.amount || "0").toFixed(2)}
                               </p>
                               <p className="text-xs text-gray-500">USDT</p>
                             </div>
