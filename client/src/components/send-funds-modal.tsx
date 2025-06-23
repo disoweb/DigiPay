@@ -136,13 +136,15 @@ export function SendFundsModal({ open, onOpenChange, nairaBalance, usdtBalance }
   }, [lookupTimeout]);
 
   const sendMutation = useMutation({
-    mutationFn: async ({ recipientId, amount, description, currency }: { recipientId: number; amount: number; description: string; currency: string }) => {
-      const endpoint = currency === "NGN" ? "/api/transfers/send" : "/api/transfers/send-usdt";
-      const response = await apiRequest("POST", endpoint, {
-        recipientId,
-        amount,
-        description,
-        currency
+    mutationFn: async (data: any) => {
+      const endpoint = data.currency === "NGN" ? "/api/transfers/send" : "/api/transfers/send-usdt";
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('digipay_token')}`
+        },
+        body: JSON.stringify(data)
       });
       if (!response.ok) {
         const error = await response.json();
@@ -226,61 +228,64 @@ export function SendFundsModal({ open, onOpenChange, nairaBalance, usdtBalance }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md mx-auto">
+      <DialogContent className="w-[95vw] max-w-sm mx-auto max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+          <DialogTitle className="flex items-center gap-2 text-lg">
             <Send className="h-5 w-5" />
-            Send Funds
+            {step === 3 ? "Confirm Transfer" : "Send Funds"}
           </DialogTitle>
-          <DialogDescription>
-            Send money to other users on the platform
+          <DialogDescription className="text-sm">
+            {step === 3 ? "Enter your PIN to confirm" : "Send money to other users"}
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4">
-          {/* Currency Selection */}
-          <div className="space-y-2">
-            <Label>Select Currency</Label>
-            <Select value={currency} onValueChange={(value: "NGN" | "USDT") => setCurrency(value)}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="NGN">
-                  <div className="flex items-center gap-2">
-                    <DollarSign className="h-4 w-4" />
-                    Nigerian Naira (₦{parseFloat(nairaBalance).toLocaleString()})
-                  </div>
-                </SelectItem>
-                <SelectItem value="USDT">
-                  <div className="flex items-center gap-2">
-                    <Coins className="h-4 w-4" />
-                    USDT ({parseFloat(usdtBalance).toFixed(2)})
-                  </div>
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+        <div className="space-y-3">
+          {step !== 3 && (
+            <>
+              {/* Currency Selection */}
+              <div className="flex gap-2 p-1 bg-gray-100 rounded-lg">
+                <Button
+                  variant={currency === "NGN" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setCurrency("NGN")}
+                  className="flex-1 text-xs"
+                >
+                  ₦ NGN
+                </Button>
+                <Button
+                  variant={currency === "USDT" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setCurrency("USDT")}
+                  className="flex-1 text-xs"
+                >
+                  <Coins className="h-3 w-3 mr-1" />
+                  USDT
+                </Button>
+              </div>
+            </>
+          )}
 
-          {/* Recipient Lookup */}
-          <div className="space-y-2">
-            <Label htmlFor="recipient">Send to (Email or Username)</Label>
-            <div className="relative">
-              <Input
-                id="recipient"
-                placeholder="Enter email or username (min 3 characters)"
-                value={recipientEmail}
-                onChange={(e) => handleRecipientChange(e.target.value)}
-                className={`pr-10 ${
-                  recipient 
-                    ? recipient.kycVerified 
-                      ? "border-green-500 focus:border-green-500" 
-                      : "border-yellow-500 focus:border-yellow-500"
-                    : recipientEmail.length >= 3 && !isLookingUp && !recipient
-                    ? "border-red-500 focus:border-red-500"
-                    : ""
-                }`}
-              />
+          {step !== 3 && (
+            <>
+              {/* Recipient Lookup */}
+              <div className="space-y-2">
+                <Label htmlFor="recipient" className="text-sm">Send to</Label>
+                <div className="relative">
+                  <Input
+                    id="recipient"
+                    placeholder="Email or username"
+                    value={recipientEmail}
+                    onChange={(e) => handleRecipientChange(e.target.value)}
+                    className={`pr-10 text-sm ${
+                      recipient 
+                        ? recipient.kycVerified 
+                          ? "border-green-500 focus:border-green-500" 
+                          : "border-yellow-500 focus:border-yellow-500"
+                        : recipientEmail.length >= 3 && !isLookingUp && !recipient
+                        ? "border-red-500 focus:border-red-500"
+                        : ""
+                    }`}
+                  />
               <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
                 {isLookingUp ? (
                   <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
@@ -418,33 +423,37 @@ export function SendFundsModal({ open, onOpenChange, nairaBalance, usdtBalance }
             </div>
           </div>
 
-          {/* Description */}
-          <div className="space-y-2">
-            <Label htmlFor="description">Description (Optional)</Label>
-            <Input
-              id="description"
-              placeholder="What's this for?"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              maxLength={100}
-            />
-          </div>
+              {/* Description */}
+              <div className="space-y-2">
+                <Label htmlFor="description" className="text-sm">Description (Optional)</Label>
+                <Input
+                  id="description"
+                  placeholder="What's this for?"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  maxLength={50}
+                  className="text-sm"
+                />
+              </div>
+            </>
+          )}
 
           {step === 3 && (
             <>
               {/* Transfer Summary */}
               <Card className="border-blue-200">
-                <CardContent className="p-4">
+                <CardContent className="p-3">
                   <div className="text-center space-y-2">
-                    <h4 className="font-medium">Transfer Summary</h4>
-                    <div className="text-2xl font-bold text-blue-600">
+                    <h4 className="font-medium text-sm">Transfer Summary</h4>
+                    <div className="text-xl font-bold text-blue-600">
                       {getCurrencySymbol()}{parseFloat(amount || "0").toLocaleString()} {getCurrencyLabel()}
                     </div>
-                    <div className="text-sm text-gray-600">
-                      To {recipient?.firstName} {recipient?.lastName} • {recipient?.email}
+                    <div className="text-xs text-gray-600">
+                      To {recipient?.firstName} {recipient?.lastName}
                     </div>
+                    <div className="text-xs text-gray-500">{recipient?.email}</div>
                     {description && (
-                      <div className="text-sm text-gray-500">
+                      <div className="text-xs text-gray-500 italic">
                         "{description}"
                       </div>
                     )}
@@ -454,7 +463,7 @@ export function SendFundsModal({ open, onOpenChange, nairaBalance, usdtBalance }
 
               {/* Transaction PIN */}
               <div className="space-y-2">
-                <Label htmlFor="pin">Transaction PIN</Label>
+                <Label htmlFor="pin" className="text-sm">Transaction PIN</Label>
                 <Input
                   id="pin"
                   type="password"
@@ -462,7 +471,7 @@ export function SendFundsModal({ open, onOpenChange, nairaBalance, usdtBalance }
                   value={transactionPin}
                   onChange={(e) => setTransactionPin(e.target.value)}
                   maxLength={4}
-                  className="text-center text-lg tracking-widest"
+                  className="text-center text-lg tracking-widest h-12"
                 />
               </div>
             </>
@@ -474,22 +483,22 @@ export function SendFundsModal({ open, onOpenChange, nairaBalance, usdtBalance }
               <>
                 <Button
                   variant="outline"
-                  onClick={() => setStep(2)}
-                  className="flex-1"
+                  onClick={() => setStep(1)}
+                  className="flex-1 h-10 text-sm"
                 >
                   Back
                 </Button>
                 <Button
                   onClick={handleConfirmSend}
                   disabled={!transactionPin || sendMutation.isPending}
-                  className="flex-1"
+                  className="flex-1 h-10 text-sm"
                 >
                   {sendMutation.isPending ? (
-                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    <Loader2 className="h-3 w-3 animate-spin mr-1" />
                   ) : (
-                    <Send className="h-4 w-4 mr-2" />
+                    <Send className="h-3 w-3 mr-1" />
                   )}
-                  Confirm Transfer
+                  Confirm
                 </Button>
               </>
             ) : (
@@ -497,21 +506,17 @@ export function SendFundsModal({ open, onOpenChange, nairaBalance, usdtBalance }
                 <Button
                   variant="outline"
                   onClick={() => onOpenChange(false)}
-                  className="flex-1"
+                  className="flex-1 h-10 text-sm"
                 >
                   Cancel
                 </Button>
                 <Button
                   onClick={handleSend}
                   disabled={!recipient || !amount || sendMutation.isPending}
-                  className="flex-1"
+                  className="flex-1 h-10 text-sm"
                 >
-                  {sendMutation.isPending ? (
-                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                  ) : (
-                    <Send className="h-4 w-4 mr-2" />
-                  )}
-                  Send {getCurrencySymbol()}{amount ? parseFloat(amount).toLocaleString() : "0"} {getCurrencyLabel()}
+                  <Send className="h-3 w-3 mr-1" />
+                  Continue
                 </Button>
               </>
             )}
