@@ -6,6 +6,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { Navbar } from "@/components/navbar";
 import { EnhancedDepositModal } from "@/components/enhanced-deposit-modal";
 import MobileWithdrawModal from "@/components/mobile-withdraw-modal";
+import PinSetupModal from "@/components/pin-setup-modal";
 import { TransactionDetailModal } from "@/components/transaction-detail-modal";
 import { SendFundsModal } from "@/components/send-funds-modal";
 import { SwapModal } from "@/components/swap-modal";
@@ -163,6 +164,7 @@ export default function Wallet() {
   const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
   const [showTransactionModal, setShowTransactionModal] = useState(false);
   const [showProfileCompletion, setShowProfileCompletion] = useState(false);
+  const [showPinSetup, setShowPinSetup] = useState(false);
   const { currency: portfolioCurrency, toggleCurrency } = useCurrencyPreference();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -172,6 +174,15 @@ export default function Wallet() {
   // Exchange rates
   const USDT_TO_NGN_RATE = 1485;
   const NGN_TO_USD_RATE = 0.00067; // Approximate USD rate
+
+  // Check if PIN setup is needed before withdrawal
+  const handleWithdrawClick = () => {
+    if (!user?.pinSetupCompleted) {
+      setShowPinSetup(true);
+    } else {
+      setShowWithdraw(true);
+    }
+  };
 
   // Check if profile is incomplete and show modal only once per session
   useEffect(() => {
@@ -372,7 +383,7 @@ export default function Wallet() {
                       Add
                     </Button>
                     <Button 
-                      onClick={() => setShowWithdraw(true)} 
+                      onClick={handleWithdrawClick} 
                       size="sm" 
                       variant="outline" 
                       className="h-9"
@@ -691,6 +702,12 @@ export default function Wallet() {
         open={showProfileCompletion}
         onClose={() => setShowProfileCompletion(false)}
         user={user}
+      />
+
+      <PinSetupModal
+        isOpen={showPinSetup}
+        onClose={() => setShowPinSetup(false)}
+        onSuccess={() => setShowWithdraw(true)}
       />
     </div>
   );

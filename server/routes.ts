@@ -97,23 +97,86 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Withdrawal endpoint - now requires admin approval
+  // PIN setup endpoint
+  app.post("/api/user/setup-pin", authenticateToken, async (req, res) => {
+    try {
+      const { pin } = req.body;
+      const userId = req.user!.id;
+
+      if (!pin || pin.length !== 4 || !/^\d{4}$/.test(pin)) {
+        return res.status(400).json({ error: "PIN must be exactly 4 digits" });
+      }
+
+      const hashedPin = await hashPassword(pin);
+      
+      await storage.updateUser(userId, {
+        transactionPin: hashedPin,
+        pinSetupCompleted: true
+      });
+
+      res.json({ 
+        success: true, 
+        message: "Transaction PIN setup successfully" 
+      });
+    } catch (error) {
+      console.error("PIN setup error:", error);
+      res.status(500).json({ error: "Failed to setup PIN" });
+    }
+  });
+
+  // PIN verification endpoint
+  app.post("/api/user/verify-pin", authenticateToken, async (req, res) => {
+    try {
+      const { pin } = req.body;
+      const userId = req.user!.id;
+
+      const user = await storage.getUser(userId);
+      if (!user || !user.transactionPin) {
+        return res.status(400).json({ error: "Transaction PIN not set" });
+      }
+
+      const isValid = await comparePasswords(pin, user.transactionPin);
+      
+      res.json({ 
+        success: true, 
+        valid: isValid 
+      });
+    } catch (error) {
+      console.error("PIN verification error:", error);
+      res.status(500).json({ error: "Failed to verify PIN" });
+    }
+  });
+
   app.post("/api/withdraw", authenticateToken, async (req, res) => {
     try {
-      const { amount, bankName, accountNumber, accountName } = req.body;
+      const { amount, bankName, accountNumber, accountName, transactionPin } = req.body;
       const userId = req.user!.id;
 
       if (!amount || !bankName || !accountNumber || !accountName) {
         return res.status(400).json({ error: "All fields are required" });
       }
 
-      const withdrawAmount = parseFloat(amount);
-      if (withdrawAmount < 1000) {
-        return res.status(400).json({ error: "Minimum withdrawal amount is ₦1,000" });
-      }
-
+      // Check if user has setup PIN
       const user = await storage.getUser(userId);
       if (!user) {
         return res.status(404).json({ error: "User not found" });
+      }
+
+      if (!user.pinSetupCompleted || !user.transactionPin) {
+        return res.status(400).json({ error: "Please setup your transaction PIN first" });
+      }
+
+      // Verify transaction PIN if provided
+      if (transactionPin) {
+        const isPinValid = await comparePasswords(transactionPin, user.transactionPin);
+        if (!isPinValid) {
+          return res.status(400).json({ error: "Invalid transaction PIN" });
+        }
+      }
+
+      const withdrawAmount = parseFloat(amount);
+      if (withdrawAmount < 1000) {
+        return res.status(400).json({ error: "Minimum withdrawal amount is ₦1,000" });
       }
 
       // Check if user's funds are frozen

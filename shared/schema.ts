@@ -33,6 +33,8 @@ export const users = pgTable("users", {
   frozenAt: timestamp("frozen_at"),
   isFeatured: boolean("is_featured").default(false),
   featuredPriority: integer("featured_priority"),
+  transactionPin: text("transaction_pin"), // Hashed 4-digit PIN for transactions
+  pinSetupCompleted: boolean("pin_setup_completed").default(false),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

@@ -149,7 +149,8 @@ export default function MobileWithdrawModal({ isOpen, onClose, availableBalance 
         amount: withdrawAmount,
         bankName: bankName,
         accountNumber: accountNumber,
-        accountName: accountName
+        accountName: accountName,
+        transactionPin: pin
       });
     }
   };
