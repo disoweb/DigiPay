@@ -58,7 +58,7 @@ function App() {
             <ProtectedRoute path="/user-chat/:userId" component={UserChatPage} />
             <ProtectedRoute path="/admin-kyc" component={AdminKYC} />
             <ProtectedRoute path="/manage-offers" component={ManageOffers} />
-            <ProtectedRoute path="/trade/direct/:offerId" component={DirectTrade} />
+            <ProtectedRoute path="/trade-direct/:offerId" component={DirectTrade} />
             <Route path="/payment/callback" component={PaymentCallback} />
             <Route path="/settings" component={UserSettings} />
             <ProtectedRoute path="/profile" component={ProfilePage} />
