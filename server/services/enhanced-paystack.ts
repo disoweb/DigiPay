@@ -360,21 +360,28 @@ export class EnhancedPaystackService {
         };
         
         let sentCount = 0;
+        let targetUserConnected = false;
+        
         wsServer.clients.forEach((client: any) => {
           if (client.readyState === 1) { // WebSocket.OPEN
             try {
               client.send(JSON.stringify(updateMessage));
               sentCount++;
+              
+              // Check if this is the target user's connection
+              if (client.userId === user.id) {
+                targetUserConnected = true;
+              }
             } catch (error) {
               console.error('Failed to send WebSocket message:', error);
             }
           }
         });
         
-        console.log(`Balance update sent to ${sentCount} clients`);
+        console.log(`Balance update sent to ${sentCount} clients (target user ${targetUserConnected ? 'connected' : 'not connected'})`);
         
-        if (sentCount === 0) {
-          console.log('WARNING: No clients received the balance update - WebSocket connection may be lost');
+        if (!targetUserConnected) {
+          console.log(`User ${user.id} not connected via WebSocket - they will see the update on next page refresh`);
         }
       } else {
         console.log('WebSocket server or clients not available for balance update broadcast');

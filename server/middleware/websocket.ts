@@ -33,6 +33,7 @@ export function setupWebSocket(server: Server) {
           case 'user_connect':
             const userId = message.userId;
             currentUserId = userId;
+            ws.userId = userId; // Store userId directly on the WebSocket connection
             userConnections.set(userId, ws);
             
             // Update user online status
@@ -40,7 +41,7 @@ export function setupWebSocket(server: Server) {
               .set({ isOnline: true })
               .where(eq(users.id, userId));
             
-            console.log(`User ${userId} connected via WebSocket`);
+            console.log(`User ${userId} connected via WebSocket for real-time updates`);
             
             // Send confirmation back to client
             ws.send(JSON.stringify({

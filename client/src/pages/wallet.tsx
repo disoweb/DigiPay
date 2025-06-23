@@ -223,13 +223,16 @@ export default function Wallet() {
             queryClient.refetchQueries({ queryKey: ["/api/user"] });
             queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
             
-            // Show success notification
+            // Show success notification with enhanced styling
             if (data.lastTransaction?.type === 'deposit') {
               toast({
-                title: "Balance Updated!",
-                description: `₦${parseFloat(data.lastTransaction.amount).toLocaleString()} credited to your wallet`,
+                title: "💰 Deposit Successful!",
+                description: `₦${parseFloat(data.lastTransaction.amount).toLocaleString()} has been credited to your wallet`,
+                className: "border-green-200 bg-green-50 text-green-800",
               });
             }
+          } else {
+            console.log('Balance update for different user, ignoring');
           }
         }
       } catch (error) {
@@ -346,6 +349,12 @@ export default function Wallet() {
             <div className="flex items-center justify-center gap-2 mb-2">
               <WalletIcon className="h-8 w-8 text-primary" />
               <h1 className="text-2xl font-bold text-gray-900">My Wallet</h1>
+              {wsConnected && (
+                <div className="flex items-center gap-1 px-2 py-1 bg-green-100 rounded-full text-xs text-green-700">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                  Live
+                </div>
+              )}
             </div>
             <p className="text-gray-600">Manage your funds, send money, and swap currencies</p>
           </div>
