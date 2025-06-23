@@ -29,6 +29,7 @@ import UserChatPage from "./pages/user-chat-new";
 import PaymentCallback from "./pages/payment-callback";
 import AdminUsersFixed from "./pages/admin-users-fixed";
 import AdminDisputesNew from "./pages/admin-disputes-new";
+import AdminWallet from "./pages/admin-wallet";
 
 const queryClient = new QueryClient();
 
@@ -56,6 +57,7 @@ function App() {
             <ProtectedRoute path="/admin/approvals" component={AdminApprovals} adminOnly />
             <ProtectedRoute path="/admin/kyc" component={AdminKYC} adminOnly />
             <ProtectedRoute path="/admin/users" component={AdminUsersFixed} adminOnly />
+            <ProtectedRoute path="/admin/wallet" component={AdminWallet} adminOnly />
             <ProtectedRoute path="/admin/disputes" component={AdminDisputesNew} adminOnly />
             <ProtectedRoute path="/profile-setup" component={ProfileSetup} />
             <ProtectedRoute path="/create-offer" component={OfferCreation} />

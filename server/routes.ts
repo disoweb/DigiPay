@@ -2444,6 +2444,126 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin wallet management - credit/debit user accounts
+  app.post("/api/admin/wallet/credit", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      const { userId, amount, currency, description } = req.body;
+      const adminId = req.user!.id;
+
+      if (!userId || !amount || !currency || !description) {
+        return res.status(400).json({ error: "All fields are required" });
+      }
+
+      if (amount <= 0) {
+        return res.status(400).json({ error: "Amount must be positive" });
+      }
+
+      if (!["NGN", "USDT"].includes(currency)) {
+        return res.status(400).json({ error: "Currency must be NGN or USDT" });
+      }
+
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      // Update user balance
+      const currentBalance = parseFloat(currency === "NGN" ? user.nairaBalance || "0" : user.usdtBalance || "0");
+      const newBalance = currentBalance + parseFloat(amount);
+
+      const updates: any = {};
+      if (currency === "NGN") {
+        updates.nairaBalance = newBalance.toString();
+      } else {
+        updates.usdtBalance = newBalance.toString();
+      }
+
+      await storage.updateUser(userId, updates);
+
+      // Create transaction record
+      await storage.createTransaction({
+        userId,
+        type: "credit",
+        amount: amount.toString(),
+        status: "completed",
+        adminNotes: `Admin credit: ${description}`,
+        paymentMethod: `admin_credit_${currency.toLowerCase()}`
+      });
+
+      res.json({ 
+        success: true, 
+        message: `Successfully credited ${amount} ${currency} to user account`,
+        newBalance: newBalance.toString()
+      });
+    } catch (error) {
+      console.error("Admin credit error:", error);
+      res.status(500).json({ error: "Failed to credit account" });
+    }
+  });
+
+  app.post("/api/admin/wallet/debit", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      const { userId, amount, currency, description } = req.body;
+      const adminId = req.user!.id;
+
+      if (!userId || !amount || !currency || !description) {
+        return res.status(400).json({ error: "All fields are required" });
+      }
+
+      if (amount <= 0) {
+        return res.status(400).json({ error: "Amount must be positive" });
+      }
+
+      if (!["NGN", "USDT"].includes(currency)) {
+        return res.status(400).json({ error: "Currency must be NGN or USDT" });
+      }
+
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      // Check current balance
+      const currentBalance = parseFloat(currency === "NGN" ? user.nairaBalance || "0" : user.usdtBalance || "0");
+      const debitAmount = parseFloat(amount);
+
+      if (currentBalance < debitAmount) {
+        return res.status(400).json({ error: `Insufficient ${currency} balance. Current: ${currentBalance}` });
+      }
+
+      // Update user balance
+      const newBalance = currentBalance - debitAmount;
+
+      const updates: any = {};
+      if (currency === "NGN") {
+        updates.nairaBalance = newBalance.toString();
+      } else {
+        updates.usdtBalance = newBalance.toString();
+      }
+
+      await storage.updateUser(userId, updates);
+
+      // Create transaction record
+      await storage.createTransaction({
+        userId,
+        type: "debit",
+        amount: amount.toString(),
+        status: "completed",
+        adminNotes: `Admin debit: ${description}`,
+        paymentMethod: `admin_debit_${currency.toLowerCase()}`
+      });
+
+      res.json({ 
+        success: true, 
+        message: `Successfully debited ${amount} ${currency} from user account`,
+        newBalance: newBalance.toString()
+      });
+    } catch (error) {
+      console.error("Admin debit error:", error);
+      res.status(500).json({ error: "Failed to debit account" });
+    }
+  });
+
   // User lookup for transfers
   app.post("/api/users/lookup", authenticateToken, async (req, res) => {
     try {

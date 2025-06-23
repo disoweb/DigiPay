@@ -46,6 +46,7 @@ export function Navbar() {
   const adminNavigation = [
     { name: "Dashboard", href: "/admin", icon: Shield },
     { name: "Users", href: "/admin/users", icon: User },
+    { name: "Wallet", href: "/admin/wallet", icon: Wallet },
     { name: "Disputes", href: "/admin/disputes", icon: Settings },
     { name: "Approvals", href: "/admin/approvals", icon: Settings },
   ];
