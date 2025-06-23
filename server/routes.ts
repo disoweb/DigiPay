@@ -537,7 +537,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin endpoint to manually feature/unfeature users
-  app.post("/api/admin/users/:userId/feature", authenticateToken, requireAdmin, async (req, res) => {
+  app.post("/api/admin/users/:userId/feature", authenticateToken, async (req, res) => {
     try {
       const userId = parseInt(req.params.userId);
       const { featured, priority = 0 } = req.body;

@@ -31,6 +31,8 @@ export const users = pgTable("users", {
   fundsFrozen: boolean("funds_frozen").default(false),
   freezeReason: text("freeze_reason"),
   frozenAt: timestamp("frozen_at"),
+  isFeatured: boolean("is_featured").default(false),
+  featuredPriority: integer("featured_priority"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

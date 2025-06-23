@@ -62,10 +62,27 @@ export default function Admin() {
 
 
 
-  const { data: featuredUsers = [] } = useQuery({
+  const { data: featuredUsers = [], isLoading: featuredLoading, error: featuredError } = useQuery({
     queryKey: ["/api/admin/featured-users"],
+    queryFn: async () => {
+      const response = await apiRequest("GET", "/api/admin/featured-users");
+      if (!response.ok) {
+        throw new Error("Failed to fetch featured users");
+      }
+      return response.json();
+    },
     enabled: !!user?.isAdmin,
     refetchInterval: 300000, // Refresh every 5 minutes
+    retry: 3,
+    retryDelay: 1000,
+  });
+
+  // Debug featured users
+  console.log("Featured Users Debug:", {
+    featuredUsers,
+    featuredLoading,
+    featuredError: featuredError?.message,
+    length: featuredUsers.length
   });
 
   const resolveTradeMutation = useMutation({
@@ -189,11 +206,22 @@ export default function Admin() {
               <p className="text-sm text-gray-600">Admin-selected users, top traders by volume, or users with highest portfolios</p>
             </CardHeader>
             <CardContent>
-              {featuredUsers.length === 0 ? (
+              {featuredLoading ? (
+                <div className="text-center py-8">
+                  <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-2 text-blue-600" />
+                  <p className="text-gray-600">Loading featured users...</p>
+                </div>
+              ) : featuredError ? (
+                <div className="text-center py-8">
+                  <AlertCircle className="h-8 w-8 mx-auto mb-2 text-red-500" />
+                  <p className="text-red-600 mb-2">Error loading featured users</p>
+                  <p className="text-sm text-gray-500">{featuredError.message}</p>
+                </div>
+              ) : featuredUsers.length === 0 ? (
                 <div className="text-center py-8">
                   <TrendingUp className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                  <p className="text-gray-500 font-medium">No trading activity this week</p>
-                  <p className="text-sm text-gray-400">Featured users will appear when trades are completed</p>
+                  <p className="text-gray-500 font-medium">No featured users found</p>
+                  <p className="text-sm text-gray-400">Users will appear based on trading volume or portfolio value</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
