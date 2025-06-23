@@ -339,7 +339,15 @@ export function TradingDashboard() {
                       <Button 
                         size="sm" 
                         variant="outline"
-                        onClick={() => setLocation(`/chat/${trade.id}`)}
+                        onClick={() => {
+                          console.log("Chat button clicked for trade:", trade);
+                          if (trade && trade.id) {
+                            console.log("Navigating to chat with trade ID:", trade.id);
+                            setLocation(`/chat/${trade.id}`);
+                          } else {
+                            console.error("Invalid trade data:", trade);
+                          }
+                        }}
                         className="px-3 py-1 h-7 text-xs ml-auto"
                       >
                         <MessageCircle className="h-3 w-3 mr-1" />
