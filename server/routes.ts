@@ -24,6 +24,7 @@ import {
 import { messages as messagesTable } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  const httpServer = createServer(app);
   setupJWTAuth(app);
 
   // User routes - MUST be first to avoid frontend route conflict
@@ -208,6 +209,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.updateUser(userId, {
         nairaBalance: newBalance.toString()
       });
+
+      // Send real-time balance update via WebSocket (same pattern as deposit)
+      setTimeout(() => {
+        const wsServerGlobal = (global as any).wsServer;
+        if (wsServerGlobal && wsServerGlobal.clients) {
+          console.log(`Broadcasting withdrawal balance update to ${wsServerGlobal.clients.size} connected clients`);
+          
+          const updateMessage = {
+            type: 'balance_updated',
+            userId: user.id,
+            nairaBalance: newBalance.toString(),
+            usdtBalance: user.usdtBalance || "0",
+            previousBalance: availableBalance.toString(),
+            lastTransaction: {
+              type: 'withdrawal',
+              amount: withdrawAmount.toString(),
+              status: 'completed'
+            }
+          };
+          
+          wsServerGlobal.clients.forEach((client: any) => {
+            if (client.readyState === 1 && client.userId === user.id) { // WebSocket.OPEN
+              console.log('Sending withdrawal balance update to user:', user.id);
+              client.send(JSON.stringify(updateMessage));
+            }
+          });
+        }
+      }, 100);
 
       // Create withdrawal request (pending admin approval)
       const transaction = await storage.createTransaction({
@@ -3250,32 +3279,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
         nairaBalance: newRecipientBalance.toString() 
       });
 
-      // Send real-time balance updates via WebSocket
-      const wss = (req as any).wss;
-      if (wss) {
-        // Update sender's balance
-        wss.clients.forEach((client: any) => {
-          if (client.userId === senderId && client.readyState === 1) {
-            client.send(JSON.stringify({
-              type: 'BALANCE_UPDATE',
-              data: {
-                nairaBalance: newSenderBalance.toString(),
-                usdtBalance: sender.usdtBalance
+      // Send real-time balance updates via WebSocket (same pattern as deposit)
+      setTimeout(() => {
+        const wsServerGlobal = (global as any).wsServer;
+        if (wsServerGlobal && wsServerGlobal.clients) {
+          console.log(`Broadcasting transfer balance update to ${wsServerGlobal.clients.size} connected clients`);
+          
+          // Update sender's balance
+          const senderUpdateMessage = {
+            type: 'balance_updated',
+            userId: senderId,
+            nairaBalance: newSenderBalance.toString(),
+            usdtBalance: sender.usdtBalance || "0",
+            previousBalance: senderBalance.toString(),
+            lastTransaction: {
+              type: 'transfer_out',
+              amount: amount.toString(),
+              status: 'completed'
+            }
+          };
+          
+          // Update recipient's balance  
+          const recipientUpdateMessage = {
+            type: 'balance_updated',
+            userId: recipientId,
+            nairaBalance: newRecipientBalance.toString(),
+            usdtBalance: recipient.usdtBalance || "0",
+            previousBalance: parseFloat(recipient.nairaBalance || "0").toString(),
+            lastTransaction: {
+              type: 'transfer_in',
+              amount: transferAmount.toString(),
+              status: 'completed'
+            }
+          };
+          
+          wsServerGlobal.clients.forEach((client: any) => {
+            if (client.readyState === 1) { // WebSocket.OPEN
+              if (client.userId === senderId) {
+                console.log('Sending balance update to sender:', senderId);
+                client.send(JSON.stringify(senderUpdateMessage));
               }
-            }));
-          }
-          // Update recipient's balance
-          if (client.userId === recipientId && client.readyState === 1) {
-            client.send(JSON.stringify({
-              type: 'BALANCE_UPDATE',
-              data: {
-                nairaBalance: newRecipientBalance.toString(),
-                usdtBalance: recipient.usdtBalance
+              if (client.userId === recipientId) {
+                console.log('Sending balance update to recipient:', recipientId);
+                client.send(JSON.stringify(recipientUpdateMessage));
               }
-            }));
-          }
-        });
-      }
+            }
+          });
+        }
+      }, 100);
 
       // Create transaction records
       await storage.createTransaction({
@@ -3503,8 +3554,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: "USDT transfer failed" });
     }
   });
-
-  const httpServer = createServer(app);
 
   // Setup WebSocket for real-time features
   const { setupWebSocket } = await import('./middleware/websocket');
