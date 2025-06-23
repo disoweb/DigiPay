@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { Navbar } from "@/components/navbar";
@@ -9,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Users, Handshake, AlertTriangle, Shield, Star, TrendingUp, Award, Crown, RefreshCw, AlertCircle } from "lucide-react";
 import { useLocation } from "wouter";
+import { UserDetailModal } from "@/components/user-detail-modal";
 import type { Trade } from "@shared/schema";
 
 type EnrichedTrade = Trade & {
@@ -21,6 +23,9 @@ export default function Admin() {
   const { user, isLoading } = useAuth();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
+  const [selectedUserId, setSelectedUserId] = useState<number>(0);
+  const [selectedUserName, setSelectedUserName] = useState<string>("");
+  const [showUserModal, setShowUserModal] = useState(false);
 
   // Show loading while checking auth
   if (isLoading) {
@@ -226,7 +231,19 @@ export default function Admin() {
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {featuredUsers.map((seller: any, index: number) => (
-                    <Card key={seller.sellerId} className="relative overflow-hidden border border-gray-200 hover:shadow-md transition-all duration-200">
+                    <Card 
+                      key={seller.sellerId} 
+                      className="relative overflow-hidden border border-gray-200 hover:shadow-md transition-all duration-200 cursor-pointer hover:border-blue-300"
+                      onClick={() => {
+                        setSelectedUserId(seller.sellerId);
+                        setSelectedUserName(
+                          seller.user.firstName && seller.user.lastName 
+                            ? `${seller.user.firstName} ${seller.user.lastName}`
+                            : seller.user.username || seller.user.email
+                        );
+                        setShowUserModal(true);
+                      }}
+                    >
                       <CardContent className="p-4">
                         {/* Rank Badge */}
                         <div className="absolute top-2 right-2">
@@ -465,6 +482,14 @@ export default function Admin() {
           </Card>
         </div>
       </main>
+
+      {/* User Detail Modal */}
+      <UserDetailModal
+        isOpen={showUserModal}
+        onClose={() => setShowUserModal(false)}
+        userId={selectedUserId}
+        userName={selectedUserName}
+      />
     </div>
   );
 }
