@@ -144,7 +144,7 @@ export function DepositModal({ open, onOpenChange }: DepositModalProps) {
         amount: parseFloat(amount) * 100,
         currency: "NGN",
         reference: paystackData.reference,
-        channels: ['card', 'bank', 'ussd', 'qr', 'mobile_money', 'bank_transfer'],
+        channels: ['bank_transfer', 'card', 'ussd', 'bank', 'mobile_money', 'qr'],
         callback: async (response: any) => {
           console.log("Paystack callback received:", response);
           
