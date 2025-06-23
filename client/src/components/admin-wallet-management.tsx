@@ -412,16 +412,41 @@ export function AdminWalletManagement() {
             </DialogTitle>
             <DialogDescription className="text-xs sm:text-sm">
               {selectedUser && (
-                <div className="flex items-center gap-2 mt-1">
-                  <div className="p-1 bg-gray-100 rounded-full">
-                    <User className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-gray-600" />
+                <div className="flex items-center justify-between gap-2 mt-1">
+                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                    <div className="p-1 bg-gray-100 rounded-full">
+                      <User className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-gray-600" />
+                    </div>
+                    <span className="font-medium text-xs sm:text-sm truncate">
+                      {selectedUser.first_name && selectedUser.last_name 
+                        ? `${selectedUser.first_name} ${selectedUser.last_name}`
+                        : selectedUser.username || selectedUser.email.split('@')[0]
+                      }
+                    </span>
                   </div>
-                  <span className="font-medium text-xs sm:text-sm truncate">
-                    {selectedUser.first_name && selectedUser.last_name 
-                      ? `${selectedUser.first_name} ${selectedUser.last_name}`
-                      : selectedUser.username || selectedUser.email.split('@')[0]
-                    }
-                  </span>
+                  
+                  {/* Currency Selection - Inline */}
+                  <div className="flex-shrink-0">
+                    <Select value={currency} onValueChange={setCurrency}>
+                      <SelectTrigger className="h-6 w-20 text-xs border-gray-300">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="NGN">
+                          <div className="flex items-center gap-1">
+                            <DollarSign className="h-2.5 w-2.5 text-green-600" />
+                            <span className="text-xs">NGN</span>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="USDT">
+                          <div className="flex items-center gap-1">
+                            <CreditCard className="h-2.5 w-2.5 text-blue-600" />
+                            <span className="text-xs">USDT</span>
+                          </div>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
               )}
             </DialogDescription>
@@ -453,32 +478,7 @@ export function AdminWalletManagement() {
                   </div>
                 </Card>
 
-                {/* Currency Selection */}
-                <div>
-                  <Label htmlFor="currency" className="text-xs sm:text-sm font-medium flex items-center gap-1">
-                    <CreditCard className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
-                    Currency
-                  </Label>
-                  <Select value={currency} onValueChange={setCurrency}>
-                    <SelectTrigger className="mt-1 h-8 sm:h-10 text-xs sm:text-sm">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="NGN">
-                        <div className="flex items-center gap-2">
-                          <DollarSign className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-green-600" />
-                          <span className="text-xs sm:text-sm">NGN</span>
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="USDT">
-                        <div className="flex items-center gap-2">
-                          <CreditCard className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-blue-600" />
-                          <span className="text-xs sm:text-sm">USDT</span>
-                        </div>
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+
 
                 {/* Amount */}
                 <div>
