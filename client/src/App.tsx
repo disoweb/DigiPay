@@ -30,6 +30,7 @@ import PaymentCallback from "./pages/payment-callback";
 import AdminUsersFixed from "./pages/admin-users-fixed";
 import AdminDisputesNew from "./pages/admin-disputes-new";
 import AdminWallet from "./pages/admin-wallet";
+import AdminGuide from "./pages/admin-guide";
 
 const queryClient = new QueryClient();
 
@@ -58,6 +59,7 @@ function App() {
             <ProtectedRoute path="/admin/kyc" component={AdminKYC} adminOnly />
             <ProtectedRoute path="/admin/users" component={AdminUsersFixed} adminOnly />
             <ProtectedRoute path="/admin/wallet" component={AdminWallet} adminOnly />
+            <ProtectedRoute path="/admin/guide" component={AdminGuide} adminOnly />
             <ProtectedRoute path="/admin/disputes" component={AdminDisputesNew} adminOnly />
             <ProtectedRoute path="/profile-setup" component={ProfileSetup} />
             <ProtectedRoute path="/create-offer" component={OfferCreation} />
