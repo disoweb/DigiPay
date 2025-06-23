@@ -86,12 +86,13 @@ export function useRealtimeBalance() {
                     usdtBalance: data.usdtBalance || oldData.usdtBalance
                   };
                   console.log('Updated user data in cache:', updatedData);
+                  console.log('Old USDT:', oldData.usdtBalance, 'New USDT:', data.usdtBalance);
                   return updatedData;
                 }
                 return oldData;
               });
               
-              // Force re-fetch to ensure consistency
+              // Force re-fetch to ensure consistency - this should trigger UI updates
               queryClient.invalidateQueries({ queryKey: ["/api/user"] });
               queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
               
