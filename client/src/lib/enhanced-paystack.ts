@@ -64,7 +64,7 @@ export const initializeEnhancedPaystack = async (config: PaystackConfig) => {
     amount: config.amount,
     currency: config.currency || 'NGN',
     reference: config.reference,
-    channels: config.channels || ['card', 'bank', 'transfer', 'ussd', 'mobile_money'],
+    channels: config.channels || ['card', 'bank', 'ussd', 'mobile_money'],
     metadata: config.metadata || {},
     callback: config.callback,
     onClose: config.onClose
@@ -103,11 +103,11 @@ export const getMobileOptimizedChannels = (): string[] => {
   const isMobile = detectMobileDevice();
   
   if (isMobile) {
-    // Prioritize mobile-friendly payment methods including transfer
-    return ['card', 'bank', 'transfer', 'ussd', 'mobile_money'];
+    // Prioritize mobile-friendly payment methods
+    return ['card', 'bank', 'ussd', 'mobile_money'];
   } else {
-    // Desktop gets all available channels including transfer
-    return ['card', 'bank', 'transfer', 'ussd', 'mobile_money', 'qr'];
+    // Desktop gets all available channels
+    return ['card', 'bank', 'ussd', 'mobile_money', 'qr'];
   }
 };
 

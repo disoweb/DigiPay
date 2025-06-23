@@ -151,7 +151,7 @@ export function EnhancedDepositModal({ open, onOpenChange, user }: EnhancedDepos
         amount: parseFloat(amount) * 100,
         currency: "NGN",
         reference: paystackData.reference,
-        channels: ['card', 'bank', 'transfer', 'ussd', 'mobile_money', 'qr'],
+        channels: ['card', 'bank', 'ussd', 'mobile_money', 'qr'],
         metadata: {
           source: 'mobile_deposit',
           userId: user.id.toString()
