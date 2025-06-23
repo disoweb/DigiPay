@@ -505,7 +505,12 @@ export class DatabaseStorage implements IStorage {
     const [trade] = await db
       .insert(trades)
       .values({
-        ...insertTrade,
+        offerId: insertTrade.offerId,
+        buyerId: insertTrade.buyerId,
+        sellerId: insertTrade.sellerId,
+        amount: insertTrade.amount,
+        rate: insertTrade.rate,
+        fiatAmount: insertTrade.fiatAmount,
         status: "pending",
         escrowAddress: `TRX_ESCROW_${Math.random().toString(36).substring(2, 15)}`,
       })

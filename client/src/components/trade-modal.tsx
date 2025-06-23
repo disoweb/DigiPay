@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
+import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from "@/hooks/use-auth";
 import { 
   DollarSign, 
@@ -19,7 +20,11 @@ import {
   CreditCard,
   Building,
   Smartphone,
-  Wallet
+  Wallet,
+  ArrowRight,
+  TrendingUp,
+  TrendingDown,
+  Info
 } from "lucide-react";
 
 interface Offer {
@@ -70,6 +75,7 @@ export function TradeModal({ isOpen, onClose, offer, onSubmit, isLoading }: Trad
   const { user } = useAuth();
   const [amount, setAmount] = useState("");
   const [errors, setErrors] = useState<string[]>([]);
+  const [step, setStep] = useState(1);
 
   const minAmount = !isNaN(parseFloat(offer.minAmount || offer.amount)) ? parseFloat(offer.minAmount || offer.amount) : 0;
   const maxAmount = !isNaN(parseFloat(offer.maxAmount || offer.amount)) ? parseFloat(offer.maxAmount || offer.amount) : 0;
@@ -83,6 +89,7 @@ export function TradeModal({ isOpen, onClose, offer, onSubmit, isLoading }: Trad
     if (isOpen) {
       setAmount("");
       setErrors([]);
+      setStep(1);
     }
   }, [isOpen]);
 
@@ -116,7 +123,7 @@ export function TradeModal({ isOpen, onClose, offer, onSubmit, isLoading }: Trad
       // User is selling USDT, needs enough USDT
       const userUsdtBalance = !isNaN(parseFloat(user.usdtBalance || "0")) ? parseFloat(user.usdtBalance || "0") : 0;
       if (tradeAmount > userUsdtBalance) {
-        newErrors.push(`Insufficient USDT balance. Need ${tradeAmount.toFixed(2)} USDT, have ${userUsdtBalance.toFixed(8)} USDT`);
+        newErrors.push(`Insufficient USDT balance. Need ${tradeAmount.toFixed(2)} USDT, have ${userUsdtBalance.toFixed(2)} USDT`);
       }
     }
 
@@ -128,17 +135,21 @@ export function TradeModal({ isOpen, onClose, offer, onSubmit, isLoading }: Trad
     return newErrors;
   };
 
-  const handleSubmit = async () => {
+  const handleContinue = () => {
     const validationErrors = validateTrade();
     setErrors(validationErrors);
 
     if (validationErrors.length === 0) {
-      try {
-        await onSubmit(amount);
-        // Success handled by parent component
-      } catch (error: any) {
-        setErrors([error.message || "Failed to create trade. Please try again."]);
-      }
+      setStep(2);
+    }
+  };
+
+  const handleSubmit = async () => {
+    try {
+      await onSubmit(amount);
+      // Success handled by parent component
+    } catch (error: any) {
+      setErrors([error.message || "Failed to create trade. Please try again."]);
     }
   };
 
@@ -147,281 +158,281 @@ export function TradeModal({ isOpen, onClose, offer, onSubmit, isLoading }: Trad
     return <IconComponent className="h-4 w-4" />;
   };
 
+  const getTradeTypeIcon = () => {
+    return offer.type === "sell" ? <TrendingUp className="h-5 w-5 text-green-600" /> : <TrendingDown className="h-5 w-5 text-red-600" />;
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            {offer.type === "sell" ? (
-              <>
-                <DollarSign className="h-5 w-5 text-green-600" />
-                Buy USDT
-              </>
-            ) : (
-              <>
-                <DollarSign className="h-5 w-5 text-red-600" />
-                Sell USDT
-              </>
-            )}
-          </DialogTitle>
-        </DialogHeader>
+      <DialogContent className="max-w-md mx-auto max-h-[90vh] overflow-y-auto p-0">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-4 rounded-t-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-lg">
+              {getTradeTypeIcon()}
+              {offer.type === "sell" ? "Buy USDT" : "Sell USDT"}
+            </DialogTitle>
+          </DialogHeader>
+          <p className="text-blue-100 text-sm mt-1">
+            Trade with {offer.user.email.split('@')[0]}***
+          </p>
+        </div>
 
-        <div className="space-y-6">
-          {/* Trader Information */}
-          <div className="bg-gray-50 p-4 rounded-lg">
-            <h4 className="font-medium mb-3 flex items-center gap-2">
-              <User className="h-4 w-4" />
-              Trading Partner
-            </h4>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Email:</span>
-                <span className="font-medium">{offer.user.email}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Rating:</span>
-                <div className="flex items-center gap-1">
-                  <Star className="h-3 w-3 text-yellow-400 fill-current" />
-                  <span className="text-sm font-medium">
-                    {!isNaN(parseFloat(offer.user.averageRating)) ? parseFloat(offer.user.averageRating).toFixed(1) : '0.0'} ({offer.user.ratingCount || 0} reviews)
-                  </span>
-                </div>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Completed Trades:</span>
-                <span className="font-medium">{offer.user.completedTrades || 0}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Verification:</span>
-                {offer.user.kycVerified ? (
-                  <Badge variant="outline" className="text-green-600 border-green-600">
-                    <Shield className="h-3 w-3 mr-1" />
-                    Verified
-                  </Badge>
-                ) : (
-                  <Badge variant="outline" className="text-gray-600 border-gray-600">
-                    Not Verified
-                  </Badge>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Offer Details */}
-          <div className="bg-blue-50 p-4 rounded-lg">
-            <h4 className="font-medium mb-3">Offer Details</h4>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm text-gray-600">Type</p>
-                <p className="font-medium capitalize">{offer.type === "sell" ? "Sell USDT (You Buy)" : "Buy USDT (You Sell)"}</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Rate</p>
-                <p className="font-medium text-lg">₦{rate.toLocaleString()}/USDT</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Available Amount</p>
-                <p className="font-medium">{availableAmount.toFixed(2)} USDT</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Payment Method</p>
-                <div className="flex items-center gap-1">
-                  {getPaymentMethodIcon()}
-                  <span className="font-medium text-sm">
-                    {paymentMethodLabels[offer.paymentMethod as keyof typeof paymentMethodLabels]}
-                  </span>
-                </div>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Trade Limits</p>
-                <p className="font-medium">
-                  {minAmount.toFixed(2)} - {maxAmount.toFixed(2)} USDT
-                </p>
-              </div>
-              {offer.timeLimit && (
-                <div>
-                  <p className="text-sm text-gray-600">Payment Window</p>
-                  <div className="flex items-center gap-1">
-                    <Clock className="h-3 w-3" />
-                    <span className="font-medium">{offer.timeLimit} minutes</span>
+        <div className="p-4 space-y-4">
+          {step === 1 ? (
+            <>
+              {/* Trader Info Card */}
+              <Card className="border-0 bg-gray-50">
+                <CardContent className="p-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                      <User className="h-5 w-5 text-blue-600" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm truncate">{offer.user.email}</p>
+                      <div className="flex items-center gap-2 text-xs text-gray-600">
+                        <div className="flex items-center gap-1">
+                          <Star className="h-3 w-3 text-yellow-400 fill-current" />
+                          <span>{!isNaN(parseFloat(offer.user.averageRating)) ? parseFloat(offer.user.averageRating).toFixed(1) : '0.0'}</span>
+                          <span>({offer.user.ratingCount || 0})</span>
+                        </div>
+                        <span>•</span>
+                        <span>{offer.user.completedTrades || 0} trades</span>
+                        {offer.user.kycVerified && (
+                          <>
+                            <span>•</span>
+                            <Shield className="h-3 w-3 text-green-500" />
+                          </>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                </div>
-              )}
-            </div>
-          </div>
+                </CardContent>
+              </Card>
 
-          {/* Terms and Conditions */}
-          {offer.terms && (
-            <div className="bg-yellow-50 p-4 rounded-lg">
-              <h4 className="font-medium mb-2 flex items-center gap-2">
-                <AlertTriangle className="h-4 w-4 text-yellow-600" />
-                Terms & Conditions
-              </h4>
-              <p className="text-sm text-gray-700">{offer.terms}</p>
-            </div>
-          )}
+              {/* Offer Details */}
+              <Card className="border-0 bg-blue-50">
+                <CardContent className="p-3 space-y-2">
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <p className="text-gray-600 text-xs">Rate</p>
+                      <p className="font-bold text-lg text-blue-600">₦{rate.toLocaleString()}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-600 text-xs">Available</p>
+                      <p className="font-medium">{availableAmount.toFixed(2)} USDT</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-600 text-xs">Limits</p>
+                      <p className="font-medium text-xs">{minAmount.toFixed(2)} - {maxAmount.toFixed(2)} USDT</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-600 text-xs">Payment</p>
+                      <div className="flex items-center gap-1">
+                        {getPaymentMethodIcon()}
+                        <span className="font-medium text-xs">
+                          {paymentMethodLabels[offer.paymentMethod as keyof typeof paymentMethodLabels]}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  {offer.timeLimit && (
+                    <div className="flex items-center gap-1 text-xs text-orange-600">
+                      <Clock className="h-3 w-3" />
+                      <span>{offer.timeLimit} min payment window</span>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
 
-          {/* Trade Amount Input */}
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="amount">
-                Amount to {offer.type === "sell" ? "Buy" : "Sell"} (USDT)
-              </Label>
-              <Input
-                id="amount"
-                type="number"
-                placeholder={`Min: ${minAmount}, Max: ${maxAmount}`}
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                min={minAmount}
-                max={maxAmount}
-                step="0.01"
-              />
-              <div className="flex justify-between text-xs text-gray-500 mt-1">
-                <span>Min: {minAmount.toFixed(2)} USDT</span>
-                <span>Max: {maxAmount.toFixed(2)} USDT</span>
-              </div>
-            </div>
+              {/* Amount Input */}
+              <div className="space-y-3">
+                <Label htmlFor="amount" className="text-sm font-medium">
+                  Amount to {offer.type === "sell" ? "Buy" : "Sell"} (USDT)
+                </Label>
+                <Input
+                  id="amount"
+                  type="number"
+                  placeholder={`${minAmount} - ${maxAmount}`}
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  min={minAmount}
+                  max={maxAmount}
+                  step="0.01"
+                  className="text-center text-lg font-medium"
+                />
 
-            {/* Quick Amount Buttons */}
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setAmount(minAmount.toString())}
-              >
-                Min
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setAmount((maxAmount * 0.25).toFixed(2))}
-              >
-                25%
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setAmount((maxAmount * 0.5).toFixed(2))}
-              >
-                50%
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setAmount((maxAmount * 0.75).toFixed(2))}
-              >
-                75%
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setAmount(maxAmount.toString())}
-              >
-                Max
-              </Button>
-            </div>
-          </div>
-
-          {/* Trade Summary */}
-          {tradeAmount > 0 && (
-            <div className="bg-green-50 p-4 rounded-lg">
-              <h4 className="font-medium mb-3">Trade Summary</h4>
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-sm text-gray-600">
-                    {offer.type === "sell" ? "You pay:" : "You receive:"}
-                  </span>
-                  <span className="font-medium">₦{totalCost.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-gray-600">
-                    {offer.type === "sell" ? "You receive:" : "You pay:"}
-                  </span>
-                  <span className="font-medium">{tradeAmount.toFixed(2)} USDT</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-gray-600">Exchange Rate:</span>
-                  <span className="font-medium">₦{rate.toLocaleString()}/USDT</span>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Your Balances */}
-          {user && (
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <h4 className="font-medium mb-3">Your Balances</h4>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-gray-600">USDT Balance</p>
-                  <p className="font-medium">
-                    {!isNaN(parseFloat(user.usdtBalance || "0")) ? parseFloat(user.usdtBalance || "0").toFixed(8) : '0.00000000'} USDT
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Naira Balance</p>
-                  <p className="font-medium">
-                    ₦{!isNaN(parseFloat(user.nairaBalance || "0")) ? parseFloat(user.nairaBalance || "0").toLocaleString() : '0'}
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Errors */}
-          {errors.length > 0 && (
-            <Alert variant="destructive">
-              <AlertTriangle className="h-4 w-4" />
-              <AlertDescription>
-                <ul className="list-disc list-inside">
-                  {errors.map((error, index) => (
-                    <li key={index}>{error}</li>
+                {/* Quick Amount Buttons */}
+                <div className="grid grid-cols-4 gap-2">
+                  {[
+                    { label: "25%", value: maxAmount * 0.25 },
+                    { label: "50%", value: maxAmount * 0.5 },
+                    { label: "75%", value: maxAmount * 0.75 },
+                    { label: "Max", value: maxAmount }
+                  ].map((btn) => (
+                    <Button
+                      key={btn.label}
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setAmount(btn.value.toFixed(2))}
+                      className="text-xs"
+                    >
+                      {btn.label}
+                    </Button>
                   ))}
-                </ul>
-              </AlertDescription>
-            </Alert>
-          )}
+                </div>
+              </div>
 
-          {/* Security Notice */}
-          <Alert>
-            <Shield className="h-4 w-4" />
-            <AlertDescription>
-              <strong>Security Notice:</strong> Your funds will be held in escrow until the trade is completed. 
-              Always verify payment details before confirming any transaction.
-            </AlertDescription>
-          </Alert>
-
-          <Separator />
-
-          {/* Action Buttons */}
-          <div className="flex gap-3">
-            <Button variant="outline" onClick={onClose} className="flex-1">
-              Cancel
-            </Button>
-            <Button 
-              onClick={handleSubmit} 
-              disabled={isLoading || errors.length > 0 || !amount}
-              className="flex-1"
-            >
-              {isLoading ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
-                  Processing...
-                </>
-              ) : (
-                <>
-                  <CheckCircle className="h-4 w-4 mr-2" />
-                  Confirm Trade
-                </>
+              {/* Trade Preview */}
+              {tradeAmount > 0 && (
+                <Card className="border-green-200 bg-green-50">
+                  <CardContent className="p-3">
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">
+                          {offer.type === "sell" ? "You pay:" : "You receive:"}
+                        </span>
+                        <span className="font-bold text-green-600">₦{totalCost.toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">
+                          {offer.type === "sell" ? "You receive:" : "You pay:"}
+                        </span>
+                        <span className="font-bold text-green-600">{tradeAmount.toFixed(2)} USDT</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
               )}
-            </Button>
-          </div>
+
+              {/* Your Balances */}
+              {user && (
+                <Card className="border-0 bg-gray-50">
+                  <CardContent className="p-3">
+                    <p className="text-xs text-gray-600 mb-2">Your Balances</p>
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      <div>
+                        <p className="text-gray-600 text-xs">USDT</p>
+                        <p className="font-medium">{!isNaN(parseFloat(user.usdtBalance || "0")) ? parseFloat(user.usdtBalance || "0").toFixed(2) : '0.00'}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-600 text-xs">Naira</p>
+                        <p className="font-medium">₦{!isNaN(parseFloat(user.nairaBalance || "0")) ? parseFloat(user.nairaBalance || "0").toLocaleString() : '0'}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Terms */}
+              {offer.terms && (
+                <Alert>
+                  <Info className="h-4 w-4" />
+                  <AlertDescription className="text-xs">{offer.terms}</AlertDescription>
+                </Alert>
+              )}
+
+              {/* Errors */}
+              {errors.length > 0 && (
+                <Alert variant="destructive">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertDescription className="text-xs">
+                    <ul className="list-disc list-inside space-y-1">
+                      {errors.map((error, index) => (
+                        <li key={index}>{error}</li>
+                      ))}
+                    </ul>
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex gap-3 pt-2">
+                <Button variant="outline" onClick={onClose} className="flex-1">
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={handleContinue} 
+                  disabled={!amount || errors.length > 0}
+                  className="flex-1"
+                >
+                  Continue
+                  <ArrowRight className="h-4 w-4 ml-1" />
+                </Button>
+              </div>
+            </>
+          ) : (
+            <>
+              {/* Step 2: Confirmation */}
+              <div className="text-center space-y-4">
+                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
+                  <CheckCircle className="h-8 w-8 text-green-600" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900">Confirm Trade</h3>
+                  <p className="text-sm text-gray-600">Please review your trade details</p>
+                </div>
+              </div>
+
+              {/* Trade Summary */}
+              <Card className="border-0 bg-gradient-to-r from-green-50 to-blue-50">
+                <CardContent className="p-4 space-y-3">
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-gray-900">{tradeAmount.toFixed(2)} USDT</p>
+                    <p className="text-sm text-gray-600">for ₦{totalCost.toLocaleString()}</p>
+                  </div>
+                  <Separator />
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span>Rate:</span>
+                      <span className="font-medium">₦{rate.toLocaleString()}/USDT</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Payment Method:</span>
+                      <span className="font-medium">{paymentMethodLabels[offer.paymentMethod as keyof typeof paymentMethodLabels]}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Trading Partner:</span>
+                      <span className="font-medium">{offer.user.email.split('@')[0]}***</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Security Notice */}
+              <Alert>
+                <Shield className="h-4 w-4" />
+                <AlertDescription className="text-xs">
+                  <strong>Escrow Protection:</strong> Your funds will be securely held until trade completion.
+                </AlertDescription>
+              </Alert>
+
+              {/* Final Action Buttons */}
+              <div className="flex gap-3 pt-2">
+                <Button variant="outline" onClick={() => setStep(1)} className="flex-1">
+                  Back
+                </Button>
+                <Button 
+                  onClick={handleSubmit} 
+                  disabled={isLoading}
+                  className="flex-1 bg-green-600 hover:bg-green-700"
+                >
+                  {isLoading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle className="h-4 w-4 mr-2" />
+                      Confirm Trade
+                    </>
+                  )}
+                </Button>
+              </div>
+            </>
+          )}
         </div>
       </DialogContent>
     </Dialog>
