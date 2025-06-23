@@ -168,11 +168,11 @@ export default function Wallet() {
 
   // WebSocket connection for real-time balance updates
   useEffect(() => {
-    if (!auth.user?.id) return;
+    if (!user?.id) return;
 
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsUrl = `${protocol}//${window.location.host}/ws`;
-    console.log('Attempting WebSocket connection to:', wsUrl, 'for user:', auth.user.id);
+    console.log('Attempting WebSocket connection to:', wsUrl, 'for user:', user.id);
     const ws = new WebSocket(wsUrl);
 
     ws.onopen = () => {
@@ -180,7 +180,7 @@ export default function Wallet() {
       setWsConnected(true);
       const connectMessage = {
         type: 'user_connect',
-        userId: auth.user.id
+        userId: user.id
       };
       console.log('Sending user connect message:', connectMessage);
       ws.send(JSON.stringify(connectMessage));
@@ -196,9 +196,9 @@ export default function Wallet() {
         } else if (data.type === 'connection_established') {
           console.log('WebSocket connection established:', data);
         } else if (data.type === 'balance_updated') {
-          console.log('Balance update received for userId:', data.userId, 'current user:', auth.user.id);
+          console.log('Balance update received for userId:', data.userId, 'current user:', user.id);
           
-          if (data.userId === auth.user.id) {
+          if (data.userId === user.id) {
             console.log('Processing balance update for current user');
             console.log('Old balance will be updated from cache, new balance:', data.nairaBalance);
             
@@ -250,7 +250,7 @@ export default function Wallet() {
     return () => {
       ws.close();
     };
-  }, [auth.user?.id, queryClient, toast]);
+  }, [user?.id, queryClient, toast]);
 
   // Exchange rates
   const USDT_TO_NGN_RATE = 1485;
@@ -289,7 +289,7 @@ export default function Wallet() {
     retryDelay: 1000,
   });
 
-  if (!auth.user) return null;
+  if (!user) return null;
 
   // Portfolio value calculations
   const calculatePortfolioValue = () => {
