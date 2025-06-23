@@ -2860,6 +2860,99 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin user management endpoints
+  app.patch("/api/admin/users/:userId", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const updateData = req.body;
+
+      if (isNaN(userId)) {
+        return res.status(400).json({ error: "Invalid user ID" });
+      }
+
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      // Update user
+      const updatedUser = await storage.updateUser(userId, {
+        email: updateData.email,
+        username: updateData.username || null,
+        firstName: updateData.firstName,
+        lastName: updateData.lastName,
+        phone: updateData.phone || null,
+        nairaBalance: updateData.nairaBalance,
+        usdtBalance: updateData.usdtBalance,
+        isAdmin: updateData.isAdmin,
+        kycVerified: updateData.kycVerified
+      });
+
+      res.json({ success: true, user: updatedUser });
+    } catch (error) {
+      console.error("Update user error:", error);
+      res.status(500).json({ error: "Failed to update user" });
+    }
+  });
+
+  app.delete("/api/admin/users/:userId", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+
+      if (isNaN(userId)) {
+        return res.status(400).json({ error: "Invalid user ID" });
+      }
+
+      // Prevent deleting self
+      if (userId === req.user!.id) {
+        return res.status(400).json({ error: "Cannot delete your own account" });
+      }
+
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      await pool.query("DELETE FROM users WHERE id = $1", [userId]);
+      res.json({ success: true, message: "User deleted successfully" });
+    } catch (error) {
+      console.error("Delete user error:", error);
+      res.status(500).json({ error: "Failed to delete user" });
+    }
+  });
+
+  app.get("/api/admin/users/:userId/transactions", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+
+      if (isNaN(userId)) {
+        return res.status(400).json({ error: "Invalid user ID" });
+      }
+
+      const transactions = await storage.getUserTransactions(userId);
+      res.json(transactions);
+    } catch (error) {
+      console.error("Get user transactions error:", error);
+      res.status(500).json({ error: "Failed to fetch user transactions" });
+    }
+  });
+
+  app.get("/api/admin/users/:userId/trades", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+
+      if (isNaN(userId)) {
+        return res.status(400).json({ error: "Invalid user ID" });
+      }
+
+      const trades = await storage.getUserTrades(userId);
+      res.json(trades);
+    } catch (error) {
+      console.error("Get user trades error:", error);
+      res.status(500).json({ error: "Failed to fetch user trades" });
+    }
+  });
+
   // Admin stats endpoint
   app.get("/api/admin/stats", async (req, res) => {
     if (!req.isAuthenticated() || !req.user!.isAdmin) {
