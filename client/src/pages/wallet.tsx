@@ -5,7 +5,7 @@ import { useRealtimeBalance } from "@/hooks/use-realtime-balance";
 import { apiRequest } from "@/lib/queryClient";
 import { Navbar } from "@/components/navbar";
 import { EnhancedDepositModal } from "@/components/enhanced-deposit-modal";
-import EnhancedWithdrawModal from "@/components/enhanced-withdraw-modal";
+import MobileWithdrawModal from "@/components/mobile-withdraw-modal";
 import { TransactionDetailModal } from "@/components/transaction-detail-modal";
 import { SendFundsModal } from "@/components/send-funds-modal";
 import { SwapModal } from "@/components/swap-modal";
@@ -592,7 +592,7 @@ export default function Wallet() {
 
       {/* Modals */}
       <EnhancedDepositModal open={showDeposit} onOpenChange={setShowDeposit} user={user} />
-      <EnhancedWithdrawModal
+      <MobileWithdrawModal
         isOpen={showWithdraw}
         onClose={() => setShowWithdraw(false)}
         availableBalance={latestBalance || user.nairaBalance}
