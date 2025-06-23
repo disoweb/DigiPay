@@ -217,11 +217,27 @@ export function SendFundsModal({ open, onOpenChange, nairaBalance, usdtBalance }
       return;
     }
 
+    // Move to PIN confirmation step
+    setStep(3);
+  };
+
+  const handleConfirmSend = () => {
+    if (!transactionPin || transactionPin.length !== 4) {
+      toast({
+        title: "Invalid PIN",
+        description: "Please enter your 4-digit transaction PIN",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const transferAmount = parseFloat(amount);
     sendMutation.mutate({
       recipientId: recipient.id,
       amount: transferAmount,
       description: description.trim() || "P2P Transfer",
-      currency
+      currency,
+      transactionPin
     });
   };
 
