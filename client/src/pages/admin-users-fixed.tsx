@@ -408,86 +408,92 @@ export default function AdminUsersFixed() {
                   {filteredUsers.map((user: User) => (
                     <div 
                       key={user.id}
-                      className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100"
+                      className="bg-gray-50 rounded-lg hover:bg-gray-100 p-4"
                     >
-                      {/* Left: User Info */}
-                      <div className="flex-1">
+                      {/* Top: User Name and Actions */}
+                      <div className="flex items-center justify-between mb-3">
                         <h3 className="font-medium text-lg">
                           {user.first_name && user.last_name 
                             ? `${user.first_name} ${user.last_name}`
                             : user.username || 'No Name'
                           }
                         </h3>
-                        <p className="text-gray-600">{user.email}</p>
                         
-                        <div className="flex items-center gap-3 mt-2">
+                        {/* Actions Button - Top Right */}
+                        <div className="relative">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setDropdownOpen(dropdownOpen === user.id ? null : user.id);
+                            }}
+                            className="px-3 py-1.5 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 flex items-center gap-1"
+                          >
+                            Actions
+                            <ChevronDown className="h-3 w-3" />
+                          </button>
+                          
+                          {dropdownOpen === user.id && (
+                            <div className="absolute right-0 mt-2 w-48 bg-white border rounded-lg shadow-lg z-20">
+                              <button
+                                onClick={() => {
+                                  handleAction(user, "view");
+                                  setDropdownOpen(null);
+                                }}
+                                className="w-full text-left px-4 py-2 hover:bg-gray-100 rounded-t-lg"
+                              >
+                                View Details
+                              </button>
+                              <button
+                                onClick={() => {
+                                  handleAction(user, "edit");
+                                  setDropdownOpen(null);
+                                }}
+                                className="w-full text-left px-4 py-2 hover:bg-gray-100"
+                              >
+                                Edit User
+                              </button>
+                              {!user.is_admin && (
+                                <>
+                                  <button
+                                    onClick={() => {
+                                      handleAction(user, "freeze");
+                                      setDropdownOpen(null);
+                                    }}
+                                    className="w-full text-left px-4 py-2 hover:bg-gray-100 text-orange-600"
+                                  >
+                                    {user.funds_frozen ? 'Unfreeze Funds' : 'Freeze Funds'}
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      handleAction(user, "ban");
+                                      setDropdownOpen(null);
+                                    }}
+                                    className="w-full text-left px-4 py-2 hover:bg-gray-100 rounded-b-lg text-red-600"
+                                  >
+                                    {user.is_banned ? 'Unban User' : 'Ban User'}
+                                  </button>
+                                </>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* User Details */}
+                      <div>
+                        <p className="text-gray-600 mb-2">{user.email}</p>
+                        
+                        <div className="flex items-center gap-3 mb-2">
                           <span className="text-sm">₦{parseFloat(user.naira_balance).toLocaleString()}</span>
                           <span className="text-sm">{parseFloat(user.usdt_balance).toFixed(2)} USDT</span>
-                          
+                        </div>
+
+                        <div className="flex items-center gap-2 flex-wrap">
                           {user.is_admin && <span className="px-2 py-1 bg-purple-200 text-purple-800 text-xs rounded">ADMIN</span>}
                           {user.kyc_verified && <span className="px-2 py-1 bg-green-200 text-green-800 text-xs rounded">VERIFIED</span>}
                           {user.is_banned && <span className="px-2 py-1 bg-red-200 text-red-800 text-xs rounded">BANNED</span>}
                           {user.funds_frozen && <span className="px-2 py-1 bg-orange-200 text-orange-800 text-xs rounded">FROZEN</span>}
                         </div>
-                      </div>
-                      
-                      {/* Right: Actions */}
-                      <div className="relative">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setDropdownOpen(dropdownOpen === user.id ? null : user.id);
-                          }}
-                          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 flex items-center gap-2"
-                        >
-                          Actions
-                          <ChevronDown className="h-4 w-4" />
-                        </button>
-                        
-                        {dropdownOpen === user.id && (
-                          <div className="absolute right-0 mt-2 w-48 bg-white border rounded-lg shadow-lg z-10">
-                            <button
-                              onClick={() => {
-                                handleAction(user, "view");
-                                setDropdownOpen(null);
-                              }}
-                              className="w-full text-left px-4 py-2 hover:bg-gray-100 rounded-t-lg"
-                            >
-                              View Details
-                            </button>
-                            <button
-                              onClick={() => {
-                                handleAction(user, "edit");
-                                setDropdownOpen(null);
-                              }}
-                              className="w-full text-left px-4 py-2 hover:bg-gray-100"
-                            >
-                              Edit User
-                            </button>
-                            {!user.is_admin && (
-                              <>
-                                <button
-                                  onClick={() => {
-                                    handleAction(user, "freeze");
-                                    setDropdownOpen(null);
-                                  }}
-                                  className="w-full text-left px-4 py-2 hover:bg-gray-100 text-orange-600"
-                                >
-                                  {user.funds_frozen ? 'Unfreeze Funds' : 'Freeze Funds'}
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    handleAction(user, "ban");
-                                    setDropdownOpen(null);
-                                  }}
-                                  className="w-full text-left px-4 py-2 hover:bg-gray-100 rounded-b-lg text-red-600"
-                                >
-                                  {user.is_banned ? 'Unban User' : 'Ban User'}
-                                </button>
-                              </>
-                            )}
-                          </div>
-                        )}
                       </div>
                     </div>
                   ))}
@@ -683,7 +689,7 @@ export default function AdminUsersFixed() {
 
         {/* Edit User Modal */}
         <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
-          <DialogContent className="max-w-md mx-4 sm:mx-auto">
+          <DialogContent className="w-[95vw] max-w-md max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <Edit className="h-5 w-5" />
@@ -806,31 +812,31 @@ export default function AdminUsersFixed() {
 
         {/* Action Modal */}
         <Dialog open={showActionModal} onOpenChange={setShowActionModal}>
-          <DialogContent className="max-w-md mx-4 sm:mx-auto">
-            <DialogHeader>
-              <DialogTitle>
+          <DialogContent className="w-[95vw] max-w-md mx-auto">
+            <DialogHeader className="text-center">
+              <DialogTitle className="text-lg">
                 {actionType === "ban" ? (selectedUser?.is_banned ? "Unban User" : "Ban User") : 
                  actionType === "freeze" ? (selectedUser?.funds_frozen ? "Unfreeze Funds" : "Freeze User Funds") : "User Action"}
               </DialogTitle>
-              <DialogDescription>
+              <DialogDescription className="text-center">
                 {selectedUser && `Action for: ${selectedUser.email}`}
               </DialogDescription>
             </DialogHeader>
 
-            <div className="space-y-4">
+            <div className="space-y-4 mt-4">
               <Textarea
                 placeholder={`Reason for ${actionType}...`}
                 value={actionReason}
                 onChange={(e) => setActionReason(e.target.value)}
                 rows={3}
-                className="text-sm"
+                className="text-sm w-full"
               />
-              <div className="flex gap-2">
-                <Button onClick={executeAction} variant="destructive" className="flex-1">
+              <div className="flex flex-col sm:flex-row gap-2">
+                <Button onClick={executeAction} variant="destructive" className="flex-1 w-full">
                   Confirm {actionType === "ban" ? (selectedUser?.is_banned ? "Unban" : "Ban") : 
                             actionType === "freeze" ? (selectedUser?.funds_frozen ? "Unfreeze" : "Freeze") : "Action"}
                 </Button>
-                <Button variant="outline" onClick={() => setShowActionModal(false)} className="flex-1">
+                <Button variant="outline" onClick={() => setShowActionModal(false)} className="flex-1 w-full">
                   Cancel
                 </Button>
               </div>
