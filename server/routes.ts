@@ -54,20 +54,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         (t.buyerId === userId || t.sellerId === userId) && t.status === 'completed'
       );
 
-      // Return public profile info only
+      // Return public profile info including wallet balances for admin view
       const publicProfile = {
         id: user.id,
         email: user.email,
         username: user.username,
         firstName: user.firstName,
         lastName: user.lastName,
+        phone: user.phone,
+        location: user.location,
         kycVerified: user.kycVerified,
         averageRating: user.averageRating,
         ratingCount: user.ratingCount,
         completedTrades: userTrades.length,
         isOnline: user.isOnline || false,
         lastSeen: user.lastSeen || user.createdAt,
-        createdAt: user.createdAt
+        createdAt: user.createdAt,
+        nairaBalance: user.nairaBalance || "0",
+        usdtBalance: user.usdtBalance || "0"
       };
 
       res.json(publicProfile);
