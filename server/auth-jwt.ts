@@ -52,8 +52,8 @@ function generateToken(user: SelectUser): string {
     { 
       userId: user.id, 
       email: user.email,
-      isAdmin: user.isAdmin,
-      kycVerified: user.kycVerified
+      isAdmin: Boolean(user.isAdmin),
+      kycVerified: Boolean(user.kycVerified)
     },
     JWT_SECRET,
     { expiresIn: JWT_EXPIRES_IN }

@@ -156,11 +156,14 @@ export class DatabaseStorage implements IStorage {
         });
         console.log("✅ Seeded admin user - Email: admin@digipay.com, Password: admin123");
       } else {
-        // Update existing admin with new balances
+        // Update existing admin with admin privileges and balances
         await this.updateUser(adminUser.id, {
+          isAdmin: true,
+          kycVerified: true,
           nairaBalance: "100000",
           usdtBalance: "100.00"
         });
+        console.log("✅ Updated admin@digipay.com to have admin privileges");
       }
 
       // Removed automatic balance seeding to prevent unwanted fund additions
