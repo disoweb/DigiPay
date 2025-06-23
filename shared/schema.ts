@@ -141,9 +141,9 @@ export const messages = pgTable("messages", {
 export const transactions = pgTable("transactions", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").references(() => users.id).notNull(),
-  type: text("type").notNull(), // 'deposit', 'withdrawal'
+  type: text("type", { enum: ["deposit", "withdrawal", "transfer"] }).notNull(),
   amount: text("amount").notNull(),
-  status: text("status").default("pending"), // 'pending', 'completed', 'failed', 'approved', 'rejected'
+  status: text("status", { enum: ["pending", "completed", "failed", "cancelled"] }).default("pending"),
   paystackRef: text("paystack_ref"),
   adminNotes: text("admin_notes"),
   paymentMethod: text("payment_method"),
@@ -257,9 +257,9 @@ export const insertMessageSchema = createInsertSchema(messages).omit({
 export const insertTransactionSchema = createInsertSchema(transactions).omit({
   id: true,
   createdAt: true,
-  status: true,
 }).extend({
   paystackRef: z.string().optional(),
+  status: z.enum(["pending", "completed", "failed", "cancelled"]).default("pending"),
 });
 
 export const insertRatingSchema = createInsertSchema(ratings).omit({

@@ -10,6 +10,7 @@ import { paystackService } from "./services/paystack";
 import { tronService } from "./services/tron";
 import { emailService, smsService } from "./services/notifications";
 import { kycRoutes } from "./routes/kyc";
+import * as crypto from "crypto";
 import { db, pool } from "./db";
 import { eq, desc, or, and, asc, gte } from "drizzle-orm";
 import { 
@@ -2494,6 +2495,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           userId: user.id,
           type: "deposit",
           amount: amount.toString(),
+          status: "pending",
           paystackRef: reference,
         });
 
@@ -2511,6 +2513,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Payment initialization error:", error);
       res.status(500).json({ error: "Payment initialization failed" });
+    }
+  });
+
+  // Paystack webhook for automatic payment verification
+  app.post("/api/payments/webhook", async (req, res) => {
+    try {
+      const hash = crypto.createHmac('sha512', process.env.PAYSTACK_SECRET_KEY!).update(JSON.stringify(req.body)).digest('hex');
+      if (hash === req.headers['x-paystack-signature']) {
+        const event = req.body;
+        
+        if (event.event === 'charge.success') {
+          const { reference, amount, status } = event.data;
+          
+          // Find the transaction by reference
+          const allTransactions = await storage.getAllTransactions();
+          const transaction = allTransactions.find(tx => tx.paystackRef === reference);
+          
+          if (transaction && transaction.status === 'pending') {
+            // Update transaction status
+            await storage.updateTransaction(transaction.id, { status: 'completed' });
+            
+            // Update user balance
+            const user = await storage.getUser(transaction.userId);
+            if (user) {
+              const currentBalance = parseFloat(user.nairaBalance || "0");
+              const depositAmount = amount / 100; // Convert from kobo to naira
+              const newBalance = currentBalance + depositAmount;
+              
+              await storage.updateUser(user.id, { 
+                nairaBalance: newBalance.toString() 
+              });
+              
+              console.log(`Webhook: User ${user.id} balance updated to ₦${newBalance} via reference ${reference}`);
+              
+              // Send success email notification
+              await emailService.sendEmail(
+                user.email,
+                "Deposit Confirmed - DigiPay",
+                `Your deposit of ₦${depositAmount.toLocaleString()} has been successfully credited to your account.`
+              );
+            }
+          }
+        }
+        
+        res.status(200).send('OK');
+      } else {
+        res.status(400).send('Invalid signature');
+      }
+    } catch (error) {
+      console.error("Webhook error:", error);
+      res.status(500).send('Webhook processing failed');
     }
   });
 
