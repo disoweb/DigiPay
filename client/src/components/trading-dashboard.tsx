@@ -340,13 +340,29 @@ export function TradingDashboard() {
                         size="sm" 
                         variant="outline"
                         onClick={() => {
-                          console.log("Chat button clicked for trade:", trade);
+                          console.log("=== CHAT BUTTON DEBUG ===");
+                          console.log("1. Chat button clicked for trade:", trade);
+                          console.log("2. Trade object keys:", Object.keys(trade || {}));
+                          console.log("3. Trade ID:", trade?.id);
+                          console.log("4. Trade ID type:", typeof trade?.id);
+                          console.log("5. User ID:", user?.id);
+                          console.log("6. User role in trade - Buyer:", trade?.buyerId === user?.id, "Seller:", trade?.sellerId === user?.id);
+                          console.log("7. Trade status:", trade?.status);
+                          console.log("8. Full trade object:", JSON.stringify(trade, null, 2));
+                          
                           if (trade && trade.id && typeof trade.id === 'number') {
-                            console.log("Navigating to chat with trade ID:", trade.id);
-                            setLocation(`/chat/${trade.id}`);
+                            console.log("9. ✅ Valid trade data - Navigating to chat with trade ID:", trade.id);
+                            const chatUrl = `/chat/${trade.id}`;
+                            console.log("10. Chat URL:", chatUrl);
+                            setLocation(chatUrl);
                           } else {
-                            console.error("Invalid trade data for chat navigation:", trade);
+                            console.error("11. ❌ Invalid trade data for chat navigation");
+                            console.error("    - Trade exists:", !!trade);
+                            console.error("    - Trade has ID:", !!trade?.id);
+                            console.error("    - ID is number:", typeof trade?.id === 'number');
+                            console.error("    - Full trade:", trade);
                           }
+                          console.log("=== END CHAT BUTTON DEBUG ===");
                         }}
                         className="px-3 py-1 h-7 text-xs ml-auto"
                       >
