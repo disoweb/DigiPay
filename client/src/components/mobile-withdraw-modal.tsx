@@ -130,11 +130,9 @@ export default function MobileWithdrawModal({ isOpen, onClose, availableBalance 
       
       withdrawMutation.mutate({
         amount: withdrawAmount,
-        bankName,
-        accountNumber,
-        accountName,
-        fee,
-        transactionPin: pin
+        bankName: bankName,
+        accountNumber: accountNumber,
+        accountName: accountName
       });
     }
   };

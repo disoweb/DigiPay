@@ -107,8 +107,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const withdrawAmount = parseFloat(amount);
-      if (withdrawAmount < 100) {
-        return res.status(400).json({ error: "Minimum withdrawal amount is ₦100" });
+      if (withdrawAmount < 1000) {
+        return res.status(400).json({ error: "Minimum withdrawal amount is ₦1,000" });
       }
 
       const user = await storage.getUser(userId);
@@ -133,18 +133,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const availableBalance = parseFloat(user.nairaBalance || "0");
-      if (withdrawAmount > availableBalance) {
-        return res.status(400).json({ error: "Insufficient balance" });
+      const fee = withdrawAmount * 0.015; // 1.5% fee
+      const totalDeduction = withdrawAmount + fee;
+      
+      if (totalDeduction > availableBalance) {
+        return res.status(400).json({ error: "Insufficient balance to cover withdrawal amount and fee" });
       }
 
-      // Deduct from user balance immediately
-      const newBalance = availableBalance - withdrawAmount;
+      // Deduct total amount (withdrawal + fee) from user balance immediately
+      const newBalance = availableBalance - totalDeduction;
       await storage.updateUser(userId, {
         nairaBalance: newBalance.toString()
       });
 
       // Create withdrawal request (pending admin approval)
-      await storage.createTransaction({
+      const transaction = await storage.createTransaction({
         userId,
         amount: withdrawAmount.toString(),
         type: "withdrawal",
@@ -156,8 +159,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.json({ 
         success: true, 
-        message: "Withdrawal request submitted. Awaiting admin approval.",
-        amount: withdrawAmount.toFixed(2)
+        message: "Withdrawal request submitted successfully",
+        amount: withdrawAmount.toFixed(2),
+        fee: fee.toFixed(2),
+        total: totalDeduction.toFixed(2),
+        reference: `WD${transaction.id}_${Date.now()}`
       });
     } catch (error) {
       console.error("Withdrawal error:", error);
