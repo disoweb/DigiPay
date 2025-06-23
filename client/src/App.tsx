@@ -28,7 +28,7 @@ import UserChatPage from "./pages/user-chat-new";
 import PaymentCallback from "./pages/payment-callback";
 import { lazy } from "react";
 
-const AdminUsers = lazy(() => import('./pages/admin-users'));
+const AdminUsers = lazy(() => import('./pages/admin-users-new'));
 const AdminDisputes = lazy(() => import('./pages/admin-disputes'));
 
 const queryClient = new QueryClient();

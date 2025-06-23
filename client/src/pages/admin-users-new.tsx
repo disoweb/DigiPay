@@ -18,10 +18,7 @@ import {
   UserCheck, 
   UserX,
   Search,
-  MoreHorizontal,
-  Eye,
-  Lock,
-  Unlock
+  Eye
 } from "lucide-react";
 
 interface AdminUser {
@@ -53,55 +50,8 @@ export default function AdminUsers() {
   const [actionType, setActionType] = useState<"ban" | "freeze" | "view">("view");
   const [actionReason, setActionReason] = useState("");
 
-  const { data: users = [], isLoading } = useQuery<AdminUser[]>({
+  const { data: users = [], isLoading, error } = useQuery<AdminUser[]>({
     queryKey: ["/api/admin/users"],
-  });
-  const [showActionModal, setShowActionModal] = useState(false);
-  const [actionType, setActionType] = useState<"ban" | "freeze" | "view">("view");
-  const [actionReason, setActionReason] = useState("");
-
-  const { data: users = [], isLoading } = useQuery<AdminUser[]>({
-    queryKey: ["/api/admin/users"],
-    queryFn: async () => {
-      const response = await apiRequest("GET", "/api/admin/users");
-      if (!response.ok) throw new Error("Failed to fetch users");
-      return response.json();
-    },
-    refetchInterval: 30000,
-  });
-
-  const banUserMutation = useMutation({
-    mutationFn: async ({ userId, banned, reason }: { userId: number; banned: boolean; reason: string }) => {
-      const response = await apiRequest("PATCH", `/api/admin/users/${userId}/ban`, { banned, reason });
-      if (!response.ok) throw new Error("Failed to update user status");
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
-      toast({ title: "Success", description: "User status updated successfully" });
-      setShowActionModal(false);
-      setActionReason("");
-    },
-    onError: () => {
-      toast({ title: "Error", description: "Failed to update user status", variant: "destructive" });
-    },
-  });
-
-  const freezeUserMutation = useMutation({
-    mutationFn: async ({ userId, frozen, reason }: { userId: number; frozen: boolean; reason: string }) => {
-      const response = await apiRequest("PATCH", `/api/admin/users/${userId}/freeze`, { frozen, reason });
-      if (!response.ok) throw new Error("Failed to update user funds");
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
-      toast({ title: "Success", description: "User funds status updated successfully" });
-      setShowActionModal(false);
-      setActionReason("");
-    },
-    onError: () => {
-      toast({ title: "Error", description: "Failed to update user funds status", variant: "destructive" });
-    },
   });
 
   const banUserMutation = useMutation({
@@ -174,6 +124,20 @@ export default function AdminUsers() {
         <Navbar />
         <div className="flex items-center justify-center h-64">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Navbar />
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <p className="text-red-600">Error loading users</p>
+            <p className="text-gray-500">{error.message}</p>
+          </div>
         </div>
       </div>
     );
@@ -289,7 +253,7 @@ export default function AdminUsers() {
                               {user.first_name} {user.last_name}
                             </div>
                             <div className="text-xs text-gray-400">
-                              ID: {user.id} • Joined: {new Date(user.created_at).toLocaleDateString()}
+                              ID: {user.id}
                             </div>
                           </div>
                         </TableCell>
@@ -394,7 +358,7 @@ export default function AdminUsers() {
                       </div>
                       <div>
                         <label className="text-sm font-medium">Phone</label>
-                        <p className="text-sm text-gray-600">{selectedUser.phone || "Not provided"}</p>
+                        <p className="text-sm text-gray-600">{selectedUser.phone}</p>
                       </div>
                       <div>
                         <label className="text-sm font-medium">KYC Status</label>
