@@ -46,9 +46,21 @@ export default function Admin() {
     enabled: !!user?.isAdmin,
   });
 
-  const { data: users = [] } = useQuery({
+  const { data: users = [], isLoading: usersLoading, error: usersError } = useQuery({
     queryKey: ["/api/admin/users"],
     enabled: !!user?.isAdmin,
+    retry: 3,
+    retryDelay: 1000,
+  });
+
+  // Debug logging
+  console.log("Admin Dashboard Debug:", {
+    userIsAdmin: user?.isAdmin,
+    usersData: users,
+    usersLength: users.length,
+    usersLoading,
+    usersError,
+    enabled: !!user?.isAdmin
   });
 
   const { data: featuredUsers = [] } = useQuery({
@@ -88,7 +100,7 @@ export default function Admin() {
   const stats = [
     {
       title: "Total Users",
-      value: users.length.toLocaleString(),
+      value: usersLoading ? "Loading..." : users.length.toLocaleString(),
       icon: Users,
       color: "text-blue-600",
       bgColor: "bg-blue-50",
