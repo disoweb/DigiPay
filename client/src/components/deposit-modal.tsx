@@ -90,7 +90,7 @@ export function DepositModal({ open, onOpenChange }: DepositModalProps) {
         
         toast({
           title: "Payment Successful!",
-          description: `₦${depositAmount.toLocaleString()} has been credited to your account.`,
+          description: `₦${depositAmount.toLocaleString()} has been ${data.existing ? 'already' : ''} credited to your account.`,
         });
         
         // Refresh user data

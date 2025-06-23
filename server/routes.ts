@@ -2583,133 +2583,85 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log(`Verifying payment for user ${userId}, reference: ${reference}`);
 
-      // First check if we already have a completed transaction for this reference
-      const allUserTransactions = await storage.getUserTransactions(userId);
-      const existingCompletedTx = allUserTransactions.find(tx => 
-        tx.paystackRef === reference && tx.status === 'completed'
-      );
+      // Check ALL transactions globally for this reference to prevent any duplicates
+      const allTransactions = await storage.getAllTransactions();
+      const existingTransaction = allTransactions.find(tx => tx.paystackRef === reference);
 
-      if (existingCompletedTx) {
-        console.log("Transaction already completed, preventing double credit:", existingCompletedTx.id);
+      if (existingTransaction) {
+        console.log("Transaction already exists for reference:", reference, "Status:", existingTransaction.status);
         return res.json({
           success: true,
-          data: { status: 'success', amount: parseFloat(existingCompletedTx.amount) * 100 },
+          data: { status: 'success', amount: parseFloat(existingTransaction.amount) * 100 },
           balanceUpdated: false,
-          message: "Payment already processed"
+          message: "Payment already processed",
+          existing: true
         });
       }
 
       const result = await paystackService.verifyPayment(reference);
       console.log("Paystack verification result:", result);
 
-      if (result.success && result.data) {
-        // Check if payment was successful
-        if (result.data.status === 'success') {
-          const pendingTx = allUserTransactions.find(tx => 
-            tx.paystackRef === reference && tx.status === 'pending'
-          );
+      if (result.success && result.data && result.data.status === 'success') {
+        // Double-check again before creating transaction to handle race conditions
+        const reCheckTransactions = await storage.getAllTransactions();
+        const reCheckExisting = reCheckTransactions.find(tx => tx.paystackRef === reference);
+        
+        if (reCheckExisting) {
+          console.log("Race condition detected - transaction already exists:", reference);
+          return res.json({
+            success: true,
+            data: { status: 'success', amount: parseFloat(reCheckExisting.amount) * 100 },
+            balanceUpdated: false,
+            message: "Payment already processed"
+          });
+        }
 
-          console.log("Found pending transaction:", pendingTx);
+        // Create and auto-settle new transaction
+        console.log("Creating new transaction for successful payment");
+        const depositAmount = result.data.amount / 100;
+        
+        const newTransaction = await storage.createTransaction({
+          userId,
+          type: "deposit",
+          amount: depositAmount.toString(),
+          status: "completed", // Auto-settle
+          paystackRef: reference,
+          approvedAt: new Date(),
+          adminNotes: "Auto-settled via payment verification"
+        });
 
-          if (pendingTx) {
-            // Auto-settle: Update transaction status to completed
-            await storage.updateTransaction(pendingTx.id, { 
-              status: "completed",
-              approvedAt: new Date(),
-              adminNotes: "Auto-settled via payment verification"
-            });
-            console.log(`Transaction ${pendingTx.id} auto-settled as completed`);
+        // Update user balance
+        const user = await storage.getUser(userId);
+        if (user) {
+          const currentBalance = parseFloat(user.nairaBalance || "0");
+          const newBalance = currentBalance + depositAmount;
+          
+          await storage.updateUser(user.id, { 
+            nairaBalance: newBalance.toString() 
+          });
+          
+          console.log(`User ${user.id} balance updated: ${currentBalance} + ${depositAmount} = ${newBalance}`);
 
-            // Immediately update user balance
-            const user = await storage.getUser(userId);
-            if (user) {
-              const currentBalance = parseFloat(user.nairaBalance || "0");
-              const depositAmount = result.data.amount / 100; // Convert from kobo to naira
-              const newBalance = currentBalance + depositAmount;
-
-              console.log(`Auto-settling balance: ${currentBalance} + ${depositAmount} = ${newBalance}`);
-
-              await storage.updateUser(user.id, { 
-                nairaBalance: newBalance.toString() 
-              });
-
-              console.log(`User ${user.id} balance auto-settled to ₦${newBalance}`);
-
-              // Send success notification
-              try {
-                await emailService.sendEmail(
-                  user.email,
-                  "Deposit Confirmed - DigiPay",
-                  `Your deposit of ₦${depositAmount.toLocaleString()} has been automatically credited to your account.`
-                );
-              } catch (emailError) {
-                console.log("Email notification failed:", emailError.message);
-              }
-            }
-          } else {
-            console.log("No pending transaction found for reference:", reference);
-            
-            // Only create new transaction if none exists for this reference
-            const anyExistingTx = allUserTransactions.find(tx => tx.paystackRef === reference);
-            
-            if (!anyExistingTx) {
-              // Create and auto-settle new transaction
-              console.log("Creating and auto-settling new transaction for successful payment");
-              const depositAmount = result.data.amount / 100;
-              
-              await storage.createTransaction({
-                userId,
-                type: "deposit",
-                amount: depositAmount.toString(),
-                status: "completed", // Auto-settle
-                paystackRef: reference,
-                approvedAt: new Date(),
-                adminNotes: "Auto-settled via payment verification"
-              });
-
-              // Immediately update user balance
-              const user = await storage.getUser(userId);
-              if (user) {
-                const currentBalance = parseFloat(user.nairaBalance || "0");
-                const newBalance = currentBalance + depositAmount;
-                
-                await storage.updateUser(user.id, { 
-                  nairaBalance: newBalance.toString() 
-                });
-                
-                console.log(`User ${user.id} balance auto-settled to ₦${newBalance}`);
-
-                // Send success notification
-                try {
-                  await emailService.sendEmail(
-                    user.email,
-                    "Deposit Confirmed - DigiPay",
-                    `Your deposit of ₦${depositAmount.toLocaleString()} has been automatically credited to your account.`
-                  );
-                } catch (emailError) {
-                  console.log("Email notification failed:", emailError.message);
-                }
-              }
-            } else {
-              console.log("Transaction already exists for this reference, skipping credit");
-              return res.json({
-                ...result,
-                balanceUpdated: false,
-                message: "Payment already processed"
-              });
-            }
+          // Send success notification
+          try {
+            await emailService.sendEmail(
+              user.email,
+              "Deposit Confirmed - DigiPay",
+              `Your deposit of ₦${depositAmount.toLocaleString()} has been automatically credited to your account.`
+            );
+          } catch (emailError) {
+            console.log("Email notification failed:", emailError.message);
           }
-        } else {
-          console.log("Payment not successful, status:", result.data.status);
         }
 
         res.json({
           ...result,
-          balanceUpdated: true, // Flag to indicate balance was updated
-          autoSettled: true // Flag to indicate auto-settlement
+          balanceUpdated: true,
+          autoSettled: true,
+          transactionId: newTransaction.id
         });
       } else {
-        console.log("Payment verification failed:", result.message);
+        console.log("Payment not successful, status:", result.data?.status || "failed");
         res.status(400).json({ error: result.message || "Payment verification failed" });
       }
     } catch (error) {

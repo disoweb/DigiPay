@@ -61,16 +61,16 @@ export const loadPaystackScript = (): Promise<void> => {
 };
 
 export const initializePaystack = async (config: PaystackConfig) => {
-  console.log("Loading Paystack script for inline payment...");
+  console.log("Loading Paystack script for payment...");
   await loadPaystackScript();
 
-  console.log("Paystack script loaded, creating inline payment...");
+  console.log("Paystack script loaded, setting up payment...");
 
   if (!window.PaystackPop) {
     throw new Error("PaystackPop is not available after script load");
   }
 
-  // Enhanced config for inline experience within modal
+  // Enhanced config with single callback handling
   const enhancedConfig = {
     ...config,
     onLoad: (response: any) => {
@@ -87,13 +87,12 @@ export const initializePaystack = async (config: PaystackConfig) => {
   };
 
   const handler = window.PaystackPop.setup(enhancedConfig);
-  console.log("Payment handler created for inline experience");
+  console.log("Payment handler created");
 
   if (!handler || !handler.openIframe) {
     throw new Error("Payment handler setup failed");
   }
 
-  // Open the payment in an iframe that appears as an overlay
   handler.openIframe();
-  console.log("Inline payment iframe opened");
+  console.log("Payment iframe opened");
 };
