@@ -32,7 +32,9 @@ import {
   Building,
   Edit,
   Trash2,
-  Save
+  Save,
+  Plus,
+  Minus
 } from "lucide-react";
 
 interface Transaction {
@@ -898,16 +900,16 @@ export default function AdminApprovals() {
 
         {/* Edit Transaction Modal */}
         <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
-          <DialogContent className="max-w-lg mx-4 sm:mx-auto max-h-[90vh] overflow-hidden flex flex-col">
-            <DialogHeader className="shrink-0 pb-4">
-              <DialogTitle className="flex items-center gap-2 text-lg">
-                <div className="p-2 bg-blue-100 rounded-full">
-                  <Edit className="h-4 w-4 text-blue-600" />
+          <DialogContent className="w-[95vw] sm:max-w-lg mx-auto max-h-[85vh] sm:max-h-[90vh] overflow-hidden flex flex-col">
+            <DialogHeader className="shrink-0 pb-2 sm:pb-4">
+              <DialogTitle className="flex items-center gap-2 text-base sm:text-lg">
+                <div className="p-1.5 sm:p-2 bg-blue-100 rounded-full">
+                  <Edit className="h-3 w-3 sm:h-4 sm:w-4 text-blue-600" />
                 </div>
                 Edit Transaction
               </DialogTitle>
-              <DialogDescription className="text-sm">
-                <div className="flex items-center gap-2 mt-2">
+              <DialogDescription className="text-xs sm:text-sm">
+                <div className="flex items-center gap-2 mt-1 sm:mt-2">
                   <Badge variant="outline" className="text-xs">
                     ID: {selectedTransaction?.id}
                   </Badge>
@@ -919,12 +921,12 @@ export default function AdminApprovals() {
             </DialogHeader>
             
             <ScrollArea className="flex-1 pr-2">
-              <div className="space-y-4 pb-4">
+              <div className="space-y-3 sm:space-y-4 pb-2 sm:pb-4">
                 {/* Amount and Status Row */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
                   <div>
-                    <Label htmlFor="edit-amount" className="text-sm font-medium flex items-center gap-1">
-                      <DollarSign className="h-3 w-3" />
+                    <Label htmlFor="edit-amount" className="text-xs sm:text-sm font-medium flex items-center gap-1">
+                      <DollarSign className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                       Amount
                     </Label>
                     <div className="relative mt-1">
@@ -934,19 +936,19 @@ export default function AdminApprovals() {
                         step="0.01"
                         value={editForm.amount}
                         onChange={(e) => setEditForm(prev => ({ ...prev, amount: e.target.value }))}
-                        className="pl-7 h-10"
+                        className="pl-6 sm:pl-7 h-8 sm:h-10 text-sm"
                         placeholder="0.00"
                       />
-                      <span className="absolute left-2.5 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">₦</span>
+                      <span className="absolute left-2 sm:left-2.5 top-1/2 transform -translate-y-1/2 text-gray-500 text-xs sm:text-sm">₦</span>
                     </div>
                   </div>
                   <div>
-                    <Label htmlFor="edit-status" className="text-sm font-medium flex items-center gap-1">
-                      <Clock className="h-3 w-3" />
+                    <Label htmlFor="edit-status" className="text-xs sm:text-sm font-medium flex items-center gap-1">
+                      <Clock className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                       Status
                     </Label>
                     <Select value={editForm.status} onValueChange={(value) => setEditForm(prev => ({ ...prev, status: value }))}>
-                      <SelectTrigger className="mt-1 h-10">
+                      <SelectTrigger className="mt-1 h-8 sm:h-10 text-xs sm:text-sm">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -1112,23 +1114,23 @@ export default function AdminApprovals() {
             </ScrollArea>
 
             {/* Action Buttons */}
-            <div className="shrink-0 flex gap-2 pt-4 border-t">
+            <div className="shrink-0 flex gap-2 pt-3 sm:pt-4 border-t">
               <Button 
                 onClick={handleSaveEdit}
                 disabled={editTransactionMutation.isPending}
-                className="flex-1 h-10 bg-blue-600 hover:bg-blue-700"
+                className="flex-1 h-8 sm:h-10 bg-blue-600 hover:bg-blue-700 text-xs sm:text-sm"
               >
                 {editTransactionMutation.isPending ? (
-                  <RefreshCw className="h-4 w-4 animate-spin mr-2" />
+                  <RefreshCw className="h-3 w-3 sm:h-4 sm:w-4 animate-spin mr-1 sm:mr-2" />
                 ) : (
-                  <Save className="h-4 w-4 mr-2" />
+                  <Save className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                 )}
-                Save Changes
+                Save
               </Button>
               <Button 
                 variant="outline" 
                 onClick={() => setShowEditModal(false)} 
-                className="px-6 h-10"
+                className="px-3 sm:px-6 h-8 sm:h-10 text-xs sm:text-sm"
                 disabled={editTransactionMutation.isPending}
               >
                 Cancel

@@ -398,25 +398,25 @@ export function AdminWalletManagement() {
 
       {/* Wallet Action Modal */}
       <Dialog open={showModal} onOpenChange={setShowModal}>
-        <DialogContent className="max-w-md mx-4 sm:mx-auto max-h-[90vh] overflow-hidden flex flex-col">
-          <DialogHeader className="shrink-0">
-            <DialogTitle className="flex items-center gap-2 text-lg">
-              <div className={`p-2 rounded-full ${actionType === "credit" ? "bg-green-100" : "bg-red-100"}`}>
+        <DialogContent className="w-[95vw] sm:max-w-md mx-auto max-h-[85vh] sm:max-h-[90vh] overflow-hidden flex flex-col">
+          <DialogHeader className="shrink-0 pb-2">
+            <DialogTitle className="flex items-center gap-2 text-base sm:text-lg">
+              <div className={`p-1.5 sm:p-2 rounded-full ${actionType === "credit" ? "bg-green-100" : "bg-red-100"}`}>
                 {actionType === "credit" ? (
-                  <Plus className="h-4 w-4 text-green-600" />
+                  <Plus className="h-3 w-3 sm:h-4 sm:w-4 text-green-600" />
                 ) : (
-                  <Minus className="h-4 w-4 text-red-600" />
+                  <Minus className="h-3 w-3 sm:h-4 sm:w-4 text-red-600" />
                 )}
               </div>
               {actionType === "credit" ? "Credit Account" : "Debit Account"}
             </DialogTitle>
-            <DialogDescription className="text-sm">
+            <DialogDescription className="text-xs sm:text-sm">
               {selectedUser && (
-                <div className="flex items-center gap-2 mt-2">
+                <div className="flex items-center gap-2 mt-1">
                   <div className="p-1 bg-gray-100 rounded-full">
-                    <User className="h-3 w-3 text-gray-600" />
+                    <User className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-gray-600" />
                   </div>
-                  <span className="font-medium">
+                  <span className="font-medium text-xs sm:text-sm truncate">
                     {selectedUser.first_name && selectedUser.last_name 
                       ? `${selectedUser.first_name} ${selectedUser.last_name}`
                       : selectedUser.username || selectedUser.email.split('@')[0]
@@ -429,25 +429,25 @@ export function AdminWalletManagement() {
 
           {selectedUser && (
             <ScrollArea className="flex-1 pr-2">
-              <div className="space-y-4 pb-4">
-                {/* Current Balances */}
-                <Card className="p-3 bg-gradient-to-r from-blue-50 to-green-50 border-0">
-                  <div className="text-sm">
-                    <p className="font-semibold mb-3 text-gray-800">Current Balances</p>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="p-2 bg-white/80 rounded-lg">
+              <div className="space-y-3 pb-2">
+                {/* Current Balances - Compact Mobile Version */}
+                <Card className="p-2 sm:p-3 bg-gradient-to-r from-blue-50 to-green-50 border-0">
+                  <div className="text-xs sm:text-sm">
+                    <p className="font-semibold mb-2 text-gray-800 text-xs sm:text-sm">Current Balances</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="p-1.5 sm:p-2 bg-white/80 rounded">
                         <div className="flex items-center gap-1 mb-1">
-                          <DollarSign className="h-3 w-3 text-green-600" />
+                          <DollarSign className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-green-600" />
                           <span className="text-xs font-medium text-green-700">NGN</span>
                         </div>
-                        <p className="font-bold text-green-800">₦{formatBalance(selectedUser.naira_balance)}</p>
+                        <p className="font-bold text-green-800 text-xs sm:text-sm">₦{formatBalance(selectedUser.naira_balance)}</p>
                       </div>
-                      <div className="p-2 bg-white/80 rounded-lg">
+                      <div className="p-1.5 sm:p-2 bg-white/80 rounded">
                         <div className="flex items-center gap-1 mb-1">
-                          <CreditCard className="h-3 w-3 text-blue-600" />
+                          <CreditCard className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-blue-600" />
                           <span className="text-xs font-medium text-blue-700">USDT</span>
                         </div>
-                        <p className="font-bold text-blue-800">${formatBalance(selectedUser.usdt_balance)}</p>
+                        <p className="font-bold text-blue-800 text-xs sm:text-sm">${formatBalance(selectedUser.usdt_balance)}</p>
                       </div>
                     </div>
                   </div>
@@ -455,25 +455,25 @@ export function AdminWalletManagement() {
 
                 {/* Currency Selection */}
                 <div>
-                  <Label htmlFor="currency" className="text-sm font-medium flex items-center gap-1">
-                    <CreditCard className="h-3 w-3" />
+                  <Label htmlFor="currency" className="text-xs sm:text-sm font-medium flex items-center gap-1">
+                    <CreditCard className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                     Currency
                   </Label>
                   <Select value={currency} onValueChange={setCurrency}>
-                    <SelectTrigger className="mt-1 h-10">
+                    <SelectTrigger className="mt-1 h-8 sm:h-10 text-xs sm:text-sm">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="NGN">
                         <div className="flex items-center gap-2">
-                          <DollarSign className="h-3 w-3 text-green-600" />
-                          NGN (Nigerian Naira)
+                          <DollarSign className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-green-600" />
+                          <span className="text-xs sm:text-sm">NGN</span>
                         </div>
                       </SelectItem>
                       <SelectItem value="USDT">
                         <div className="flex items-center gap-2">
-                          <CreditCard className="h-3 w-3 text-blue-600" />
-                          USDT (Tether)
+                          <CreditCard className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-blue-600" />
+                          <span className="text-xs sm:text-sm">USDT</span>
                         </div>
                       </SelectItem>
                     </SelectContent>
@@ -482,11 +482,11 @@ export function AdminWalletManagement() {
 
                 {/* Amount */}
                 <div>
-                  <Label htmlFor="amount" className="text-sm font-medium flex items-center gap-1">
+                  <Label htmlFor="amount" className="text-xs sm:text-sm font-medium flex items-center gap-1">
                     {actionType === "credit" ? (
-                      <TrendingUp className="h-3 w-3 text-green-600" />
+                      <TrendingUp className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-green-600" />
                     ) : (
-                      <TrendingDown className="h-3 w-3 text-red-600" />
+                      <TrendingDown className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-red-600" />
                     )}
                     Amount *
                   </Label>
@@ -499,9 +499,9 @@ export function AdminWalletManagement() {
                       onChange={(e) => setAmount(e.target.value)}
                       min="0"
                       step="0.01"
-                      className="pl-8 h-10 text-base"
+                      className="pl-6 sm:pl-8 h-8 sm:h-10 text-sm sm:text-base"
                     />
-                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">
+                    <span className="absolute left-2 sm:left-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-xs sm:text-sm">
                       {currency === "NGN" ? "₦" : "$"}
                     </span>
                   </div>
@@ -509,30 +509,29 @@ export function AdminWalletManagement() {
 
                 {/* Description */}
                 <div>
-                  <Label htmlFor="description" className="text-sm font-medium flex items-center gap-1">
-                    <AlertCircle className="h-3 w-3" />
+                  <Label htmlFor="description" className="text-xs sm:text-sm font-medium flex items-center gap-1">
+                    <AlertCircle className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                     Description *
                   </Label>
                   <Textarea
                     id="description"
-                    placeholder={`Reason for ${actionType}ing this account...`}
+                    placeholder={`Reason for ${actionType}ing...`}
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    rows={3}
-                    className="mt-1 text-sm resize-none"
+                    rows={2}
+                    className="mt-1 text-xs sm:text-sm resize-none"
                   />
                 </div>
 
-                {/* Preview */}
+                {/* Preview - Only show on mobile if both fields filled */}
                 {amount && description && (
-                  <Card className="p-3 bg-yellow-50 border-yellow-200">
-                    <div className="flex items-start gap-2">
-                      <AlertCircle className="h-4 w-4 text-yellow-600 mt-0.5 shrink-0" />
-                      <div className="text-sm">
-                        <p className="font-medium text-yellow-800 mb-1">Transaction Preview</p>
+                  <Card className="p-2 sm:p-3 bg-yellow-50 border-yellow-200">
+                    <div className="flex items-start gap-1.5 sm:gap-2">
+                      <AlertCircle className="h-3 w-3 sm:h-4 sm:w-4 text-yellow-600 mt-0.5 shrink-0" />
+                      <div className="text-xs sm:text-sm">
+                        <p className="font-medium text-yellow-800 mb-1">Preview</p>
                         <p className="text-yellow-700">
-                          {actionType === "credit" ? "Add" : "Remove"} {currency === "NGN" ? "₦" : "$"}{amount} 
-                          {actionType === "credit" ? " to" : " from"} {selectedUser.email}'s wallet
+                          {actionType === "credit" ? "Add" : "Remove"} {currency === "NGN" ? "₦" : "$"}{amount}
                         </p>
                       </div>
                     </div>
@@ -543,27 +542,27 @@ export function AdminWalletManagement() {
           )}
 
           {/* Action Buttons */}
-          <div className="shrink-0 flex gap-2 pt-4 border-t">
+          <div className="shrink-0 flex gap-2 pt-3 border-t">
             <Button
               onClick={handleWalletAction}
               disabled={walletMutation.isPending || !amount || !description}
-              className={`flex-1 h-10 ${actionType === "credit" 
+              className={`flex-1 h-8 sm:h-10 text-xs sm:text-sm ${actionType === "credit" 
                 ? "bg-green-600 hover:bg-green-700" 
                 : "bg-red-600 hover:bg-red-700"
               }`}
             >
               {walletMutation.isPending ? (
-                <RefreshCw className="h-4 w-4 animate-spin mr-2" />
+                <RefreshCw className="h-3 w-3 sm:h-4 sm:w-4 animate-spin mr-1 sm:mr-2" />
               ) : (
-                <CheckCircle2 className="h-4 w-4 mr-2" />
+                <CheckCircle2 className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
               )}
-              {actionType === "credit" ? "Credit Account" : "Debit Account"}
+              {actionType === "credit" ? "Credit" : "Debit"}
             </Button>
             <Button
               variant="outline"
               onClick={() => setShowModal(false)}
               disabled={walletMutation.isPending}
-              className="px-6 h-10"
+              className="px-3 sm:px-6 h-8 sm:h-10 text-xs sm:text-sm"
             >
               Cancel
             </Button>
