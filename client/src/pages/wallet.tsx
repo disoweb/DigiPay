@@ -170,128 +170,100 @@ export default function Wallet() {
   useEffect(() => {
     if (!user?.id) return;
 
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';  
     const wsUrl = `${protocol}//${window.location.host}/ws`;
-    console.log('Attempting WebSocket connection to:', wsUrl, 'for user:', user.id);
+    console.log('🔌 Connecting WebSocket:', wsUrl, 'for user:', user.id);
     
-    let ws: WebSocket;
+    let ws: WebSocket | null = null;
     let reconnectAttempts = 0;
-    const maxReconnectAttempts = 5;
+    const maxReconnectAttempts = 3;
+    let reconnectTimeout: NodeJS.Timeout;
     
     const connect = () => {
       try {
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          console.log('WebSocket already connected, skipping');
+          return;
+        }
+
         ws = new WebSocket(wsUrl);
 
         ws.onopen = () => {
-          console.log('WebSocket connected successfully for real-time updates');
+          console.log('✅ WebSocket connected for user', user.id);
           setWsConnected(true);
           reconnectAttempts = 0;
           
+          // Send connection message immediately
           const connectMessage = {
             type: 'user_connect',
             userId: user.id
           };
-          console.log('Sending user connect message:', connectMessage);
-          ws.send(JSON.stringify(connectMessage));
-          
-          // Refresh wallet data on connection to ensure we have the latest balance
-          setTimeout(() => {
-            console.log('Refreshing wallet data on WebSocket connection');
-            queryClient.invalidateQueries({ queryKey: ["/api/user"] });
-            queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
-          }, 500);
+          ws?.send(JSON.stringify(connectMessage));
+          console.log('📤 Sent user connect message');
         };
 
         ws.onmessage = (event) => {
           try {
             const data = JSON.parse(event.data);
-            console.log('WebSocket message received:', data);
+            console.log('📨 WebSocket message:', data.type, data);
             
-            if (data.type === 'user_connected') {
-              console.log('WebSocket user connection confirmed:', data);
-            } else if (data.type === 'connection_established') {
-              console.log('WebSocket connection established:', data);
-            } else if (data.type === 'balance_updated') {
-              console.log('Balance update received for userId:', data.userId, 'current user:', user.id);
+            if (data.type === 'balance_updated' && data.userId === user.id) {
+              console.log('💰 Processing balance update:', data.nairaBalance);
               
-              if (data.userId === user.id) {
-                console.log('Processing balance update for current user');
-                console.log('Updating balance from', user.nairaBalance, 'to', data.nairaBalance);
-                
-                // Update query cache immediately with new data
-                queryClient.setQueryData(["/api/user"], (oldData: any) => {
-                  if (oldData) {
-                    console.log('Cache update - Old balance:', oldData.nairaBalance, 'New balance:', data.nairaBalance);
-                    const updatedData = {
-                      ...oldData,
-                      nairaBalance: data.nairaBalance,
-                      usdtBalance: data.usdtBalance || oldData.usdtBalance
-                    };
-                    console.log('Cache updated with new data:', updatedData);
-                    return updatedData;
-                  }
-                  console.log('No old data found in cache');
-                  return oldData;
+              // Force immediate cache invalidation and refetch
+              queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+              queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
+              
+              // Show notification
+              if (data.lastTransaction?.type === 'deposit') {
+                toast({
+                  title: "✅ Deposit Successful!",
+                  description: `₦${parseFloat(data.lastTransaction.amount).toLocaleString()} credited to your wallet`,
+                  className: "border-green-200 bg-green-50 text-green-800",
                 });
-                
-                // Verify the cache was updated
-                setTimeout(() => {
-                  const cachedData = queryClient.getQueryData(["/api/user"]);
-                  console.log('Cache verification - Current cached data:', cachedData);
-                }, 50);
-                
-                // Force queries to refetch with updated data
-                setTimeout(() => {
-                  queryClient.invalidateQueries({ queryKey: ["/api/user"] });
-                  queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
-                }, 100);
-                
-                // Show success notification
-                if (data.lastTransaction?.type === 'deposit') {
-                  toast({
-                    title: "💰 Deposit Successful!",
-                    description: `₦${parseFloat(data.lastTransaction.amount).toLocaleString()} has been credited to your wallet`,
-                    className: "border-green-200 bg-green-50 text-green-800",
-                  });
-                }
-              } else {
-                console.log('Balance update for different user, ignoring');
               }
             }
           } catch (error) {
-            console.error('WebSocket message parsing error:', error);
+            console.error('❌ WebSocket message error:', error);
           }
         };
 
         ws.onclose = (event) => {
-          console.log('WebSocket disconnected. Code:', event.code, 'Reason:', event.reason);
+          console.log('🔌 WebSocket closed:', event.code, event.reason);
           setWsConnected(false);
           
-          // Attempt to reconnect
-          if (reconnectAttempts < maxReconnectAttempts) {
+          // Only reconnect if it wasn't a manual close
+          if (event.code !== 1000 && reconnectAttempts < maxReconnectAttempts) {
             reconnectAttempts++;
-            console.log(`Attempting to reconnect... (${reconnectAttempts}/${maxReconnectAttempts})`);
-            setTimeout(connect, 2000 * reconnectAttempts); // Exponential backoff
-          } else {
-            console.log('Max reconnection attempts reached');
+            const delay = Math.min(1000 * Math.pow(2, reconnectAttempts), 10000);
+            console.log(`🔄 Reconnecting in ${delay}ms (attempt ${reconnectAttempts})`);
+            reconnectTimeout = setTimeout(connect, delay);
           }
         };
 
         ws.onerror = (error) => {
-          console.error('WebSocket error:', error);
+          console.error('❌ WebSocket error:', error);
           setWsConnected(false);
         };
+
       } catch (error) {
-        console.error('Failed to create WebSocket connection:', error);
+        console.error('❌ WebSocket connection failed:', error);
         setWsConnected(false);
       }
     };
 
+    // Start connection
     connect();
 
+    // Cleanup function
     return () => {
-      if (ws && ws.readyState === WebSocket.OPEN) {
-        ws.close();
+      console.log('🧹 Cleaning up WebSocket connection');
+      if (reconnectTimeout) {
+        clearTimeout(reconnectTimeout);
+      }
+      if (ws) {
+        ws.close(1000, 'Component unmounting');
+        ws = null;
       }
     };
   }, [user?.id, queryClient, toast]);
@@ -325,12 +297,14 @@ export default function Wallet() {
         return response.json();
       } catch (error) {
         console.error('Transaction fetch error:', error);
-        throw error;
+        return []; // Return empty array instead of throwing
       }
     },
     enabled: !!user?.id,
-    retry: 2,
-    retryDelay: 1000,
+    retry: 1,
+    retryDelay: 2000,
+    refetchOnWindowFocus: false,
+    staleTime: 30000, // Consider data fresh for 30 seconds
   });
 
   if (!user) return null;

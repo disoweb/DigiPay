@@ -8,51 +8,41 @@ async function throwIfResNotOk(res: Response) {
 }
 
 export async function apiRequest(method: string, url: string, data?: any) {
-  const token = localStorage.getItem("digipay_token");
+  try {
+    const token = localStorage.getItem("digipay_token");
 
-  const config: RequestInit = {
-    method,
-    headers: {
-      "Content-Type": "application/json",
-    },
-  };
+    if (!token) {
+      console.log("No auth token found");
+      // Don't redirect immediately, let the component handle it
+      throw new Error("No authentication token");
+    }
 
-  // Add Authorization header if token exists
-  if (token) {
-    config.headers = {
-      ...config.headers,
-      "Authorization": `Bearer ${token}`,
+    const config: RequestInit = {
+      method,
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
     };
-  }
 
-  console.log(`API Request: ${method} ${url}`, { hasToken: !!token });
+    if (data) {
+      config.body = JSON.stringify(data);
+    }
 
-  if (data) {
-    config.body = JSON.stringify(data);
-  }
+    const response = await fetch(url, config);
 
-  const response = await fetch(url, config);
-
-  if (!response.ok) {
     if (response.status === 401) {
-      // Clear invalid token and redirect to login
+      console.log("Unauthorized, clearing token");
       localStorage.removeItem("digipay_token");
       window.location.href = "/auth";
       throw new Error("Unauthorized");
     }
 
-    let errorMessage = "Request failed";
-    try {
-      const errorData = await response.json();
-      errorMessage = errorData.error || errorData.message || errorMessage;
-    } catch {
-      errorMessage = response.statusText || errorMessage;
-    }
-
-    throw new Error(errorMessage);
+    return response;
+  } catch (error) {
+    console.error("API request error:", error);
+    throw error;
   }
-
-  return response;
 }
 
 type UnauthorizedBehavior = "returnNull" | "throw";
