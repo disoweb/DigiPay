@@ -122,24 +122,7 @@ export class DatabaseStorage implements IStorage {
 
   private async seedInitialData() {
     try {
-      // Always ensure users exist
-      let user1 = await this.getUser(1);
-      if (!user1) {
-        const hashedPass = await bcrypt.hash("password123", 12);
-        user1 = await this.createUser({
-          email: "cyfer33@gmail.com",
-          phone: "08000000000",
-          password: hashedPass,
-          kycVerified: true,
-          nairaBalance: "50000",
-          usdtBalance: "25.50",
-          bvn: "12345678901",
-          tronAddress: "TRX123456789"
-        });
-        console.log("Seeded initial user data");
-      }
-
-      // Create admin user
+      // Create admin user without automatic balance seeding
       let adminUser = await this.getUserByEmail("admin@digipay.com");
       if (!adminUser) {
         const hashedAdminPass = await bcrypt.hash("admin123", 12);
@@ -149,26 +132,22 @@ export class DatabaseStorage implements IStorage {
           password: hashedAdminPass,
           kycVerified: true,
           isAdmin: true,
-          nairaBalance: "100000",
-          usdtBalance: "100.00",
+          nairaBalance: "0",
+          usdtBalance: "0",
           bvn: "98765432109",
           tronAddress: "TRXAdmin987654321"
         });
-        console.log("✅ Seeded admin user - Email: admin@digipay.com, Password: admin123");
+        console.log("✅ Created admin user - Email: admin@digipay.com, Password: admin123");
       } else {
-        // Update existing admin with admin privileges and balances
+        // Only update admin privileges, not balances
         await this.updateUser(adminUser.id, {
           isAdmin: true,
-          kycVerified: true,
-          nairaBalance: "100000",
-          usdtBalance: "100.00"
+          kycVerified: true
         });
-        console.log("✅ Updated admin@digipay.com to have admin privileges");
+        console.log("✅ Updated admin@digipay.com admin privileges");
       }
 
-      // Removed automatic balance seeding to prevent unwanted fund additions
-
-      // Create additional test users for offers
+      // Create additional test users for demo offers (without automatic balances)
       let testUser1 = await this.getUserByEmail("trader1@example.com");
       if (!testUser1) {
         testUser1 = await this.createUser({
@@ -176,14 +155,14 @@ export class DatabaseStorage implements IStorage {
           phone: "08011111111",
           password: "trader123",
           kycVerified: true,
-          nairaBalance: "75000",
-          usdtBalance: "40.00",
+          nairaBalance: "0",
+          usdtBalance: "0",
           bvn: "11111111111",
           tronAddress: "TRXTrader1111",
           averageRating: "4.8",
           ratingCount: 25
         });
-        console.log("✅ Seeded trader1 user");
+        console.log("✅ Created trader1 user (no balance)");
       }
 
       let testUser2 = await this.getUserByEmail("trader2@example.com");
@@ -193,14 +172,14 @@ export class DatabaseStorage implements IStorage {
           phone: "08022222222",
           password: "trader123",
           kycVerified: true,
-          nairaBalance: "120000",
-          usdtBalance: "80.00",
+          nairaBalance: "0",
+          usdtBalance: "0",
           bvn: "22222222222",
           tronAddress: "TRXTrader2222",
           averageRating: "4.9",
           ratingCount: 42
         });
-        console.log("✅ Seeded trader2 user");
+        console.log("✅ Created trader2 user (no balance)");
       }
 
       // Always refresh offers to ensure they exist
@@ -235,7 +214,7 @@ export class DatabaseStorage implements IStorage {
         });
 
         await this.createOffer({
-          userId: user1.id,
+          userId: adminUser.id,
           type: "buy",
           amount: "50.00",
           rate: "1490.00",
@@ -287,7 +266,7 @@ export class DatabaseStorage implements IStorage {
         });
 
         await this.createOffer({
-          userId: user1.id,
+          userId: adminUser.id,
           type: "sell",
           amount: "80.00",
           rate: "1478.00",
@@ -329,7 +308,7 @@ export class DatabaseStorage implements IStorage {
         });
 
         await this.createOffer({
-          userId: user1.id,
+          userId: adminUser.id,
           type: "sell",
           amount: "60.00",
           rate: "1474.00",
