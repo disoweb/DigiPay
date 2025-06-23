@@ -677,6 +677,7 @@ export class DatabaseStorage implements IStorage {
     bankName?: string;
     accountNumber?: string;
     accountName?: string;
+    paystackRef?: string;
   }): Promise<Transaction> {
     const [transaction] = await db
       .insert(transactions)
@@ -690,7 +691,8 @@ export class DatabaseStorage implements IStorage {
         adminNotes: data.adminNotes,
         bankName: data.bankName,
         accountNumber: data.accountNumber,
-        accountName: data.accountName
+        accountName: data.accountName,
+        paystackRef: data.paystackRef
       })
       .returning();
     return transaction;
@@ -739,6 +741,37 @@ export class DatabaseStorage implements IStorage {
 
   async getAllTransactions(): Promise<Transaction[]> {
     return await db.select().from(transactions).orderBy(desc(transactions.createdAt));
+  }
+
+  async getTransactionByReference(reference: string): Promise<Transaction | null> {
+    const result = await db.select()
+      .from(transactions)
+      .where(eq(transactions.paystackRef, reference))
+      .limit(1);
+    return result[0] || null;
+  }
+
+  async getUserPendingDeposit(userId: number): Promise<Transaction | null> {
+    const result = await db.select()
+      .from(transactions)
+      .where(and(
+        eq(transactions.userId, userId),
+        eq(transactions.type, 'deposit'),
+        eq(transactions.status, 'pending')
+      ))
+      .limit(1);
+    return result[0] || null;
+  }
+
+  async deleteTransactionByReference(reference: string): Promise<void> {
+    await db.delete(transactions)
+      .where(eq(transactions.paystackRef, reference));
+  }
+
+  async updateUserBalance(userId: number, balances: { nairaBalance?: string; usdtBalance?: string }): Promise<void> {
+    await db.update(users)
+      .set(balances)
+      .where(eq(users.id, userId));
   }
 
   async getTransaction(id: number): Promise<Transaction | undefined> {

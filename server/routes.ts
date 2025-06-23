@@ -6,7 +6,7 @@ import { setupJWTAuth, authenticateToken, requireKYC, requireAdmin } from "./aut
 import { storage } from "./storage";
 import { insertOfferSchema, insertTradeSchema, insertMessageSchema, insertTransactionSchema, insertRatingSchema } from "@shared/schema";
 import { youVerifyService } from "./services/youverify";
-import { paystackService } from "./services/paystack";
+import { enhancedPaystackService } from "./services/enhanced-paystack.js";
 import { tronService } from "./services/tron";
 import { emailService, smsService } from "./services/notifications";
 import { kycRoutes } from "./routes/kyc";
@@ -2473,109 +2473,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Paystack payment initialization
+  // Enhanced Paystack payment initialization with mobile optimization
   app.post("/api/payments/initialize", authenticateToken, async (req, res) => {
-
     try {
-      const { amount } = req.body;
-      const user = req.user;
+      const { amount, metadata } = req.body;
+      const user = req.user!;
 
-      if (!user?.email) {
-        return res.status(401).json({ error: "User email required" });
-      }
+      console.log(`Payment initialization for user ${user.id}, amount: ₦${amount}`);
 
-      // Allow deposits without KYC verification
+      const result = await enhancedPaystackService.initializePayment(
+        user.id,
+        user.email,
+        parseFloat(amount),
+        metadata
+      );
 
-      const reference = `digipay_${Date.now()}_${user.id}`;
-      const callbackUrl = `${process.env.NODE_ENV === 'production' ? 'https' : 'http'}://${req.get('host')}/payment-callback`;
-      const result = await paystackService.initializePayment(user.email, amount, reference, callbackUrl);
+      console.log("Payment initialization result:", result.success ? "success" : "failed");
+      res.json(result);
 
-      if (result.success) {
-        await storage.createTransaction({
-          userId: user.id,
-          type: "deposit",
-          amount: amount.toString(),
-          status: "pending",
-          paystackRef: reference,
-        });
-
-        // Send email notification
-        await emailService.sendEmail(
-          user.email,
-          "Deposit Initiated - DigiPay",
-          `Your deposit of ₦${amount.toLocaleString()} has been initiated. Reference: ${reference}`
-        );
-
-        res.json(result);
-      } else {
-        res.status(400).json({ error: result.message || "Payment initialization failed" });
-      }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Payment initialization error:", error);
-      res.status(500).json({ error: "Payment initialization failed" });
+      res.status(400).json({ 
+        success: false, 
+        message: error.message 
+      });
     }
   });
 
-  // Paystack webhook for automatic payment verification and auto-settlement
+  // Enhanced Paystack webhook for automatic processing
   app.post("/api/payments/webhook", async (req, res) => {
     try {
-      const hash = crypto.createHmac('sha512', process.env.PAYSTACK_SECRET_KEY!).update(JSON.stringify(req.body)).digest('hex');
-      if (hash === req.headers['x-paystack-signature']) {
-        const event = req.body;
-        
-        if (event.event === 'charge.success') {
-          const { reference, amount, status } = event.data;
-          
-          // Find the transaction by reference
-          const allTransactions = await storage.getAllTransactions();
-          const transaction = allTransactions.find(tx => tx.paystackRef === reference);
-          
-          if (transaction && transaction.status === 'pending') {
-            // Auto-settle: Update transaction status to completed
-            await storage.updateTransaction(transaction.id, { 
-              status: 'completed',
-              approvedAt: new Date(),
-              adminNotes: 'Auto-settled via webhook'
-            });
-            
-            // Immediately update user balance
-            const user = await storage.getUser(transaction.userId);
-            if (user) {
-              const currentBalance = parseFloat(user.nairaBalance || "0");
-              const depositAmount = amount / 100; // Convert from kobo to naira
-              const newBalance = currentBalance + depositAmount;
-              
-              await storage.updateUser(user.id, { 
-                nairaBalance: newBalance.toString() 
-              });
-              
-              console.log(`Webhook auto-settlement: User ${user.id} balance updated to ₦${newBalance} via reference ${reference}`);
-              
-              // Send success email notification
-              try {
-                await emailService.sendEmail(
-                  user.email,
-                  "Deposit Confirmed - DigiPay",
-                  `Your deposit of ₦${depositAmount.toLocaleString()} has been automatically credited to your account.`
-                );
-              } catch (emailError) {
-                console.log("Webhook email notification failed:", emailError.message);
-              }
-            }
-          }
-        }
-        
-        res.status(200).send('OK');
-      } else {
-        res.status(400).send('Invalid signature');
+      const signature = req.headers['x-paystack-signature'] as string;
+      
+      if (!signature) {
+        return res.status(400).send('Missing signature');
       }
-    } catch (error) {
-      console.error("Webhook error:", error);
-      res.status(500).send('Webhook processing failed');
+
+      await enhancedPaystackService.handleWebhook(req.body, signature);
+      
+      res.status(200).send('Webhook processed successfully');
+    } catch (error: any) {
+      console.error('Webhook processing error:', error);
+      res.status(400).send(error.message || 'Webhook processing failed');
     }
   });
 
-  // Paystack payment verification - Auto-settle deposits
+  // Enhanced Paystack payment verification with automatic balance crediting
   app.post("/api/payments/verify", authenticateToken, async (req, res) => {
     try {
       const { reference } = req.body;
@@ -2583,90 +2526,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log(`Verifying payment for user ${userId}, reference: ${reference}`);
 
-      // Check ALL transactions globally for this reference to prevent any duplicates
-      const allTransactions = await storage.getAllTransactions();
-      const existingTransaction = allTransactions.find(tx => tx.paystackRef === reference);
+      const result = await enhancedPaystackService.verifyPayment(reference, userId);
+      
+      console.log("Payment verification result:", result.success ? "success" : "failed");
+      res.json(result);
 
-      if (existingTransaction) {
-        console.log("Transaction already exists for reference:", reference, "Status:", existingTransaction.status);
-        return res.json({
-          success: true,
-          data: { status: 'success', amount: parseFloat(existingTransaction.amount) * 100 },
-          balanceUpdated: false,
-          message: "Payment already processed",
-          existing: true
-        });
-      }
-
-      const result = await paystackService.verifyPayment(reference);
-      console.log("Paystack verification result:", result);
-
-      if (result.success && result.data && result.data.status === 'success') {
-        // Double-check again before creating transaction to handle race conditions
-        const reCheckTransactions = await storage.getAllTransactions();
-        const reCheckExisting = reCheckTransactions.find(tx => tx.paystackRef === reference);
-        
-        if (reCheckExisting) {
-          console.log("Race condition detected - transaction already exists:", reference);
-          return res.json({
-            success: true,
-            data: { status: 'success', amount: parseFloat(reCheckExisting.amount) * 100 },
-            balanceUpdated: false,
-            message: "Payment already processed"
-          });
-        }
-
-        // Create and auto-settle new transaction
-        console.log("Creating new transaction for successful payment");
-        const depositAmount = result.data.amount / 100;
-        
-        const newTransaction = await storage.createTransaction({
-          userId,
-          type: "deposit",
-          amount: depositAmount.toString(),
-          status: "completed", // Auto-settle
-          paystackRef: reference,
-          approvedAt: new Date(),
-          adminNotes: "Auto-settled via payment verification"
-        });
-
-        // Update user balance
-        const user = await storage.getUser(userId);
-        if (user) {
-          const currentBalance = parseFloat(user.nairaBalance || "0");
-          const newBalance = currentBalance + depositAmount;
-          
-          await storage.updateUser(user.id, { 
-            nairaBalance: newBalance.toString() 
-          });
-          
-          console.log(`User ${user.id} balance updated: ${currentBalance} + ${depositAmount} = ${newBalance}`);
-
-          // Send success notification
-          try {
-            await emailService.sendEmail(
-              user.email,
-              "Deposit Confirmed - DigiPay",
-              `Your deposit of ₦${depositAmount.toLocaleString()} has been automatically credited to your account.`
-            );
-          } catch (emailError) {
-            console.log("Email notification failed:", emailError.message);
-          }
-        }
-
-        res.json({
-          ...result,
-          balanceUpdated: true,
-          autoSettled: true,
-          transactionId: newTransaction.id
-        });
-      } else {
-        console.log("Payment not successful, status:", result.data?.status || "failed");
-        res.status(400).json({ error: result.message || "Payment verification failed" });
-      }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Payment verification error:", error);
-      res.status(500).json({ error: "Payment verification failed" });
+      res.status(400).json({ 
+        success: false, 
+        message: error.message 
+      });
     }
   });
 

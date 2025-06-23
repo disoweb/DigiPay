@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { apiRequest } from "@/lib/queryClient";
 import { Navbar } from "@/components/navbar";
-import { DepositModal } from "@/components/deposit-modal";
+import { EnhancedDepositModal } from "@/components/enhanced-deposit-modal";
 import { WithdrawModal } from "@/components/withdraw-modal";
 import { TransactionDetailModal } from "@/components/transaction-detail-modal";
 import { SendFundsModal } from "@/components/send-funds-modal";
@@ -563,7 +563,7 @@ export default function Wallet() {
       </main>
 
       {/* Modals */}
-      <DepositModal open={showDeposit} onOpenChange={setShowDeposit} />
+      <EnhancedDepositModal open={showDeposit} onOpenChange={setShowDeposit} user={user} />
       <WithdrawModal open={showWithdraw} onOpenChange={setShowWithdraw} balance={user.nairaBalance || "0"} />
 
       {/* Transaction Detail Modal */}
