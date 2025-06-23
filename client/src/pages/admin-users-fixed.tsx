@@ -31,6 +31,13 @@ export default function AdminUsersFixed() {
 
   const { data: users = [], isLoading, error } = useQuery({
     queryKey: ["/api/admin/users"],
+    queryFn: async () => {
+      const response = await apiRequest("GET", "/api/admin/users");
+      if (!response.ok) {
+        throw new Error("Failed to fetch admin users");
+      }
+      return response.json();
+    },
     onError: (err) => {
       console.error("Failed to fetch admin users:", err);
     },

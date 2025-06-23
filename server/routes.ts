@@ -38,11 +38,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/users/:userId", authenticateToken, async (req, res) => {
     try {
       const userId = parseInt(req.params.userId);
-      
+
       if (isNaN(userId)) {
         return res.status(400).json({ error: "Invalid user ID" });
       }
-      
+
       const user = await storage.getUser(userId);
       if (!user) {
         return res.status(404).json({ error: "User not found" });
@@ -291,7 +291,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const offerId = parseInt(req.params.id);
       const offer = await storage.getOffer(offerId);
-      
+
       if (!offer) {
         return res.status(404).json({ error: "Offer not found" });
       }
@@ -1066,7 +1066,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Seller wins - gets USDT back and fiat amount
           const usdtAmount = parseFloat(trade.amount);
           const fiatAmount = parseFloat(trade.fiatAmount);
-          
+
           await storage.updateUser(seller.id, {
             usdtBalance: (parseFloat(seller.usdtBalance || "0") + usdtAmount).toString(),
             nairaBalance: (parseFloat(seller.nairaBalance || "0") + fiatAmount).toString()
@@ -1793,7 +1793,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
          ORDER BY created_at ASC`,
         [currentUserId, userId]
       );
-      
+
       const messages = result.rows.map(row => ({
         id: row.id,
         senderId: row.sender_id,
@@ -1988,7 +1988,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin routes
-  app.get("/api/admin/trades", authenticateToken, requireAdmin, async (req, res) => {
+  // Admin users endpoint
+  app.get("/api/admin/users", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      console.log("Admin users endpoint called");
+      const allUsers = await db.select({
+        id: users.id,
+        email: users.email,
+        username: users.username,
+        first_name: users.firstName,
+        last_name: users.lastName,
+        phone: users.phone,
+        kyc_verified: users.kycVerified,
+        kyc_status: users.kycStatus,
+        naira_balance: users.nairaBalance,
+        usdt_balance: users.usdtBalance,
+        average_rating: users.averageRating,
+        rating_count: users.ratingCount,
+        is_admin: users.isAdmin,
+        is_online: users.isOnline,
+        is_banned: users.isBanned,
+        funds_frozen: users.fundsFrozen,
+        created_at: users.createdAt,
+        total_trades: users.ratingCount, // Using rating count as proxy for total trades
+        completed_trades: users.ratingCount // Using rating count as proxy for completed trades
+      }).from(users);
+
+      console.log(`Found ${allUsers.length} users`);
+      res.json(allUsers);
+    } catch (error) {
+      console.error("Admin users error:", error);
+      res.status(500).json({ error: "Failed to fetch users" });
+    }
+  });
+
+  // Admin routes for approvals
+  app.get("/api/admin/transactions", authenticateToken, requireAdmin, async (req, res) => {
 
     try {
       const trades = await storage.getTrades();
@@ -2217,39 +2252,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Enhanced admin endpoints
-  app.get("/api/admin/users", authenticateToken, requireAdmin, async (req, res) => {
-    try {
-      const result = await pool.query(`
-        SELECT 
-          u.id, u.email, u.username, u.first_name, u.last_name, u.phone, 
-          u.kyc_verified, u.kyc_status, u.naira_balance, u.usdt_balance,
-          u.average_rating, u.rating_count, u.is_online, u.last_seen,
-          u.created_at, u.is_admin,
-          COUNT(DISTINCT t.id) as total_trades,
-          COUNT(DISTINCT CASE WHEN t.status = 'completed' THEN t.id END) as completed_trades
-        FROM users u
-        LEFT JOIN trades t ON (t.buyer_id = u.id OR t.seller_id = u.id)
-        GROUP BY u.id
-        ORDER BY u.created_at DESC
-      `);
-      
-      res.json(result.rows);
-    } catch (error) {
-      console.error("Admin users error:", error);
-      res.status(500).json({ error: "Failed to fetch users" });
-    }
-  });
-
   app.patch("/api/admin/users/:userId/ban", authenticateToken, requireAdmin, async (req, res) => {
     try {
       const userId = parseInt(req.params.userId);
       const { banned, reason } = req.body;
-      
+
       await pool.query(
         "UPDATE users SET is_banned = $1, ban_reason = $2, banned_at = $3 WHERE id = $4",
         [banned, reason || null, banned ? new Date() : null, userId]
       );
-      
+
       res.json({ message: `User ${banned ? 'banned' : 'unbanned'} successfully` });
     } catch (error) {
       console.error("Ban user error:", error);
@@ -2261,12 +2273,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = parseInt(req.params.userId);
       const { frozen, reason } = req.body;
-      
+
       await pool.query(
         "UPDATE users SET funds_frozen = $1, freeze_reason = $2, frozen_at = $3 WHERE id = $4",
         [frozen, reason || null, frozen ? new Date() : null, userId]
       );
-      
+
       res.json({ message: `User funds ${frozen ? 'frozen' : 'unfrozen'} successfully` });
     } catch (error) {
       console.error("Freeze funds error:", error);
@@ -2289,7 +2301,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         WHERE t.status = 'disputed'
         ORDER BY t.dispute_created_at DESC
       `);
-      
+
       res.json(result.rows);
     } catch (error) {
       console.error("Admin disputes error:", error);
@@ -2301,16 +2313,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const tradeId = parseInt(req.params.tradeId);
       const { resolution, winner, notes } = req.body;
-      
+
       const newStatus = resolution === 'release' ? 'completed' : 'cancelled';
-      
+
       await pool.query(`
         UPDATE trades 
         SET status = $1, dispute_resolution = $2, dispute_winner = $3, 
             admin_notes = $4, last_admin_update = NOW()
         WHERE id = $5
       `, [newStatus, resolution, winner, notes, tradeId]);
-      
+
       res.json({ message: "Dispute resolved successfully" });
     } catch (error) {
       console.error("Resolve dispute error:", error);
@@ -2322,12 +2334,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const transactionId = parseInt(req.params.id);
       const { notes } = req.body;
-      
+
       await pool.query(
         "UPDATE transactions SET status = 'approved', admin_notes = $1 WHERE id = $2",
         [notes || null, transactionId]
       );
-      
+
       res.json({ message: "Transaction approved successfully" });
     } catch (error) {
       console.error("Approve transaction error:", error);
@@ -2339,12 +2351,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const transactionId = parseInt(req.params.id);
       const { notes } = req.body;
-      
+
       await pool.query(
         "UPDATE transactions SET status = 'rejected', admin_notes = $1 WHERE id = $2",
         [notes || null, transactionId]
       );
-      
+
       res.json({ message: "Transaction rejected successfully" });
     } catch (error) {
       console.error("Reject transaction error:", error);
@@ -2356,14 +2368,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/users/lookup", authenticateToken, async (req, res) => {
     try {
       const { query } = req.body;
-      
+
       if (!query || query.trim().length === 0) {
         return res.status(400).json({ error: "Query parameter is required" });
       }
 
       let user = null;
       const trimmedQuery = query.trim().toLowerCase();
-      
+
       // Try to find by email first
       if (trimmedQuery.includes('@')) {
         user = await storage.getUserByEmail(trimmedQuery);
