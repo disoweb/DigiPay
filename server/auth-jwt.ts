@@ -138,7 +138,7 @@ export function setupJWTAuth(app: Express) {
   app.post("/api/auth/register", async (req: Request, res: Response) => {
     try {
       const { email, password, phone, bvn } = req.body;
-      
+
       if (!email || !password) {
         return res.status(400).json({ error: "Email and password are required" });
       }
@@ -159,7 +159,7 @@ export function setupJWTAuth(app: Express) {
 
       const wallet = tronService.generateWallet();
       const hashedPassword = await hashPassword(password);
-      
+
       const user = await storage.createUser({
         email: email.toLowerCase(),
         password: hashedPassword,
@@ -192,7 +192,7 @@ export function setupJWTAuth(app: Express) {
 
       const token = generateToken(user);
       const { password: _, ...userWithoutPassword } = user;
-      
+
       res.status(201).json({ 
         ...userWithoutPassword, 
         token 
@@ -207,7 +207,7 @@ export function setupJWTAuth(app: Express) {
   app.post("/api/auth/login", async (req: Request, res: Response) => {
     try {
       const { email, password } = req.body;
-      
+
       if (!email || !password) {
         return res.status(400).json({ error: "Email and password are required" });
       }
@@ -222,9 +222,26 @@ export function setupJWTAuth(app: Express) {
         return res.status(401).json({ error: "Invalid email or password" });
       }
 
+      // For demo - auto-create admin user if logging in with admin email
+      if (email === "admin@digipay.com" && !user) {
+        user = await storage.createUser({
+          email,
+          password: await bcrypt.hash(password, 10),
+          firstName: "Admin",
+          lastName: "User",
+          isAdmin: true
+        });
+      }
+
+      // Ensure admin@digipay.com always has admin privileges
+      if (email === "admin@digipay.com" && user && !user.isAdmin) {
+        await storage.updateUser(user.id, { isAdmin: true });
+        user.isAdmin = true;
+      }
+
       const token = generateToken(user);
       const { password: _, ...userWithoutPassword } = user;
-      
+
       // Return token in response for client-side storage (development approach)
       res.json({ 
         ...userWithoutPassword, 

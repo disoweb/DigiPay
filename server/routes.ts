@@ -1786,7 +1786,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Get messages between current user and specified user using direct SQL
       const result = await pool.query(
-        `SELECT id, sender_id, recipient_id, message, trade_id, is_read, created_at
+        ````text
+SELECT id, sender_id, recipient_id, message, trade_id, is_read, created_at
          FROM messages 
          WHERE (sender_id = $1 AND recipient_id = $2) 
             OR (sender_id = $2 AND recipient_id = $1)
@@ -2666,7 +2667,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   app.post("/api/ratings", authenticateToken, async (req, res) => {
-    try {
+    try{
       const { tradeId, rating, comment } = req.body;
       const user = req.user!;
 
