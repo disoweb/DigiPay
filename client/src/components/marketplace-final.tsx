@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -246,7 +246,7 @@ export function MarketplaceFinal() {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterType, setFilterType] = useState<"all" | "buy" | "sell">("all");
+  const [filterType, setFilterType] = useState<"buy" | "sell">("buy");
   const [paymentMethodFilter, setPaymentMethodFilter] = useState("all");
   const [minAmount, setMinAmount] = useState("");
   const [maxAmount, setMaxAmount] = useState("");
@@ -351,7 +351,7 @@ export function MarketplaceFinal() {
     }
 
     // Type filter
-    if (filterType !== "all" && offer.type !== filterType) {
+    if (offer.type !== filterType) {
       return false;
     }
 
@@ -518,12 +518,11 @@ export function MarketplaceFinal() {
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div className="space-y-2">
                     <Label className="text-sm font-medium">Type</Label>
-                    <Select value={filterType} onValueChange={(value: "all" | "buy" | "sell") => setFilterType(value)}>
+                    <Select value={filterType} onValueChange={(value: "buy" | "sell") => setFilterType(value)}>
                       <SelectTrigger className="h-12 rounded-xl">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all">All Types</SelectItem>
                         <SelectItem value="buy">Buy Offers</SelectItem>
                         <SelectItem value="sell">Sell Offers</SelectItem>
                       </SelectContent>
@@ -558,103 +557,78 @@ export function MarketplaceFinal() {
         </CardContent>
       </Card>
 
-      {/* Enhanced Mobile Tabs */}
-      <Tabs defaultValue="buy" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2 bg-gray-100 p-2 h-16 rounded-2xl">
-          <TabsTrigger 
-            value="buy" 
-            className="flex items-center gap-3 data-[state=active]:bg-gradient-to-r data-[state=active]:from-green-600 data-[state=active]:to-green-700 data-[state=active]:text-white text-base font-bold rounded-xl transition-all duration-200"
-          >
-            <TrendingUp className="h-5 w-5" />
-            <div className="text-left">
-              <div className="text-sm font-bold">Buy USDT</div>
-              <div className="text-xs opacity-80">{buyOffers.length} offers</div>
-            </div>
-          </TabsTrigger>
-          <TabsTrigger 
-            value="sell" 
-            className="flex items-center gap-3 data-[state=active]:bg-gradient-to-r data-[state=active]:from-red-600 data-[state=active]:to-red-700 data-[state=active]:text-white text-base font-bold rounded-xl transition-all duration-200"
-          >
-            <DollarSign className="h-5 w-5" />
-            <div className="text-left">
-              <div className="text-sm font-bold">Sell USDT</div>
-              <div className="text-xs opacity-80">{sellOffers.length} offers</div>
-            </div>
-          </TabsTrigger>
-        </TabsList>
+      {/* Buy/Sell Filter Buttons */}
+      <div className="flex gap-3 mb-6">
+        <button
+          onClick={() => setFilterType("buy")}
+          className={`flex-1 h-14 rounded-2xl font-bold text-lg transition-all duration-200 ${
+            filterType === "buy"
+              ? "bg-black text-white shadow-lg"
+              : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+          }`}
+        >
+          Buy USDT
+        </button>
+        <button
+          onClick={() => setFilterType("sell")}
+          className={`flex-1 h-14 rounded-2xl font-bold text-lg transition-all duration-200 ${
+            filterType === "sell"
+              ? "bg-gray-500 text-white shadow-lg"
+              : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+          }`}
+        >
+          Sell USDT
+        </button>
+      </div>
 
-        <TabsContent value="buy" className="space-y-4 mt-8">
-          {buyOffers.length === 0 ? (
-            <div className="text-center py-16 bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl border border-green-100">
-              <div className="p-4 bg-green-100 rounded-full w-20 h-20 mx-auto mb-6 flex items-center justify-center">
-                <Eye className="h-10 w-10 text-green-600" />
-              </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-3">No Buy Offers Available</h3>
-              <p className="text-gray-600 mb-6 max-w-sm mx-auto leading-relaxed">
-                {filteredOffers.length === 0 && offers.length > 0 
-                  ? "Try adjusting your filters to see more offers" 
-                  : "Be the first to create a buy offer and start trading"}
-              </p>
-              <Button 
-                onClick={() => setLocation('/create-offer')} 
-                className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-bold px-8 py-3 rounded-xl shadow-lg"
-                size="lg"
-              >
-                <TrendingUp className="h-5 w-5 mr-2" />
-                Create Buy Offer
-              </Button>
+      {/* Offers Display */}
+      <div className="space-y-4">
+        {(filterType === "buy" ? buyOffers : sellOffers).length === 0 ? (
+          <div className={`text-center py-16 rounded-2xl border ${
+            filterType === "buy" 
+              ? "bg-gradient-to-br from-green-50 to-emerald-50 border-green-100"
+              : "bg-gradient-to-br from-red-50 to-pink-50 border-red-100"
+          }`}>
+            <div className={`p-4 rounded-full w-20 h-20 mx-auto mb-6 flex items-center justify-center ${
+              filterType === "buy" ? "bg-green-100" : "bg-red-100"
+            }`}>
+              <Eye className={`h-10 w-10 ${filterType === "buy" ? "text-green-600" : "text-red-600"}`} />
             </div>
-          ) : (
-            <div className="space-y-4">
-              {buyOffers.map((offer) => (
-                <OfferCard
-                  key={offer.id}
-                  offer={offer}
-                  onStartTrade={handleStartTrade}
-                  onMessage={handleMessageTrader}
-                  canContact={canContactOffer}
-                />
-              ))}
-            </div>
-          )}
-        </TabsContent>
-
-        <TabsContent value="sell" className="space-y-4 mt-8">
-          {sellOffers.length === 0 ? (
-            <div className="text-center py-16 bg-gradient-to-br from-red-50 to-pink-50 rounded-2xl border border-red-100">
-              <div className="p-4 bg-red-100 rounded-full w-20 h-20 mx-auto mb-6 flex items-center justify-center">
-                <Eye className="h-10 w-10 text-red-600" />
-              </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-3">No Sell Offers Available</h3>
-              <p className="text-gray-600 mb-6 max-w-sm mx-auto leading-relaxed">
-                {filteredOffers.length === 0 && offers.length > 0 
-                  ? "Try adjusting your filters to see more offers" 
-                  : "Be the first to create a sell offer and start trading"}
-              </p>
-              <Button 
-                onClick={() => setLocation('/create-offer')} 
-                className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-bold px-8 py-3 rounded-xl shadow-lg"
-                size="lg"
-              >
-                <DollarSign className="h-5 w-5 mr-2" />
-                Create Sell Offer
-              </Button>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {sellOffers.map((offer) => (
-                <OfferCard
-                  key={offer.id}
-                  offer={offer}
-                  onStartTrade={handleStartTrade}
-                  onMessage={handleMessageTrader}
-                  canContact={canContactOffer}
-                />
-              ))}
-            </div>
-          )}
-        </TabsContent>
-      </Tabs>
+            <h3 className="text-2xl font-bold text-gray-900 mb-3">
+              No {filterType === "buy" ? "Buy" : "Sell"} Offers Available
+            </h3>
+            <p className="text-gray-600 mb-6 max-w-sm mx-auto leading-relaxed">
+              {filteredOffers.length === 0 && offers.length > 0 
+                ? "Try adjusting your filters to see more offers" 
+                : `Be the first to create a ${filterType} offer and start trading`}
+            </p>
+            <Button 
+              onClick={() => setLocation('/create-offer')} 
+              className={`font-bold px-8 py-3 rounded-xl shadow-lg text-white ${
+                filterType === "buy"
+                  ? "bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800"
+                  : "bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800"
+              }`}
+              size="lg"
+            >
+              {filterType === "buy" ? <TrendingUp className="h-5 w-5 mr-2" /> : <DollarSign className="h-5 w-5 mr-2" />}
+              Create {filterType === "buy" ? "Buy" : "Sell"} Offer
+            </Button>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {(filterType === "buy" ? buyOffers : sellOffers).map((offer) => (
+              <OfferCard
+                key={offer.id}
+                offer={offer}
+                onStartTrade={handleStartTrade}
+                onMessage={handleMessageTrader}
+                canContact={canContactOffer}
+              />
+            ))}
+          </div>
+        )}
+      </div>
 
 
     </div>
