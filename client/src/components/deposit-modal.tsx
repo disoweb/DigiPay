@@ -94,13 +94,13 @@ export function DepositModal({ open, onOpenChange }: DepositModalProps) {
       if (paystackData.authorization_url) {
         console.log("Opening Paystack URL directly:", paystackData.authorization_url);
         const paymentWindow = window.open(paystackData.authorization_url, '_blank', 'width=600,height=700');
-        
+
         // Show manual verification option
         toast({
           title: "Payment Window Opened",
           description: "Complete your payment in the new window, then click 'Verify Payment' below.",
         });
-        
+
         setIsProcessing(false);
         return;
       }
@@ -133,7 +133,7 @@ export function DepositModal({ open, onOpenChange }: DepositModalProps) {
     } catch (error) {
       console.error("Paystack payment error:", error);
       setIsProcessing(false);
-      
+
       // If inline payment fails, show the authorization URL as fallback
       if (paystackData.authorization_url) {
         toast({
@@ -177,13 +177,15 @@ export function DepositModal({ open, onOpenChange }: DepositModalProps) {
 
         toast({
           title: "Payment Successful!",
-          description: `₦${depositAmount.toLocaleString()} has been added to your account.`,
+          description: `₦${depositAmount.toLocaleString()} has been automatically credited to your account.`,
         });
 
         // Refresh user data and close modal
         await queryClient.invalidateQueries({ queryKey: ["user"] });
         await queryClient.invalidateQueries({ queryKey: ["transactions"] });
         setAmount("");
+        setShowVerifyButton(false);
+        setPaymentReference("");
         onOpenChange(false);
       } else {
         throw new Error(result.message || "Payment verification failed");

@@ -2516,7 +2516,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Paystack webhook for automatic payment verification
+  // Paystack webhook for automatic payment verification and auto-settlement
   app.post("/api/payments/webhook", async (req, res) => {
     try {
       const hash = crypto.createHmac('sha512', process.env.PAYSTACK_SECRET_KEY!).update(JSON.stringify(req.body)).digest('hex');
@@ -2531,10 +2531,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const transaction = allTransactions.find(tx => tx.paystackRef === reference);
           
           if (transaction && transaction.status === 'pending') {
-            // Update transaction status
-            await storage.updateTransaction(transaction.id, { status: 'completed' });
+            // Auto-settle: Update transaction status to completed
+            await storage.updateTransaction(transaction.id, { 
+              status: 'completed',
+              approvedAt: new Date(),
+              adminNotes: 'Auto-settled via webhook'
+            });
             
-            // Update user balance
+            // Immediately update user balance
             const user = await storage.getUser(transaction.userId);
             if (user) {
               const currentBalance = parseFloat(user.nairaBalance || "0");
@@ -2545,14 +2549,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 nairaBalance: newBalance.toString() 
               });
               
-              console.log(`Webhook: User ${user.id} balance updated to ₦${newBalance} via reference ${reference}`);
+              console.log(`Webhook auto-settlement: User ${user.id} balance updated to ₦${newBalance} via reference ${reference}`);
               
               // Send success email notification
-              await emailService.sendEmail(
-                user.email,
-                "Deposit Confirmed - DigiPay",
-                `Your deposit of ₦${depositAmount.toLocaleString()} has been successfully credited to your account.`
-              );
+              try {
+                await emailService.sendEmail(
+                  user.email,
+                  "Deposit Confirmed - DigiPay",
+                  `Your deposit of ₦${depositAmount.toLocaleString()} has been automatically credited to your account.`
+                );
+              } catch (emailError) {
+                console.log("Webhook email notification failed:", emailError.message);
+              }
             }
           }
         }
@@ -2567,7 +2575,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Paystack payment verification
+  // Paystack payment verification - Auto-settle deposits
   app.post("/api/payments/verify", authenticateToken, async (req, res) => {
     try {
       const { reference } = req.body;
@@ -2587,24 +2595,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.log("Found pending transaction:", pendingTx);
 
           if (pendingTx) {
-            // Update transaction status
-            await storage.updateTransaction(pendingTx.id, { status: "completed" });
-            console.log(`Transaction ${pendingTx.id} marked as completed`);
+            // Auto-settle: Update transaction status to completed
+            await storage.updateTransaction(pendingTx.id, { 
+              status: "completed",
+              approvedAt: new Date(),
+              adminNotes: "Auto-settled via payment verification"
+            });
+            console.log(`Transaction ${pendingTx.id} auto-settled as completed`);
 
-            // Update user balance
+            // Immediately update user balance
             const user = await storage.getUser(userId);
             if (user) {
               const currentBalance = parseFloat(user.nairaBalance || "0");
               const depositAmount = result.data.amount / 100; // Convert from kobo to naira
               const newBalance = currentBalance + depositAmount;
 
-              console.log(`Updating balance: ${currentBalance} + ${depositAmount} = ${newBalance}`);
+              console.log(`Auto-settling balance: ${currentBalance} + ${depositAmount} = ${newBalance}`);
 
               await storage.updateUser(user.id, { 
                 nairaBalance: newBalance.toString() 
               });
 
-              console.log(`User ${user.id} balance updated to ₦${newBalance}`);
+              console.log(`User ${user.id} balance auto-settled to ₦${newBalance}`);
+
+              // Send success notification
+              try {
+                await emailService.sendEmail(
+                  user.email,
+                  "Deposit Confirmed - DigiPay",
+                  `Your deposit of ₦${depositAmount.toLocaleString()} has been automatically credited to your account.`
+                );
+              } catch (emailError) {
+                console.log("Email notification failed:", emailError.message);
+              }
             }
           } else {
             console.log("No pending transaction found for reference:", reference);
@@ -2620,19 +2643,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 message: "Payment already processed"
               });
             } else if (!existingTx) {
-              // Create new transaction if none exists
-              console.log("Creating new transaction for successful payment");
+              // Create and auto-settle new transaction
+              console.log("Creating and auto-settling new transaction for successful payment");
               const depositAmount = result.data.amount / 100;
               
               await storage.createTransaction({
                 userId,
                 type: "deposit",
                 amount: depositAmount.toString(),
-                status: "completed",
+                status: "completed", // Auto-settle
                 paystackRef: reference,
+                approvedAt: new Date(),
+                adminNotes: "Auto-settled via payment verification"
               });
 
-              // Update user balance
+              // Immediately update user balance
               const user = await storage.getUser(userId);
               if (user) {
                 const currentBalance = parseFloat(user.nairaBalance || "0");
@@ -2642,7 +2667,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   nairaBalance: newBalance.toString() 
                 });
                 
-                console.log(`User ${user.id} balance updated to ₦${newBalance}`);
+                console.log(`User ${user.id} balance auto-settled to ₦${newBalance}`);
+
+                // Send success notification
+                try {
+                  await emailService.sendEmail(
+                    user.email,
+                    "Deposit Confirmed - DigiPay",
+                    `Your deposit of ₦${depositAmount.toLocaleString()} has been automatically credited to your account.`
+                  );
+                } catch (emailError) {
+                  console.log("Email notification failed:", emailError.message);
+                }
               }
             }
           }
@@ -2652,7 +2688,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         res.json({
           ...result,
-          balanceUpdated: true // Flag to indicate balance was updated
+          balanceUpdated: true, // Flag to indicate balance was updated
+          autoSettled: true // Flag to indicate auto-settlement
         });
       } else {
         console.log("Payment verification failed:", result.message);

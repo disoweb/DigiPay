@@ -1,4 +1,3 @@
-
 import { createContext, useContext, ReactNode } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -96,7 +95,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           title: "Success",
           description: "Logged in successfully!",
         });
-        
+
         // Set a timeout to ensure token is stored before navigation
         setTimeout(() => {
           window.location.href = data.isAdmin ? "/admin" : "/marketplace";
@@ -147,11 +146,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.log("Server logout error:", error);
     }
-    
+
     // Clear client-side data
     localStorage.removeItem("digipay_token");
     queryClient.clear();
-    
+
     // Force page reload to completely reset auth state
     window.location.href = "/auth";
   };
