@@ -378,119 +378,195 @@ export default function AdminUsersFixed() {
             </Card>
           </div>
 
-          {/* Users Table - Mobile Responsive */}
-          <Card>
-            <CardHeader className="pb-4">
-              <CardTitle className="text-lg sm:text-xl">All Users ({filteredUsers.length})</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="min-w-[200px]">User</TableHead>
-                      <TableHead className="hidden sm:table-cell">KYC Status</TableHead>
-                      <TableHead className="hidden lg:table-cell">Balance</TableHead>
-                      <TableHead className="hidden md:table-cell">Trades</TableHead>
-                      <TableHead className="hidden lg:table-cell">Rating</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredUsers.map((user: User) => (
-                      <TableRow key={user.id}>
-                        <TableCell>
-                          <div>
-                            <div className="font-medium text-sm">{user.email}</div>
-                            <div className="text-xs text-gray-500">
-                              {user.first_name} {user.last_name}
-                            </div>
-                            <div className="text-xs text-gray-400">ID: {user.id}</div>
-                          </div>
-                        </TableCell>
-                        <TableCell className="hidden sm:table-cell">
-                          <Badge variant={user.kyc_verified ? "default" : "secondary"} className="text-xs">
-                            {user.kyc_verified ? "Verified" : user.kyc_status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="hidden lg:table-cell">
-                          <div className="text-xs">
-                            <div>₦{parseFloat(user.naira_balance).toLocaleString()}</div>
-                            <div className="text-gray-500">{parseFloat(user.usdt_balance).toFixed(2)} USDT</div>
-                          </div>
-                        </TableCell>
-                        <TableCell className="hidden md:table-cell">
-                          <div className="text-xs">
-                            <div>{user.completed_trades}/{user.total_trades}</div>
-                            <div className="text-gray-500">completed</div>
-                          </div>
-                        </TableCell>
-                        <TableCell className="hidden lg:table-cell">
-                          <div className="text-xs">
-                            <div>⭐ {parseFloat(user.average_rating).toFixed(1)}</div>
-                            <div className="text-gray-500">({user.rating_count} reviews)</div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex flex-col gap-1">
-                            {user.is_admin && (
-                              <Badge variant="outline" className="text-purple-600 border-purple-600 text-xs">
-                                Admin
-                              </Badge>
-                            )}
-                            {user.is_banned && (
-                              <Badge variant="destructive" className="text-xs">Banned</Badge>
-                            )}
-                            {user.funds_frozen && (
-                              <Badge variant="secondary" className="text-orange-600 text-xs">Frozen</Badge>
-                            )}
-                            <Badge variant={user.is_online ? "default" : "secondary"} className="text-xs">
-                              {user.is_online ? "Online" : "Offline"}
-                            </Badge>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex gap-1 justify-end">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleAction(user, "view")}
-                              className="h-8 w-8 p-0"
-                            >
-                              <Eye className="h-3 w-3" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleAction(user, "edit")}
-                              className="h-8 w-8 p-0"
-                            >
-                              <Edit className="h-3 w-3" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleAction(user, "freeze")}
-                              className="h-8 w-8 p-0 text-orange-600 hover:text-orange-700"
-                            >
-                              <Snowflake className="h-3 w-3" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleAction(user, "ban")}
-                              className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
-                            >
-                              <Ban className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+          {/* All Users - Modern Card Layout */}
+          <Card className="border-0 shadow-lg bg-white/90 backdrop-blur-sm">
+            <CardHeader className="pb-4 border-b border-gray-100">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div>
+                  <CardTitle className="text-lg sm:text-xl flex items-center gap-2">
+                    <Users className="h-5 w-5 text-blue-600" />
+                    All Users
+                  </CardTitle>
+                  <p className="text-sm text-gray-600 mt-1">
+                    {filteredUsers.length} of {users.length} users shown
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline" className="text-xs">
+                    {users.filter((u: User) => u.is_online).length} online
+                  </Badge>
+                </div>
               </div>
+            </CardHeader>
+            <CardContent className="p-0">
+              {filteredUsers.length === 0 ? (
+                <div className="text-center py-12">
+                  <Users className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                  <p className="text-gray-500 font-medium">No users found</p>
+                  <p className="text-sm text-gray-400">Try adjusting your search</p>
+                </div>
+              ) : (
+                <div className="divide-y divide-gray-100">
+                  {filteredUsers.map((user: User) => (
+                    <div
+                      key={user.id}
+                      className="p-4 hover:bg-gray-50 transition-colors"
+                    >
+                      <div className="flex items-start justify-between gap-4">
+                        {/* User Avatar & Info */}
+                        <div className="flex items-center space-x-3 flex-1 min-w-0">
+                          <div className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 ${
+                            user.is_admin ? 'bg-purple-100' : 
+                            user.kyc_verified ? 'bg-green-100' : 
+                            user.is_banned ? 'bg-red-100' : 'bg-gray-100'
+                          }`}>
+                            {user.is_admin ? (
+                              <Shield className={`w-6 h-6 text-purple-600`} />
+                            ) : user.kyc_verified ? (
+                              <UserCheck className={`w-6 h-6 text-green-600`} />
+                            ) : user.is_banned ? (
+                              <Ban className={`w-6 h-6 text-red-600`} />
+                            ) : (
+                              <Users className={`w-6 h-6 text-gray-600`} />
+                            )}
+                          </div>
+
+                          {/* User Details */}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <h3 className="text-sm font-semibold text-gray-900 truncate">
+                                {user.first_name && user.last_name 
+                                  ? `${user.first_name} ${user.last_name}`
+                                  : user.username || 'No Name'
+                                }
+                              </h3>
+                              <div className="flex items-center gap-1">
+                                {user.is_admin && (
+                                  <Badge className="bg-purple-100 text-purple-700 text-xs px-2 py-0.5">
+                                    Admin
+                                  </Badge>
+                                )}
+                                {user.kyc_verified && (
+                                  <UserCheck className="w-4 h-4 text-green-500" />
+                                )}
+                                <div className={`w-2 h-2 rounded-full ${user.is_online ? 'bg-green-500' : 'bg-gray-300'}`} />
+                              </div>
+                            </div>
+                            
+                            <div className="flex items-center gap-2 text-xs text-gray-500 mb-2">
+                              <Mail className="w-3 h-3" />
+                              <span className="truncate">{user.email}</span>
+                              <span className="text-gray-300">•</span>
+                              <span>ID: {user.id}</span>
+                            </div>
+
+                            {/* Status Badges - Mobile */}
+                            <div className="flex flex-wrap gap-1 mb-2">
+                              {user.is_banned && (
+                                <Badge variant="destructive" className="text-xs">
+                                  Banned
+                                </Badge>
+                              )}
+                              {user.funds_frozen && (
+                                <Badge className="bg-orange-100 text-orange-700 text-xs">
+                                  Frozen
+                                </Badge>
+                              )}
+                              <Badge 
+                                className={`text-xs ${
+                                  user.kyc_verified 
+                                    ? 'bg-green-100 text-green-700' 
+                                    : 'bg-gray-100 text-gray-700'
+                                }`}
+                              >
+                                {user.kyc_verified ? 'KYC Verified' : user.kyc_status}
+                              </Badge>
+                            </div>
+
+                            {/* Stats Row - Desktop */}
+                            <div className="hidden sm:flex items-center gap-4 text-xs text-gray-500">
+                              <div className="flex items-center gap-1">
+                                <Wallet className="w-3 h-3" />
+                                <span>₦{parseFloat(user.naira_balance).toLocaleString()}</span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <DollarSign className="w-3 h-3" />
+                                <span>{parseFloat(user.usdt_balance).toFixed(2)} USDT</span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <Activity className="w-3 h-3" />
+                                <span>{user.completed_trades}/{user.total_trades} trades</span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <span>⭐ {parseFloat(user.average_rating).toFixed(1)}</span>
+                                <span>({user.rating_count})</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="flex items-center gap-1">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleAction(user, "view")}
+                            className="h-8 w-8 p-0 hover:bg-blue-50"
+                          >
+                            <Eye className="h-4 w-4 text-blue-600" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleAction(user, "edit")}
+                            className="h-8 w-8 p-0 hover:bg-gray-50"
+                          >
+                            <Edit className="h-4 w-4 text-gray-600" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleAction(user, "freeze")}
+                            className="h-8 w-8 p-0 hover:bg-orange-50"
+                          >
+                            <Snowflake className="h-4 w-4 text-orange-600" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleAction(user, "ban")}
+                            className="h-8 w-8 p-0 hover:bg-red-50"
+                          >
+                            <Ban className="h-4 w-4 text-red-600" />
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* Mobile Stats */}
+                      <div className="sm:hidden mt-3 pt-3 border-t border-gray-100">
+                        <div className="grid grid-cols-2 gap-3 text-xs">
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">Naira:</span>
+                            <span className="font-medium">₦{parseFloat(user.naira_balance).toLocaleString()}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">USDT:</span>
+                            <span className="font-medium">{parseFloat(user.usdt_balance).toFixed(2)}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">Trades:</span>
+                            <span className="font-medium">{user.completed_trades}/{user.total_trades}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">Rating:</span>
+                            <span className="font-medium">⭐ {parseFloat(user.average_rating).toFixed(1)} ({user.rating_count})</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
