@@ -59,8 +59,9 @@ export default function Admin() {
     usersData: users,
     usersLength: users.length,
     usersLoading,
-    usersError,
-    enabled: !!user?.isAdmin
+    usersError: usersError?.message,
+    enabled: !!user?.isAdmin,
+    userObject: user
   });
 
   const { data: featuredUsers = [] } = useQuery({
@@ -172,6 +173,11 @@ export default function Admin() {
                     <div className="ml-4">
                       <p className="text-sm font-medium text-gray-600">{stat.title}</p>
                       <p className="text-3xl font-bold text-gray-900">{stat.value}</p>
+                      {stat.title === "Total Users" && (
+                        <p className="text-xs text-gray-500">
+                          Debug: L:{usersLoading ? "Y" : "N"} E:{usersError?.message || "None"} Data:{users.length} Admin:{user?.isAdmin ? "Y" : "N"}
+                        </p>
+                      )}
                     </div>
                   </div>
                 </CardContent>
