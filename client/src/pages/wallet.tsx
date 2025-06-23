@@ -153,8 +153,21 @@ function SendUSDTForm({ onClose, userBalance }: { onClose: () => void; userBalan
 }
 
 export default function Wallet() {
-  const { user } = useAuth();
+  const { user: authUser } = useAuth();
   const { wsConnected, latestBalance } = useRealtimeBalance();
+  
+  // Get the latest user data from React Query cache (includes real-time updates)
+  const { data: user } = useQuery({
+    queryKey: ["/api/user"],
+    queryFn: async () => {
+      const response = await apiRequest("GET", "/api/user");
+      if (!response.ok) throw new Error("Failed to fetch user");
+      return response.json();
+    },
+    initialData: authUser,
+    staleTime: 0, // Always use latest cached data
+    refetchOnWindowFocus: false,
+  });
   const [showDeposit, setShowDeposit] = useState(false);
   const [showWithdraw, setShowWithdraw] = useState(false);
   const [showReceive, setShowReceive] = useState(false);
