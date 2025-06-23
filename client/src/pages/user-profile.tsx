@@ -156,17 +156,17 @@ export default function UserProfile() {
 
               <div className="text-right">
                 <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm ${
-                  profile.isOnline 
+                  profile && profile.isOnline 
                     ? "bg-green-100 text-green-800" 
                     : "bg-gray-100 text-gray-600"
                 }`}>
                   <div className={`w-2 h-2 rounded-full ${
-                    profile.isOnline ? "bg-green-500" : "bg-gray-400"
+                    profile && profile.isOnline ? "bg-green-500" : "bg-gray-400"
                   }`} />
-                  {profile.isOnline ? "Online" : "Offline"}
+                  {profile && profile.isOnline ? "Online" : "Offline"}
                 </div>
                 
-                {!profile.isOnline && profile.lastSeen && (
+                {!profile && profile.isOnline && profile.lastSeen && (
                   <p className="text-xs text-gray-500 mt-1">
                     Last seen: {new Date(profile.lastSeen).toLocaleDateString()}
                   </p>

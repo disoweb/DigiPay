@@ -172,7 +172,7 @@ export function ModernChat({ chatUserId, onBack }: ModernChatProps) {
                     {chatUser?.email?.charAt(0)?.toUpperCase() || 'U'}
                   </AvatarFallback>
                 </Avatar>
-                {chatUser && chatUser.isOnline && (
+                {chatUser && chatUser && chatUser.isOnline && (
                   <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-white"></div>
                 )}
               </div>
@@ -182,7 +182,7 @@ export function ModernChat({ chatUserId, onBack }: ModernChatProps) {
                   {chatUser?.email?.split('@')[0] || 'User'}
                 </p>
                 <div className="flex items-center gap-2 text-xs text-gray-500">
-                  {chatUser && chatUser.isOnline ? (
+                  {chatUser && chatUser && chatUser.isOnline ? (
                     <span className="text-green-600">Online</span>
                   ) : (
                     <span>Last seen recently</span>
