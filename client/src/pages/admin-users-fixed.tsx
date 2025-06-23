@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Navbar } from "@/components/navbar";
@@ -17,7 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { 
   Users, 
   Ban, 
-  Freeze, 
+  Snowflake, 
   Shield, 
   UserCheck, 
   UserX,
@@ -296,7 +295,7 @@ export default function AdminUsersFixed() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
-      
+
       <main className="max-w-7xl mx-auto py-4 px-4 sm:py-8 sm:px-6 lg:px-8">
         <div className="space-y-6">
           {/* Header - Mobile Optimized */}
@@ -335,7 +334,7 @@ export default function AdminUsersFixed() {
                 </div>
               </CardContent>
             </Card>
-            
+
             <Card>
               <CardContent className="p-4 sm:p-6">
                 <div className="flex items-center">
@@ -349,7 +348,7 @@ export default function AdminUsersFixed() {
                 </div>
               </CardContent>
             </Card>
-            
+
             <Card>
               <CardContent className="p-4 sm:p-6">
                 <div className="flex items-center">
@@ -363,7 +362,7 @@ export default function AdminUsersFixed() {
                 </div>
               </CardContent>
             </Card>
-            
+
             <Card>
               <CardContent className="p-4 sm:p-6">
                 <div className="flex items-center">
@@ -475,7 +474,7 @@ export default function AdminUsersFixed() {
                               onClick={() => handleAction(user, "freeze")}
                               className="h-8 w-8 p-0 text-orange-600 hover:text-orange-700"
                             >
-                              <Freeze className="h-3 w-3" />
+                              <Snowflake className="h-3 w-3" />
                             </Button>
                             <Button
                               size="sm"
@@ -508,7 +507,7 @@ export default function AdminUsersFixed() {
                 Complete profile and activity information
               </SheetDescription>
             </SheetHeader>
-            
+
             {selectedUser && (
               <div className="space-y-6 mt-6">
                 {/* Basic Info */}
@@ -692,7 +691,7 @@ export default function AdminUsersFixed() {
                 Update user information and settings
               </DialogDescription>
             </DialogHeader>
-            
+
             <div className="space-y-4 max-h-96 overflow-y-auto">
               <div className="grid grid-cols-2 gap-3">
                 <div>
@@ -714,7 +713,7 @@ export default function AdminUsersFixed() {
                   />
                 </div>
               </div>
-              
+
               <div>
                 <Label htmlFor="email" className="text-sm">Email</Label>
                 <Input
@@ -725,7 +724,7 @@ export default function AdminUsersFixed() {
                   className="text-sm"
                 />
               </div>
-              
+
               <div>
                 <Label htmlFor="username" className="text-sm">Username</Label>
                 <Input
@@ -735,7 +734,7 @@ export default function AdminUsersFixed() {
                   className="text-sm"
                 />
               </div>
-              
+
               <div>
                 <Label htmlFor="phone" className="text-sm">Phone</Label>
                 <Input
@@ -745,7 +744,7 @@ export default function AdminUsersFixed() {
                   className="text-sm"
                 />
               </div>
-              
+
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <Label htmlFor="nairaBalance" className="text-sm">Naira Balance</Label>
@@ -769,7 +768,7 @@ export default function AdminUsersFixed() {
                   />
                 </div>
               </div>
-              
+
               <div className="flex gap-4">
                 <label className="flex items-center space-x-2 text-sm">
                   <input
@@ -791,7 +790,7 @@ export default function AdminUsersFixed() {
                 </label>
               </div>
             </div>
-            
+
             <div className="flex gap-2 pt-4">
               <Button onClick={handleEditSubmit} className="flex-1">
                 Save Changes
@@ -815,7 +814,7 @@ export default function AdminUsersFixed() {
                 {selectedUser && `Action for: ${selectedUser.email}`}
               </DialogDescription>
             </DialogHeader>
-            
+
             <div className="space-y-4">
               <Textarea
                 placeholder={`Reason for ${actionType}...`}

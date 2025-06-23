@@ -577,44 +577,46 @@ export class DatabaseStorage implements IStorage {
     return message;
   }
 
-    async getUserMessages(userId: number): Promise<any[]> {
-        try {
-            console.log("getUserMessages called with userId:", userId);
-            const result = await pool.query(
-                `SELECT m.id, m.sender_id, m.receiver_id, m.content, m.trade_id, m.is_read, m.created_at,
-                        u.email as sender_email, u.username as sender_username, u.kyc_verified as sender_kyc_verified
-                 FROM messages m 
-                 LEFT JOIN users u ON m.sender_id = u.id
-                 WHERE m.receiver_id = $1 
-                 ORDER BY m.created_at DESC`,
-                [userId]
-            );
-            
-            const messages = result.rows.map(row => ({
-                id: row.id,
-                senderId: row.sender_id,
-                receiverId: row.receiver_id,
-                content: row.content,
-                messageText: row.content,
-                tradeId: row.trade_id,
-                isRead: row.is_read,
-                createdAt: row.created_at,
-                sender: {
-                    id: row.sender_id,
-                    email: row.sender_email,
-                    username: row.sender_username,
-                    kycVerified: row.sender_kyc_verified || false,
-                    isOnline: Math.random() > 0.5
-                }
-            }));
-            
-            console.log("getUserMessages found", messages.length, "messages for user", userId);
-            return messages;
-        } catch (error) {
-            console.error("Error in getUserMessages:", error);
-            return [];
-        }
+    async getUserMessages(userId: number): Promise<Message[]> {
+    try {
+      console.log("getUserMessages called with userId:", userId);
+
+      const result = await pool.query(`
+        SELECT 
+          m.id,
+          m.sender_id,
+          m.recipient_id,
+          m.message,
+          m.trade_id,
+          m.offer_id,
+          m.is_read,
+          m.created_at,
+          sender.email as sender_email,
+          receiver.email as receiver_email
+        FROM messages m
+        LEFT JOIN users sender ON m.sender_id = sender.id
+        LEFT JOIN users receiver ON m.recipient_id = receiver.id
+        WHERE m.sender_id = $1 OR m.recipient_id = $1
+        ORDER BY m.created_at DESC
+      `, [userId]);
+
+      return result.rows.map(row => ({
+        id: row.id,
+        senderId: row.sender_id,
+        recipientId: row.recipient_id,
+        messageText: row.message,
+        tradeId: row.trade_id,
+        offerId: row.offer_id,
+        isRead: row.is_read,
+        createdAt: row.created_at,
+        senderEmail: row.sender_email,
+        receiverEmail: row.receiver_email
+      }));
+    } catch (error) {
+      console.error("Error in getUserMessages:", error);
+      return [];
     }
+  }
 
     async createDirectMessage(message: any): Promise<any> {
         try {
@@ -630,7 +632,7 @@ export class DatabaseStorage implements IStorage {
                     false
                 ]
             );
-            
+
             const row = result.rows[0];
             return {
                 id: row.id,
