@@ -37,6 +37,8 @@ export function DepositModal({ open, onOpenChange }: DepositModalProps) {
       setPaymentStep('amount');
       setPaymentReference("");
       hasVerifiedRef.current = false;
+      // Always ensure scroll lock is removed when modal closes
+      document.body.classList.remove('paystack-open');
       if (verificationTimeoutRef.current) {
         clearTimeout(verificationTimeoutRef.current);
         verificationTimeoutRef.current = null;

@@ -34,9 +34,14 @@ iframe[src*="checkout.paystack.com"] * {
   cursor: pointer !important;
 }
 
-/* Override any conflicting styles */
+/* Override any conflicting styles - but allow it to be easily removed */
 body.paystack-open {
   overflow: hidden !important;
+}
+
+/* Ensure body can scroll when paystack is closed */
+body:not(.paystack-open) {
+  overflow: auto !important;
 }
 
 /* Button and form element fixes within Paystack */

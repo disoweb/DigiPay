@@ -48,6 +48,9 @@ export function EnhancedDepositModal({ open, onOpenChange, user }: EnhancedDepos
       if (verificationTimeoutRef.current) {
         clearTimeout(verificationTimeoutRef.current);
       }
+    } else {
+      // Always ensure scroll lock is removed when modal closes
+      document.body.classList.remove('paystack-open');
     }
   }, [open]);
 
@@ -105,6 +108,9 @@ export function EnhancedDepositModal({ open, onOpenChange, user }: EnhancedDepos
         queryClient.invalidateQueries({ queryKey: ["/api/user"] });
         queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
         
+        // Remove paystack scroll lock to prevent freezing
+        document.body.classList.remove('paystack-open');
+        
         toast({
           title: "Payment Successful!",
           description: `₦${parseFloat(amount).toLocaleString()} added to your wallet instantly`,
@@ -122,6 +128,9 @@ export function EnhancedDepositModal({ open, onOpenChange, user }: EnhancedDepos
       setPaymentStep('error');
       setErrorMessage(error.message);
       hasVerifiedRef.current = false;
+      
+      // Remove scroll lock on error to prevent freezing
+      document.body.classList.remove('paystack-open');
       
       toast({
         title: "Verification Failed",
@@ -188,6 +197,8 @@ export function EnhancedDepositModal({ open, onOpenChange, user }: EnhancedDepos
         },
         onClose: function() {
           console.log("Payment popup closed");
+          // Always remove scroll lock when payment closes
+          document.body.classList.remove('paystack-open');
           if (!hasVerifiedRef.current) {
             setIsProcessing(false);
             setPaymentStep('amount');
