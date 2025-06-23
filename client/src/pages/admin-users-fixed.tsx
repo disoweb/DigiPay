@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Navbar } from "@/components/navbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -32,7 +32,8 @@ import {
   TrendingUp,
   Plus,
   Trash2,
-  RefreshCw
+  RefreshCw,
+  ChevronDown
 } from "lucide-react";
 
 interface User {
@@ -85,6 +86,19 @@ export default function AdminUsersFixed() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [actionType, setActionType] = useState<"ban" | "freeze" | "view" | "edit">("view");
   const [actionReason, setActionReason] = useState("");
+  const [dropdownOpen, setDropdownOpen] = useState<number | null>(null);
+
+  // Close dropdown when clicking outside
+  React.useEffect(() => {
+    const handleClickOutside = () => {
+      setDropdownOpen(null);
+    };
+    
+    if (dropdownOpen) {
+      document.addEventListener('click', handleClickOutside);
+      return () => document.removeEventListener('click', handleClickOutside);
+    }
+  }, [dropdownOpen]);
   const [editFormData, setEditFormData] = useState({
     email: "",
     username: "",
@@ -418,34 +432,61 @@ export default function AdminUsersFixed() {
                       </div>
                       
                       {/* Right: Actions */}
-                      <div className="flex gap-2">
+                      <div className="relative">
                         <button
-                          onClick={() => handleAction(user, "view")}
-                          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setDropdownOpen(dropdownOpen === user.id ? null : user.id);
+                          }}
+                          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 flex items-center gap-2"
                         >
-                          View
+                          Actions
+                          <ChevronDown className="h-4 w-4" />
                         </button>
-                        <button
-                          onClick={() => handleAction(user, "edit")}
-                          className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
-                        >
-                          Edit
-                        </button>
-                        {!user.is_admin && (
-                          <>
+                        
+                        {dropdownOpen === user.id && (
+                          <div className="absolute right-0 mt-2 w-48 bg-white border rounded-lg shadow-lg z-10">
                             <button
-                              onClick={() => handleAction(user, "freeze")}
-                              className="px-4 py-2 bg-orange-600 text-white rounded hover:bg-orange-700"
+                              onClick={() => {
+                                handleAction(user, "view");
+                                setDropdownOpen(null);
+                              }}
+                              className="w-full text-left px-4 py-2 hover:bg-gray-100 rounded-t-lg"
                             >
-                              {user.funds_frozen ? 'Unfreeze' : 'Freeze'}
+                              View Details
                             </button>
                             <button
-                              onClick={() => handleAction(user, "ban")}
-                              className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+                              onClick={() => {
+                                handleAction(user, "edit");
+                                setDropdownOpen(null);
+                              }}
+                              className="w-full text-left px-4 py-2 hover:bg-gray-100"
                             >
-                              {user.is_banned ? 'Unban' : 'Ban'}
+                              Edit User
                             </button>
-                          </>
+                            {!user.is_admin && (
+                              <>
+                                <button
+                                  onClick={() => {
+                                    handleAction(user, "freeze");
+                                    setDropdownOpen(null);
+                                  }}
+                                  className="w-full text-left px-4 py-2 hover:bg-gray-100 text-orange-600"
+                                >
+                                  {user.funds_frozen ? 'Unfreeze Funds' : 'Freeze Funds'}
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    handleAction(user, "ban");
+                                    setDropdownOpen(null);
+                                  }}
+                                  className="w-full text-left px-4 py-2 hover:bg-gray-100 rounded-b-lg text-red-600"
+                                >
+                                  {user.is_banned ? 'Unban User' : 'Ban User'}
+                                </button>
+                              </>
+                            )}
+                          </div>
                         )}
                       </div>
                     </div>
