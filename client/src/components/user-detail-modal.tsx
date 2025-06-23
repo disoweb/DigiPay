@@ -20,7 +20,11 @@ import {
   TrendingUp,
   TrendingDown,
   RefreshCw,
-  X
+  X,
+  Wallet,
+  Phone,
+  Mail,
+  MapPin
 } from "lucide-react";
 
 interface UserDetailModalProps {
@@ -56,6 +60,7 @@ interface UserDetails {
   firstName?: string;
   lastName?: string;
   phone?: string;
+  location?: string;
   kycVerified: boolean;
   nairaBalance: string;
   usdtBalance: string;
@@ -127,10 +132,16 @@ export function UserDetailModal({ isOpen, onClose, userId, userName }: UserDetai
     }
   };
 
-  const formatAmount = (amount: string, type: string) => {
-    const isNegative = ["withdrawal", "debit", "transfer_out"].includes(type);
-    const formatted = parseFloat(amount).toLocaleString();
-    return isNegative ? `-₦${formatted}` : `+₦${formatted}`;
+  const formatAmount = (amount: string, type?: string) => {
+    const isNegative = type && ["withdrawal", "debit", "transfer_out"].includes(type);
+    const numAmount = parseFloat(amount || "0");
+    const formatted = numAmount.toLocaleString();
+    return isNegative ? `-₦${formatted}` : `₦${formatted}`;
+  };
+
+  const formatUSDTAmount = (amount: string) => {
+    const numAmount = parseFloat(amount || "0");
+    return `$${numAmount.toFixed(2)}`;
   };
 
   const formatDate = (dateString: string) => {
@@ -150,132 +161,137 @@ export function UserDetailModal({ isOpen, onClose, userId, userName }: UserDetai
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
-        <DialogHeader className="flex-shrink-0">
-          <DialogTitle className="flex items-center justify-between">
+      <DialogContent className="max-w-4xl max-h-[95vh] w-[95vw] sm:w-full overflow-hidden flex flex-col p-0 gap-0">
+        <DialogHeader className="flex-shrink-0 p-4 sm:p-6 border-b bg-gradient-to-r from-blue-50 to-indigo-50">
+          <DialogTitle className="flex items-center justify-between text-lg sm:text-xl">
             <div className="flex items-center gap-2">
-              <User className="h-5 w-5" />
-              {userName} - User Details
+              <div className="p-2 bg-blue-100 rounded-full">
+                <User className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
+              </div>
+              <div>
+                <span className="font-bold text-gray-900">{userName}</span>
+                <p className="text-sm text-gray-600 font-normal">User Profile & Activity</p>
+              </div>
             </div>
-            <Button variant="ghost" size="sm" onClick={onClose}>
+            <Button variant="ghost" size="sm" onClick={onClose} className="h-8 w-8 p-0">
               <X className="h-4 w-4" />
             </Button>
           </DialogTitle>
         </DialogHeader>
 
         {userLoading ? (
-          <div className="flex items-center justify-center py-8">
-            <RefreshCw className="h-8 w-8 animate-spin text-blue-600" />
+          <div className="flex items-center justify-center py-12">
+            <div className="text-center">
+              <RefreshCw className="h-8 w-8 animate-spin text-blue-600 mx-auto mb-3" />
+              <p className="text-gray-600">Loading user details...</p>
+            </div>
           </div>
         ) : userDetails ? (
           <div className="flex-1 overflow-hidden">
             <Tabs defaultValue="overview" className="h-full flex flex-col">
-              <TabsList className="flex-shrink-0 grid w-full grid-cols-4">
-                <TabsTrigger value="overview">Overview</TabsTrigger>
-                <TabsTrigger value="transactions">Transactions</TabsTrigger>
-                <TabsTrigger value="trades">Trades</TabsTrigger>
-                <TabsTrigger value="activity">Activity</TabsTrigger>
+              <TabsList className="flex-shrink-0 grid w-full grid-cols-4 mx-4 sm:mx-6 mt-4">
+                <TabsTrigger value="overview" className="text-xs sm:text-sm">Overview</TabsTrigger>
+                <TabsTrigger value="wallet" className="text-xs sm:text-sm">Wallet</TabsTrigger>
+                <TabsTrigger value="transactions" className="text-xs sm:text-sm">Transactions</TabsTrigger>
+                <TabsTrigger value="trades" className="text-xs sm:text-sm">Trades</TabsTrigger>
               </TabsList>
 
-              <TabsContent value="overview" className="flex-1 overflow-auto space-y-4 mt-4">
-                {/* User Info Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Card>
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-sm flex items-center gap-2">
-                        <User className="h-4 w-4" />
-                        Profile Information
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      <div className="flex justify-between">
-                        <span className="text-sm text-gray-600">Email:</span>
-                        <span className="text-sm font-medium">{userDetails.email}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm text-gray-600">Username:</span>
-                        <span className="text-sm font-medium">{userDetails.username || "Not set"}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm text-gray-600">Full Name:</span>
-                        <span className="text-sm font-medium">
-                          {userDetails.firstName && userDetails.lastName 
-                            ? `${userDetails.firstName} ${userDetails.lastName}`
-                            : "Not set"
-                          }
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm text-gray-600">Phone:</span>
-                        <span className="text-sm font-medium">{userDetails.phone || "Not set"}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm text-gray-600">KYC Status:</span>
-                        {userDetails.kycVerified ? (
-                          <Badge className="bg-green-100 text-green-800 text-xs">
-                            <Shield className="h-3 w-3 mr-1" />
-                            Verified
-                          </Badge>
-                        ) : (
-                          <Badge className="bg-yellow-100 text-yellow-800 text-xs">
-                            Pending
-                          </Badge>
-                        )}
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm text-gray-600">Rating:</span>
-                        <div className="flex items-center gap-1">
-                          <Star className="h-3 w-3 text-yellow-400 fill-current" />
-                          <span className="text-sm font-medium">
-                            {parseFloat(userDetails.averageRating).toFixed(1)} ({userDetails.ratingCount})
-                          </span>
+              <TabsContent value="overview" className="flex-1 overflow-auto px-4 sm:px-6 pb-6 space-y-4 mt-4">
+                {/* Profile Card */}
+                <Card className="shadow-sm">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <User className="h-4 w-4" />
+                      Profile Information
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <Mail className="h-4 w-4 text-gray-500" />
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs text-gray-600">Email</p>
+                            <p className="text-sm font-medium truncate">{userDetails.email}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <User className="h-4 w-4 text-gray-500" />
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs text-gray-600">Full Name</p>
+                            <p className="text-sm font-medium">
+                              {userDetails.firstName && userDetails.lastName 
+                                ? `${userDetails.firstName} ${userDetails.lastName}`
+                                : userDetails.username || "Not set"
+                              }
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Phone className="h-4 w-4 text-gray-500" />
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs text-gray-600">Phone</p>
+                            <p className="text-sm font-medium">{userDetails.phone || "Not set"}</p>
+                          </div>
                         </div>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm text-gray-600">Status:</span>
+                      
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <MapPin className="h-4 w-4 text-gray-500" />
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs text-gray-600">Location</p>
+                            <p className="text-sm font-medium">{userDetails.location || "Not set"}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Shield className="h-4 w-4 text-gray-500" />
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs text-gray-600">KYC Status</p>
+                            {userDetails.kycVerified ? (
+                              <Badge className="bg-green-100 text-green-800 text-xs">
+                                Verified
+                              </Badge>
+                            ) : (
+                              <Badge className="bg-yellow-100 text-yellow-800 text-xs">
+                                Pending
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Star className="h-4 w-4 text-gray-500" />
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs text-gray-600">Rating</p>
+                            <div className="flex items-center gap-1">
+                              <Star className="h-3 w-3 text-yellow-400 fill-current" />
+                              <span className="text-sm font-medium">
+                                {parseFloat(userDetails.averageRating).toFixed(1)} ({userDetails.ratingCount})
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Status and Join Date */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t">
+                      <div>
+                        <p className="text-xs text-gray-600 mb-1">Status</p>
                         <Badge className={userDetails.isOnline ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}>
                           {userDetails.isOnline ? "Online" : "Offline"}
                         </Badge>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm text-gray-600">Joined:</span>
-                        <span className="text-sm font-medium">{formatDate(userDetails.createdAt)}</span>
+                      <div>
+                        <p className="text-xs text-gray-600 mb-1">Member Since</p>
+                        <p className="text-sm font-medium">{formatDate(userDetails.createdAt)}</p>
                       </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-sm flex items-center gap-2">
-                        <DollarSign className="h-4 w-4" />
-                        Wallet Balance
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="p-3 bg-green-50 rounded-lg">
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="text-sm font-medium text-green-700">Naira Balance</span>
-                          <DollarSign className="h-4 w-4 text-green-600" />
-                        </div>
-                        <p className="text-lg font-bold text-green-800">
-                          ₦{parseFloat(userDetails.nairaBalance).toLocaleString()}
-                        </p>
-                      </div>
-                      <div className="p-3 bg-blue-50 rounded-lg">
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="text-sm font-medium text-blue-700">USDT Balance</span>
-                          <CreditCard className="h-4 w-4 text-blue-600" />
-                        </div>
-                        <p className="text-lg font-bold text-blue-800">
-                          ${parseFloat(userDetails.usdtBalance).toLocaleString()}
-                        </p>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
+                    </div>
+                  </CardContent>
+                </Card>
 
                 {/* Trading Stats */}
-                <Card>
+                <Card className="shadow-sm">
                   <CardHeader className="pb-3">
                     <CardTitle className="text-sm flex items-center gap-2">
                       <Activity className="h-4 w-4" />
@@ -283,26 +299,86 @@ export function UserDetailModal({ isOpen, onClose, userId, userName }: UserDetai
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="text-center p-3 bg-blue-50 rounded-lg">
-                        <p className="text-2xl font-bold text-blue-600">{trades.length}</p>
-                        <p className="text-sm text-blue-700">Total Trades</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      <div className="text-center p-4 bg-blue-50 rounded-lg">
+                        <p className="text-xl sm:text-2xl font-bold text-blue-600">{trades.length}</p>
+                        <p className="text-xs sm:text-sm text-blue-700">Total Trades</p>
                       </div>
-                      <div className="text-center p-3 bg-green-50 rounded-lg">
-                        <p className="text-2xl font-bold text-green-600">{completedTrades}</p>
-                        <p className="text-sm text-green-700">Completed</p>
+                      <div className="text-center p-4 bg-green-50 rounded-lg">
+                        <p className="text-xl sm:text-2xl font-bold text-green-600">{completedTrades}</p>
+                        <p className="text-xs sm:text-sm text-green-700">Completed</p>
                       </div>
-                      <div className="text-center p-3 bg-purple-50 rounded-lg">
-                        <p className="text-2xl font-bold text-purple-600">₦{totalVolume.toLocaleString()}</p>
-                        <p className="text-sm text-purple-700">Total Volume</p>
+                      <div className="text-center p-4 bg-purple-50 rounded-lg">
+                        <p className="text-lg sm:text-2xl font-bold text-purple-600">₦{totalVolume.toLocaleString()}</p>
+                        <p className="text-xs sm:text-sm text-purple-700">Total Volume</p>
                       </div>
                     </div>
                   </CardContent>
                 </Card>
               </TabsContent>
 
-              <TabsContent value="transactions" className="flex-1 overflow-auto mt-4">
-                <Card className="h-full">
+              <TabsContent value="wallet" className="flex-1 overflow-auto px-4 sm:px-6 pb-6 space-y-4 mt-4">
+                <Card className="shadow-sm">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <Wallet className="h-4 w-4" />
+                      Wallet Balances
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {/* Naira Balance */}
+                      <div className="p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-xl border border-green-200">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-2">
+                            <div className="p-2 bg-green-200 rounded-full">
+                              <DollarSign className="h-4 w-4 text-green-700" />
+                            </div>
+                            <span className="text-sm font-medium text-green-700">Naira Balance</span>
+                          </div>
+                        </div>
+                        <p className="text-2xl sm:text-3xl font-bold text-green-800">
+                          {formatAmount(userDetails.nairaBalance || "0")}
+                        </p>
+                        <p className="text-xs text-green-600 mt-1">Nigerian Naira</p>
+                      </div>
+
+                      {/* USDT Balance */}
+                      <div className="p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-2">
+                            <div className="p-2 bg-blue-200 rounded-full">
+                              <CreditCard className="h-4 w-4 text-blue-700" />
+                            </div>
+                            <span className="text-sm font-medium text-blue-700">USDT Balance</span>
+                          </div>
+                        </div>
+                        <p className="text-2xl sm:text-3xl font-bold text-blue-800">
+                          {formatUSDTAmount(userDetails.usdtBalance || "0")}
+                        </p>
+                        <p className="text-xs text-blue-600 mt-1">Tether USD</p>
+                      </div>
+                    </div>
+
+                    {/* Total Portfolio Value */}
+                    <div className="p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl border border-purple-200">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="p-2 bg-purple-200 rounded-full">
+                          <TrendingUp className="h-4 w-4 text-purple-700" />
+                        </div>
+                        <span className="text-sm font-medium text-purple-700">Total Portfolio Value</span>
+                      </div>
+                      <p className="text-xl sm:text-2xl font-bold text-purple-800">
+                        {formatAmount((parseFloat(userDetails.nairaBalance || "0") + (parseFloat(userDetails.usdtBalance || "0") * 1600)).toString())}
+                      </p>
+                      <p className="text-xs text-purple-600">Estimated at ₦1,600/USDT</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="transactions" className="flex-1 overflow-auto px-4 sm:px-6 pb-6 mt-4">
+                <Card className="shadow-sm h-full">
                   <CardHeader className="pb-3">
                     <CardTitle className="text-sm flex items-center gap-2">
                       <Activity className="h-4 w-4" />
@@ -317,54 +393,43 @@ export function UserDetailModal({ isOpen, onClose, userId, userName }: UserDetai
                         </div>
                       ) : transactions.length === 0 ? (
                         <div className="text-center py-8 text-gray-500">
-                          No transactions found
+                          <Activity className="h-12 w-12 mx-auto mb-2 text-gray-300" />
+                          <p>No transactions found</p>
                         </div>
                       ) : (
-                        <Table>
-                          <TableHeader>
-                            <TableRow>
-                              <TableHead>Type</TableHead>
-                              <TableHead>Amount</TableHead>
-                              <TableHead>Status</TableHead>
-                              <TableHead>Date</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {transactions.map((transaction) => (
-                              <TableRow key={transaction.id}>
-                                <TableCell>
-                                  <div className="flex items-center gap-2">
-                                    {getTransactionIcon(transaction.type)}
-                                    <span className="capitalize text-sm">
-                                      {transaction.type.replace('_', ' ')}
-                                    </span>
-                                  </div>
-                                </TableCell>
-                                <TableCell>
-                                  <span className={`font-medium ${
-                                    ["withdrawal", "debit", "transfer_out"].includes(transaction.type)
-                                      ? "text-red-600" 
-                                      : "text-green-600"
-                                  }`}>
-                                    {formatAmount(transaction.amount, transaction.type)}
-                                  </span>
-                                </TableCell>
-                                <TableCell>{getStatusBadge(transaction.status)}</TableCell>
-                                <TableCell className="text-sm">
+                        <div className="space-y-2 p-4">
+                          {transactions.map((transaction) => (
+                            <div key={transaction.id} className="flex items-center gap-3 p-3 border rounded-lg hover:bg-gray-50">
+                              {getTransactionIcon(transaction.type)}
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium capitalize">
+                                  {transaction.type.replace('_', ' ')}
+                                </p>
+                                <p className="text-xs text-gray-500">
                                   {formatDate(transaction.created_at)}
-                                </TableCell>
-                              </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
+                                </p>
+                              </div>
+                              <div className="text-right">
+                                <p className={`text-sm font-medium ${
+                                  ["withdrawal", "debit", "transfer_out"].includes(transaction.type)
+                                    ? "text-red-600" 
+                                    : "text-green-600"
+                                }`}>
+                                  {formatAmount(transaction.amount, transaction.type)}
+                                </p>
+                                {getStatusBadge(transaction.status)}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
                       )}
                     </ScrollArea>
                   </CardContent>
                 </Card>
               </TabsContent>
 
-              <TabsContent value="trades" className="flex-1 overflow-auto mt-4">
-                <Card className="h-full">
+              <TabsContent value="trades" className="flex-1 overflow-auto px-4 sm:px-6 pb-6 mt-4">
+                <Card className="shadow-sm h-full">
                   <CardHeader className="pb-3">
                     <CardTitle className="text-sm flex items-center gap-2">
                       <Activity className="h-4 w-4" />
@@ -379,83 +444,46 @@ export function UserDetailModal({ isOpen, onClose, userId, userName }: UserDetai
                         </div>
                       ) : trades.length === 0 ? (
                         <div className="text-center py-8 text-gray-500">
-                          No trades found
+                          <Activity className="h-12 w-12 mx-auto mb-2 text-gray-300" />
+                          <p>No trades found</p>
                         </div>
                       ) : (
-                        <Table>
-                          <TableHeader>
-                            <TableRow>
-                              <TableHead>ID</TableHead>
-                              <TableHead>Amount</TableHead>
-                              <TableHead>Rate</TableHead>
-                              <TableHead>Status</TableHead>
-                              <TableHead>Date</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {trades.map((trade) => (
-                              <TableRow key={trade.id}>
-                                <TableCell className="font-medium">
+                        <div className="space-y-2 p-4">
+                          {trades.map((trade) => (
+                            <div key={trade.id} className="border rounded-lg p-3 hover:bg-gray-50">
+                              <div className="flex items-center justify-between mb-2">
+                                <span className="font-medium text-sm">
                                   T{trade.id.toString().padStart(3, '0')}
-                                </TableCell>
-                                <TableCell>{parseFloat(trade.amount).toFixed(2)} USDT</TableCell>
-                                <TableCell>₦{parseFloat(trade.rate).toLocaleString()}</TableCell>
-                                <TableCell>{getStatusBadge(trade.status)}</TableCell>
-                                <TableCell className="text-sm">
-                                  {formatDate(trade.createdAt)}
-                                </TableCell>
-                              </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
+                                </span>
+                                {getStatusBadge(trade.status)}
+                              </div>
+                              <div className="grid grid-cols-2 gap-2 text-xs">
+                                <div>
+                                  <span className="text-gray-600">Amount:</span>
+                                  <p className="font-medium">{parseFloat(trade.amount).toFixed(2)} USDT</p>
+                                </div>
+                                <div>
+                                  <span className="text-gray-600">Rate:</span>
+                                  <p className="font-medium">₦{parseFloat(trade.rate).toLocaleString()}</p>
+                                </div>
+                              </div>
+                              <p className="text-xs text-gray-500 mt-2">
+                                {formatDate(trade.createdAt)}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
                       )}
                     </ScrollArea>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="activity" className="flex-1 overflow-auto mt-4">
-                <Card className="h-full">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-sm flex items-center gap-2">
-                      <Calendar className="h-4 w-4" />
-                      Recent Activity
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      {transactions.slice(0, 5).map((transaction, index) => (
-                        <div key={index} className="flex items-center gap-3 p-3 border rounded-lg">
-                          {getTransactionIcon(transaction.type)}
-                          <div className="flex-1">
-                            <p className="text-sm font-medium capitalize">
-                              {transaction.type.replace('_', ' ')}
-                            </p>
-                            <p className="text-xs text-gray-500">
-                              {formatDate(transaction.created_at)}
-                            </p>
-                          </div>
-                          <div className="text-right">
-                            <p className={`text-sm font-medium ${
-                              ["withdrawal", "debit", "transfer_out"].includes(transaction.type)
-                                ? "text-red-600" 
-                                : "text-green-600"
-                            }`}>
-                              {formatAmount(transaction.amount, transaction.type)}
-                            </p>
-                            {getStatusBadge(transaction.status)}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
                   </CardContent>
                 </Card>
               </TabsContent>
             </Tabs>
           </div>
         ) : (
-          <div className="text-center py-8 text-gray-500">
-            Failed to load user details
+          <div className="text-center py-12 text-gray-500">
+            <User className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+            <p>Failed to load user details</p>
           </div>
         )}
       </DialogContent>
