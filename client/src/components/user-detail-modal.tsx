@@ -62,8 +62,10 @@ interface UserDetails {
   phone?: string;
   location?: string;
   kycVerified: boolean;
-  nairaBalance: string;
-  usdtBalance: string;
+  nairaBalance?: string;
+  usdtBalance?: string;
+  naira_balance?: string;
+  usdt_balance?: string;
   averageRating: string;
   ratingCount: number;
   isOnline: boolean;
@@ -339,7 +341,7 @@ export function UserDetailModal({ isOpen, onClose, userId, userName }: UserDetai
                               </div>
                             </div>
                             <p className="text-2xl sm:text-3xl font-bold text-green-800">
-                              {formatAmount(userDetails.nairaBalance || "0")}
+                              {formatAmount(userDetails.nairaBalance || userDetails.naira_balance || "0")}
                             </p>
                             <p className="text-xs text-green-600 mt-1">Nigerian Naira</p>
                           </div>
@@ -355,7 +357,7 @@ export function UserDetailModal({ isOpen, onClose, userId, userName }: UserDetai
                               </div>
                             </div>
                             <p className="text-2xl sm:text-3xl font-bold text-blue-800">
-                              {formatUSDTAmount(userDetails.usdtBalance || "0")}
+                              {formatUSDTAmount(userDetails.usdtBalance || userDetails.usdt_balance || "0")}
                             </p>
                             <p className="text-xs text-blue-600 mt-1">Tether USD</p>
                           </div>
@@ -370,7 +372,7 @@ export function UserDetailModal({ isOpen, onClose, userId, userName }: UserDetai
                             <span className="text-sm font-medium text-purple-700">Total Portfolio Value</span>
                           </div>
                           <p className="text-xl sm:text-2xl font-bold text-purple-800">
-                            {formatAmount((parseFloat(userDetails.nairaBalance || "0") + (parseFloat(userDetails.usdtBalance || "0") * 1600)).toString())}
+                            {formatAmount((parseFloat(userDetails.nairaBalance || userDetails.naira_balance || "0") + (parseFloat(userDetails.usdtBalance || userDetails.usdt_balance || "0") * 1600)).toString())}
                           </p>
                           <p className="text-xs text-purple-600">Estimated at ₦1,600/USDT</p>
                         </div>
