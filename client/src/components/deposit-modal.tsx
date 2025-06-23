@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -183,7 +182,7 @@ export function DepositModal({ open, onOpenChange }: DepositModalProps) {
     } catch (error) {
       console.error("Paystack payment error:", error);
       setIsProcessing(false);
-      
+
       // Fallback to authorization URL
       if (paystackData.authorization_url) {
         window.open(paystackData.authorization_url, '_blank');
@@ -465,4 +464,15 @@ export function DepositModal({ open, onOpenChange }: DepositModalProps) {
       </DialogContent>
     </Dialog>
   );
+}
+
+declare global {
+  interface Window {
+    PaystackPop: {
+      setup: (config: PaystackConfig) => {
+        openIframe: () => void;
+        embed?: () => void;
+      };
+    };
+  }
 }

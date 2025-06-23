@@ -9,6 +9,8 @@ export interface PaystackConfig {
   reference: string;
   callback: (response: any) => void;
   onClose: () => void;
+  container?: string;
+  embed?: boolean;
 }
 
 declare global {
@@ -64,7 +66,7 @@ export const loadPaystackScript = (): Promise<void> => {
 };
 
 export const initializePaystack = async (config: PaystackConfig) => {
-  console.log("Loading Paystack script for seamless payment...");
+  console.log("Loading Paystack script for embedded payment...");
   await loadPaystackScript();
   
   console.log("Paystack script loaded, setting up inline payment...");
@@ -73,30 +75,66 @@ export const initializePaystack = async (config: PaystackConfig) => {
     throw new Error("PaystackPop is not available after script load");
   }
   
-  // Enhanced config for seamless experience
+  // Create or get the container for embedded payment
+  let container = document.getElementById('paystack-embedded-container');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'paystack-embedded-container';
+    container.style.width = '100%';
+    container.style.minHeight = '500px';
+    container.style.border = 'none';
+    container.style.borderRadius = '8px';
+    container.style.overflow = 'hidden';
+    
+    // Find the modal content to append the container
+    const modalContent = document.querySelector('[role="dialog"]');
+    if (modalContent) {
+      modalContent.appendChild(container);
+    }
+  }
+  
+  // Enhanced config for embedded experience
   const enhancedConfig = {
     ...config,
-    container: 'paystack-container', // Try to use container if available
+    container: 'paystack-embedded-container',
+    embed: true, // Force embedded mode
     onLoad: (response: any) => {
-      console.log("Paystack loaded:", response);
+      console.log("Paystack embedded payment loaded:", response);
     },
     onCancel: () => {
       console.log("Payment cancelled by user");
+      // Clean up container
+      const containerEl = document.getElementById('paystack-embedded-container');
+      if (containerEl) {
+        containerEl.remove();
+      }
       config.onClose();
     },
     onError: (error: any) => {
       console.error("Paystack error:", error);
+      // Clean up container
+      const containerEl = document.getElementById('paystack-embedded-container');
+      if (containerEl) {
+        containerEl.remove();
+      }
       config.onClose();
     }
   };
   
   const handler = window.PaystackPop.setup(enhancedConfig);
-  console.log("Payment handler created for seamless experience");
+  console.log("Payment handler created for embedded experience");
   
-  if (!handler || !handler.openIframe) {
+  if (!handler) {
     throw new Error("Payment handler setup failed");
   }
   
-  handler.openIframe();
-  console.log("Seamless payment iframe opened");
+  // Use embedded initialization instead of popup
+  if (handler.embed) {
+    handler.embed();
+    console.log("Embedded payment initialized");
+  } else {
+    // Fallback to iframe if embed method doesn't exist
+    handler.openIframe();
+    console.log("Fallback to iframe payment");
+  }
 };
