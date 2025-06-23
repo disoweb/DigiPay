@@ -29,7 +29,10 @@ import {
   Eye,
   Banknote,
   Calendar,
-  Building
+  Building,
+  Edit,
+  Trash2,
+  Save
 } from "lucide-react";
 
 interface Transaction {
@@ -60,8 +63,20 @@ export default function AdminApprovals() {
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [showActionModal, setShowActionModal] = useState(false);
   const [showDetailSheet, setShowDetailSheet] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [actionType, setActionType] = useState<"approve" | "reject">("approve");
   const [actionNotes, setActionNotes] = useState("");
+  
+  // Edit form state
+  const [editForm, setEditForm] = useState({
+    amount: "",
+    status: "",
+    adminNotes: "",
+    type: "",
+    bankName: "",
+    accountNumber: "",
+    accountName: ""
+  });
 
   const { data: transactions = [], isLoading, error, refetch } = useQuery({
     queryKey: ["/api/admin/transactions"],
@@ -102,13 +117,54 @@ export default function AdminApprovals() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/transactions"] });
-      refetch(); // Force immediate refetch for real-time update
+      refetch();
       toast({ title: "Success", description: "Transaction rejected successfully" });
       setShowActionModal(false);
       setActionNotes("");
     },
     onError: () => {
       toast({ title: "Error", description: "Failed to reject transaction", variant: "destructive" });
+    },
+  });
+
+  const editTransactionMutation = useMutation({
+    mutationFn: async ({ transactionId, data }: { transactionId: number; data: any }) => {
+      const response = await apiRequest("PUT", `/api/admin/transactions/${transactionId}`, data);
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to update transaction");
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/transactions"] });
+      refetch();
+      toast({ title: "Success", description: "Transaction updated successfully" });
+      setShowEditModal(false);
+      resetEditForm();
+    },
+    onError: (error: Error) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    },
+  });
+
+  const deleteTransactionMutation = useMutation({
+    mutationFn: async (transactionId: number) => {
+      const response = await apiRequest("DELETE", `/api/admin/transactions/${transactionId}`);
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to delete transaction");
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/transactions"] });
+      refetch();
+      toast({ title: "Success", description: "Transaction deleted successfully" });
+      setShowDetailSheet(false);
+    },
+    onError: (error: Error) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
     },
   });
 
@@ -158,6 +214,70 @@ export default function AdminApprovals() {
         transactionId: selectedTransaction.id,
         notes: actionNotes.trim()
       });
+    }
+  };
+
+  const resetEditForm = () => {
+    setEditForm({
+      amount: "",
+      status: "",
+      adminNotes: "",
+      type: "",
+      bankName: "",
+      accountNumber: "",
+      accountName: ""
+    });
+  };
+
+  const handleEditTransaction = (transaction: Transaction) => {
+    setSelectedTransaction(transaction);
+    setEditForm({
+      amount: transaction.amount || "",
+      status: transaction.status || "",
+      adminNotes: transaction.admin_notes || "",
+      type: transaction.type || "",
+      bankName: transaction.bank_name || "",
+      accountNumber: transaction.account_number || "",
+      accountName: transaction.account_name || ""
+    });
+    setShowEditModal(true);
+  };
+
+  const handleSaveEdit = () => {
+    if (!selectedTransaction) return;
+    
+    const updates: any = {};
+    if (editForm.amount && editForm.amount !== selectedTransaction.amount) {
+      updates.amount = parseFloat(editForm.amount);
+    }
+    if (editForm.status && editForm.status !== selectedTransaction.status) {
+      updates.status = editForm.status;
+    }
+    if (editForm.adminNotes !== selectedTransaction.admin_notes) {
+      updates.adminNotes = editForm.adminNotes;
+    }
+    if (editForm.type && editForm.type !== selectedTransaction.type) {
+      updates.type = editForm.type;
+    }
+    if (editForm.bankName !== selectedTransaction.bank_name) {
+      updates.bankName = editForm.bankName;
+    }
+    if (editForm.accountNumber !== selectedTransaction.account_number) {
+      updates.accountNumber = editForm.accountNumber;
+    }
+    if (editForm.accountName !== selectedTransaction.account_name) {
+      updates.accountName = editForm.accountName;
+    }
+
+    editTransactionMutation.mutate({
+      transactionId: selectedTransaction.id,
+      data: updates
+    });
+  };
+
+  const handleDeleteTransaction = (transactionId: number) => {
+    if (confirm("Are you sure you want to delete this transaction? This action cannot be undone and may affect user balances.")) {
+      deleteTransactionMutation.mutate(transactionId);
     }
   };
 
@@ -463,8 +583,27 @@ export default function AdminApprovals() {
                               variant="outline"
                               onClick={() => handleViewTransaction(transaction)}
                               className="h-6 w-6 sm:h-8 sm:w-8 p-0"
+                              title="View Details"
                             >
                               <Eye className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleEditTransaction(transaction)}
+                              className="h-6 w-6 sm:h-8 sm:w-8 p-0 text-blue-600 hover:text-blue-700"
+                              title="Edit Transaction"
+                            >
+                              <Edit className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleDeleteTransaction(transaction.id)}
+                              className="h-6 w-6 sm:h-8 sm:w-8 p-0 text-red-600 hover:text-red-700"
+                              title="Delete Transaction"
+                            >
+                              <Trash2 className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                             </Button>
                             {transaction.status === 'pending' && (
                               <>
@@ -473,6 +612,7 @@ export default function AdminApprovals() {
                                   variant="outline"
                                   onClick={() => handleAction(transaction, "approve")}
                                   className="h-6 w-6 sm:h-8 sm:w-8 p-0 text-green-600 hover:text-green-700"
+                                  title="Approve"
                                 >
                                   <CheckCircle className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                                 </Button>
@@ -481,6 +621,7 @@ export default function AdminApprovals() {
                                   variant="outline"
                                   onClick={() => handleAction(transaction, "reject")}
                                   className="h-6 w-6 sm:h-8 sm:w-8 p-0 text-red-600 hover:text-red-700"
+                                  title="Reject"
                                 >
                                   <XCircle className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                                 </Button>
@@ -642,35 +783,55 @@ export default function AdminApprovals() {
                 )}
 
                 {/* Quick Actions */}
-                {selectedTransaction.status === 'pending' && (
-                  <Card>
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-sm">Quick Actions</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      <div className="grid grid-cols-2 gap-2">
-                        <Button 
-                          onClick={() => handleAction(selectedTransaction, "approve")}
-                          variant="outline" 
-                          size="sm" 
-                          className="text-green-600 border-green-300"
-                        >
-                          <CheckCircle className="h-4 w-4 mr-2" />
-                          Approve
-                        </Button>
-                        <Button 
-                          onClick={() => handleAction(selectedTransaction, "reject")}
-                          variant="outline" 
-                          size="sm" 
-                          className="text-red-600 border-red-300"
-                        >
-                          <XCircle className="h-4 w-4 mr-2" />
-                          Reject
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm">Admin Actions</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="grid grid-cols-2 gap-2">
+                      <Button 
+                        onClick={() => handleEditTransaction(selectedTransaction)}
+                        variant="outline" 
+                        size="sm" 
+                        className="text-blue-600 border-blue-300"
+                      >
+                        <Edit className="h-4 w-4 mr-2" />
+                        Edit
+                      </Button>
+                      <Button 
+                        onClick={() => handleDeleteTransaction(selectedTransaction.id)}
+                        variant="outline" 
+                        size="sm" 
+                        className="text-red-600 border-red-300"
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Delete
+                      </Button>
+                      {selectedTransaction.status === 'pending' && (
+                        <>
+                          <Button 
+                            onClick={() => handleAction(selectedTransaction, "approve")}
+                            variant="outline" 
+                            size="sm" 
+                            className="text-green-600 border-green-300"
+                          >
+                            <CheckCircle className="h-4 w-4 mr-2" />
+                            Approve
+                          </Button>
+                          <Button 
+                            onClick={() => handleAction(selectedTransaction, "reject")}
+                            variant="outline" 
+                            size="sm" 
+                            className="text-orange-600 border-orange-300"
+                          >
+                            <XCircle className="h-4 w-4 mr-2" />
+                            Reject
+                          </Button>
+                        </>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
             )}
           </SheetContent>
@@ -727,6 +888,137 @@ export default function AdminApprovals() {
                   variant="outline" 
                   onClick={() => setShowActionModal(false)} 
                   className="flex-1 text-sm"
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Edit Transaction Modal */}
+        <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
+          <DialogContent className="max-w-md mx-4 sm:mx-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Edit className="h-5 w-5 text-blue-600" />
+                Edit Transaction
+              </DialogTitle>
+              <DialogDescription>
+                Transaction #{selectedTransaction?.id} - Modify transaction details
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="space-y-4 max-h-96 overflow-y-auto">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label htmlFor="edit-amount" className="text-sm font-medium">Amount</Label>
+                  <Input
+                    id="edit-amount"
+                    type="number"
+                    step="0.01"
+                    value={editForm.amount}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, amount: e.target.value }))}
+                    className="text-sm"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit-status" className="text-sm font-medium">Status</Label>
+                  <Select value={editForm.status} onValueChange={(value) => setEditForm(prev => ({ ...prev, status: value }))}>
+                    <SelectTrigger className="text-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pending">Pending</SelectItem>
+                      <SelectItem value="completed">Completed</SelectItem>
+                      <SelectItem value="approved">Approved</SelectItem>
+                      <SelectItem value="rejected">Rejected</SelectItem>
+                      <SelectItem value="failed">Failed</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="edit-type" className="text-sm font-medium">Type</Label>
+                <Select value={editForm.type} onValueChange={(value) => setEditForm(prev => ({ ...prev, type: value }))}>
+                  <SelectTrigger className="text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="deposit">Deposit</SelectItem>
+                    <SelectItem value="withdrawal">Withdrawal</SelectItem>
+                    <SelectItem value="credit">Credit</SelectItem>
+                    <SelectItem value="debit">Debit</SelectItem>
+                    <SelectItem value="transfer_in">Transfer In</SelectItem>
+                    <SelectItem value="transfer_out">Transfer Out</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {editForm.type === "withdrawal" && (
+                <div className="space-y-3">
+                  <div>
+                    <Label htmlFor="edit-bank-name" className="text-sm font-medium">Bank Name</Label>
+                    <Input
+                      id="edit-bank-name"
+                      value={editForm.bankName}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, bankName: e.target.value }))}
+                      className="text-sm"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <Label htmlFor="edit-account-number" className="text-sm font-medium">Account Number</Label>
+                      <Input
+                        id="edit-account-number"
+                        value={editForm.accountNumber}
+                        onChange={(e) => setEditForm(prev => ({ ...prev, accountNumber: e.target.value }))}
+                        className="text-sm"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="edit-account-name" className="text-sm font-medium">Account Name</Label>
+                      <Input
+                        id="edit-account-name"
+                        value={editForm.accountName}
+                        onChange={(e) => setEditForm(prev => ({ ...prev, accountName: e.target.value }))}
+                        className="text-sm"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div>
+                <Label htmlFor="edit-admin-notes" className="text-sm font-medium">Admin Notes</Label>
+                <Textarea
+                  id="edit-admin-notes"
+                  value={editForm.adminNotes}
+                  onChange={(e) => setEditForm(prev => ({ ...prev, adminNotes: e.target.value }))}
+                  rows={3}
+                  className="text-sm"
+                />
+              </div>
+              
+              <div className="flex gap-2 pt-4">
+                <Button 
+                  onClick={handleSaveEdit}
+                  disabled={editTransactionMutation.isPending}
+                  className="flex-1 text-sm"
+                >
+                  {editTransactionMutation.isPending ? (
+                    <RefreshCw className="h-4 w-4 animate-spin mr-2" />
+                  ) : (
+                    <Save className="h-4 w-4 mr-2" />
+                  )}
+                  Save Changes
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowEditModal(false)} 
+                  className="flex-1 text-sm"
+                  disabled={editTransactionMutation.isPending}
                 >
                   Cancel
                 </Button>

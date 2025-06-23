@@ -2564,6 +2564,153 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin transaction CRUD operations
+  app.get("/api/admin/transactions/:id", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      const transactionId = parseInt(req.params.id);
+      const transaction = await storage.getTransaction(transactionId);
+      
+      if (!transaction) {
+        return res.status(404).json({ error: "Transaction not found" });
+      }
+
+      // Enrich with user data
+      const user = await storage.getUser(transaction.userId);
+      res.json({
+        ...transaction,
+        user: user ? {
+          id: user.id,
+          email: user.email,
+          first_name: user.firstName,
+          last_name: user.lastName
+        } : null
+      });
+    } catch (error) {
+      console.error("Get transaction error:", error);
+      res.status(500).json({ error: "Failed to fetch transaction" });
+    }
+  });
+
+  app.put("/api/admin/transactions/:id", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      const transactionId = parseInt(req.params.id);
+      const { amount, status, adminNotes, type, bankName, accountNumber, accountName } = req.body;
+
+      const transaction = await storage.getTransaction(transactionId);
+      if (!transaction) {
+        return res.status(404).json({ error: "Transaction not found" });
+      }
+
+      // Validate status transitions
+      const validStatuses = ["pending", "completed", "failed", "rejected", "approved"];
+      if (status && !validStatuses.includes(status)) {
+        return res.status(400).json({ error: "Invalid status" });
+      }
+
+      // Handle balance adjustments for amount changes
+      if (amount && parseFloat(amount) !== parseFloat(transaction.amount)) {
+        const user = await storage.getUser(transaction.userId);
+        if (!user) {
+          return res.status(404).json({ error: "User not found" });
+        }
+
+        const oldAmount = parseFloat(transaction.amount);
+        const newAmount = parseFloat(amount);
+        const difference = newAmount - oldAmount;
+
+        // Adjust user balance based on transaction type
+        if (transaction.type === "credit" || transaction.type === "deposit") {
+          const currentBalance = parseFloat(user.nairaBalance || "0");
+          await storage.updateUser(transaction.userId, {
+            nairaBalance: (currentBalance + difference).toString()
+          });
+        } else if (transaction.type === "debit" || transaction.type === "withdrawal") {
+          const currentBalance = parseFloat(user.nairaBalance || "0");
+          const newBalance = currentBalance - difference;
+          
+          if (newBalance < 0) {
+            return res.status(400).json({ error: "Insufficient balance for amount adjustment" });
+          }
+          
+          await storage.updateUser(transaction.userId, {
+            nairaBalance: newBalance.toString()
+          });
+        }
+      }
+
+      // Update transaction
+      const updates: any = {};
+      if (amount !== undefined) updates.amount = amount.toString();
+      if (status !== undefined) updates.status = status;
+      if (adminNotes !== undefined) updates.adminNotes = adminNotes;
+      if (type !== undefined) updates.type = type;
+      if (bankName !== undefined) updates.bankName = bankName;
+      if (accountNumber !== undefined) updates.accountNumber = accountNumber;
+      if (accountName !== undefined) updates.accountName = accountName;
+
+      const updatedTransaction = await storage.updateTransaction(transactionId, updates);
+
+      res.json({ 
+        success: true, 
+        message: "Transaction updated successfully",
+        transaction: updatedTransaction
+      });
+    } catch (error) {
+      console.error("Update transaction error:", error);
+      res.status(500).json({ error: "Failed to update transaction" });
+    }
+  });
+
+  app.delete("/api/admin/transactions/:id", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      const transactionId = parseInt(req.params.id);
+      const transaction = await storage.getTransaction(transactionId);
+      
+      if (!transaction) {
+        return res.status(404).json({ error: "Transaction not found" });
+      }
+
+      // Prevent deletion of completed transactions that affect balance
+      if (transaction.status === "completed" && ["credit", "debit", "deposit", "withdrawal"].includes(transaction.type)) {
+        // Reverse the transaction effect on user balance before deletion
+        const user = await storage.getUser(transaction.userId);
+        if (user) {
+          const amount = parseFloat(transaction.amount);
+          let currentBalance = parseFloat(user.nairaBalance || "0");
+
+          if (transaction.type === "credit" || transaction.type === "deposit") {
+            // Reverse credit by debiting
+            currentBalance -= amount;
+          } else if (transaction.type === "debit" || transaction.type === "withdrawal") {
+            // Reverse debit by crediting
+            currentBalance += amount;
+          }
+
+          if (currentBalance < 0) {
+            return res.status(400).json({ 
+              error: "Cannot delete transaction: would result in negative balance" 
+            });
+          }
+
+          await storage.updateUser(transaction.userId, {
+            nairaBalance: currentBalance.toString()
+          });
+        }
+      }
+
+      // Delete transaction
+      await pool.query("DELETE FROM transactions WHERE id = $1", [transactionId]);
+
+      res.json({ 
+        success: true, 
+        message: "Transaction deleted successfully"
+      });
+    } catch (error) {
+      console.error("Delete transaction error:", error);
+      res.status(500).json({ error: "Failed to delete transaction" });
+    }
+  });
+
   // User lookup for transfers
   app.post("/api/users/lookup", authenticateToken, async (req, res) => {
     try {
