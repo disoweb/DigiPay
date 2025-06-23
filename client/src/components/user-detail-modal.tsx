@@ -162,15 +162,15 @@ export function UserDetailModal({ isOpen, onClose, userId, userName }: UserDetai
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[95vh] w-[95vw] sm:w-full overflow-hidden flex flex-col p-0 gap-0">
-        <DialogHeader className="flex-shrink-0 p-4 sm:p-6 border-b bg-gradient-to-r from-blue-50 to-indigo-50">
-          <DialogTitle className="flex items-center justify-between text-lg sm:text-xl">
+        <DialogHeader className="flex-shrink-0 p-3 sm:p-6 border-b bg-gradient-to-r from-blue-50 to-indigo-50">
+          <DialogTitle className="flex items-center justify-between text-base sm:text-xl">
             <div className="flex items-center gap-2">
-              <div className="p-2 bg-blue-100 rounded-full">
+              <div className="p-1.5 sm:p-2 bg-blue-100 rounded-full">
                 <User className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
               </div>
               <div>
-                <span className="font-bold text-gray-900">{userName}</span>
-                <p className="text-sm text-gray-600 font-normal">User Profile & Activity</p>
+                <span className="font-bold text-gray-900 text-sm sm:text-base">{userName}</span>
+                <p className="text-xs sm:text-sm text-gray-600 font-normal">User Profile & Activity</p>
               </div>
             </div>
             <Button variant="ghost" size="sm" onClick={onClose} className="h-8 w-8 p-0">
@@ -180,43 +180,43 @@ export function UserDetailModal({ isOpen, onClose, userId, userName }: UserDetai
         </DialogHeader>
 
         {userLoading ? (
-          <div className="flex items-center justify-center py-12">
+          <div className="flex items-center justify-center py-8 sm:py-12">
             <div className="text-center">
-              <RefreshCw className="h-8 w-8 animate-spin text-blue-600 mx-auto mb-3" />
-              <p className="text-gray-600">Loading user details...</p>
+              <RefreshCw className="h-6 w-6 sm:h-8 sm:w-8 animate-spin text-blue-600 mx-auto mb-2 sm:mb-3" />
+              <p className="text-sm sm:text-base text-gray-600">Loading user details...</p>
             </div>
           </div>
         ) : userDetails ? (
-          <div className="flex-1 overflow-hidden">
+          <div className="flex-1 overflow-hidden min-h-0">
             <Tabs defaultValue="overview" className="h-full flex flex-col">
-              <TabsList className="flex-shrink-0 grid w-full grid-cols-4 mx-4 sm:mx-6 mt-4">
-                <TabsTrigger value="overview" className="text-xs sm:text-sm">Overview</TabsTrigger>
-                <TabsTrigger value="wallet" className="text-xs sm:text-sm">Wallet</TabsTrigger>
-                <TabsTrigger value="transactions" className="text-xs sm:text-sm">Transactions</TabsTrigger>
-                <TabsTrigger value="trades" className="text-xs sm:text-sm">Trades</TabsTrigger>
+              <TabsList className="flex-shrink-0 grid w-full grid-cols-4 mx-3 sm:mx-6 mt-2 sm:mt-4">
+                <TabsTrigger value="overview" className="text-xs sm:text-sm px-2 sm:px-4">Overview</TabsTrigger>
+                <TabsTrigger value="wallet" className="text-xs sm:text-sm px-2 sm:px-4">Wallet</TabsTrigger>
+                <TabsTrigger value="transactions" className="text-xs sm:text-sm px-2 sm:px-4">Transactions</TabsTrigger>
+                <TabsTrigger value="trades" className="text-xs sm:text-sm px-2 sm:px-4">Trades</TabsTrigger>
               </TabsList>
 
-              <TabsContent value="overview" className="flex-1 overflow-auto px-4 sm:px-6 pb-6 space-y-4 mt-4">
+              <TabsContent value="overview" className="flex-1 overflow-auto px-3 sm:px-6 pb-4 sm:pb-6 space-y-3 sm:space-y-4 mt-2 sm:mt-4 min-h-0">
                 {/* Profile Card */}
                 <Card className="shadow-sm">
-                  <CardHeader className="pb-3">
+                  <CardHeader className="pb-2 sm:pb-3">
                     <CardTitle className="text-sm flex items-center gap-2">
                       <User className="h-4 w-4" />
                       Profile Information
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div className="space-y-3">
+                  <CardContent className="space-y-3 sm:space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                      <div className="space-y-2 sm:space-y-3">
                         <div className="flex items-center gap-2">
-                          <Mail className="h-4 w-4 text-gray-500" />
+                          <Mail className="h-4 w-4 text-gray-500 flex-shrink-0" />
                           <div className="min-w-0 flex-1">
                             <p className="text-xs text-gray-600">Email</p>
                             <p className="text-sm font-medium truncate">{userDetails.email}</p>
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
-                          <User className="h-4 w-4 text-gray-500" />
+                          <User className="h-4 w-4 text-gray-500 flex-shrink-0" />
                           <div className="min-w-0 flex-1">
                             <p className="text-xs text-gray-600">Full Name</p>
                             <p className="text-sm font-medium">
@@ -228,7 +228,7 @@ export function UserDetailModal({ isOpen, onClose, userId, userName }: UserDetai
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
-                          <Phone className="h-4 w-4 text-gray-500" />
+                          <Phone className="h-4 w-4 text-gray-500 flex-shrink-0" />
                           <div className="min-w-0 flex-1">
                             <p className="text-xs text-gray-600">Phone</p>
                             <p className="text-sm font-medium">{userDetails.phone || "Not set"}</p>
@@ -236,16 +236,16 @@ export function UserDetailModal({ isOpen, onClose, userId, userName }: UserDetai
                         </div>
                       </div>
                       
-                      <div className="space-y-3">
+                      <div className="space-y-2 sm:space-y-3">
                         <div className="flex items-center gap-2">
-                          <MapPin className="h-4 w-4 text-gray-500" />
+                          <MapPin className="h-4 w-4 text-gray-500 flex-shrink-0" />
                           <div className="min-w-0 flex-1">
                             <p className="text-xs text-gray-600">Location</p>
                             <p className="text-sm font-medium">{userDetails.location || "Not set"}</p>
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
-                          <Shield className="h-4 w-4 text-gray-500" />
+                          <Shield className="h-4 w-4 text-gray-500 flex-shrink-0" />
                           <div className="min-w-0 flex-1">
                             <p className="text-xs text-gray-600">KYC Status</p>
                             {userDetails.kycVerified ? (
@@ -260,7 +260,7 @@ export function UserDetailModal({ isOpen, onClose, userId, userName }: UserDetai
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
-                          <Star className="h-4 w-4 text-gray-500" />
+                          <Star className="h-4 w-4 text-gray-500 flex-shrink-0" />
                           <div className="min-w-0 flex-1">
                             <p className="text-xs text-gray-600">Rating</p>
                             <div className="flex items-center gap-1">
@@ -275,7 +275,7 @@ export function UserDetailModal({ isOpen, onClose, userId, userName }: UserDetai
                     </div>
 
                     {/* Status and Join Date */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 pt-3 sm:pt-4 border-t">
                       <div>
                         <p className="text-xs text-gray-600 mb-1">Status</p>
                         <Badge className={userDetails.isOnline ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}>
@@ -292,24 +292,24 @@ export function UserDetailModal({ isOpen, onClose, userId, userName }: UserDetai
 
                 {/* Trading Stats */}
                 <Card className="shadow-sm">
-                  <CardHeader className="pb-3">
+                  <CardHeader className="pb-2 sm:pb-3">
                     <CardTitle className="text-sm flex items-center gap-2">
                       <Activity className="h-4 w-4" />
                       Trading Statistics
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                      <div className="text-center p-4 bg-blue-50 rounded-lg">
-                        <p className="text-xl sm:text-2xl font-bold text-blue-600">{trades.length}</p>
+                    <div className="grid grid-cols-3 gap-2 sm:gap-4">
+                      <div className="text-center p-2 sm:p-4 bg-blue-50 rounded-lg">
+                        <p className="text-lg sm:text-2xl font-bold text-blue-600">{trades.length}</p>
                         <p className="text-xs sm:text-sm text-blue-700">Total Trades</p>
                       </div>
-                      <div className="text-center p-4 bg-green-50 rounded-lg">
-                        <p className="text-xl sm:text-2xl font-bold text-green-600">{completedTrades}</p>
+                      <div className="text-center p-2 sm:p-4 bg-green-50 rounded-lg">
+                        <p className="text-lg sm:text-2xl font-bold text-green-600">{completedTrades}</p>
                         <p className="text-xs sm:text-sm text-green-700">Completed</p>
                       </div>
-                      <div className="text-center p-4 bg-purple-50 rounded-lg">
-                        <p className="text-lg sm:text-2xl font-bold text-purple-600">₦{totalVolume.toLocaleString()}</p>
+                      <div className="text-center p-2 sm:p-4 bg-purple-50 rounded-lg">
+                        <p className="text-sm sm:text-2xl font-bold text-purple-600">₦{totalVolume.toLocaleString()}</p>
                         <p className="text-xs sm:text-sm text-purple-700">Total Volume</p>
                       </div>
                     </div>
@@ -317,15 +317,15 @@ export function UserDetailModal({ isOpen, onClose, userId, userName }: UserDetai
                 </Card>
               </TabsContent>
 
-              <TabsContent value="wallet" className="flex-1 overflow-auto px-4 sm:px-6 pb-6 space-y-4 mt-4">
+              <TabsContent value="wallet" className="flex-1 overflow-auto px-3 sm:px-6 pb-4 sm:pb-6 space-y-3 sm:space-y-4 mt-2 sm:mt-4 min-h-0">
                 <Card className="shadow-sm">
-                  <CardHeader className="pb-3">
+                  <CardHeader className="pb-2 sm:pb-3">
                     <CardTitle className="text-sm flex items-center gap-2">
                       <Wallet className="h-4 w-4" />
                       Wallet Balances
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4">
+                  <CardContent className="space-y-3 sm:space-y-4">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       {/* Naira Balance */}
                       <div className="p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-xl border border-green-200">
@@ -377,16 +377,16 @@ export function UserDetailModal({ isOpen, onClose, userId, userName }: UserDetai
                 </Card>
               </TabsContent>
 
-              <TabsContent value="transactions" className="flex-1 overflow-auto px-4 sm:px-6 pb-6 mt-4">
+              <TabsContent value="transactions" className="flex-1 overflow-auto px-3 sm:px-6 pb-4 sm:pb-6 mt-2 sm:mt-4 min-h-0">
                 <Card className="shadow-sm h-full">
-                  <CardHeader className="pb-3">
+                  <CardHeader className="pb-2 sm:pb-3">
                     <CardTitle className="text-sm flex items-center gap-2">
                       <Activity className="h-4 w-4" />
                       Recent Transactions ({transactions.length})
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="p-0">
-                    <ScrollArea className="h-[400px]">
+                    <ScrollArea className="h-[300px] sm:h-[400px]">
                       {transactionsLoading ? (
                         <div className="flex items-center justify-center py-8">
                           <RefreshCw className="h-6 w-6 animate-spin" />
@@ -428,16 +428,16 @@ export function UserDetailModal({ isOpen, onClose, userId, userName }: UserDetai
                 </Card>
               </TabsContent>
 
-              <TabsContent value="trades" className="flex-1 overflow-auto px-4 sm:px-6 pb-6 mt-4">
+              <TabsContent value="trades" className="flex-1 overflow-auto px-3 sm:px-6 pb-4 sm:pb-6 mt-2 sm:mt-4 min-h-0">
                 <Card className="shadow-sm h-full">
-                  <CardHeader className="pb-3">
+                  <CardHeader className="pb-2 sm:pb-3">
                     <CardTitle className="text-sm flex items-center gap-2">
                       <Activity className="h-4 w-4" />
                       Trading History ({trades.length})
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="p-0">
-                    <ScrollArea className="h-[400px]">
+                    <ScrollArea className="h-[300px] sm:h-[400px]">
                       {tradesLoading ? (
                         <div className="flex items-center justify-center py-8">
                           <RefreshCw className="h-6 w-6 animate-spin" />
