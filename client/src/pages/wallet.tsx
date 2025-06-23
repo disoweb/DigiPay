@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
+import { useRealtimeBalance } from "@/hooks/use-realtime-balance";
 import { apiRequest } from "@/lib/queryClient";
 import { Navbar } from "@/components/navbar";
 import { EnhancedDepositModal } from "@/components/enhanced-deposit-modal";
@@ -152,6 +153,7 @@ function SendUSDTForm({ onClose, userBalance }: { onClose: () => void; userBalan
 
 export default function Wallet() {
   const { user } = useAuth();
+  const { wsConnected, latestBalance } = useRealtimeBalance();
   const [showDeposit, setShowDeposit] = useState(false);
   const [showWithdraw, setShowWithdraw] = useState(false);
   const [showReceive, setShowReceive] = useState(false);
@@ -161,7 +163,6 @@ export default function Wallet() {
   const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
   const [showTransactionModal, setShowTransactionModal] = useState(false);
   const [showProfileCompletion, setShowProfileCompletion] = useState(false);
-  const [wsConnected, setWsConnected] = useState(false);
   const { currency: portfolioCurrency, toggleCurrency } = useCurrencyPreference();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -223,47 +224,44 @@ export default function Wallet() {
         ws.onmessage = (event) => {
           try {
             const data = JSON.parse(event.data);
-            console.log('WebSocket message received:', data.type, data);
+            console.log('WebSocket message received:', data);
             
             if (data.type === 'balance_updated') {
-              console.log('Balance update received for user:', data.userId, 'Current user:', user.id);
-            }
-            
-            if (data.type === 'balance_updated' && data.userId === user.id) {
-              console.log('Processing balance update:', {
-                old: data.previousBalance,
-                new: data.nairaBalance,
-                deposit: data.depositAmount
-              });
+              console.log('Balance update for user:', data.userId, 'Current user:', user.id);
+              console.log('Balance data:', data.nairaBalance, data.usdtBalance);
               
-              // Update cache immediately with new balance
-              queryClient.setQueryData(["/api/user"], (oldData: any) => {
-                if (oldData) {
-                  const updatedData = {
-                    ...oldData,
-                    nairaBalance: data.nairaBalance,
-                    usdtBalance: data.usdtBalance || oldData.usdtBalance
-                  };
-                  console.log('Updated user data in cache:', updatedData);
-                  return updatedData;
-                }
-                return oldData;
-              });
+              if (data.userId === user.id) {
+                console.log('Processing balance update for current user');
+                console.log('Old balance:', data.previousBalance, 'New balance:', data.nairaBalance);
               
-              // Force refresh queries to trigger UI update immediately
-              setTimeout(() => {
-                queryClient.invalidateQueries({ queryKey: ["/api/user"] });
-                queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
-                queryClient.refetchQueries({ queryKey: ["/api/user"] });
-              }, 50);
-              
-              // Show success notification
-              if (data.lastTransaction?.type === 'deposit') {
-                toast({
-                  title: "Deposit Successful!",
-                  description: `₦${parseFloat(data.depositAmount || data.lastTransaction.amount).toLocaleString()} credited to your wallet`,
-                  className: "border-green-200 bg-green-50 text-green-800",
+                // Force immediate cache invalidation and refetch
+                queryClient.setQueryData(["/api/user"], (oldData: any) => {
+                  if (oldData && oldData.id === user.id) {
+                    console.log('Updating user cache with new balance:', data.nairaBalance);
+                    return {
+                      ...oldData,
+                      nairaBalance: data.nairaBalance,
+                      usdtBalance: data.usdtBalance || oldData.usdtBalance
+                    };
+                  }
+                  return oldData;
                 });
+                
+                // Invalidate and refetch immediately to ensure UI updates
+                queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+                queryClient.refetchQueries({ queryKey: ["/api/user"] });
+                queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
+              
+                // Show success notification
+                if (data.lastTransaction?.type === 'deposit') {
+                  toast({
+                    title: "Deposit Successful!",
+                    description: `₦${parseFloat(data.depositAmount).toLocaleString()} has been credited to your wallet`,
+                    className: "border-green-200 bg-green-50 text-green-800",
+                  });
+                }
+                
+                console.log('Balance update processing complete');
               }
             }
           } catch (error) {
@@ -364,7 +362,7 @@ export default function Wallet() {
   // Portfolio value calculations
   const calculatePortfolioValue = () => {
     const usdtBalance = parseFloat(user.usdtBalance || "0");
-    const ngnBalance = parseFloat(user.nairaBalance || "0");
+    const ngnBalance = parseFloat(latestBalance || "0");
     
     if (portfolioCurrency === "USD") {
       const usdtInUsd = usdtBalance; // USDT is 1:1 with USD
@@ -465,10 +463,10 @@ export default function Wallet() {
                   <div className="flex justify-center space-x-6 text-sm">
                     <div className="text-center">
                       <p className="text-blue-100">NGN</p>
-                      <p className="font-semibold">₦{parseFloat(user.nairaBalance || "0").toLocaleString()}</p>
+                      <p className="font-semibold">₦{parseFloat(latestBalance || "0").toLocaleString()}</p>
                       {portfolioCurrency === "USD" && (
                         <p className="text-xs text-blue-200">
-                          ≈ ${(parseFloat(user.nairaBalance || "0") * NGN_TO_USD_RATE).toFixed(2)}
+                          ≈ ${(parseFloat(latestBalance || "0") * NGN_TO_USD_RATE).toFixed(2)}
                         </p>
                       )}
                     </div>
@@ -508,7 +506,7 @@ export default function Wallet() {
 
                   <div className="space-y-2 mb-4">
                     <p className="text-2xl font-bold text-gray-900">
-                      ₦{parseFloat(user.nairaBalance || "0").toLocaleString()}
+                      ₦{parseFloat(latestBalance || "0").toLocaleString()}
                     </p>
                     <p className="text-sm text-gray-600">Available for trading</p>
                   </div>

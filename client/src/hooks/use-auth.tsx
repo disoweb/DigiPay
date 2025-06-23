@@ -96,7 +96,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return failureCount < 2;
     },
     refetchOnWindowFocus: false,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 1000, // 1 second - allow frequent updates for real-time balance changes
   });
 
   // Handle auth errors
