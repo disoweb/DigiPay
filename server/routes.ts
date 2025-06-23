@@ -48,6 +48,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "User not found" });
       }
 
+
+
       // Calculate completed trades
       const trades = await storage.getTrades();
       const userTrades = trades.filter(t => 
