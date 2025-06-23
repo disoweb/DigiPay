@@ -28,29 +28,16 @@ export const userRoutes = {
     try {
       const { id } = req.params;
       
-      const [user] = await db.select({
-        id: users.id,
-        email: users.email,
-        username: users.username,
-        firstName: users.firstName,
-        lastName: users.lastName,
-        phone: users.phone,
-        location: users.location,
-        nairaBalance: users.nairaBalance,
-        usdtBalance: users.usdtBalance,
-        averageRating: users.averageRating,
-        ratingCount: users.ratingCount,
-        kycVerified: users.kycVerified,
-        isOnline: users.isOnline,
-        lastSeen: users.lastSeen,
-        createdAt: users.createdAt
-      }).from(users).where(eq(users.id, parseInt(id)));
+      const [user] = await db.select().from(users).where(eq(users.id, parseInt(id)));
       
       if (!user) {
         return res.status(404).json({ error: 'User not found' });
       }
       
-      res.json(user);
+      // Remove password from response and ensure consistent field names
+      const { password, ...userProfile } = user;
+      
+      res.json(userProfile);
     } catch (error) {
       console.error('Get user profile error:', error);
       res.status(500).json({ error: 'Failed to fetch user profile' });

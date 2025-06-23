@@ -77,7 +77,11 @@ export function UserDetailModal({ isOpen, onClose, userId, userName }: UserDetai
     queryFn: async () => {
       const response = await apiRequest("GET", `/api/users/${userId}`);
       if (!response.ok) throw new Error("Failed to fetch user details");
-      return response.json();
+      const data = await response.json();
+      console.log('User details received:', data);
+      console.log('Naira balance:', data.nairaBalance);
+      console.log('USDT balance:', data.usdtBalance);
+      return data;
     },
     enabled: isOpen && userId > 0,
   });
