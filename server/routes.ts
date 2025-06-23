@@ -3435,13 +3435,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }, 100);
 
-      // Create transaction record
+      // Create transaction record with proper amount and currency info
+      const transactionAmount = fromCurrency === "USDT" ? amount.toString() : (amount / USDT_TO_NGN_RATE).toFixed(6);
+      const transactionNotes = fromCurrency === "USDT" 
+        ? `Swapped ${amount} USDT to ₦${nairaAmount.toLocaleString()} (Fee: ${fee.toFixed(6)} USDT)`
+        : `Swapped ₦${amount.toLocaleString()} to ${usdtAmount.toFixed(6)} USDT (Fee: ₦${fee.toLocaleString()})`;
+      
       await storage.createTransaction({
         userId,
         type: "swap",
-        amount: amount.toString(),
+        amount: transactionAmount,
         status: "completed",
-        adminNotes: transactionNote
+        adminNotes: transactionNotes
       });
 
       res.json({
