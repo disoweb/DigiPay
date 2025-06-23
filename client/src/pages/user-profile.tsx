@@ -166,7 +166,7 @@ export default function UserProfile() {
                   {profile && profile.isOnline ? "Online" : "Offline"}
                 </div>
                 
-                {!profile && profile.isOnline && profile.lastSeen && (
+                {profile && !profile.isOnline && profile.lastSeen && (
                   <p className="text-xs text-gray-500 mt-1">
                     Last seen: {new Date(profile.lastSeen).toLocaleDateString()}
                   </p>
