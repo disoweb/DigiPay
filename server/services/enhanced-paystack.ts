@@ -110,7 +110,7 @@ export class EnhancedPaystackService {
           amount: Math.round(amount * 100), // Convert to kobo and ensure integer
           reference,
           currency: 'NGN',
-          channels: ['bank_transfer', 'card', 'ussd', 'bank', 'mobile_money', 'qr'],
+          channels: ['card', 'bank', 'ussd', 'transfer', 'mobile_money', 'qr'],
           metadata: {
             userId,
             depositType: 'wallet_funding',

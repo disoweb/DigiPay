@@ -101,22 +101,19 @@ export function EnhancedDepositModal({ open, onOpenChange, user }: EnhancedDepos
       if (data.success) {
         setPaymentStep('success');
         
-        // Comprehensive data refresh to prevent freezing
+        // Real-time balance update without page refresh
         queryClient.invalidateQueries({ queryKey: ["/api/user"] });
         queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
-        queryClient.refetchQueries({ queryKey: ["/api/user"] });
         
         toast({
           title: "Payment Successful!",
           description: `₦${parseFloat(amount).toLocaleString()} added to your wallet instantly`,
         });
 
-        // Auto-close and force refresh to prevent page freezing
+        // Auto-close modal after success without page refresh
         setTimeout(() => {
           onOpenChange(false);
-          queryClient.clear(); // Clear query cache
-          window.location.reload(); // Force refresh to prevent freezing
-        }, 2500);
+        }, 2000);
       } else {
         throw new Error(data.message || 'Payment verification failed');
       }
@@ -154,7 +151,7 @@ export function EnhancedDepositModal({ open, onOpenChange, user }: EnhancedDepos
         amount: parseFloat(amount) * 100,
         currency: "NGN",
         reference: paystackData.reference,
-        channels: ['card', 'bank', 'ussd', 'qr'],
+        channels: ['card', 'bank', 'transfer', 'ussd', 'mobile_money', 'qr'],
         metadata: {
           source: 'mobile_deposit',
           userId: user.id.toString()
