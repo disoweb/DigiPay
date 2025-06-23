@@ -322,11 +322,11 @@ export function TradingDashboard() {
                       <div className="flex-1">
                         <p className="font-medium">Trade #{trade.id}</p>
                         <p className="text-sm text-gray-600">
-                          ${parseFloat(trade.amount).toFixed(2)} @ ₦{parseFloat(trade.rate).toLocaleString()}
+                          ${parseFloat(trade.amount || 0).toFixed(2)} @ ₦{parseFloat(trade.rate || 0).toLocaleString()}
                         </p>
                       </div>
                       <Badge className={getStatusColor(trade.status)}>
-                        {trade.status.replace('_', ' ').toUpperCase()}
+                        {(trade.status || '').replace('_', ' ').toUpperCase()}
                       </Badge>
                     </div>
                     <div className="flex items-center justify-between">
@@ -341,11 +341,35 @@ export function TradingDashboard() {
                         variant="outline"
                         onClick={() => {
                           console.log("Chat button clicked for trade:", trade);
-                          if (trade && trade.id) {
+                          if (trade && trade.id && typeof trade.id === 'number') {
                             console.log("Navigating to chat with trade ID:", trade.id);
                             setLocation(`/chat/${trade.id}`);
                           } else {
-                            console.error("Invalid trade data:", trade);
+                            console.error("Invalid trade data for chat navigation:", trade);
+                          }
+                        }}
+                        className="px-3 py-1 h-7 text-xs ml-auto"
+                      >
+                        <MessageCircle className="h-3 w-3 mr-1" />
+                        Chat
+                      </Button>
+                    </div>
+                  </div>
+                ))}-500">
+                          <Clock className="h-3 w-3 inline mr-1" />
+                          {new Date(trade.paymentDeadline).toLocaleTimeString()}
+                        </p>
+                      )}
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => {
+                          console.log("Chat button clicked for trade:", trade);
+                          if (trade && trade.id && typeof trade.id === 'number') {
+                            console.log("Navigating to chat with trade ID:", trade.id);
+                            setLocation(`/chat/${trade.id}`);
+                          } else {
+                            console.error("Invalid trade data for chat navigation:", trade);
                           }
                         }}
                         className="px-3 py-1 h-7 text-xs ml-auto"
