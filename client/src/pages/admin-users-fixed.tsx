@@ -21,36 +21,15 @@ import {
   Eye
 } from "lucide-react";
 
-interface AdminUser {
-  id: number;
-  email: string;
-  username: string;
-  first_name: string;
-  last_name: string;
-  phone: string;
-  kyc_verified: boolean;
-  kyc_status: string;
-  naira_balance: string;
-  usdt_balance: string;
-  average_rating: string;
-  rating_count: number;
-  is_online: boolean;
-  last_seen: string;
-  created_at: string;
-  is_admin: boolean;
-  total_trades: number;
-  completed_trades: number;
-}
-
-export default function AdminUsers() {
+export default function AdminUsersFixed() {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
+  const [selectedUser, setSelectedUser] = useState<any>(null);
   const [showActionModal, setShowActionModal] = useState(false);
   const [actionType, setActionType] = useState<"ban" | "freeze" | "view">("view");
   const [actionReason, setActionReason] = useState("");
 
-  const { data: users = [], isLoading, error } = useQuery<AdminUser[]>({
+  const { data: users = [], isLoading, error } = useQuery({
     queryKey: ["/api/admin/users"],
   });
 
@@ -88,13 +67,13 @@ export default function AdminUsers() {
     },
   });
 
-  const filteredUsers = users.filter(user =>
+  const filteredUsers = users.filter((user: any) =>
     user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     `${user.first_name || ''} ${user.last_name || ''}`.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleAction = (user: AdminUser, action: "ban" | "freeze" | "view") => {
+  const handleAction = (user: any, action: "ban" | "freeze" | "view") => {
     setSelectedUser(user);
     setActionType(action);
     setShowActionModal(true);
@@ -188,7 +167,7 @@ export default function AdminUsers() {
                   <div className="ml-4">
                     <p className="text-sm font-medium text-gray-600">KYC Verified</p>
                     <p className="text-2xl font-bold text-gray-900">
-                      {users.filter(u => u.kyc_verified).length}
+                      {users.filter((u: any) => u.kyc_verified).length}
                     </p>
                   </div>
                 </div>
@@ -202,7 +181,7 @@ export default function AdminUsers() {
                   <div className="ml-4">
                     <p className="text-sm font-medium text-gray-600">Admins</p>
                     <p className="text-2xl font-bold text-gray-900">
-                      {users.filter(u => u.is_admin).length}
+                      {users.filter((u: any) => u.is_admin).length}
                     </p>
                   </div>
                 </div>
@@ -216,7 +195,7 @@ export default function AdminUsers() {
                   <div className="ml-4">
                     <p className="text-sm font-medium text-gray-600">Active Traders</p>
                     <p className="text-2xl font-bold text-gray-900">
-                      {users.filter(u => u.total_trades > 0).length}
+                      {users.filter((u: any) => u.total_trades > 0).length}
                     </p>
                   </div>
                 </div>
@@ -244,7 +223,7 @@ export default function AdminUsers() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredUsers.map((user) => (
+                    {filteredUsers.map((user: any) => (
                       <TableRow key={user.id}>
                         <TableCell>
                           <div>
@@ -307,7 +286,7 @@ export default function AdminUsers() {
                               onClick={() => handleAction(user, "freeze")}
                               className="text-orange-600 hover:text-orange-700"
                             >
-                              <Freeze className="h-4 w-4" />
+                              ❄️
                             </Button>
                             <Button
                               size="sm"
