@@ -11,7 +11,7 @@ import { tronService } from "./services/tron";
 import { emailService, smsService } from "./services/notifications";
 import { kycRoutes } from "./routes/kyc";
 import { db, pool } from "./db";
-import { eq, desc, or, and, asc } from "drizzle-orm";
+import { eq, desc, or, and, asc, gte } from "drizzle-orm";
 import { 
   users, offers, trades, messages, transactions, ratings,
   type User, type InsertUser, type Offer, type InsertOffer,
