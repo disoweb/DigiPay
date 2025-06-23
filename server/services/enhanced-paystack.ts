@@ -372,14 +372,14 @@ export class EnhancedPaystackService {
             let sentCount = 0;
             let targetUserConnected = false;
             
+            // Send to all clients but only to the target user
             wsServer.clients.forEach((client: any) => {
               if (client.readyState === 1) { // WebSocket.OPEN
                 try {
-                  client.send(messageStr);
-                  sentCount++;
-                  
-                  // Check if this is the target user's connection
+                  // Only send balance updates to the specific user
                   if (client.userId === user.id) {
+                    client.send(messageStr);
+                    sentCount++;
                     targetUserConnected = true;
                     console.log(`✅ Target user ${user.id} is connected and received the update`);
                   }

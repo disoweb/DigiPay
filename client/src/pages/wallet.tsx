@@ -223,10 +223,14 @@ export default function Wallet() {
         ws.onmessage = (event) => {
           try {
             const data = JSON.parse(event.data);
-            console.log('📨 WebSocket message received:', data.type);
+            console.log('WebSocket message received:', data.type, data);
+            
+            if (data.type === 'balance_updated') {
+              console.log('Balance update received for user:', data.userId, 'Current user:', user.id);
+            }
             
             if (data.type === 'balance_updated' && data.userId === user.id) {
-              console.log('💰 Processing balance update:', {
+              console.log('Processing balance update:', {
                 old: data.previousBalance,
                 new: data.nairaBalance,
                 deposit: data.depositAmount
@@ -235,23 +239,28 @@ export default function Wallet() {
               // Update cache immediately with new balance
               queryClient.setQueryData(["/api/user"], (oldData: any) => {
                 if (oldData) {
-                  return {
+                  const updatedData = {
                     ...oldData,
                     nairaBalance: data.nairaBalance,
                     usdtBalance: data.usdtBalance || oldData.usdtBalance
                   };
+                  console.log('Updated user data in cache:', updatedData);
+                  return updatedData;
                 }
                 return oldData;
               });
               
-              // Force UI refresh
-              queryClient.invalidateQueries({ queryKey: ["/api/user"] });
-              queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
+              // Force refresh queries to trigger UI update immediately
+              setTimeout(() => {
+                queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+                queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
+                queryClient.refetchQueries({ queryKey: ["/api/user"] });
+              }, 50);
               
               // Show success notification
               if (data.lastTransaction?.type === 'deposit') {
                 toast({
-                  title: "✅ Deposit Successful!",
+                  title: "Deposit Successful!",
                   description: `₦${parseFloat(data.depositAmount || data.lastTransaction.amount).toLocaleString()} credited to your wallet`,
                   className: "border-green-200 bg-green-50 text-green-800",
                 });
