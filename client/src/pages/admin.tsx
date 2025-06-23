@@ -48,21 +48,19 @@ export default function Admin() {
 
   const { data: users = [], isLoading: usersLoading, error: usersError } = useQuery({
     queryKey: ["/api/admin/users"],
+    queryFn: async () => {
+      const response = await apiRequest("GET", "/api/admin/users");
+      if (!response.ok) {
+        throw new Error("Failed to fetch users");
+      }
+      return response.json();
+    },
     enabled: !!user?.isAdmin,
     retry: 3,
     retryDelay: 1000,
   });
 
-  // Debug logging
-  console.log("Admin Dashboard Debug:", {
-    userIsAdmin: user?.isAdmin,
-    usersData: users,
-    usersLength: users.length,
-    usersLoading,
-    usersError: usersError?.message,
-    enabled: !!user?.isAdmin,
-    userObject: user
-  });
+
 
   const { data: featuredUsers = [] } = useQuery({
     queryKey: ["/api/admin/featured-users"],
@@ -173,11 +171,7 @@ export default function Admin() {
                     <div className="ml-4">
                       <p className="text-sm font-medium text-gray-600">{stat.title}</p>
                       <p className="text-3xl font-bold text-gray-900">{stat.value}</p>
-                      {stat.title === "Total Users" && (
-                        <p className="text-xs text-gray-500">
-                          Debug: L:{usersLoading ? "Y" : "N"} E:{usersError?.message || "None"} Data:{users.length} Admin:{user?.isAdmin ? "Y" : "N"}
-                        </p>
-                      )}
+
                     </div>
                   </div>
                 </CardContent>
