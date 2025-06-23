@@ -1,52 +1,49 @@
 # DigiPay P2P Cryptocurrency Trading Platform
 
-## Project Overview
-A comprehensive peer-to-peer cryptocurrency trading platform built with React, Node.js/Express, and PostgreSQL. Features include secure trading, KYC verification, real-time messaging, escrow services, and admin management.
+## Overview
+A peer-to-peer cryptocurrency trading platform that enables direct trading between users without intermediaries. Built with Express.js backend, React frontend, PostgreSQL database, and integrated with Tron blockchain for USDT transactions.
 
-## Architecture Overview
-- **Frontend**: React with TypeScript, Tailwind CSS, Radix UI components
-- **Backend**: Node.js/Express with TypeScript
-- **Database**: PostgreSQL with Drizzle ORM
-- **Real-time**: WebSocket for live chat and notifications
-- **Authentication**: JWT-based auth with session management
-- **Security**: Helmet, rate limiting, input validation
-
-## Recent Changes
-- **2025-01-22**: Successfully migrated from Replit Agent to Replit environment
-- **2025-01-22**: Added online status indicators for traders in marketplace
-- **2025-01-22**: Implemented direct messaging feature for trader communication
-- **2025-01-22**: Enhanced WebSocket system for real-time status updates
-- **2025-01-22**: Fixed database schema issues with isOnline/lastSeen columns
-- **2025-01-22**: Created new marketplace component with proper online status display  
-- **2025-01-22**: Fixed messaging functionality with working send button
-- **2025-01-22**: Modernized messaging system with mobile-optimized floating widget
-- **2025-01-22**: Implemented automatic messaging when new trades are created
-- **2025-01-22**: Added responsive message interface with real-time updates
+## Project Architecture
+- **Backend**: Express.js with TypeScript, Drizzle ORM
+- **Frontend**: React with Vite, Tailwind CSS, shadcn/ui components
+- **Database**: PostgreSQL (Replit built-in)
+- **Blockchain**: Tron network for USDT transactions
+- **Real-time**: WebSocket for chat and notifications
+- **Authentication**: JWT with Passport.js
+- **Payments**: Stripe and Paystack integration
 
 ## Key Features
-- P2P trading with USDT/Naira pairs
-- Real-time marketplace with live offers
-- Secure escrow system with smart contracts
-- KYC verification workflow
-- Admin panel for user and transaction management
-- Real-time chat system for trades
-- Payment integration with Paystack
-- Mobile-responsive design
+- P2P cryptocurrency trading (USDT/Naira)
+- KYC verification system
+- Real-time messaging between traders
+- Escrow system for secure transactions
+- Admin panel for trade oversight
+- Multi-currency wallet management
+- Rating and review system
 
-## Database Schema
-- Users with KYC status and online tracking
-- Offers with payment methods and terms
-- Trades with escrow and status tracking
-- Messages for trade communication
-- Transactions for deposits/withdrawals
-- Notifications for real-time updates
+## Recent Changes
+*Date: Current session*
+- ✓ Migrated project from Replit Agent to Replit environment
+- ✓ Installed Node.js dependencies and tsx compiler
+- ✓ Created PostgreSQL database and applied schema
+- ✓ Configured environment variables for database connection
+- ✓ Server successfully running on port 5000
+- ✓ WebSocket server initialized for real-time features
+- ✓ TronWeb service running in demo mode for development
 
 ## Security Features
-- JWT authentication
-- Rate limiting on sensitive endpoints
-- Input validation and sanitization
-- Secure password hashing with bcrypt
-- Admin role-based access control
+- Helmet.js for security headers
+- Content Security Policy (CSP)
+- Express rate limiting
+- Secure session management
+- Input validation with Zod
+- Client/server separation maintained
+
+## Development Status
+- ✓ Environment setup complete
+- ✓ Database configured and migrations applied
+- ✓ Server running successfully
+- → Ready for development and feature expansion
 
 ## User Preferences
-*No specific preferences documented yet*
+*To be updated as user preferences are expressed*
