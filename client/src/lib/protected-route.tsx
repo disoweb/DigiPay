@@ -22,9 +22,13 @@ export function ProtectedRoute({
     // Add a small delay to prevent redirect loops during initial load
     const timer = setTimeout(() => {
       if (!isLoading && !user) {
+        console.log("No user, redirecting to auth");
         setLocation("/auth");
       } else if (!isLoading && user && adminOnly && !user.isAdmin) {
+        console.log(`User ${user.email} is not admin (isAdmin: ${user.isAdmin}), redirecting to dashboard`);
         setLocation("/dashboard");
+      } else if (!isLoading && user && adminOnly && user.isAdmin) {
+        console.log(`Admin access confirmed for ${user.email}`);
       }
     }, 100);
 

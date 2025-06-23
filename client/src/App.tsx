@@ -70,6 +70,22 @@ function App() {
             <ProtectedRoute path="/manage-offers" component={ManageOffers} />
             <ProtectedRoute path="/trade-direct/:offerId" component={DirectTrade} />
             <Route path="/payment/callback" component={PaymentCallback} />
+            <Route path="/admin-test" component={() => {
+              const AdminTest = lazy(() => import('./pages/admin-test'));
+              return (
+                <Suspense fallback={<div>Loading...</div>}>
+                  <AdminTest />
+                </Suspense>
+              );
+            }} />
+            <Route path="/quick-admin" component={() => {
+              const QuickAdmin = lazy(() => import('./pages/quick-admin'));
+              return (
+                <Suspense fallback={<div>Loading...</div>}>
+                  <QuickAdmin />
+                </Suspense>
+              );
+            }} />
             <Route path="/settings" component={UserSettings} />
             <ProtectedRoute path="/profile" component={ProfilePage} />
             <ProtectedRoute path="/manage-offers" component={ManageOffers} />

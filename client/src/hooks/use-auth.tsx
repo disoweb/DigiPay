@@ -95,8 +95,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           title: "Success",
           description: "Logged in successfully!",
         });
-        // Force page reload to reset auth state
-        window.location.href = data.isAdmin ? "/admin" : "/marketplace";
+        
+        // Set a timeout to ensure token is stored before navigation
+        setTimeout(() => {
+          window.location.href = data.isAdmin ? "/admin" : "/marketplace";
+        }, 100);
       }
     },
     onError: (error: any) => {

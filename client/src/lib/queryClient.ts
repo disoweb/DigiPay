@@ -25,6 +25,8 @@ export async function apiRequest(method: string, url: string, data?: any) {
     };
   }
 
+  console.log(`API Request: ${method} ${url}`, { hasToken: !!token });
+
   if (data) {
     config.body = JSON.stringify(data);
   }

@@ -18,23 +18,32 @@ type EnrichedTrade = Trade & {
 };
 
 export default function Admin() {
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
 
+  // Show loading while checking auth
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading admin dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
   // Redirect if not admin
   if (!user?.isAdmin) {
-    setLocation("/");
+    console.log("Non-admin user attempting to access admin:", user);
+    setLocation("/dashboard");
     return null;
   }
 
   const { data: trades = [] } = useQuery<EnrichedTrade[]>({
     queryKey: ["/api/admin/trades"],
-    queryFn: async () => {
-      const response = await apiRequest("GET", "/api/admin/trades");
-      if (!response.ok) throw new Error("Failed to fetch trades");
-      return response.json();
-    },
+    enabled: !!user?.isAdmin,
   });
 
   const resolveTradeMutation = useMutation({
