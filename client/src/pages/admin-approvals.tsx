@@ -182,6 +182,39 @@ export default function AdminApprovals() {
     }
   };
 
+  const formatDate = (dateString: string) => {
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) {
+        return "Invalid Date";
+      }
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch (error) {
+      return "Invalid Date";
+    }
+  };
+
+  const formatDateShort = (dateString: string) => {
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) {
+        return "Invalid";
+      }
+      return date.toLocaleDateString('en-US', { 
+        month: 'short', 
+        day: 'numeric' 
+      });
+    } catch (error) {
+      return "Invalid";
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -394,10 +427,7 @@ export default function AdminApprovals() {
                             ₦{parseFloat(transaction.amount).toLocaleString()}
                           </div>
                           <div className="text-xs text-gray-500 lg:hidden">
-                            {new Date(transaction.created_at).toLocaleDateString('en-US', { 
-                              month: 'short', 
-                              day: 'numeric' 
-                            })}
+                            {formatDateShort(transaction.created_at)}
                           </div>
                         </TableCell>
                         <TableCell className="hidden md:table-cell py-2 sm:py-3">
@@ -419,7 +449,7 @@ export default function AdminApprovals() {
                         </TableCell>
                         <TableCell className="hidden lg:table-cell py-2 sm:py-3">
                           <div className="text-xs sm:text-sm text-gray-500">
-                            {new Date(transaction.created_at).toLocaleDateString()}
+                            {formatDate(transaction.created_at)}
                           </div>
                         </TableCell>
                         <TableCell className="py-2 sm:py-3">
@@ -526,7 +556,7 @@ export default function AdminApprovals() {
                         <label className="font-medium text-gray-700">Created</label>
                         <div className="flex items-center gap-2">
                           <Calendar className="h-4 w-4 text-gray-400" />
-                          <span className="text-xs">{new Date(selectedTransaction.created_at).toLocaleString()}</span>
+                          <span className="text-xs">{formatDate(selectedTransaction.created_at)}</span>
                         </div>
                       </div>
                       <div>
