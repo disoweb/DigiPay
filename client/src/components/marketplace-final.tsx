@@ -197,10 +197,10 @@ function OfferCard({ offer, onContact, canContact }: {
                 </div>
                 <div className="text-right">
                   <div className="text-sm font-bold text-gray-900">
-                    {formatCurrency(safeParseFloat(offer.minLimit))}
+                    {safeParseFloat(offer.minLimit).toFixed(2)} USDT
                   </div>
                   <div className="text-xs text-gray-500">
-                    to {formatCurrency(safeParseFloat(offer.maxLimit))}
+                    to {safeParseFloat(offer.maxLimit).toFixed(2)} USDT
                   </div>
                 </div>
               </div>
@@ -658,6 +658,23 @@ export function MarketplaceFinal() {
                     <div className="text-center bg-white rounded-xl p-3 border border-gray-200">
                       <div className="text-xs text-gray-500 mb-1 font-medium">Available</div>
                       <div className="font-black text-lg">{safeParseFloat(contactOffer?.amount).toFixed(2)} USDT</div>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-blue-50 rounded-xl p-3 border border-blue-200">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <DollarSign className="h-4 w-4 text-blue-500" />
+                        <span className="text-xs text-blue-600 font-medium">Trading Limits</span>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-sm font-bold text-blue-900">
+                          {safeParseFloat(contactOffer?.minLimit).toFixed(2)} USDT
+                        </div>
+                        <div className="text-xs text-blue-600">
+                          to {safeParseFloat(contactOffer?.maxLimit).toFixed(2)} USDT
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
