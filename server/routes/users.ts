@@ -35,6 +35,16 @@ export const userRoutes = {
       const directQuery = await db.execute(`SELECT * FROM users WHERE id = ${parseInt(id)} LIMIT 1`);
       console.log('Direct SQL query result:', directQuery);
       
+      // Let's also check what column names exist
+      const schemaQuery = await db.execute(`PRAGMA table_info(users)`);
+      console.log('Users table schema:', schemaQuery);
+      
+      // And let's see the raw row data
+      if (directQuery.length > 0) {
+        console.log('Raw row data:', directQuery[0]);
+        console.log('Available fields in raw data:', Object.keys(directQuery[0]));
+      }
+      
       // First, let's get the raw user data to see what's actually in the database
       const [rawUser] = await db.select().from(users).where(eq(users.id, parseInt(id)));
       
@@ -52,9 +62,30 @@ export const userRoutes = {
       });
       
       // Now select specific fields and ensure proper mapping
-      // Check all possible field name variations
-      const nairaBalance = rawUser.nairaBalance || (rawUser as any).naira_balance || "0";
-      const usdtBalance = rawUser.usdtBalance || (rawUser as any).usdt_balance || "0";
+      // Check all possible field name variations including from direct query
+      let nairaBalance = "0";
+      let usdtBalance = "0";
+      
+      // Try different field name variations
+      if (rawUser.nairaBalance !== undefined && rawUser.nairaBalance !== null) {
+        nairaBalance = rawUser.nairaBalance;
+      } else if ((rawUser as any).naira_balance !== undefined && (rawUser as any).naira_balance !== null) {
+        nairaBalance = (rawUser as any).naira_balance;
+      } else if ((rawUser as any).nairBalance !== undefined && (rawUser as any).nairBalance !== null) {
+        nairaBalance = (rawUser as any).nairBalance;
+      } else if (directQuery.length > 0) {
+        const row = directQuery[0] as any;
+        nairaBalance = row.nairaBalance || row.naira_balance || row.nairBalance || "0";
+      }
+      
+      if (rawUser.usdtBalance !== undefined && rawUser.usdtBalance !== null) {
+        usdtBalance = rawUser.usdtBalance;
+      } else if ((rawUser as any).usdt_balance !== undefined && (rawUser as any).usdt_balance !== null) {
+        usdtBalance = (rawUser as any).usdt_balance;
+      } else if (directQuery.length > 0) {
+        const row = directQuery[0] as any;
+        usdtBalance = row.usdtBalance || row.usdt_balance || "0";
+      }
       
       console.log('Field mapping check:', {
         'rawUser.nairaBalance': rawUser.nairaBalance,
