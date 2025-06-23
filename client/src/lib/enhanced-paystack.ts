@@ -25,96 +25,52 @@ declare global {
 
 export const loadPaystackScript = (): Promise<void> => {
   return new Promise((resolve, reject) => {
+    // Check if Paystack is already available
     if (window.PaystackPop) {
       resolve();
       return;
     }
 
-    const existingScript = document.querySelector('script[src*="paystack"]');
-    if (!existingScript) {
-      const script = document.createElement('script');
-      script.src = 'https://js.paystack.co/v1/inline.js';
-      script.onload = () => {
-        setTimeout(() => {
-          if (window.PaystackPop) {
-            resolve();
-          } else {
-            reject(new Error('Paystack script loaded but PaystackPop not available'));
-          }
-        }, 200);
-      };
-      script.onerror = () => reject(new Error('Failed to load Paystack script'));
-      document.head.appendChild(script);
-    } else {
-      let attempts = 0;
-      const checkPaystack = () => {
-        if (window.PaystackPop) {
-          resolve();
-        } else if (attempts < 30) {
-          attempts++;
-          setTimeout(checkPaystack, 100);
-        } else {
-          reject(new Error('Paystack script not available after waiting'));
-        }
-      };
-      checkPaystack();
-    }
+    // Wait for script to load (it's already in index.html)
+    let attempts = 0;
+    const checkPaystack = () => {
+      if (window.PaystackPop) {
+        resolve();
+      } else if (attempts < 50) {
+        attempts++;
+        setTimeout(checkPaystack, 100);
+      } else {
+        reject(new Error('Paystack script timeout'));
+      }
+    };
+    checkPaystack();
   });
 };
 
 export const initializeEnhancedPaystack = async (config: PaystackConfig) => {
-  console.log("Loading enhanced Paystack script for mobile payment...");
+  console.log("Initializing Paystack payment...");
+  
+  // Wait for Paystack to be available
   await loadPaystackScript();
 
-  console.log("Paystack script loaded, setting up enhanced payment...");
-
   if (!window.PaystackPop) {
-    throw new Error("PaystackPop is not available after script load");
+    throw new Error("Paystack not available");
   }
 
-  // Ensure callback is a function
-  if (typeof config.callback !== 'function') {
-    throw new Error("Callback must be a valid function");
-  }
-
-  // Enhanced config with mobile optimization and proper callback handling
-  const enhancedConfig = {
+  // Setup and open payment
+  const handler = window.PaystackPop.setup({
     key: config.key,
     email: config.email,
     amount: config.amount,
-    currency: config.currency,
+    currency: config.currency || 'NGN',
     reference: config.reference,
-    channels: config.channels || ['card', 'bank', 'ussd', 'qr', 'mobile_money', 'bank_transfer'],
+    channels: config.channels || ['card', 'bank', 'ussd', 'qr'],
     metadata: config.metadata || {},
-    callback: (response: any) => {
-      console.log("Payment callback triggered:", response);
-      try {
-        config.callback(response);
-      } catch (error) {
-        console.error("Callback execution error:", error);
-      }
-    },
-    onClose: () => {
-      console.log("Payment modal closed");
-      try {
-        if (config.onClose) {
-          config.onClose();
-        }
-      } catch (error) {
-        console.error("OnClose execution error:", error);
-      }
-    }
-  };
-
-  const handler = window.PaystackPop.setup(enhancedConfig);
-  console.log("Enhanced payment handler created");
-
-  if (!handler || !handler.openIframe) {
-    throw new Error("Enhanced payment handler setup failed");
-  }
-
+    callback: config.callback,
+    onClose: config.onClose
+  });
+  
   handler.openIframe();
-  console.log("Enhanced payment interface opened");
 };
 
 export const detectMobileDevice = (): boolean => {

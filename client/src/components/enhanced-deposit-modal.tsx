@@ -146,31 +146,31 @@ export function EnhancedDepositModal({ open, onOpenChange, user }: EnhancedDepos
         throw new Error("User email not available. Please refresh and try again.");
       }
 
-      await initializeEnhancedPaystack({
+      // Check if Paystack script is loaded
+      if (!window.PaystackPop) {
+        throw new Error("Payment system not ready. Please refresh the page.");
+      }
+
+      const config = {
         key: PAYSTACK_PUBLIC_KEY,
         email: user.email,
         amount: parseFloat(amount) * 100, // Convert to kobo
         currency: "NGN",
         reference: paystackData.reference,
-        channels: getMobileOptimizedChannels(),
+        channels: ['card', 'bank', 'ussd', 'qr'],
         metadata: {
           source: 'enhanced_mobile_deposit',
           userId: user.id
         },
         callback: (response: any) => {
-          console.log("Paystack callback received:", response);
+          console.log("Paystack callback:", response);
           
-          // Prevent duplicate verification
-          if (hasVerifiedRef.current) {
-            console.log("Verification already in progress");
-            return;
-          }
+          if (hasVerifiedRef.current) return;
           
           if (response.status === "success") {
             hasVerifiedRef.current = true;
             setPaymentStep('verifying');
             
-            // Verify payment with slight delay for processing
             verificationTimeoutRef.current = setTimeout(async () => {
               try {
                 await verifyPaymentMutation.mutateAsync(response.reference);
@@ -186,16 +186,19 @@ export function EnhancedDepositModal({ open, onOpenChange, user }: EnhancedDepos
           }
         },
         onClose: () => {
-          console.log("Paystack payment closed");
+          console.log("Payment modal closed");
           if (!hasVerifiedRef.current) {
             setIsProcessing(false);
             setPaymentStep('amount');
           }
-        },
-      });
+        }
+      };
+
+      const handler = window.PaystackPop.setup(config);
+      handler.openIframe();
 
     } catch (error: any) {
-      console.error("Paystack initialization error:", error);
+      console.error("Paystack error:", error);
       setPaymentStep('error');
       setErrorMessage(error.message || "Failed to initialize payment");
       setIsProcessing(false);
