@@ -28,6 +28,9 @@ export const userRoutes = {
     try {
       const { id } = req.params;
       
+      // Debug: Let's see what columns are available in the users table
+      console.log('Available columns in users table:', Object.keys(users));
+      
       // First, let's get the raw user data to see what's actually in the database
       const [rawUser] = await db.select().from(users).where(eq(users.id, parseInt(id)));
       
@@ -45,6 +48,19 @@ export const userRoutes = {
       });
       
       // Now select specific fields and ensure proper mapping
+      // Check all possible field name variations
+      const nairaBalance = rawUser.nairaBalance || (rawUser as any).naira_balance || "0";
+      const usdtBalance = rawUser.usdtBalance || (rawUser as any).usdt_balance || "0";
+      
+      console.log('Field mapping check:', {
+        'rawUser.nairaBalance': rawUser.nairaBalance,
+        'rawUser.naira_balance': (rawUser as any).naira_balance,
+        'rawUser.usdtBalance': rawUser.usdtBalance,
+        'rawUser.usdt_balance': (rawUser as any).usdt_balance,
+        'final nairaBalance': nairaBalance,
+        'final usdtBalance': usdtBalance
+      });
+      
       const userProfile = {
         id: rawUser.id,
         email: rawUser.email,
@@ -53,8 +69,8 @@ export const userRoutes = {
         lastName: rawUser.lastName,
         phone: rawUser.phone,
         location: rawUser.location,
-        nairaBalance: rawUser.nairaBalance?.toString() || "0",
-        usdtBalance: rawUser.usdtBalance?.toString() || "0",
+        nairaBalance: nairaBalance.toString(),
+        usdtBalance: usdtBalance.toString(),
         averageRating: rawUser.averageRating?.toString() || "0",
         ratingCount: rawUser.ratingCount || 0,
         kycVerified: rawUser.kycVerified,

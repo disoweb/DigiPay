@@ -88,6 +88,7 @@ export function UserDetailModal({ isOpen, onClose, userId, userName }: UserDetai
         naira_balance: data.naira_balance,
         usdt_balance: data.usdt_balance
       });
+      console.log('Full user object:', JSON.stringify(data, null, 2));
       
       // Ensure we have the correct field names
       const processedData = {
