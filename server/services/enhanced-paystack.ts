@@ -339,6 +339,28 @@ export class EnhancedPaystackService {
       });
 
       console.log(`Successfully credited ₦${depositAmount.toLocaleString()} to user ${user.id}`);
+      
+      // Emit real-time balance update via WebSocket
+      const wsServer = (global as any).wsServer;
+      if (wsServer) {
+        wsServer.clients.forEach((client: any) => {
+          if (client.readyState === 1) { // WebSocket.OPEN
+            client.send(JSON.stringify({
+              type: 'balance_updated',
+              userId: user.id,
+              nairaBalance: newBalance.toString(),
+              usdtBalance: user.usdtBalance,
+              lastTransaction: {
+                id: transaction.id,
+                type: 'deposit',
+                amount: depositAmount.toString(),
+                status: 'completed'
+              }
+            }));
+          }
+        });
+      }
+      
       return true;
 
     } catch (error) {

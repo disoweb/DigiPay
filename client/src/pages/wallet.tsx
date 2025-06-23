@@ -161,8 +161,74 @@ export default function Wallet() {
   const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
   const [showTransactionModal, setShowTransactionModal] = useState(false);
   const [showProfileCompletion, setShowProfileCompletion] = useState(false);
+  const [wsConnected, setWsConnected] = useState(false);
   const { currency: portfolioCurrency, toggleCurrency } = useCurrencyPreference();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  // WebSocket connection for real-time balance updates
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${protocol}//${window.location.host}/ws`;
+    const ws = new WebSocket(wsUrl);
+
+    ws.onopen = () => {
+      console.log('WebSocket connected for real-time updates');
+      setWsConnected(true);
+      ws.send(JSON.stringify({
+        type: 'user_connect',
+        userId: user.id
+      }));
+    };
+
+    ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        
+        if (data.type === 'balance_updated' && data.userId === user.id) {
+          console.log('Real-time balance update received:', data);
+          
+          queryClient.setQueryData(["/api/user"], (oldData: any) => {
+            if (oldData) {
+              return {
+                ...oldData,
+                nairaBalance: data.nairaBalance,
+                usdtBalance: data.usdtBalance
+              };
+            }
+            return oldData;
+          });
+          
+          queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
+          
+          if (data.lastTransaction?.type === 'deposit') {
+            toast({
+              title: "Balance Updated!",
+              description: `₦${parseFloat(data.lastTransaction.amount).toLocaleString()} credited to your wallet`,
+            });
+          }
+        }
+      } catch (error) {
+        console.error('WebSocket message parsing error:', error);
+      }
+    };
+
+    ws.onclose = () => {
+      console.log('WebSocket disconnected');
+      setWsConnected(false);
+    };
+
+    ws.onerror = (error) => {
+      console.error('WebSocket error:', error);
+      setWsConnected(false);
+    };
+
+    return () => {
+      ws.close();
+    };
+  }, [user?.id, queryClient, toast]);
 
   // Exchange rates
   const USDT_TO_NGN_RATE = 1485;

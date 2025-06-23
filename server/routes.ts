@@ -2583,6 +2583,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
             
             result.balanceUpdated = true;
             console.log(`Manually credited ₦${amount.toLocaleString()} to user ${userId}`);
+            
+            // Emit real-time balance update via WebSocket
+            const wsServerGlobal = (global as any).wsServer;
+            if (wsServerGlobal) {
+              wsServerGlobal.clients.forEach((client: any) => {
+                if (client.readyState === 1) { // WebSocket.OPEN
+                  client.send(JSON.stringify({
+                    type: 'balance_updated',
+                    userId: userId,
+                    nairaBalance: newBalance.toString(),
+                    usdtBalance: user.usdtBalance,
+                    lastTransaction: {
+                      type: 'deposit',
+                      amount: amount.toString(),
+                      status: 'completed'
+                    }
+                  }));
+                }
+              });
+            }
           }
         } catch (manualError) {
           console.error("Manual crediting failed:", manualError);
