@@ -50,6 +50,8 @@ export default function LandingPage() {
   const [onlineTraders, setOnlineTraders] = useState(1247);
   const [heroTextIndex, setHeroTextIndex] = useState(0);
   const [isTextVisible, setIsTextVisible] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadingProgress, setLoadingProgress] = useState(0);
   const heroTexts = [
     "Complete Security",
     "Complete Confidence", 
@@ -60,8 +62,20 @@ export default function LandingPage() {
     setOpenFAQ(openFAQ === index ? null : index);
   };
 
-  // Initialize animations
+  // Initialize loading and animations
   useEffect(() => {
+    // Simulate loading progress
+    const loadingInterval = setInterval(() => {
+      setLoadingProgress(prev => {
+        if (prev >= 90) {
+          clearInterval(loadingInterval);
+          setTimeout(() => setIsLoading(false), 300); // Small delay before hiding
+          return 90;
+        }
+        return prev + Math.random() * 15;
+      });
+    }, 100);
+
     const rateInterval = setInterval(() => {
       setCurrentRate(prev => prev + Math.floor(Math.random() * 3) - 1);
     }, 5000);
@@ -79,6 +93,7 @@ export default function LandingPage() {
     }, 5000); // Change every 5 seconds
 
     return () => {
+      clearInterval(loadingInterval);
       clearInterval(rateInterval);
       clearInterval(tradersInterval);
       clearInterval(heroTextInterval);
@@ -86,7 +101,49 @@ export default function LandingPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-white">
+    <>
+      {isLoading && (
+        <div className="fixed inset-0 bg-white z-50 flex items-center justify-center">
+          <div className="text-center">
+            <div className="relative w-16 h-16 mx-auto mb-6">
+              <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 animate-spin"
+                   style={{ animation: "spin 1.5s linear infinite" }} />
+              <div className="absolute inset-2 rounded-full bg-white" />
+              <div className="absolute inset-3 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 animate-pulse" />
+            </div>
+            
+            {/* Progress bar */}
+            <div className="w-64 h-2 bg-gray-200 rounded-full overflow-hidden mb-4">
+              <div 
+                className="h-full bg-gradient-to-r from-blue-600 to-purple-600 transition-all duration-300 ease-out"
+                style={{ width: `${loadingProgress}%` }}
+              />
+            </div>
+            
+            <div className="flex items-center justify-center space-x-2 text-gray-600">
+              <span className="text-sm font-medium">Loading DigiPay</span>
+              <div className="flex space-x-1">
+                {[0, 1, 2].map((i) => (
+                  <div
+                    key={i}
+                    className="w-1.5 h-1.5 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full animate-bounce"
+                    style={{
+                      animationDelay: `${i * 0.2}s`,
+                      animationDuration: "0.8s"
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
+            
+            <p className="text-xs text-gray-400 mt-2">
+              {Math.round(loadingProgress)}% complete
+            </p>
+          </div>
+        </div>
+      )}
+      
+      <div className="min-h-screen bg-white">
       {/* Header */}
       <header className="fixed top-0 w-full bg-white/95 backdrop-blur-md border-b border-gray-100 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -539,5 +596,6 @@ export default function LandingPage() {
         </div>
       </footer>
     </div>
+    </>
   );
 }
