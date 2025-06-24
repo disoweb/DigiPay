@@ -25,7 +25,7 @@ A peer-to-peer cryptocurrency trading platform enabling direct trading between u
 - Focus on functionality over technical details
 - Real-time updates are critical for user experience
 - Transaction history visibility is important for transparency
-- Default trades page filter should be "Completed" instead of "Active"
+- Smart default filter selection: "Active" → "Completed" → "All" (fallback chain)
 - Hide filters with 0 count completely from UI
 
 ## Key Features

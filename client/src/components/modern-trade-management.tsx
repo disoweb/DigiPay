@@ -63,7 +63,7 @@ export function ModernTradeManagement() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
-  const [selectedStatus, setSelectedStatus] = useState<'all' | 'active' | 'completed' | 'disputed' | 'expired'>('completed');
+  const [selectedStatus, setSelectedStatus] = useState<'all' | 'active' | 'completed' | 'disputed' | 'expired'>('active');
   const [searchTerm, setSearchTerm] = useState('');
   const [hiddenCanceledTrades, setHiddenCanceledTrades] = useState<Set<number>>(new Set());
 
@@ -208,13 +208,29 @@ export function ModernTradeManagement() {
     return trade.buyerId === user?.id ? trade.seller : trade.buyer;
   };
 
+  const completedCount = visibleTrades.filter(t => t.status === 'completed').length;
+  const disputedCount = visibleTrades.filter(t => t.status === 'disputed').length;
+  
   const quickFilters = [
     { key: 'active', label: 'Active', count: activeTrades.length, icon: Activity, color: 'text-green-600' },
-    { key: 'completed', label: 'Completed', count: visibleTrades.filter(t => t.status === 'completed').length, icon: CheckCircle2, color: 'text-blue-600' },
+    { key: 'completed', label: 'Completed', count: completedCount, icon: CheckCircle2, color: 'text-blue-600' },
     { key: 'expired', label: 'Expired', count: expiredTrades.length, icon: Timer, color: 'text-red-600' },
-    { key: 'disputed', label: 'Disputed', count: visibleTrades.filter(t => t.status === 'disputed').length, icon: AlertTriangle, color: 'text-orange-600' },
+    { key: 'disputed', label: 'Disputed', count: disputedCount, icon: AlertTriangle, color: 'text-orange-600' },
     { key: 'all', label: 'All', count: visibleTrades.length, icon: Users, color: 'text-purple-600' },
   ];
+
+  // Smart default selection: active -> completed -> all
+  useEffect(() => {
+    if (!isLoading && trades.length > 0) {
+      if (selectedStatus === 'active' && activeTrades.length === 0) {
+        if (completedCount > 0) {
+          setSelectedStatus('completed');
+        } else {
+          setSelectedStatus('all');
+        }
+      }
+    }
+  }, [activeTrades.length, completedCount, isLoading, trades.length, selectedStatus]);
 
 
 
