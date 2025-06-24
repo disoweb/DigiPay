@@ -323,7 +323,7 @@ export function ModernTradeManagement() {
       <div className="p-4 bg-white border-b">
         <ScrollArea className="w-full">
           <div className="flex gap-3 pb-2 overflow-x-auto">
-            {quickFilters.filter(filter => (filter.count > 0 || filter.key === 'all' || selectedStatus === filter.key)).map((filter) => {
+            {quickFilters.filter(filter => (filter.count > 0 || filter.key === 'all' || filter.key === selectedStatus)).map((filter) => {
               const Icon = filter.icon;
               const isActive = selectedStatus === filter.key;
               return (
