@@ -2893,6 +2893,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.patch("/api/admin/users/:userId/password", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const { password } = req.body;
+
+      if (isNaN(userId)) {
+        return res.status(400).json({ error: "Invalid user ID" });
+      }
+
+      if (!password || password.length < 6) {
+        return res.status(400).json({ error: "Password must be at least 6 characters long" });
+      }
+
+      // Prevent updating own password through admin interface
+      if (userId === req.user!.id) {
+        return res.status(400).json({ error: "Use profile settings to update your own password" });
+      }
+
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      // Hash the new password
+      const { hashPassword } = await import("./auth-jwt");
+      const hashedPassword = await hashPassword(password);
+
+      await pool.query(
+        "UPDATE users SET password_hash = $1, updated_at = $2 WHERE id = $3",
+        [hashedPassword, new Date(), userId]
+      );
+
+      console.log(`Admin ${req.user!.email} updated password for user ${user.email}`);
+      res.json({ message: "Password updated successfully" });
+    } catch (error) {
+      console.error("Update password error:", error);
+      res.status(500).json({ error: "Failed to update password" });
+    }
+  });
+
   app.get("/api/admin/disputes", authenticateToken, requireAdmin, async (req, res) => {
     try {
       const result = await pool.query(`
