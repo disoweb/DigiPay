@@ -34,45 +34,30 @@ export default function DirectTrade() {
   console.log("DirectTrade params:", params);
   console.log("DirectTrade offerId:", offerId);
 
-  // Get offer from sessionStorage or fetch it
-  const [selectedOffer, setSelectedOffer] = useState(null);
-
-  useEffect(() => {
-    console.log("DirectTrade component mounted, offerId:", offerId);
-    const storedOffer = sessionStorage.getItem('selectedOffer');
-    if (storedOffer) {
-      console.log("Found stored offer:", storedOffer);
-      try {
-        const parsed = JSON.parse(storedOffer);
-        console.log("Parsed offer:", parsed);
-        setSelectedOffer(parsed);
-        // Clear after use
-        sessionStorage.removeItem('selectedOffer');
-      } catch (e) {
-        console.error("Error parsing stored offer:", e);
-      }
-    }
-  }, [offerId]);
-
-  const { data: offer, isLoading, error: queryError } = useQuery({
-    queryKey: [`/api/offers/${offerId}`],
+  // Fetch offer data from API
+  const { data: selectedOffer, isLoading: offerLoading, error: offerError } = useQuery({
+    queryKey: ["/api/offers", offerId],
     queryFn: async () => {
+      if (!offerId) throw new Error("No offer ID provided");
       console.log("Fetching offer for ID:", offerId);
       const response = await apiRequest("GET", `/api/offers/${offerId}`);
-      if (!response.ok) throw new Error("Failed to fetch offer");
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || "Failed to fetch offer");
+      }
       const data = await response.json();
       console.log("Fetched offer data:", data);
       return data;
     },
-    enabled: !!offerId && !selectedOffer,
+    enabled: !!offerId
   });
 
   useEffect(() => {
-    if (queryError) {
-      console.error("Query error:", queryError);
-      setError(`Failed to load offer: ${queryError.message}`);
+    if (offerError) {
+      console.error("Offer fetch error:", offerError);
+      setError(`Failed to load offer: ${offerError.message}`);
     }
-  }, [queryError]);
+  }, [offerError]);
 
   const createTradeMutation = useMutation({
     mutationFn: async (tradeData: any) => {
@@ -97,9 +82,9 @@ export default function DirectTrade() {
     },
   });
 
-  const currentOffer = selectedOffer || offer;
+  const currentOffer = selectedOffer;
 
-  if (isLoading && !selectedOffer) {
+  if (offerLoading) {
     return (
       <div className="min-h-screen bg-gray-50">
         <Navbar />
