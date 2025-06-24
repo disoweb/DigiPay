@@ -52,7 +52,9 @@ export function TradeManagement() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
-  const [selectedStatus, setSelectedStatus] = useState<'all' | 'active' | 'completed' | 'disputed'>('all');
+  const [selectedStatus, setSelectedStatus] = useState<'all' | 'active' | 'completed' | 'disputed'>('active');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [hiddenCanceledTrades, setHiddenCanceledTrades] = useState<Set<number>>(new Set());
 
   const { data: trades = [], isLoading, error, refetch } = useQuery<Trade[]>({
     queryKey: ['/api/trades'],
@@ -73,6 +75,25 @@ export function TradeManagement() {
     refetchOnWindowFocus: false,
     refetchOnMount: true,
   });
+
+  // Auto-hide canceled trades after 9 minutes
+  useEffect(() => {
+    const canceledTrades = trades.filter(trade => trade.status === 'canceled');
+    
+    canceledTrades.forEach(trade => {
+      const tradeCreatedTime = new Date(trade.createdAt).getTime();
+      const nineMinutesLater = tradeCreatedTime + (9 * 60 * 1000);
+      const timeUntilHide = nineMinutesLater - Date.now();
+      
+      if (timeUntilHide > 0 && !hiddenCanceledTrades.has(trade.id)) {
+        setTimeout(() => {
+          setHiddenCanceledTrades(prev => new Set([...prev, trade.id]));
+        }, timeUntilHide);
+      } else if (timeUntilHide <= 0) {
+        setHiddenCanceledTrades(prev => new Set([...prev, trade.id]));
+      }
+    });
+  }, [trades, hiddenCanceledTrades]);
 
   const cancelTradeMutation = useMutation({
     mutationFn: async (tradeId: number) => {
