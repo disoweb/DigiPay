@@ -16,8 +16,7 @@ import {
   Clock,
   CheckCircle,
   XCircle,
-  AlertTriangle,
-  Wifi
+  AlertTriangle
 } from "lucide-react";
 
 type EnrichedTrade = {
@@ -200,10 +199,7 @@ export default function ChatPage() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <div className="flex items-center space-x-2">
-              <Wifi className="h-4 w-4 text-green-500" />
-              <span className="text-xs text-green-500 font-medium">Online</span>
-            </div>
+            {getStatusIcon(trade.status)}
             {getStatusBadge(trade.status)}
           </div>
         </div>
@@ -232,8 +228,8 @@ export default function ChatPage() {
         />
       </div>
 
-      {/* Full-screen Chat - Optimized for mobile */}
-      <div className="flex-1 flex flex-col min-h-0">
+      {/* Full-screen Chat */}
+      <div className="flex-1 min-h-0">
         <RealTimeChat tradeId={trade.id} />
       </div>
     </div>
