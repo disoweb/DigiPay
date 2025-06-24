@@ -102,17 +102,7 @@ export function DisputeResolution({ trade, userRole, onDisputeRaised }: DisputeR
   }
 
   return (
-    <Card className="border-red-200">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-red-700">
-          <AlertTriangle className="h-5 w-5" />
-          Raise a Dispute
-        </CardTitle>
-        <CardDescription>
-          If there's an issue with this trade, you can raise a dispute for admin review
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
+    <div className="space-y-4">
         <div className="bg-red-50 p-4 rounded-lg border border-red-200">
           <div className="flex items-start gap-3">
             <MessageSquare className="h-5 w-5 text-red-600 mt-0.5" />
@@ -152,7 +142,6 @@ export function DisputeResolution({ trade, userRole, onDisputeRaised }: DisputeR
         <p className="text-xs text-gray-600 text-center">
           Disputes are reviewed by our support team within 24 hours
         </p>
-      </CardContent>
-    </Card>
+    </div>
   );
 }
