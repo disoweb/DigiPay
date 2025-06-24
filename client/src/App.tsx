@@ -30,6 +30,7 @@ import UserChatPage from "./pages/user-chat-new";
 import PaymentCallback from "./pages/payment-callback";
 import AdminUsersFixed from "./pages/admin-users-fixed";
 import AdminDisputesNew from "./pages/admin-disputes-new";
+import AdminDisputesV2 from "./pages/admin-disputes-v2";
 import AdminWallet from "./pages/admin-wallet";
 import AdminGuide from "./pages/admin-guide";
 
@@ -85,6 +86,8 @@ function App() {
             <ProtectedRoute path="/manage-offers" component={ManageOffers} />
             <Route path="/admin-guide" component={AdminGuide} />
           <Route path="/admin" component={Admin} />
+          <Route path="/admin/disputes" component={AdminDisputesV2} />
+          <Route path="/admin/disputes-legacy" component={AdminDisputesNew} />
           <Route path="/admin/approvals" component={AdminApprovalsNew} />
           <Route path="/admin/users" component={AdminUsersFixed} />
           <Route path="*" component={NotFound} />

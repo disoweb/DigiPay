@@ -727,34 +727,14 @@ export function ModernTradeDetail() {
           />
         )}
 
-        {/* Dispute Form Modal */}
-        {showDisputeForm && trade && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
-              <div className="p-4">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold">Raise Dispute</h3>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setShowDisputeForm(false)}
-                    className="h-8 w-8 p-0"
-                  >
-                    <XCircle className="h-4 w-4" />
-                  </Button>
-                </div>
-                <DisputeResolution
-                  trade={trade as any}
-                  userRole={isBuyer ? 'buyer' : 'seller'}
-                  onDisputeRaised={() => {
-                    refetch();
-                    setShowDisputeForm(false);
-                  }}
-                />
-              </div>
-            </div>
-          </div>
-        )}
+        {/* Enhanced Dispute System */}
+        <DisputeSystemV2
+          trade={trade as any}
+          userRole={isBuyer ? 'buyer' : 'seller'}
+          onDisputeUpdate={() => {
+            refetch();
+          }}
+        />
       </div>
     </div>
   );

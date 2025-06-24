@@ -1567,7 +1567,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get all disputes for admin
+  // Enhanced disputes endpoint for admin
+  app.get("/api/admin/disputes/enhanced", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      const allTrades = await db
+        .select()
+        .from(trades)
+        .where(or(eq(trades.status, 'disputed'), eq(trades.status, 'resolved'), eq(trades.status, 'escalated')))
+        .orderBy(desc(trades.disputeCreatedAt));
+
+      // Enrich with comprehensive data
+      const enrichedDisputes = await Promise.all(
+        allTrades.map(async (trade) => {
+          const buyer = await storage.getUser(trade.buyerId);
+          const seller = await storage.getUser(trade.sellerId);
+          const offer = await storage.getOffer(trade.offerId);
+          const resolver = trade.resolvedBy ? await storage.getUser(trade.resolvedBy) : null;
+
+          return {
+            ...trade,
+            buyer: buyer ? { id: buyer.id, email: buyer.email, username: buyer.username } : null,
+            seller: seller ? { id: seller.id, email: seller.email, username: seller.username } : null,
+            offer: offer ? { paymentMethod: offer.paymentMethod, type: offer.type } : null,
+            resolver: resolver ? { id: resolver.id, email: resolver.email, username: resolver.username } : null,
+            caseId: `${trade.id}-DSP`,
+            priority: getCasePriority(trade.disputeCategory),
+            ageInHours: trade.disputeCreatedAt ? 
+              Math.floor((Date.now() - new Date(trade.disputeCreatedAt).getTime()) / (1000 * 60 * 60)) : 0
+          };
+        })
+      );
+
+      res.json(enrichedDisputes);
+    } catch (error) {
+      console.error("Get enhanced disputes error:", error);
+      res.status(500).json({ error: "Failed to fetch disputes" });
+    }
+  });
+
+  // Legacy disputes endpoint for backward compatibility
   app.get("/api/admin/disputes", authenticateToken, requireAdmin, async (req, res) => {
     try {
       const disputedTrades = await storage.getDisputedTrades();
@@ -1583,7 +1621,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             ...trade,
             buyer: buyer ? { id: buyer.id, email: buyer.email } : null,
             seller: seller ? { id: seller.id, email: seller.email } : null,
-            offer
+            offer: offer ? { paymentMethod: offer.paymentMethod } : null
           };
         })
       );
@@ -1592,6 +1630,126 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Get disputes error:", error);
       res.status(500).json({ error: "Failed to fetch disputes" });
+    }
+  });
+
+  // Helper function for case priority
+  function getCasePriority(category: string): 'high' | 'medium' | 'low' {
+    const highPriority = ['payment_not_received', 'payment_not_sent', 'fake_payment_proof'];
+    const mediumPriority = ['wrong_amount', 'delayed_payment', 'account_details_wrong'];
+    
+    if (highPriority.includes(category)) return 'high';
+    if (mediumPriority.includes(category)) return 'medium';
+    return 'low';
+  }
+
+  // Enhanced dispute creation endpoint with validation and security
+  app.post("/api/trades/:tradeId/dispute", authenticateToken, async (req, res) => {
+    try {
+      const { tradeId } = req.params;
+      const { reason, category, raisedBy } = req.body;
+      const user = req.user!;
+
+      // Enhanced validation
+      if (!reason || reason.length < 50) {
+        return res.status(400).json({ error: "Dispute reason must be at least 50 characters" });
+      }
+
+      if (!category) {
+        return res.status(400).json({ error: "Dispute category is required" });
+      }
+
+      const validCategories = [
+        'payment_not_received', 'payment_not_sent', 'wrong_amount', 
+        'delayed_payment', 'fake_payment_proof', 'communication_issue',
+        'account_details_wrong', 'other'
+      ];
+
+      if (!validCategories.includes(category)) {
+        return res.status(400).json({ error: "Invalid dispute category" });
+      }
+
+      const trade = await storage.getTrade(parseInt(tradeId));
+      if (!trade) {
+        return res.status(404).json({ error: "Trade not found" });
+      }
+
+      // Authorization check
+      if (trade.buyerId !== user.id && trade.sellerId !== user.id) {
+        return res.status(403).json({ error: "Unauthorized to dispute this trade" });
+      }
+
+      // Status validation
+      if (!['payment_pending', 'payment_made'].includes(trade.status)) {
+        return res.status(400).json({ 
+          error: "Trade cannot be disputed in current status",
+          currentStatus: trade.status 
+        });
+      }
+
+      // Prevent duplicate disputes
+      if (trade.status === 'disputed') {
+        return res.status(400).json({ error: "Trade is already under dispute" });
+      }
+
+      // Rate limiting check (prevent spam disputes)
+      const recentDisputes = await db
+        .select()
+        .from(trades)
+        .where(
+          and(
+            or(eq(trades.buyerId, user.id), eq(trades.sellerId, user.id)),
+            eq(trades.status, 'disputed'),
+            gte(trades.disputeCreatedAt, new Date(Date.now() - 24 * 60 * 60 * 1000))
+          )
+        );
+
+      if (recentDisputes.length >= 3) {
+        return res.status(429).json({ 
+          error: "Too many disputes created in 24 hours. Please contact support." 
+        });
+      }
+
+      const userRole = trade.buyerId === user.id ? 'buyer' : 'seller';
+
+      // Update trade with comprehensive dispute data
+      const updatedTrade = await storage.updateTrade(parseInt(tradeId), {
+        status: 'disputed',
+        disputeReason: reason,
+        disputeCategory: category,
+        disputeRaisedBy: userRole,
+        disputeCreatedAt: new Date(),
+        lastAdminUpdate: new Date()
+      });
+
+      // Notify the other party
+      const otherPartyId = trade.buyerId === user.id ? trade.sellerId : trade.buyerId;
+      await storage.createNotification({
+        userId: otherPartyId,
+        type: 'dispute_created',
+        title: 'Trade Dispute Raised',
+        message: `A dispute has been raised for trade #${tradeId}. Our support team will review the case.`,
+        data: JSON.stringify({ 
+          tradeId, 
+          caseId: `${tradeId}-DSP`,
+          category,
+          priority: getCasePriority(category)
+        })
+      });
+
+      // Log for audit trail
+      console.log(`Dispute created: Trade ${tradeId} by user ${user.id} (${userRole}) - Category: ${category}`);
+
+      res.json({
+        ...updatedTrade,
+        message: "Dispute submitted successfully. Case ID: " + `${tradeId}-DSP`,
+        caseId: `${tradeId}-DSP`,
+        priority: getCasePriority(category),
+        estimatedResolutionTime: "24-48 hours"
+      });
+    } catch (error) {
+      console.error("Create dispute error:", error);
+      res.status(500).json({ error: "Failed to create dispute" });
     }
   });
 
@@ -2966,9 +3124,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await pool.query(`
         UPDATE trades 
         SET status = $1, dispute_resolution = $2, dispute_winner = $3, 
-            admin_notes = $4, last_admin_update = NOW()
+            admin_notes = $4, last_admin_update = NOW(), resolved_by = $6, resolved_at = NOW()
         WHERE id = $5
-      `, [newStatus, resolution, winner, notes, tradeId]);
+      `, [newStatus, resolution, winner, notes, tradeId, req.user!.id]);
 
       res.json({ message: "Dispute resolved successfully" });
     } catch (error) {
