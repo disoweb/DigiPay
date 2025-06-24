@@ -123,13 +123,54 @@ export function ModernTradeDetail() {
     },
   });
 
-  // Define trade-related variables first
+  // Always call useEffect hooks consistently
+  useEffect(() => {
+    let interval: NodeJS.Timeout | null = null;
+
+    if (trade?.paymentDeadline && trade.status === 'payment_pending') {
+      const updateTimer = () => {
+        const now = new Date().getTime();
+        const deadline = new Date(trade.paymentDeadline!).getTime();
+        const difference = deadline - now;
+
+        if (difference <= 0) {
+          setTimeLeft("Expired");
+          setIsExpired(true);
+          return;
+        }
+
+        const hours = Math.floor(difference / (1000 * 60 * 60));
+        const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+
+        if (hours > 0) {
+          setTimeLeft(`${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
+        } else {
+          setTimeLeft(`${minutes}:${seconds.toString().padStart(2, '0')}`);
+        }
+      };
+
+      updateTimer();
+      interval = setInterval(updateTimer, 1000);
+    } else {
+      setTimeLeft("");
+      setIsExpired(false);
+    }
+
+    return () => {
+      if (interval) {
+        clearInterval(interval);
+      }
+    };
+  }, [trade?.paymentDeadline, trade?.status]);
+
+  // Define trade-related variables after all hooks
   const isBuyer = trade?.buyerId === user?.id;
   const isSeller = trade?.sellerId === user?.id;
   const isUserInTrade = isBuyer || isSeller;
   const partner = isBuyer ? trade?.seller : trade?.buyer;
 
-  // Now we can safely use these variables in our hook dependencies
+  // Define action capabilities
   const canMarkPaymentMade = user && trade && isBuyer && trade.status === 'payment_pending';
   const canComplete = user && trade && isSeller && trade.status === 'payment_made';
   const canCancel = user && trade && isUserInTrade && ['payment_pending', 'payment_made'].includes(trade.status);
@@ -278,49 +319,6 @@ export function ModernTradeDetail() {
       default: return 0;
     }
   };
-
-  // Countdown timer effect
-  useEffect(() => {
-    let interval: NodeJS.Timeout | null = null;
-
-    if (trade?.paymentDeadline && trade.status === 'payment_pending') {
-      const updateTimer = () => {
-        const now = new Date().getTime();
-        const deadline = new Date(trade.paymentDeadline!).getTime();
-        const difference = deadline - now;
-
-        if (difference <= 0) {
-          setTimeLeft("Expired");
-          setIsExpired(true);
-          return;
-        }
-
-        const hours = Math.floor(difference / (1000 * 60 * 60));
-        const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((difference % (1000 * 60)) / 1000);
-
-        if (hours > 0) {
-          setTimeLeft(`${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
-        } else {
-          setTimeLeft(`${minutes}:${seconds.toString().padStart(2, '0')}`);
-        }
-      };
-
-      updateTimer();
-      interval = setInterval(updateTimer, 1000);
-    } else {
-      setTimeLeft("");
-      setIsExpired(false);
-    }
-
-    return () => {
-      if (interval) {
-        clearInterval(interval);
-      }
-    };
-  }, [trade?.paymentDeadline, trade?.status]);
-
-  
 
   return (
     <div className="min-h-screen bg-gray-50">
