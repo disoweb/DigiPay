@@ -12,13 +12,13 @@ A peer-to-peer cryptocurrency trading platform enabling direct trading between u
 - **Security**: JWT authentication, rate limiting, helmet security
 
 ## Recent Changes
-- **2025-01-24**: Integrated comprehensive rating and dispute mechanisms into trade flow
-  - Added rating prompts after successful trade completion in ModernTradeDetail component
-  - Integrated dispute resolution buttons for active trades (payment_pending, payment_made)
-  - Enhanced user profile with tabbed interface showing trading stats, ratings received/given, and dispute history
-  - Added rating check functionality to prevent duplicate ratings
-  - Enhanced trade history display with dispute information and comprehensive trading statistics
-  - Created unified rating and dispute tracking across the platform
+- **2025-01-24**: Enhanced trade management with expiration handling and improved UI/UX
+  - Added "Expired" tab to trades page showing expired trades for 1 hour with reopen functionality
+  - Enhanced status badge colors across all components (green for completed, red for expired/disputed, blue for payment_made, yellow for pending)
+  - Implemented automatic trade expiration handling with server-side checks
+  - Fixed admin disputes page with proper data structure handling and fallback values
+  - Added comprehensive rating and dispute mechanisms integrated into trade flow and user profiles
+  - Created trade reopen functionality allowing users to restart expired trades within 1 hour window
 
 ## User Preferences
 - Non-technical user communication preferred

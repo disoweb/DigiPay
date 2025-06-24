@@ -2161,6 +2161,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Reopen expired trade
+  app.post("/api/trades/:id/reopen", authenticateToken, async (req, res) => {
+    try {
+      const tradeId = parseInt(req.params.id);
+      const userId = req.user!.id;
+
+      const trade = await storage.getTrade(tradeId);
+      if (!trade) {
+        return res.status(404).json({ error: "Trade not found" });
+      }
+
+      // Only participants can reopen
+      if (trade.buyerId !== userId && trade.sellerId !== userId) {
+        return res.status(403).json({ error: "Not authorized to reopen this trade" });
+      }
+
+      if (trade.status !== "expired") {
+        return res.status(400).json({ error: "Trade is not expired" });
+      }
+
+      // Check if trade was expired within last hour
+      const updatedAt = new Date(trade.updatedAt || trade.createdAt);
+      const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+      
+      if (updatedAt <= oneHourAgo) {
+        return res.status(400).json({ error: "Trade expired too long ago to reopen" });
+      }
+
+      // Reopen trade with new deadline (24 hours from now)
+      const newDeadline = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+      await storage.updateTrade(tradeId, {
+        status: "payment_pending",
+        paymentDeadline: newDeadline.toISOString(),
+        cancelReason: null
+      });
+
+      const updatedTrade = await storage.getTrade(tradeId);
+      res.json(updatedTrade);
+    } catch (error) {
+      console.error("Reopen trade error:", error);
+      res.status(500).json({ error: "Failed to reopen trade" });
+    }
+  });
+
   // Cancel trade
   app.post("/api/trades/:id/cancel", authenticateToken, async (req, res) => {
     try {
