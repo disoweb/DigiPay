@@ -276,7 +276,7 @@ export function MarketplaceFinal() {
   const [sortBy, setSortBy] = useState<"rate" | "amount" | "rating">("rate");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
-  const { data: offers = [], isLoading, error, refetch } = useQuery({
+  const { data: offers = [], isLoading: offersLoading, error, refetch } = useQuery({
     queryKey: ['/api/offers'],
     queryFn: async () => {
       const response = await apiRequest("GET", "/api/offers");

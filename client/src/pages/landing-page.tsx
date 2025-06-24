@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { LoadingSpinner, PageLoader } from "@/components/ui/loading-spinner";
 import { 
   Shield, Clock, Users, CheckCircle, Star, TrendingUp, Globe, 
   Lock, CreditCard, BarChart3, UserCheck, MessageCircle, Award, 
@@ -49,7 +50,6 @@ export default function LandingPage() {
   const [onlineTraders, setOnlineTraders] = useState(1247);
   const [heroTextIndex, setHeroTextIndex] = useState(0);
   const [isTextVisible, setIsTextVisible] = useState(true);
-
   const heroTexts = [
     "Complete Security",
     "Complete Confidence", 
@@ -60,7 +60,7 @@ export default function LandingPage() {
     setOpenFAQ(openFAQ === index ? null : index);
   };
 
-  // Animate numbers and hero text with fade effect
+  // Initialize animations
   useEffect(() => {
     const rateInterval = setInterval(() => {
       setCurrentRate(prev => prev + Math.floor(Math.random() * 3) - 1);
@@ -248,7 +248,7 @@ export default function LandingPage() {
                     </div>
                     <div className="mt-3 p-2 bg-white/60 rounded-lg">
                       <div className="flex items-center text-xs text-gray-600">
-                        <div className="w-1.5 h-1.5 bg-green-400 rounded-full mr-2 animate-pulse"></div>
+                        <LoadingSpinner size="sm" className="mr-2 w-3 h-3" />
                         <span className="transition-all duration-500">{onlineTraders.toLocaleString()} traders online now</span>
                       </div>
                     </div>
