@@ -25,6 +25,14 @@ A peer-to-peer cryptocurrency trading platform enabling direct trading between u
   - All animations use smooth duration-300 to duration-700 timing for professional feel
   - Fixed header button spacing between Sign In and Get Started buttons
   - Hero buttons are w-auto width instead of full width on mobile
+- **2025-06-24**: Enhanced rating system with dynamic button behavior and edit functionality
+  - Rating button shows "Rate this trade" initially for unrated completed trades
+  - After rating submission, button changes to "Edit this rating" for 30 seconds
+  - After 30 seconds, button reverts to "Rate this" allowing future edits
+  - Added rating edit functionality with API endpoint PUT /api/ratings/:id
+  - Rating form supports both creation and editing modes with pre-filled values
+  - User profile ratings automatically recalculate when ratings are updated
+  - Enhanced rating display with conditional button text based on edit window status
 - **2025-06-24**: Enhanced trade management with expiration handling and improved UI/UX
   - Added "Expired" tab to trades page showing expired trades for 24 hours with reopen functionality
   - Enhanced status badge colors across all components (green for completed, red for expired/disputed, blue for payment_made, yellow for pending)

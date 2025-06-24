@@ -16,7 +16,11 @@ interface RatingFormProps {
   ratedUserUsername?: string;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
-  onSubmit?: () => void;
+  onSubmit?: (data?: { rating: number; comment: string }) => void;
+  initialRating?: number;
+  initialComment?: string;
+  isEditing?: boolean;
+  ratingId?: number;
 }
 
 export function RatingForm({ tradeId, ratedUserId, ratedUserEmail, ratedUserUsername, open = false, onOpenChange, onSubmit }: RatingFormProps) {

@@ -75,9 +75,11 @@ export function ModernTradeDetail() {
   const [showRatingForm, setShowRatingForm] = useState(false);
   const [showDisputeForm, setShowDisputeForm] = useState(false);
   const [hasRated, setHasRated] = useState(false);
+  const [showEditWindow, setShowEditWindow] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
 
   // Check if user has already rated this trade
-  const { data: existingRating } = useQuery({
+  const { data: existingRating, refetch: refetchRating } = useQuery({
     queryKey: [`/api/trades/${id}/rating`],
     queryFn: async () => {
       const response = await apiRequest("GET", `/api/trades/${id}/rating`);
@@ -86,6 +88,39 @@ export function ModernTradeDetail() {
       return response.json();
     },
     enabled: !!user && !!id,
+  });
+
+  // Show edit window for 30 seconds after rating
+  useEffect(() => {
+    if (existingRating && !showEditWindow) {
+      setShowEditWindow(true);
+      const timer = setTimeout(() => {
+        setShowEditWindow(false);
+      }, 30000); // 30 seconds
+
+      return () => clearTimeout(timer);
+    }
+  }, [existingRating]);
+
+  // Update rating mutation
+  const updateRatingMutation = useMutation({
+    mutationFn: async ({ ratingId, rating, comment }: { ratingId: number, rating: number, comment?: string }) => {
+      const response = await apiRequest("PUT", `/api/ratings/${ratingId}`, { rating, comment });
+      if (!response.ok) throw new Error("Failed to update rating");
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Rating updated successfully" });
+      refetchRating();
+      setIsEditing(false);
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: "Failed to update rating", 
+        description: error.message || "Please try again",
+        variant: "destructive" 
+      });
+    },
   });
 
   const {
@@ -929,7 +964,7 @@ export function ModernTradeDetail() {
           </div>
         )}
 
-        {/* Rating Form Modal */}
+        {/* Rating Form Modal - New Rating */}
         {showRatingForm && trade && (
           <RatingForm
             tradeId={trade.id}
@@ -939,10 +974,31 @@ export function ModernTradeDetail() {
             open={showRatingForm}
             onOpenChange={setShowRatingForm}
             onSubmit={() => {
-              queryClient.invalidateQueries({
-                queryKey: [`/api/trades/${id}/rating`],
-              });
+              refetchRating();
               setShowRatingForm(false);
+            }}
+          />
+        )}
+
+        {/* Rating Form Modal - Edit Rating */}
+        {isEditing && trade && existingRating && (
+          <RatingForm
+            tradeId={trade.id}
+            ratedUserId={isBuyer ? trade.seller?.id : trade.buyer?.id}
+            ratedUserEmail={isBuyer ? trade.seller?.email : trade.buyer?.email}
+            ratedUserUsername={isBuyer ? trade.seller?.username : trade.buyer?.username}
+            open={isEditing}
+            onOpenChange={setIsEditing}
+            initialRating={existingRating.rating}
+            initialComment={existingRating.comment || ""}
+            isEditing={true}
+            ratingId={existingRating.id}
+            onSubmit={(data) => {
+              updateRatingMutation.mutate({
+                ratingId: existingRating.id,
+                rating: data.rating,
+                comment: data.comment,
+              });
             }}
           />
         )}

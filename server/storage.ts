@@ -52,6 +52,7 @@ export interface IStorage {
   getUserRatings(userId: number): Promise<Rating[]>;
   getAllRatings(): Promise<Rating[]>;
   getTradeRating(tradeId: number, raterId: number): Promise<Rating | null>;
+  updateRating(ratingId: number, updates: Partial<Rating>): Promise<Rating | null>;
 
   // Additional transaction methods
   getAllTransactions(): Promise<Transaction[]>;
@@ -888,6 +889,27 @@ export class DatabaseStorage implements IStorage {
   async getTradeRating(tradeId: number, raterId: number): Promise<Rating | null> {
     const [rating] = await db.select().from(ratings).where(and(eq(ratings.tradeId, tradeId), eq(ratings.raterId, raterId)));
     return rating || null;
+  }
+
+  async updateRating(ratingId: number, updates: Partial<Rating>): Promise<Rating | null> {
+    const [updatedRating] = await db
+      .update(ratings)
+      .set(updates)
+      .where(eq(ratings.id, ratingId))
+      .returning();
+
+    if (updatedRating) {
+      // Recalculate user's average rating
+      const userRatings = await db.select().from(ratings).where(eq(ratings.ratedUserId, updatedRating.ratedUserId));
+      const avgRating = userRatings.reduce((sum, r) => sum + r.rating, 0) / userRatings.length;
+
+      await this.updateUser(updatedRating.ratedUserId, {
+        averageRating: avgRating.toFixed(2),
+        ratingCount: userRatings.length,
+      });
+    }
+
+    return updatedRating || null;
   }
 
   async getAllTransactions(): Promise<Transaction[]> {
