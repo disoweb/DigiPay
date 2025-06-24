@@ -3662,7 +3662,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Determine who is being rated
-      const ratedUserId = trade.buyerId === user.id ? trade.sellerId : trade.buyerId; trade.sellerId : trade.buyerId;
+      const ratedUserId = trade.buyerId === user.id ? trade.sellerId : trade.buyerId;
 
       // Check if rating already exists
       const existingRating = await storage.getTradeRating(tradeId, user.id);
@@ -3704,8 +3704,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Rating creation error:", error);
       res.status(400).json({ message: "Failed to create rating" });
-    }
-  });o create rating" });
     }
   });
 
