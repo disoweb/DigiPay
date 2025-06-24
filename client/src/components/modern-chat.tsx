@@ -151,46 +151,45 @@ export function ModernChat({ chatUserId, onBack }: ModernChatProps) {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50">
-      {/* Mobile-optimized header */}
-      <div className="bg-white border-b shadow-sm sticky top-0 z-10">
-        <div className="flex items-center justify-between p-4">
-          <div className="flex items-center gap-3">
+    <div className="flex flex-col h-screen bg-gray-50 overflow-hidden">
+      {/* Compact mobile header */}
+      <div className="bg-white border-b shadow-sm flex-shrink-0">
+        <div className="flex items-center justify-between p-3">
+          <div className="flex items-center gap-2">
             <Button
               variant="ghost"
               size="sm"
               onClick={onBack}
-              className="p-2"
+              className="p-1.5 h-8 w-8"
             >
-              <ArrowLeft className="h-5 w-5" />
+              <ArrowLeft className="h-4 w-4" />
             </Button>
             
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
               <div className="relative">
-                <Avatar className="h-10 w-10">
-                  <AvatarFallback className="bg-blue-100 text-blue-600">
+                <Avatar className="h-8 w-8">
+                  <AvatarFallback className="bg-blue-100 text-blue-600 text-xs">
                     {chatUser?.email?.charAt(0)?.toUpperCase() || 'U'}
                   </AvatarFallback>
                 </Avatar>
                 {chatUser?.isOnline || false && (
-                  <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-white"></div>
+                  <div className="absolute -bottom-0.5 -right-0.5 w-2 h-2 bg-green-400 rounded-full border border-white"></div>
                 )}
               </div>
               
               <div className="flex-1 min-w-0">
-                <p className="font-medium text-gray-900 truncate">
+                <p className="font-medium text-gray-900 truncate text-sm">
                   {chatUser?.email?.split('@')[0] || 'User'}
                 </p>
-                <div className="flex items-center gap-2 text-xs text-gray-500">
+                <div className="flex items-center gap-1 text-xs text-gray-500">
                   {chatUser?.isOnline || false ? (
                     <span className="text-green-600">Online</span>
                   ) : (
-                    <span>Last seen recently</span>
+                    <span>Offline</span>
                   )}
                   {chatUser?.kycVerified && (
-                    <Badge variant="outline" className="text-xs px-1 py-0">
-                      <Shield className="h-2 w-2 mr-1" />
-                      Verified
+                    <Badge variant="outline" className="text-xs px-1 py-0 ml-1">
+                      <Shield className="h-2 w-2" />
                     </Badge>
                   )}
                 </div>
@@ -198,27 +197,27 @@ export function ModernChat({ chatUserId, onBack }: ModernChatProps) {
             </div>
           </div>
           
-          <Button variant="ghost" size="sm" className="p-2">
-            <MoreVertical className="h-5 w-5" />
+          <Button variant="ghost" size="sm" className="p-1.5 h-8 w-8">
+            <MoreVertical className="h-4 w-4" />
           </Button>
         </div>
       </div>
 
-      {/* Messages area */}
-      <div className="flex-1 overflow-y-auto p-4">
+      {/* Messages area - optimized for mobile viewport */}
+      <div className="flex-1 min-h-0 overflow-y-auto px-3 py-2">
         {messages.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
-              <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
-                <Phone className="h-8 w-8 text-gray-400" />
+              <div className="w-12 h-12 mx-auto mb-3 bg-gray-100 rounded-full flex items-center justify-center">
+                <Phone className="h-6 w-6 text-gray-400" />
               </div>
               <p className="text-gray-500 text-sm">
-                Start a conversation with {chatUser?.email?.split('@')[0] || 'this user'}
+                Start chatting with {chatUser?.email?.split('@')[0] || 'this user'}
               </p>
             </div>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-2">
             {messages.map((msg: Message) => {
               const isOwnMessage = msg.senderId === user?.id;
               const messageTime = new Date(msg.createdAt);
@@ -232,7 +231,7 @@ export function ModernChat({ chatUserId, onBack }: ModernChatProps) {
                   className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'}`}
                 >
                   <div
-                    className={`max-w-[80%] sm:max-w-[70%] rounded-2xl px-4 py-2 ${
+                    className={`max-w-[85%] rounded-2xl px-3 py-2 ${
                       isOwnMessage
                         ? 'bg-blue-600 text-white'
                         : 'bg-white border shadow-sm'
@@ -253,7 +252,7 @@ export function ModernChat({ chatUserId, onBack }: ModernChatProps) {
                           {sendingState === 'sending' && isRecent ? (
                             <Clock className="h-3 w-3 animate-pulse text-yellow-300" />
                           ) : sendingState === 'failed' && isRecent ? (
-                            <div className="h-3 w-3 rounded-full bg-red-400" />
+                            <div className="h-2 w-2 rounded-full bg-red-400" />
                           ) : msg.isRead ? (
                             <CheckCheck className="h-3 w-3 text-blue-200" />
                           ) : (
@@ -271,20 +270,20 @@ export function ModernChat({ chatUserId, onBack }: ModernChatProps) {
         )}
       </div>
 
-      {/* Message input - sticky at bottom */}
-      <div className="bg-white border-t p-4 flex-shrink-0">
-        <form onSubmit={handleSendMessage} className="flex items-center gap-3">
+      {/* Compact message input */}
+      <div className="bg-white border-t p-3 flex-shrink-0">
+        <form onSubmit={handleSendMessage} className="flex items-center gap-2">
           <Input
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             placeholder="Type a message..."
-            className="flex-1 rounded-full border-gray-200 focus:ring-blue-500 focus:border-blue-500"
+            className="flex-1 rounded-full border-gray-200 focus:ring-blue-500 focus:border-blue-500 h-9 text-sm"
             disabled={sendMessageMutation.isPending}
           />
           <Button
             type="submit"
             size="sm"
-            className={`rounded-full h-10 w-10 p-0 transition-colors ${
+            className={`rounded-full h-9 w-9 p-0 transition-colors ${
               sendingState === 'sent' ? 'bg-green-600 hover:bg-green-700' : 
               sendingState === 'failed' ? 'bg-red-600 hover:bg-red-700' : ''
             }`}
