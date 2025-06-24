@@ -67,7 +67,7 @@ export function ModernTradeManagement() {
   const [searchTerm, setSearchTerm] = useState('');
   const [hiddenCanceledTrades, setHiddenCanceledTrades] = useState<Set<number>>(new Set());
 
-  const { data: trades = [], isLoading, error, refetch } = useQuery<Trade[]>({
+  const { data: trades = [], isLoading, error, refetch, isSuccess } = useQuery<Trade[]>({
     queryKey: ['/api/trades'],
     queryFn: async () => {
       const response = await apiRequest("GET", "/api/trades");
@@ -120,10 +120,10 @@ export function ModernTradeManagement() {
   });
 
   // Filter trades
-  // Only calculate filters when trades data is successfully loaded
-  const visibleTrades = (isSuccess && trades.length > 0) ? trades.filter(trade => 
+  // Calculate visible trades (use trades directly since useQuery handles loading states)
+  const visibleTrades = trades.filter(trade => 
     trade.status !== 'canceled' || !hiddenCanceledTrades.has(trade.id)
-  ) : [];
+  );
 
   const activeTrades = visibleTrades.filter(trade => 
     ["payment_pending", "payment_made"].includes(trade.status) && trade.status !== "expired"
