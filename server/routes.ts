@@ -1951,8 +1951,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const enrichedTrade = {
         ...trade,
         offer,
-        buyer: buyer ? { id: buyer.id, email: buyer.email } : null,
-        seller: seller ? { id: seller.id, email: seller.email } : null,
+        buyer: buyer ? { id: buyer.id, email: buyer.email, username: buyer.username } : null,
+        seller: seller ? { id: seller.id, email: seller.email, username: seller.username } : null,
       };
 
       res.json(enrichedTrade);
