@@ -252,8 +252,8 @@ export function RealTimeChat({ tradeId }: RealTimeChatProps) {
         </div>
       </div>
 
-      {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-3 max-h-[calc(100vh-200px)]">
+      {/* Messages Area - Takes up available space above fixed input */}
+      <div className="flex-1 overflow-y-auto p-3 pb-0">
         {messages.length === 0 && pendingMessages.size === 0 ? (
           <div className="text-center py-8">
             <div className="bg-white dark:bg-gray-800 rounded-xl p-4 mx-auto max-w-xs shadow-sm">
@@ -320,16 +320,16 @@ export function RealTimeChat({ tradeId }: RealTimeChatProps) {
         )}
       </div>
 
-      {/* Input Area */}
-      <div className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4">
-        <form onSubmit={handleSendMessage} className="flex items-end space-x-3">
+      {/* Fixed Input Area at Bottom */}
+      <div className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4 flex-shrink-0">
+        <form onSubmit={handleSendMessage} className="flex items-center space-x-3">
           <div className="flex-1 relative">
             <Input
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               placeholder="Type your message..."
               disabled={sendMessageMutation.isPending || !isConnected}
-              className="w-full rounded-full border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent px-4 py-3 pr-12"
+              className="w-full rounded-full border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent px-4 py-3 pr-12 text-sm"
             />
             {sendMessageMutation.isPending && (
               <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
@@ -341,14 +341,14 @@ export function RealTimeChat({ tradeId }: RealTimeChatProps) {
           <Button
             type="submit"
             disabled={!message.trim() || sendMessageMutation.isPending || !isConnected}
-            className="rounded-full w-12 h-12 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+            className="rounded-full w-12 h-12 bg-blue-500 hover:bg-blue-600 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
           >
             <Send className="h-5 w-5" />
           </Button>
         </form>
         
         {!isConnected && (
-          <div className="mt-3 flex items-center justify-center space-x-2 text-red-500">
+          <div className="mt-2 flex items-center justify-center space-x-2 text-red-500">
             <WifiOff className="h-4 w-4" />
             <span className="text-xs">Connection lost. Trying to reconnect...</span>
           </div>
