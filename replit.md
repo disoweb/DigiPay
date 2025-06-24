@@ -25,7 +25,8 @@ A peer-to-peer cryptocurrency trading platform enabling direct trading between u
   - Implemented most recent first sorting for all trade filters to show latest activity
   - Cleaned up debugging logs for production readiness
   - Added comprehensive rating and dispute mechanisms integrated into trade flow and user profiles
-  - **FIXED**: Status display JSON format issue - corrected server-side updateTradeStatus function call to prevent {"Status":"Expired"} from displaying instead of proper formatted status text
+  - **FIXED**: Status display JSON format issue - corrected server-side updateTradeStatus function call and cleaned database records containing JSON status values
+  - **RESOLVED**: Trade #47 and #48 status now display as "Expired" instead of {"status":"expired"} across all pages and components
 
 ## User Preferences
 - Non-technical user communication preferred
