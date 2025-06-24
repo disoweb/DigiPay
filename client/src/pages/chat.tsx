@@ -43,8 +43,10 @@ export default function ChatPage() {
 
   const tradeId = parseInt(params.tradeId || "0");
   
-  console.log("Chat page params:", params);
-  console.log("Parsed trade ID:", tradeId);
+  console.log("Chat page - raw params:", params);
+  console.log("Chat page - params.tradeId:", params.tradeId);
+  console.log("Chat page - parsed tradeId:", tradeId);
+  console.log("Chat page - window.location.pathname:", window.location.pathname);
 
   const { data: trade, isLoading, error } = useQuery<EnrichedTrade>({
     queryKey: [`/api/trades/${tradeId}`],
