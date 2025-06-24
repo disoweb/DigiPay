@@ -53,6 +53,7 @@ interface Trade {
   paymentReference?: string;
   paymentProof?: string;
   createdAt: string;
+  updatedAt?: string;
   buyer?: { id: number; email: string; averageRating: string };
   seller?: { id: number; email: string; averageRating: string };
   offer?: { type: string; paymentMethod?: string };
@@ -135,6 +136,44 @@ export function ModernTradeManagement() {
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
     return updatedAt > oneHourAgo;
   });
+
+  // Debug logging
+  useEffect(() => {
+    if (trades.length > 0) {
+      console.log('=== DEBUG EXPIRED TRADES ===');
+      console.log('All trades count:', trades.length);
+      console.log('User ID:', user?.id);
+      
+      const allExpiredTrades = trades.filter(trade => trade.status === 'expired');
+      console.log('All expired trades:', allExpiredTrades.map(t => ({
+        id: t.id, 
+        status: t.status, 
+        buyerId: t.buyerId, 
+        sellerId: t.sellerId,
+        updatedAt: t.updatedAt,
+        createdAt: t.createdAt
+      })));
+      
+      const myExpiredTrades = trades.filter(trade => 
+        trade.status === 'expired' && 
+        (trade.buyerId === user?.id || trade.sellerId === user?.id)
+      );
+      console.log('My expired trades:', myExpiredTrades.map(t => ({
+        id: t.id, 
+        status: t.status, 
+        buyerId: t.buyerId, 
+        sellerId: t.sellerId,
+        updatedAt: t.updatedAt,
+        createdAt: t.createdAt,
+        withinHour: new Date(t.updatedAt || t.createdAt) > new Date(Date.now() - 60 * 60 * 1000)
+      })));
+      
+      console.log('Filtered expired trades count:', expiredTrades.length);
+      console.log('Active trades count:', activeTrades.length);
+      console.log('Selected status:', selectedStatus);
+      console.log('============================');
+    }
+  }, [trades, expiredTrades, activeTrades, user?.id, selectedStatus]);
 
   const filteredTrades = (() => {
     let filtered;
