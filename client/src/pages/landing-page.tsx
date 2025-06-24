@@ -53,9 +53,7 @@ export default function LandingPage() {
   const heroTexts = [
     "Complete Security",
     "Complete Confidence", 
-    "Complete Trust",
-    "Complete Protection",
-    "Complete Peace of Mind"
+    "Complete Trust"
   ];
 
   const toggleFAQ = (index: number) => {
@@ -77,8 +75,8 @@ export default function LandingPage() {
       setTimeout(() => {
         setHeroTextIndex(prev => (prev + 1) % heroTexts.length);
         setIsTextVisible(true); // Fade in new text
-      }, 500); // Half second delay for fade out before changing text
-    }, 4000); // Change every 4 seconds
+      }, 1000); // 1 second delay for fade out before changing text
+    }, 5000); // Change every 5 seconds
 
     return () => {
       clearInterval(rateInterval);
@@ -130,7 +128,7 @@ export default function LandingPage() {
             </Badge>
             <h1 className="text-3xl sm:text-4xl lg:text-7xl font-extrabold text-gray-900 mb-4 leading-tight">
               Trade USDT with
-              <span className={`block bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent transition-opacity duration-500 ${isTextVisible ? 'opacity-100' : 'opacity-0'}`}>
+              <span className={`block bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent transition-all duration-1000 ${isTextVisible ? 'opacity-100 blur-0' : 'opacity-0 blur-sm'}`}>
                 {heroTexts[heroTextIndex]}
               </span>
             </h1>
