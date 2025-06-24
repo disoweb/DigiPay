@@ -34,6 +34,7 @@ import {
   Timer,
   Users,
 } from "lucide-react";
+import { useMutation } from "@tanstack/react-query";
 
 interface Trade {
   id: number;
@@ -311,15 +312,40 @@ export function ModernTradeManagement() {
 
       {/* Trade List */}
       <div className="p-4">
+        {/* Expired trades info banner */}
+        {selectedStatus === 'expired' && expiredTrades.length > 0 && (
+          <Card className="mb-4 border-orange-200 bg-orange-50">
+            <CardContent className="p-3">
+              <div className="flex items-center gap-2 text-orange-800">
+                <Clock className="h-4 w-4" />
+                <p className="text-sm">
+                  Expired trades are shown for 1 hour, then automatically removed. Click "Reopen" to restart with a new 24-hour deadline.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {filteredTrades.length === 0 ? (
           <Card className="mt-8">
             <CardContent className="p-8 text-center">
               <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                <Search className="h-8 w-8 text-gray-400" />
+                {selectedStatus === 'expired' ? (
+                  <Timer className="h-8 w-8 text-gray-400" />
+                ) : (
+                  <Search className="h-8 w-8 text-gray-400" />
+                )}
               </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No trades found</h3>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                {selectedStatus === 'expired' ? 'No expired trades' : 'No trades found'}
+              </h3>
               <p className="text-gray-500 mb-4">
-                {searchTerm ? 'Try adjusting your search terms' : 'No trades found in this category'}
+                {selectedStatus === 'expired' 
+                  ? 'Expired trades from the last hour will appear here.'
+                  : searchTerm 
+                    ? 'Try adjusting your search terms' 
+                    : 'No trades found in this category'
+                }
               </p>
               {searchTerm && (
                 <Button variant="outline" onClick={() => setSearchTerm('')}>
@@ -338,10 +364,13 @@ export function ModernTradeManagement() {
                 new Date(trade.paymentDeadline).getTime() - Date.now() < 5 * 60 * 1000 &&
                 new Date(trade.paymentDeadline).getTime() > Date.now();
 
+              const isExpiredTrade = trade.status === 'expired';
+              
               return (
                 <Card 
                   key={trade.id}
                   className={`transition-all duration-200 hover:shadow-md active:scale-[0.98] ${
+                    isExpiredTrade ? 'border-red-200 bg-red-50 shadow-sm' :
                     isExpiringSoon ? 'border-orange-300 bg-orange-50 shadow-sm' : 'border-gray-200'
                   }`}
                 >
@@ -417,14 +446,30 @@ export function ModernTradeManagement() {
                         <Eye className="h-3 w-3 mr-2" />
                         View Details
                       </Button>
-                      <Button 
-                        size="sm"
-                        className="flex-1 h-9 bg-blue-600 hover:bg-blue-700"
-                        onClick={() => setLocation(`/chat/${trade.id}`)}
-                      >
-                        <MessageCircle className="h-3 w-3 mr-2" />
-                        Chat
-                      </Button>
+                      {trade.status === 'expired' ? (
+                        <Button 
+                          size="sm"
+                          className="flex-1 h-9 bg-blue-600 hover:bg-blue-700"
+                          onClick={() => reopenTradeMutation.mutate(trade.id)}
+                          disabled={reopenTradeMutation.isPending}
+                        >
+                          {reopenTradeMutation.isPending ? (
+                            <RefreshCw className="h-3 w-3 mr-2 animate-spin" />
+                          ) : (
+                            <RefreshCw className="h-3 w-3 mr-2" />
+                          )}
+                          Reopen
+                        </Button>
+                      ) : (
+                        <Button 
+                          size="sm"
+                          className="flex-1 h-9 bg-blue-600 hover:bg-blue-700"
+                          onClick={() => setLocation(`/chat/${trade.id}`)}
+                        >
+                          <MessageCircle className="h-3 w-3 mr-2" />
+                          Chat
+                        </Button>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
