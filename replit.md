@@ -12,12 +12,14 @@ A peer-to-peer cryptocurrency trading platform enabling direct trading between u
 - **Security**: JWT authentication, rate limiting, helmet security
 
 ## Recent Changes
-- **2025-01-22**: Fixed trade completion issues and real-time balance updates
-  - Updated trade completion endpoints to properly handle payment_made status
-  - Added WebSocket notifications for balance updates during trade completion
-  - Created transaction records for both buyer and seller on trade completion
-  - Fixed expiration status display to only show for active payment_pending trades
-  - Ensured real-time balance updates work across all trade completion flows
+- **2025-01-24**: Implemented full rating and dispute integration into trade flow
+  - Created comprehensive TradeCompletionFlow component with rating functionality
+  - Built enhanced dispute system with file upload and detailed categorization
+  - Added rating display components with distribution charts and user profiles
+  - Implemented backend API endpoints for ratings, disputes, and user profiles
+  - Integrated rating submission directly into completed trade workflow
+  - Enhanced dispute handling with admin review process and status tracking
+  - Added user profile pages with trading statistics and reputation system
 
 ## User Preferences
 - Non-technical user communication preferred

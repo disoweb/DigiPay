@@ -8,10 +8,12 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Clock, CheckCircle, AlertTriangle, Copy, ExternalLink, DollarSign, CreditCard } from "lucide-react";
+import { Clock, CheckCircle, AlertTriangle, Copy, ExternalLink, DollarSign, CreditCard, Star } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { DisputeSystem } from "@/components/dispute-system";
+import { TradeCompletionFlow } from "@/components/trade-completion-flow";
+import { EnhancedDisputeSystem } from "@/components/enhanced-dispute-system";
+import { useAuth } from "@/lib/auth";
 interface Trade {
   id: number;
   offerId: number;
@@ -423,10 +425,10 @@ export function P2PTradingFlow({ tradeId, userRole }: P2PTradingFlowProps) {
         </Card>
       )}
 
-      {/* Dispute System */}
-      <DisputeSystem 
+      {/* Enhanced Dispute System */}
+      <EnhancedDisputeSystem 
         trade={trade} 
-        userRole={userRole} 
+        currentUserId={user?.id || 0}
         onDisputeUpdated={() => {
           queryClient.invalidateQueries({ queryKey: [`/api/trades/${tradeId}`] });
         }} 
@@ -434,23 +436,11 @@ export function P2PTradingFlow({ tradeId, userRole }: P2PTradingFlowProps) {
 
       {/* Trade Completed */}
       {trade.status === 'completed' && (
-        <Card>
-          <CardContent className="p-6">
-            <div className="text-center space-y-4">
-              <CheckCircle className="h-12 w-12 text-green-500 mx-auto" />
-              <div>
-                <h3 className="text-lg font-semibold text-green-900">Trade Completed Successfully!</h3>
-                <p className="text-sm text-green-700">
-                  The trade has been completed and funds have been released.
-                </p>
-              </div>
-              <Button variant="outline" className="mt-4">
-                <Star className="h-4 w-4 mr-2" />
-                Rate Your Trading Partner
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        <TradeCompletionFlow 
+          trade={trade} 
+          currentUserId={user?.id || 0} 
+          onTradeUpdated={() => queryClient.invalidateQueries({ queryKey: [`/api/trades/${tradeId}`] })}
+        />
       )}
 
       {/* Trade Disputed */}
