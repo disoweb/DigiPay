@@ -1951,8 +1951,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const enrichedTrade = {
         ...trade,
         offer,
-        buyer: buyer ? { id: buyer.id, email: buyer.email, username: buyer.username } : null,
-        seller: seller ? { id: seller.id, email: seller.email, username: seller.username } : null,
+        buyer: buyer ? { id: buyer.id, email: buyer.email } : null,
+        seller: seller ? { id: seller.id, email: seller.email } : null,
       };
 
       res.json(enrichedTrade);
@@ -4284,7 +4284,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (trade.paymentDeadline && 
             new Date(trade.paymentDeadline) < now && 
             ["payment_pending"].includes(trade.status)) {
-          await storage.updateTradeStatus(trade.id, "expired");
+          await storage.updateTradeStatus(trade.id, { status: "expired" });
           trade.status = "expired"; // Update the local object
         }
       }

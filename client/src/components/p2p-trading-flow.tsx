@@ -201,19 +201,6 @@ export function P2PTradingFlow({ tradeId, userRole }: P2PTradingFlowProps) {
     }
   };
 
-  const formatStatusDisplay = (status: string) => {
-    const statusMap: { [key: string]: string } = {
-      'payment_pending': 'Payment Pending',
-      'payment_made': 'Payment Made',
-      'completed': 'Completed',
-      'expired': 'Expired',
-      'disputed': 'Disputed',
-      'canceled': 'Canceled',
-      'cancelled': 'Cancelled'
-    };
-    return statusMap[status] || status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
-  };
-
   const getTradeSteps = () => {
     const steps = [
       { label: 'Trade Initiated', completed: true },
@@ -251,7 +238,7 @@ export function P2PTradingFlow({ tradeId, userRole }: P2PTradingFlowProps) {
           <CardTitle className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <span className="text-lg hidden sm:block">Trade #{trade.id}</span>
             <Badge className={getStatusColor(trade.status)}>
-              {formatStatusDisplay(trade.status)}
+              {trade.status.replace('_', ' ').toUpperCase()}
             </Badge>
           </CardTitle>
         </CardHeader>

@@ -188,24 +188,9 @@ export function TradingDashboard() {
       case 'payment_pending': return 'text-blue-600 bg-blue-100';
       case 'payment_made': return 'text-orange-600 bg-orange-100';
       case 'disputed': return 'text-red-600 bg-red-100';
-      case 'expired': return 'text-red-600 bg-red-100';
       case 'cancelled': return 'text-gray-600 bg-gray-100';
-      case 'canceled': return 'text-gray-600 bg-gray-100';
       default: return 'text-gray-600 bg-gray-100';
     }
-  }
-
-  const formatStatusDisplay = (status: string) => {
-    const statusMap: { [key: string]: string } = {
-      'payment_pending': 'Payment Pending',
-      'payment_made': 'Payment Made',
-      'completed': 'Completed',
-      'expired': 'Expired',
-      'disputed': 'Disputed',
-      'canceled': 'Canceled',
-      'cancelled': 'Cancelled'
-    };
-    return statusMap[status] || status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
   };
 
   // Calculate total portfolio value
@@ -352,7 +337,7 @@ export function TradingDashboard() {
                         </p>
                       </div>
                       <Badge className={getStatusColor(trade.status)}>
-                        {formatStatusDisplay(trade.status)}
+                        {(trade.status || '').replace('_', ' ').toUpperCase()}
                       </Badge>
                     </div>
                     <div className="flex items-center justify-between">
@@ -513,7 +498,7 @@ export function TradingDashboard() {
                     <div className="text-right">
                       <p className="font-medium">₦{parseFloat(trade.fiatAmount).toLocaleString()}</p>
                       <Badge className={getStatusColor(trade.status)} size="sm">
-                        {formatStatusDisplay(trade.status)}
+                        {trade.status.replace('_', ' ').toUpperCase()}
                       </Badge>
                     </div>
                   </div>

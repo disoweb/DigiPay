@@ -61,7 +61,6 @@ export default function ChatPage() {
         }
         const data = await response.json();
         console.log("Trade data for chat:", data);
-        console.log("Trade status specifically:", data.status);
 
         // Validate the trade data
         if (!data || !data.id) {
@@ -177,21 +176,9 @@ export default function ChatPage() {
   }
 
   return (
-    <div 
-      className="flex flex-col bg-gray-50 dark:bg-gray-900 overflow-hidden" 
-      style={{ 
-        height: '100vh', 
-        maxHeight: '100vh',
-        minHeight: '100vh',
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0
-      }}
-    >
-      {/* Fixed Header */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-3 flex-shrink-0 z-20 shadow-sm">
+    <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
+      {/* Mobile-optimized Header */}
+      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-3 flex-shrink-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Button 
@@ -207,7 +194,7 @@ export default function ChatPage() {
                 Trade #{trade.id}
               </h1>
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                {otherParty?.username || otherParty?.email} • {isBuyer ? "Buying" : "Selling"} USDT
+                {otherParty?.email} • {isBuyer ? "Buying" : "Selling"} USDT
               </p>
             </div>
           </div>
@@ -241,8 +228,8 @@ export default function ChatPage() {
         />
       </div>
 
-      {/* Chat Component - Fixed height container */}
-      <div className="flex-1 overflow-hidden relative" style={{ minHeight: 0 }}>
+      {/* Full-screen Chat */}
+      <div className="flex-1 min-h-0">
         <RealTimeChat tradeId={trade.id} />
       </div>
     </div>

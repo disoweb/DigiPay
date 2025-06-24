@@ -13,13 +13,12 @@ interface RatingFormProps {
   tradeId: number;
   ratedUserId?: number;
   ratedUserEmail?: string;
-  ratedUserUsername?: string;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   onSubmit?: () => void;
 }
 
-export function RatingForm({ tradeId, ratedUserId, ratedUserEmail, ratedUserUsername, open = false, onOpenChange, onSubmit }: RatingFormProps) {
+export function RatingForm({ tradeId, ratedUserId, ratedUserEmail, open = false, onOpenChange, onSubmit }: RatingFormProps) {
   const [rating, setRating] = useState(0);
   const [hoveredRating, setHoveredRating] = useState(0);
   const [comment, setComment] = useState("");
@@ -178,7 +177,7 @@ export function RatingForm({ tradeId, ratedUserId, ratedUserEmail, ratedUserUser
         <Card>
           <CardHeader className="pb-3">
             <CardDescription>
-              How was your experience trading with {ratedUserUsername || 'this trader'}?
+              How was your experience trading with {ratedUserEmail ? ratedUserEmail.replace(/(.{2}).*(@.*)/, '$1***$2') : 'this trader'}?
             </CardDescription>
           </CardHeader>
           <CardContent>

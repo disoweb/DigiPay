@@ -90,12 +90,10 @@ interface EnrichedTrade {
   buyer: {
     id: number;
     email: string;
-    username: string;
   };
   seller: {
     id: number;
     email: string;
-    username: string;
   };
 }
 
@@ -895,8 +893,8 @@ export class DatabaseStorage implements IStorage {
       rate: parseFloat(trade.rate),
       fiatAmount: parseFloat(trade.fiatAmount),
       offer: offer ? { id: offer.id, type: offer.type } : null,
-      buyer: buyer ? { id: buyer.id, email: buyer.email, username: buyer.username } : null,
-      seller: seller ? { id: seller.id, email: seller.email, username: seller.username } : null,
+      buyer: buyer ? { id: buyer.id, email: buyer.email } : null,
+      seller: seller ? { id: seller.id, email: seller.email } : null,
     } as unknown as EnrichedTrade;
   }
 
@@ -927,12 +925,10 @@ export class DatabaseStorage implements IStorage {
         buyer: {
           id: buyerUser.id,
           email: buyerUser.email,
-          username: buyerUser.username,
         },
         seller: {
           id: sellerUser.id,
           email: sellerUser.email,
-          username: sellerUser.username,
         },
       })
       .from(trades)
