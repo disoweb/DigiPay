@@ -52,23 +52,12 @@ export default function ChatPage() {
     queryKey: [`/api/trades/${tradeId}`],
     queryFn: async () => {
       console.log("Fetching trade for chat:", tradeId);
-      console.log("User authenticated:", !!user, user?.id);
       try {
         const response = await apiRequest("GET", `/api/trades/${tradeId}`);
-        console.log("API response status:", response.status);
         if (!response.ok) {
           const errorText = await response.text().catch(() => 'Unknown error');
           console.error("Failed to fetch trade for chat:", response.status, errorText);
-          if (response.status === 401) {
-            throw new Error("Authentication required - please log in again");
-          }
-          if (response.status === 403) {
-            throw new Error("Access denied - you don't have permission to view this trade");
-          }
-          if (response.status === 404) {
-            throw new Error("Trade not found");
-          }
-          throw new Error(`Failed to load trade (${response.status}): ${errorText}`);
+          throw new Error(`Trade not found or access denied (${response.status})`);
         }
         const data = await response.json();
         console.log("Trade data for chat:", data);
@@ -86,11 +75,6 @@ export default function ChatPage() {
     },
     enabled: !!tradeId && tradeId > 0 && !!user,
     retry: (failureCount, error: any) => {
-      console.log("Query retry check:", failureCount, error?.message);
-      // Don't retry auth errors
-      if (error?.message?.includes('401') || error?.message?.includes('Authentication')) {
-        return false;
-      }
       // Don't retry if it's a 404 or 403 error
       if (error?.message?.includes('404') || error?.message?.includes('403')) {
         return false;
@@ -157,23 +141,14 @@ export default function ChatPage() {
           <div className="text-center">
             <h1 className="text-2xl font-bold text-gray-900 mb-4">Chat Not Available</h1>
             <p className="text-gray-600 mb-2">Unable to load trade information</p>
-            <div className="text-sm text-gray-500 mb-4 space-y-1">
-              <p>Trade ID: {tradeId}</p>
-              <p>Error: {error?.message || "Trade not found"}</p>
-              <p>User ID: {user?.id}</p>
-              <p>Auth Token: {localStorage.getItem('token') ? 'Present' : 'Missing'}</p>
-              <p>URL: {window.location.pathname}</p>
-            </div>
+            <p className="text-sm text-gray-500 mb-4">
+              Trade ID: {tradeId} | Error: {error?.message || "Trade not found"}
+            </p>
             <div className="space-y-2">
               <Button onClick={() => setLocation("/trades")}>Back to Trades</Button>
               <Button variant="outline" onClick={() => window.location.reload()}>
                 Retry Loading
               </Button>
-              {error?.message?.includes('Authentication') && (
-                <Button onClick={() => setLocation("/auth")} className="bg-red-600 hover:bg-red-700">
-                  Re-authenticate
-                </Button>
-              )}
             </div>
           </div>
         </div>
