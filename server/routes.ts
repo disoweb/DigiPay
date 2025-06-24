@@ -2193,11 +2193,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Reopen trade with new deadline (24 hours from now)
       const newDeadline = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
-      await storage.updateTrade(tradeId, {
+      const updateResult = await storage.updateTrade(tradeId, {
         status: "payment_pending",
         paymentDeadline: newDeadline.toISOString(),
         cancelReason: null
       });
+
+      if (!updateResult) {
+        console.error(`Failed to update trade ${tradeId}`);
+        return res.status(500).json({ error: "Failed to reopen trade" });
+      }
 
       const updatedTrade = await storage.getTrade(tradeId);
       res.json(updatedTrade);
