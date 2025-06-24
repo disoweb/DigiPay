@@ -239,36 +239,43 @@ export function ModernTradeDetail() {
 
   // Countdown timer effect
   useEffect(() => {
-    if (!trade?.paymentDeadline || trade.status !== 'payment_pending') {
-      return;
+    let interval: NodeJS.Timeout | null = null;
+
+    if (trade?.paymentDeadline && trade.status === 'payment_pending') {
+      const updateTimer = () => {
+        const now = new Date().getTime();
+        const deadline = new Date(trade.paymentDeadline!).getTime();
+        const difference = deadline - now;
+
+        if (difference <= 0) {
+          setTimeLeft("Expired");
+          setIsExpired(true);
+          return;
+        }
+
+        const hours = Math.floor(difference / (1000 * 60 * 60));
+        const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+
+        if (hours > 0) {
+          setTimeLeft(`${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
+        } else {
+          setTimeLeft(`${minutes}:${seconds.toString().padStart(2, '0')}`);
+        }
+      };
+
+      updateTimer();
+      interval = setInterval(updateTimer, 1000);
+    } else {
+      setTimeLeft("");
+      setIsExpired(false);
     }
 
-    const updateTimer = () => {
-      const now = new Date().getTime();
-      const deadline = new Date(trade.paymentDeadline!).getTime();
-      const difference = deadline - now;
-
-      if (difference <= 0) {
-        setTimeLeft("Expired");
-        setIsExpired(true);
-        return;
-      }
-
-      const hours = Math.floor(difference / (1000 * 60 * 60));
-      const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((difference % (1000 * 60)) / 1000);
-
-      if (hours > 0) {
-        setTimeLeft(`${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
-      } else {
-        setTimeLeft(`${minutes}:${seconds.toString().padStart(2, '0')}`);
+    return () => {
+      if (interval) {
+        clearInterval(interval);
       }
     };
-
-    updateTimer();
-    const interval = setInterval(updateTimer, 1000);
-
-    return () => clearInterval(interval);
   }, [trade?.paymentDeadline, trade?.status]);
 
   const canMarkPaymentMade = isBuyer && trade.status === 'payment_pending';
