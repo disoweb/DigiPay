@@ -178,6 +178,23 @@ export function ModernTradeDetail() {
   const isUserInTrade = isBuyer || isSeller;
   const partner = isBuyer ? trade.seller : trade.buyer;
 
+  // Mock online status - in real app this would come from WebSocket or API
+  const getOnlineStatus = () => {
+    const lastSeen = Math.floor(Math.random() * 10); // Random minutes for demo
+    if (lastSeen < 1) return { status: 'online', text: 'Online', color: 'bg-green-500', textColor: 'text-green-600' };
+    if (lastSeen < 5) return { status: 'recent', text: 'Active', color: 'bg-yellow-500', textColor: 'text-yellow-600' };
+    return { status: 'offline', text: 'Offline', color: 'bg-gray-400', textColor: 'text-gray-500' };
+  };
+
+  const onlineStatus = getOnlineStatus();
+
+  // Mock completion rate - in real app this would come from user stats
+  const getCompletionRate = () => {
+    return Math.floor(Math.random() * 20) + 80; // 80-100% for demo
+  };
+
+  const completionRate = getCompletionRate();
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'payment_pending': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
@@ -288,18 +305,19 @@ export function ModernTradeDetail() {
             
             <Separator />
             
-            <div className="space-y-1">
-              <p className="text-sm text-gray-600">Total Amount</p>
-              <p className="font-bold text-xl text-green-600">
-                ₦{(parseFloat(trade.amount) * parseFloat(trade.rate)).toLocaleString()}
-              </p>
-            </div>
-
-            <div className="space-y-1">
-              <p className="text-sm text-gray-600">Your Role</p>
-              <Badge variant="outline" className="capitalize">
-                {isBuyer ? 'Buyer' : 'Seller'}
-              </Badge>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <p className="text-sm text-gray-600">Total Amount</p>
+                <p className="font-bold text-xl text-green-600">
+                  ₦{(parseFloat(trade.amount) * parseFloat(trade.rate)).toLocaleString()}
+                </p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm text-gray-600">Your Role</p>
+                <Badge variant="outline" className="capitalize">
+                  {isBuyer ? 'Buyer' : 'Seller'}
+                </Badge>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -314,14 +332,28 @@ export function ModernTradeDetail() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center gap-3">
-              <Avatar className="h-10 w-10">
-                <AvatarFallback className="bg-blue-100 text-blue-600">
-                  {(partner?.email || 'U').charAt(0).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
+              <div className="relative">
+                <Avatar className="h-10 w-10">
+                  <AvatarFallback className="bg-blue-100 text-blue-600">
+                    {(partner?.email || 'U').charAt(0).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                {/* Online Status Indicator */}
+                <div className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 ${onlineStatus.color} border-2 border-white rounded-full`}></div>
+              </div>
               <div className="flex-1">
-                <p className="font-medium">{partner?.email?.split('@')[0] || 'Unknown'}</p>
-                <p className="text-sm text-gray-600">{partner?.email || 'Unknown'}</p>
+                <div className="flex items-center gap-2">
+                  <p className="font-medium">{partner?.email?.split('@')[0] || 'Unknown'}</p>
+                  <div className="flex items-center gap-1">
+                    <div className={`w-2 h-2 ${onlineStatus.color} rounded-full`}></div>
+                    <span className={`text-xs ${onlineStatus.textColor}`}>{onlineStatus.text}</span>
+                  </div>
+                </div>
+                <p className="text-xs text-gray-500">
+                  {onlineStatus.status === 'online' ? 'Active now' : 
+                   onlineStatus.status === 'recent' ? 'Active 3 min ago' : 
+                   'Last seen 2 hours ago'}
+                </p>
               </div>
               <Button
                 variant="outline"
@@ -333,30 +365,46 @@ export function ModernTradeDetail() {
               </Button>
             </div>
             
-            {partner?.averageRating && (
-              <div className="space-y-1">
-                <p className="text-sm text-gray-600">Rating</p>
-                <div className="flex items-center gap-2">
-                  <div className="flex">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <span
-                        key={star}
-                        className={`text-sm ${
-                          star <= Math.floor(parseFloat(partner.averageRating || '0'))
-                            ? 'text-yellow-400'
-                            : 'text-gray-300'
-                        }`}
-                      >
-                        ★
-                      </span>
-                    ))}
+            <div className="grid grid-cols-2 gap-4 pt-2">
+              {partner?.averageRating && (
+                <div className="space-y-1">
+                  <p className="text-sm text-gray-600">Rating</p>
+                  <div className="flex items-center gap-2">
+                    <div className="flex">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <span
+                          key={star}
+                          className={`text-sm ${
+                            star <= Math.floor(parseFloat(partner.averageRating || '0'))
+                              ? 'text-yellow-400'
+                              : 'text-gray-300'
+                          }`}
+                        >
+                          ★
+                        </span>
+                      ))}
+                    </div>
+                    <span className="text-sm text-gray-600">
+                      {parseFloat(partner.averageRating).toFixed(1)}
+                    </span>
                   </div>
-                  <span className="text-sm text-gray-600">
-                    {parseFloat(partner.averageRating).toFixed(1)}
+                </div>
+              )}
+              <div className="space-y-1">
+                <p className="text-sm text-gray-600">Completion Rate</p>
+                <div className="flex items-center gap-2">
+                  <span className={`font-medium ${completionRate >= 90 ? 'text-green-600' : completionRate >= 70 ? 'text-yellow-600' : 'text-red-600'}`}>
+                    {completionRate}%
                   </span>
+                  <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                    <div 
+                      className={`h-full rounded-full ${completionRate >= 90 ? 'bg-green-500' : completionRate >= 70 ? 'bg-yellow-500' : 'bg-red-500'}`} 
+                      style={{ width: `${completionRate}%` }}
+                    ></div>
+                  </div>
                 </div>
               </div>
-            )}
+            </div>
           </CardContent>
         </Card>
 
