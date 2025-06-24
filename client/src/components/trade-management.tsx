@@ -482,7 +482,73 @@ export function TradeManagement() {
               </Card>
             ) : (
               disputedTrades.map((trade) => (
-                <TradeCard key={trade.id} trade={trade} />
+                <Card key={trade.id} className="border-0 shadow-sm hover:shadow-md transition-shadow">
+                  <CardContent className="p-4">
+                    <div className="space-y-3">
+                      {/* Trade Header */}
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-2">
+                            {getTradeRole(trade) === 'buyer' ? (
+                              <TrendingUp className="h-4 w-4 text-green-600" />
+                            ) : (
+                              <TrendingDown className="h-4 w-4 text-blue-600" />
+                            )}
+                            <span className="font-medium text-sm">
+                              {getTradeRole(trade) === 'buyer' ? 'Buying' : 'Selling'} USDT
+                            </span>
+                          </div>
+                          {getStatusBadge(trade.status)}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          Trade #{trade.id}
+                        </div>
+                      </div>
+
+                      {/* Trade Details */}
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <span className="text-gray-600">Amount:</span>
+                          <p className="font-medium">{parseFloat(trade.amount).toFixed(2)} USDT</p>
+                        </div>
+                        <div>
+                          <span className="text-gray-600">Rate:</span>
+                          <p className="font-medium">₦{parseFloat(trade.rate).toLocaleString()}</p>
+                        </div>
+                        <div>
+                          <span className="text-gray-600">Total:</span>
+                          <p className="font-medium">₦{parseFloat(trade.fiatAmount).toLocaleString()}</p>
+                        </div>
+                        <div>
+                          <span className="text-gray-600">Partner:</span>
+                          <p className="font-medium truncate">{getTradePartner(trade)?.email}</p>
+                        </div>
+                      </div>
+
+                      {/* Trade Actions */}
+                      <div className="flex flex-col sm:flex-row gap-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          className="flex-1 sm:flex-none"
+                          onClick={() => setLocation(`/trades/${trade.id}`)}
+                        >
+                          <Eye className="h-3 w-3 mr-1" />
+                          View Details
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          className="flex-1 sm:flex-none"
+                          onClick={() => setLocation(`/chat/${trade.id}`)}
+                        >
+                          <MessageCircle className="h-3 w-3 mr-1" />
+                          Chat
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
               ))
             )}
           </div>
@@ -500,7 +566,73 @@ export function TradeManagement() {
               </Card>
             ) : (
               expiredTrades.map((trade) => (
-                <TradeCard key={trade.id} trade={trade} />
+                <Card key={trade.id} className="border-0 shadow-sm hover:shadow-md transition-shadow">
+                  <CardContent className="p-4">
+                    <div className="space-y-3">
+                      {/* Trade Header */}
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-2">
+                            {getTradeRole(trade) === 'buyer' ? (
+                              <TrendingUp className="h-4 w-4 text-green-600" />
+                            ) : (
+                              <TrendingDown className="h-4 w-4 text-blue-600" />
+                            )}
+                            <span className="font-medium text-sm">
+                              {getTradeRole(trade) === 'buyer' ? 'Buying' : 'Selling'} USDT
+                            </span>
+                          </div>
+                          {getStatusBadge(trade.status)}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          Trade #{trade.id}
+                        </div>
+                      </div>
+
+                      {/* Trade Details */}
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <span className="text-gray-600">Amount:</span>
+                          <p className="font-medium">{parseFloat(trade.amount).toFixed(2)} USDT</p>
+                        </div>
+                        <div>
+                          <span className="text-gray-600">Rate:</span>
+                          <p className="font-medium">₦{parseFloat(trade.rate).toLocaleString()}</p>
+                        </div>
+                        <div>
+                          <span className="text-gray-600">Total:</span>
+                          <p className="font-medium">₦{parseFloat(trade.fiatAmount).toLocaleString()}</p>
+                        </div>
+                        <div>
+                          <span className="text-gray-600">Partner:</span>
+                          <p className="font-medium truncate">{getTradePartner(trade)?.email}</p>
+                        </div>
+                      </div>
+
+                      {/* Trade Actions */}
+                      <div className="flex flex-col sm:flex-row gap-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          className="flex-1 sm:flex-none"
+                          onClick={() => setLocation(`/trades/${trade.id}`)}
+                        >
+                          <Eye className="h-3 w-3 mr-1" />
+                          View Details
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          className="flex-1 sm:flex-none"
+                          onClick={() => setLocation(`/chat/${trade.id}`)}
+                        >
+                          <MessageCircle className="h-3 w-3 mr-1" />
+                          Chat
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
               ))
             )}
           </div>

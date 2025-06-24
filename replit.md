@@ -1,61 +1,42 @@
 # DigiPay P2P Cryptocurrency Trading Platform
 
-## Overview
-DigiPay is a peer-to-peer cryptocurrency trading platform that enables direct trading between users without intermediaries. The platform supports both Nigerian Naira (NGN) and USDT transactions with integrated payment processing through Paystack and TRON blockchain integration.
+## Project Overview
+DigiPay is a peer-to-peer cryptocurrency trading platform that enables direct trading between users without intermediaries. The platform supports USDT/NGN trading with escrow services, KYC verification, real-time chat, and integrated payment systems.
 
-## Project Architecture
-- **Frontend**: React with TypeScript, Vite, Tailwind CSS
-- **Backend**: Express.js with TypeScript 
+## Architecture
+- **Frontend**: React with TypeScript, Vite, TailwindCSS, Radix UI components
+- **Backend**: Node.js with Express, TypeScript
 - **Database**: PostgreSQL with Drizzle ORM
-- **Authentication**: JWT-based authentication
-- **Payment Processing**: Paystack for NGN transactions
-- **Blockchain**: TRON network for USDT transactions
-- **Real-time Features**: WebSocket support for live chat and notifications
+- **Authentication**: JWT-based with sessions
+- **Real-time**: WebSocket for chat and live updates
+- **Payment**: Paystack integration for NGN, TronWeb for USDT
+- **Security**: Helmet for security headers, rate limiting, input validation
+
+## Recent Changes
+- **2025-01-22**: Fixed React hook rendering errors in trade detail components
+- **2025-01-22**: Resolved missing TradeCard component definitions in trade management
+- **2025-01-22**: Successfully migrated from Replit Agent to Replit environment
+- **2025-01-22**: Set up PostgreSQL database and applied schema migrations
+- **2025-01-22**: Installed Node.js dependencies and configured development environment
 
 ## Key Features
-- User registration and KYC verification system
-- P2P trading marketplace with offer creation and management
-- Wallet functionality with deposit/withdrawal capabilities
-- Real-time messaging system between traders
-- Escrow system for secure transactions
-- Admin panel for user and trade management
+- User registration and KYC verification
+- P2P USDT trading with escrow
+- Real-time messaging between traders
+- Admin panel for dispute resolution
+- Wallet management with deposit/withdrawal
 - Rating and review system
 - Mobile-responsive design
 
-## Recent Changes
-- **2025-01-23**: Successfully migrated project from Replit Agent to standard Replit environment
-- **2025-01-23**: Fixed database schema issues with message table columns
-- **2025-01-23**: Resolved Paystack payment integration issues
-- **2025-01-23**: Enhanced send funds modal with real-time user lookup and verification status display
-- **2025-01-23**: Added debounced search functionality for user lookup with visual feedback indicators
-- **2025-01-23**: Improved marketplace flow by removing contact modal and making buy/sell buttons navigate directly to trade page
-- **2025-01-23**: Added message buttons beside buy/sell buttons for better user experience
-- **2025-01-23**: Implemented comprehensive admin panel with extensive moderation capabilities
-- **2025-01-23**: Added admin user management with ban/freeze functionality and dispute resolution system
-- **2025-01-23**: Fixed admin authentication and JWT token handling for secure admin access
-- **2025-01-23**: Resolved admin users page rendering issue by rebuilding component structure
-- **2025-01-23**: Fixed admin users and disputes page routing and component loading issues
-- **2025-01-23**: Implemented working admin user management with ban/freeze capabilities and dispute resolution system
-
-## Database Schema
-- Users table with KYC verification fields
-- Offers table for trading listings
-- Trades table for transaction records
-- Messages table for chat functionality
-- Transactions table for payment history
-- Ratings table for user feedback
-
-## Environment Setup
-- Node.js 20 with TypeScript
-- PostgreSQL database (configured)
-- Paystack API integration (configured)
-- TRON network integration (demo mode for development)
-
 ## User Preferences
-- Focus on security and user verification
-- Real-time feedback for user interactions
-- Clean, professional UI design
-- Mobile-first responsive design
+- Language: English
+- Communication style: Professional, concise, no emojis
+- Error handling: Prefer explicit error messages over silent fallbacks
+- Security: Client/server separation, proper validation
 
-## Current Status
-The project is fully functional and ready for continued development. All core features are working including payments, user verification, and real-time messaging.
+## Technical Notes
+- Server binds to 0.0.0.0 for Replit compatibility
+- Uses Neon PostgreSQL database service
+- TronWeb runs in demo mode without API keys
+- Paystack integration requires PAYSTACK_SECRET_KEY environment variable
+- Admin user created: admin@digipay.com / admin123
