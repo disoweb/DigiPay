@@ -616,7 +616,10 @@ export function ModernTradeDetail() {
             <div className="flex gap-2">
               <Button
                 variant="outline"
-                onClick={() => setLocation(`/chat/${trade.id}`)}
+                onClick={() => {
+                  console.log("Navigating to chat for trade:", trade.id);
+                  setLocation(`/chat/${trade.id}`);
+                }}
                 className="flex-1 h-8 text-xs"
               >
                 <MessageCircle className="h-3 w-3 mr-1" />
