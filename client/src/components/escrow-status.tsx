@@ -89,7 +89,7 @@ export function EscrowStatus({ trade, userRole, onReleaseEscrow, onRefundEscrow 
             <span className="text-sm font-medium">Status</span>
             <div className="flex items-center space-x-2">
               {getStatusIcon()}
-{getStatusBadge()}
+              {getStatusBadge()}
             </div>
           </div>
           
