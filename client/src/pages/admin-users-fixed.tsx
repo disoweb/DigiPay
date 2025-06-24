@@ -115,38 +115,6 @@ export default function AdminUsersFixed() {
     kycVerified: false
   });
 
-  // Password update mutation
-  const passwordUpdateMutation = useMutation({
-    mutationFn: async ({ userId, newPassword }: { userId: number; newPassword: string }) => {
-      const response = await apiRequest("PATCH", `/api/admin/users/${userId}/password`, {
-        newPassword
-      });
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to update password");
-      }
-      return response.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: "Password Updated",
-        description: "User password has been successfully updated",
-        className: "border-green-200 bg-green-50 text-green-800",
-      });
-      setShowPasswordModal(false);
-      setNewPassword("");
-      setConfirmPassword("");
-      setSelectedUser(null);
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Password Update Failed",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
   const { data: users = [], isLoading, error, refetch } = useQuery({
     queryKey: ["/api/admin/users"],
     queryFn: async () => {
@@ -324,6 +292,23 @@ export default function AdminUsersFixed() {
         queryClient.setQueryData(["/api/admin/users"], context.previousUsers);
       }
       toast({ title: "Error", description: "Failed to delete user", variant: "destructive" });
+    },
+  });
+
+  const updatePasswordMutation = useMutation({
+    mutationFn: async ({ userId, password }: { userId: number; password: string }) => {
+      const response = await apiRequest("PATCH", `/api/admin/users/${userId}/password`, { password });
+      if (!response.ok) throw new Error("Failed to update password");
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Success", description: "Password updated successfully" });
+      setShowPasswordModal(false);
+      setNewPassword("");
+      setConfirmPassword("");
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to update password", variant: "destructive" });
     },
   });
 
@@ -578,9 +563,10 @@ export default function AdminUsersFixed() {
                                   handleAction(user, "password");
                                   setDropdownOpen(null);
                                 }}
-                                className="w-full text-left px-4 py-2 hover:bg-gray-100 text-purple-600"
+                                className="w-full text-left px-4 py-2 hover:bg-gray-100 text-blue-600 flex items-center gap-2"
                               >
-                                Reset Password
+                                <Key className="h-4 w-4" />
+                                Update Password
                               </button>
                               {!user.is_admin && (
                                 <>
@@ -1012,6 +998,88 @@ export default function AdminUsersFixed() {
                 </Button>
                 <Button variant="outline" onClick={() => setShowActionModal(false)} className="flex-1 w-full">
                   Cancel
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Password Update Modal */}
+        <Dialog open={showPasswordModal} onOpenChange={setShowPasswordModal}>
+          <DialogContent className="w-full max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Key className="h-5 w-5" />
+                Update Password
+              </DialogTitle>
+              <DialogDescription>
+                Set a new password for {selectedUser?.email}
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="newPassword">New Password</Label>
+                <Input
+                  id="newPassword"
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="Enter new password"
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label htmlFor="confirmPassword">Confirm Password</Label>
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Confirm new password"
+                  className="mt-1"
+                />
+              </div>
+              
+              <div className="flex justify-end gap-2 pt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowPasswordModal(false);
+                    setNewPassword("");
+                    setConfirmPassword("");
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={() => {
+                    if (!newPassword || newPassword !== confirmPassword) {
+                      toast({ 
+                        title: "Error", 
+                        description: "Passwords don't match or are empty", 
+                        variant: "destructive" 
+                      });
+                      return;
+                    }
+                    if (newPassword.length < 6) {
+                      toast({ 
+                        title: "Error", 
+                        description: "Password must be at least 6 characters", 
+                        variant: "destructive" 
+                      });
+                      return;
+                    }
+                    if (selectedUser) {
+                      updatePasswordMutation.mutate({ 
+                        userId: selectedUser.id, 
+                        password: newPassword 
+                      });
+                    }
+                  }}
+                  disabled={updatePasswordMutation.isPending}
+                >
+                  {updatePasswordMutation.isPending ? "Updating..." : "Update Password"}
                 </Button>
               </div>
             </div>
