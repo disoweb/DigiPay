@@ -29,8 +29,7 @@ export default function Marketplace() {
           <div className="space-y-3">
             <div className="flex items-center justify-between gap-3">
               <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 truncate">
-                <span className="sm:hidden">P2P</span>
-                <span className="hidden sm:inline">P2P Marketplace</span>
+                Marketplace
               </h1>
               <Button 
                 onClick={() => setLocation("/create-offer")} 
