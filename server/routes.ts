@@ -2222,8 +2222,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const messageData = insertMessageSchema.parse({
         tradeId,
         senderId: req.user!.id,
-        receiverId: trade.buyerId === req.user!.id ? trade.sellerId : trade.buyerId,
-        content: req.body.message,
+        recipientId: trade.buyerId === req.user!.id ? trade.sellerId : trade.buyerId,
+        message: req.body.message,
       });
 
       const message = await storage.createMessage(messageData);
