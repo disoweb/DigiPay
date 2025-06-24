@@ -770,7 +770,7 @@ export function ModernTradeDetail() {
                             : "text-red-900"
                       }`}
                     >
-                      {isExpired ? "Payment Expired" : "Time Remaining"}
+                      {isExpired ? "Payment Expired" : "Remaining"}
                     </span>
                   </div>
                   <p
