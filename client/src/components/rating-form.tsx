@@ -11,20 +11,21 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 
 interface RatingFormProps {
   tradeId: number;
-  ratedUserId: number;
-  ratedUserEmail: string;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  ratedUserId?: number;
+  ratedUserEmail?: string;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  onSubmit?: () => void;
 }
 
-export function RatingForm({ tradeId, ratedUserId, ratedUserEmail, open, onOpenChange }: RatingFormProps) {
+export function RatingForm({ tradeId, ratedUserId, ratedUserEmail, open = false, onOpenChange, onSubmit }: RatingFormProps) {
   const [rating, setRating] = useState(0);
   const [hoveredRating, setHoveredRating] = useState(0);
   const [comment, setComment] = useState("");
   const { toast } = useToast();
 
   const ratingMutation = useMutation({
-    mutationFn: async (data: { tradeId: number; ratedUserId: number; rating: number; comment?: string }) => {
+    mutationFn: async (data: { tradeId: number; rating: number; comment?: string }) => {
       const response = await apiRequest("POST", "/api/ratings", data);
       return response.json();
     },
@@ -34,8 +35,12 @@ export function RatingForm({ tradeId, ratedUserId, ratedUserEmail, open, onOpenC
         description: "Thank you for rating your trading partner!",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/trades"] });
-      queryClient.invalidateQueries({ queryKey: [`/api/users/${ratedUserId}/ratings`] });
-      onOpenChange(false);
+      queryClient.invalidateQueries({ queryKey: ["/api/ratings"] });
+      if (ratedUserId) {
+        queryClient.invalidateQueries({ queryKey: [`/api/users/${ratedUserId}/ratings`] });
+      }
+      if (onOpenChange) onOpenChange(false);
+      if (onSubmit) onSubmit();
       setRating(0);
       setComment("");
     },
@@ -62,7 +67,6 @@ export function RatingForm({ tradeId, ratedUserId, ratedUserEmail, open, onOpenC
 
     ratingMutation.mutate({
       tradeId,
-      ratedUserId,
       rating,
       comment: comment.trim() || undefined,
     });
@@ -104,6 +108,62 @@ export function RatingForm({ tradeId, ratedUserId, ratedUserEmail, open, onOpenC
     }
   };
 
+  // If used without dialog wrapper (like in trade-detail)
+  if (!onOpenChange) {
+    return (
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <User className="h-5 w-5" />
+            Rate Your Trading Partner
+          </CardTitle>
+          <CardDescription>
+            How was your experience with this trade?
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="text-center">
+              <Label className="text-base font-medium">Rating</Label>
+              <div className="mt-2 flex justify-center">
+                {renderStars()}
+              </div>
+              {rating > 0 && (
+                <p className="mt-2 text-sm text-muted-foreground">
+                  {getRatingText(rating)} ({rating} star{rating !== 1 ? 's' : ''})
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="comment">Comment (Optional)</Label>
+              <Textarea
+                id="comment"
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                placeholder="Share your experience with this trader..."
+                rows={3}
+                maxLength={500}
+                disabled={ratingMutation.isPending}
+              />
+              <p className="text-xs text-muted-foreground">
+                {comment.length}/500 characters
+              </p>
+            </div>
+
+            <Button
+              type="submit"
+              disabled={rating === 0 || ratingMutation.isPending}
+              className="w-full"
+            >
+              {ratingMutation.isPending ? "Submitting..." : "Submit Rating"}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
@@ -117,7 +177,7 @@ export function RatingForm({ tradeId, ratedUserId, ratedUserEmail, open, onOpenC
         <Card>
           <CardHeader className="pb-3">
             <CardDescription>
-              How was your experience trading with {ratedUserEmail.replace(/(.{2}).*(@.*)/, '$1***$2')}?
+              How was your experience trading with {ratedUserEmail ? ratedUserEmail.replace(/(.{2}).*(@.*)/, '$1***$2') : 'this trader'}?
             </CardDescription>
           </CardHeader>
           <CardContent>

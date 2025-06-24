@@ -214,6 +214,18 @@ export default function TradeDetail() {
   const canCancel = ["pending", "payment_pending"].includes(trade.status) && isUserInTrade;
   const isCompleted = trade.status === "completed";
 
+  // Check if user can rate this trade
+  const { data: existingRating } = useQuery({
+    queryKey: [`/api/trades/${tradeId}/rating`],
+    queryFn: async () => {
+      const response = await apiRequest("GET", `/api/trades/${tradeId}/rating`);
+      return response.json();
+    },
+    enabled: isCompleted && isUserInTrade,
+  });
+
+  const canRate = isCompleted && isUserInTrade && !existingRating;
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />

@@ -99,9 +99,12 @@ export default function Ratings() {
                           </p>
                           <p className="text-sm text-gray-600">
                             rated{" "}
-                            <span className="font-semibold text-primary">
+                            <span className="font-semibold text-primary cursor-pointer hover:underline">
                               {rating.ratedUser?.email.replace(/(.{2}).*(@.*)/, '$1***$2') || "Unknown"}
                             </span>
+                          </p>
+                          <p className="text-xs text-gray-500 mt-1">
+                            Trade completed successfully
                           </p>
                         </div>
                       </div>
