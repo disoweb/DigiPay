@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
+import { useExchangeRates } from "@/hooks/use-exchange-rates";
 import { useCurrencyPreference } from "@/hooks/use-currency-preference";
 import { apiRequest } from "@/lib/queryClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -45,9 +46,8 @@ export function TradingDashboard() {
   const [activeTab, setActiveTab] = useState("overview");
   const { currency: portfolioCurrency, toggleCurrency } = useCurrencyPreference();
 
-  // Exchange rates
-  const USDT_TO_NGN_RATE = 1485;
-  const NGN_TO_USD_RATE = 0.00067;
+  // Exchange rates from database
+  const { USDT_TO_NGN_RATE, NGN_TO_USD_RATE } = useExchangeRates();
 
   const { data: trades = [], error: tradesError, refetch: refetchTrades, isLoading: tradesLoading } = useQuery({
     queryKey: ['/api/trades'],
@@ -239,14 +239,37 @@ export function TradingDashboard() {
     currencySymbol = "$";
   }
 
+  // Portfolio calculation logic (same as wallet)
+  const calculatePortfolioValue = () => {
+    const usdtBalance = parseFloat(user.usdtBalance || "0");
+    const ngnBalance = parseFloat(user.nairaBalance || "0");
+    
+    if (portfolioCurrency === "USD") {
+      const usdtInUsd = usdtBalance; // USDT is 1:1 with USD
+      const ngnInUsd = ngnBalance * NGN_TO_USD_RATE;
+      return usdtInUsd + ngnInUsd;
+    } else {
+      const usdtInNgn = usdtBalance * USDT_TO_NGN_RATE;
+      return ngnBalance + usdtInNgn;
+    }
+  };
+
+  const formatPortfolioValue = (value: number) => {
+    if (portfolioCurrency === "USD") {
+      return `$${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    } else {
+      return `₦${value.toLocaleString()}`;
+    }
+  };
+
   return (
     <div className="space-y-6">
-      {/* Total Portfolio Value Card */}
-      <Card className="border-0 shadow-lg overflow-hidden">
-        <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-6 text-white">
-          <div className="text-center">
-            <div className="flex items-center justify-center gap-3 mb-2">
-              <h2 className="text-lg font-medium text-white/90">Total Portfolio Value</h2>
+      {/* Total Portfolio Card - Same as Wallet */}
+      <Card className="bg-gradient-to-r from-blue-600 to-purple-600 text-white border-0 shadow-lg">
+        <CardContent className="p-6">
+          <div className="text-center space-y-3">
+            <div className="flex items-center justify-center gap-3">
+              <p className="text-blue-100 text-sm">Total Portfolio Value</p>
               <Button
                 variant="ghost"
                 size="sm"
@@ -257,21 +280,35 @@ export function TradingDashboard() {
                 {portfolioCurrency}
               </Button>
             </div>
-            <div className="text-4xl font-bold mb-6">
-              {currencySymbol}{totalPortfolioValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </div>
-            <div className="grid grid-cols-2 gap-8 max-w-md mx-auto">
+            
+            {/* Main Portfolio Value */}
+            <p className="text-4xl font-bold">
+              {formatPortfolioValue(calculatePortfolioValue())}
+            </p>
+            
+            {/* Currency Breakdown */}
+            <div className="flex justify-center space-x-6 text-sm">
               <div className="text-center">
-                <p className="text-white/90 text-sm mb-1">NGN</p>
-                <p className="text-xl font-semibold">{currencySymbol}{ngnBalanceInPreferredCurrency.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                <p className="text-blue-100">NGN</p>
+                <p className="font-semibold">₦{parseFloat(user.nairaBalance || "0").toLocaleString()}</p>
+                {portfolioCurrency === "USD" && (
+                  <p className="text-xs text-blue-200">
+                    ≈ ${(parseFloat(user.nairaBalance || "0") * NGN_TO_USD_RATE).toFixed(2)}
+                  </p>
+                )}
               </div>
               <div className="text-center">
-                <p className="text-white/90 text-sm mb-1">USDT</p>
-                <p className="text-xl font-semibold">${parseFloat(user?.usdtBalance || "0").toFixed(2)}</p>
+                <p className="text-blue-100">USDT</p>
+                <p className="font-semibold">${parseFloat(user.usdtBalance || "0").toFixed(2)}</p>
+                {portfolioCurrency === "NGN" && (
+                  <p className="text-xs text-blue-200">
+                    ≈ ₦{(parseFloat(user.usdtBalance || "0") * USDT_TO_NGN_RATE).toLocaleString()}
+                  </p>
+                )}
               </div>
             </div>
           </div>
-        </div>
+        </CardContent>
       </Card>
 
         <div className="grid grid-cols-2 md:grid-cols-2 gap-4">
