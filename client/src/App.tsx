@@ -65,7 +65,11 @@ function App() {
             <ProtectedRoute path="/admin/disputes" component={AdminDisputesNew} adminOnly />
             <ProtectedRoute path="/profile-setup" component={ProfileSetup} />
             <ProtectedRoute path="/create-offer" component={OfferCreation} />
-            <ProtectedRoute path="/chat/:tradeId" component={ChatPage} />
+            <Route path="/chat/:tradeId" component={({ params }) => (
+              <ProtectedRoute>
+                <ChatPage />
+              </ProtectedRoute>
+            )} />
             <Route path="/user-chat/:userId" component={({ params }) => (
               <ProtectedRoute>
                 <UserChatPage />
