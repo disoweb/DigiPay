@@ -2182,11 +2182,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Trade is not expired" });
       }
 
-      // Check if trade was expired within last hour
+      // Check if trade was expired within last 24 hours
       const updatedAt = new Date(trade.updatedAt || trade.createdAt);
-      const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+      const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
       
-      if (updatedAt <= oneHourAgo) {
+      if (updatedAt <= twentyFourHoursAgo) {
         return res.status(400).json({ error: "Trade expired too long ago to reopen" });
       }
 

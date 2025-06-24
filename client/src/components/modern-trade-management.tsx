@@ -132,14 +132,14 @@ export function ModernTradeManagement() {
     ["payment_pending", "payment_made"].includes(trade.status) && trade.status !== "expired"
   );
 
-  // Filter expired trades (expired within last 1 hour)
+  // Filter expired trades (expired within last 24 hours for reopen functionality)
   const expiredTrades = visibleTrades.filter(trade => {
     if (trade.status !== 'expired') return false;
     
-    // Check if expired within last hour
+    // Check if expired within last 24 hours (more practical for users)
     const updatedAt = new Date(trade.updatedAt || trade.createdAt);
-    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
-    const isRecent = updatedAt > oneHourAgo;
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const isRecent = updatedAt > twentyFourHoursAgo;
     console.log(`Trade ${trade.id}: expired ${updatedAt}, recent: ${isRecent}`);
     return isRecent;
   });
@@ -363,7 +363,7 @@ export function ModernTradeManagement() {
               <div className="flex items-center gap-2 text-orange-800">
                 <Clock className="h-4 w-4" />
                 <p className="text-sm">
-                  Expired trades are shown for 1 hour, then automatically removed. Click "Reopen" to restart with a new 24-hour deadline.
+                  Expired trades are shown for 24 hours, then automatically removed. Click "Reopen" to restart with a new 24-hour deadline.
                 </p>
               </div>
             </CardContent>
