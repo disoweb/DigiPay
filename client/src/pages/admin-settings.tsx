@@ -6,11 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Separator } from "@/components/ui/separator";
 import { Navbar } from "@/components/navbar";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { ArrowLeft, Settings, DollarSign, TrendingUp, AlertCircle, Save, RefreshCw } from "lucide-react";
+import { ArrowLeft, Settings, DollarSign, TrendingUp, AlertCircle, Save, RefreshCw, Smartphone } from "lucide-react";
 import { useLocation } from "wouter";
 
 export default function AdminSettings() {
@@ -130,23 +129,28 @@ export default function AdminSettings() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <Navbar />
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-4 sm:py-8 max-w-4xl">
         {/* Header */}
         <div className="mb-6">
-          <div className="flex items-center gap-3 mb-4">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-4">
             <Button 
               onClick={() => setLocation("/admin")} 
               variant="outline"
               size="sm"
+              className="self-start"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Admin
+              <span className="hidden sm:inline">Back to Admin</span>
+              <span className="sm:hidden">Back</span>
             </Button>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">General Settings</h1>
-              <p className="text-gray-600">Configure platform-wide settings and parameters</p>
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-1">
+                <Settings className="h-6 w-6 text-blue-600" />
+                <h1 className="text-xl sm:text-2xl font-bold text-gray-900">General Settings</h1>
+              </div>
+              <p className="text-sm sm:text-base text-gray-600">Configure platform-wide settings and parameters</p>
             </div>
           </div>
         </div>
@@ -155,23 +159,27 @@ export default function AdminSettings() {
         <div className="space-y-6">
           
           {/* Exchange Rates Section */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <DollarSign className="h-5 w-5 text-blue-600" />
-                Exchange Rates Management
+          <Card className="border-0 shadow-lg bg-white/90 backdrop-blur-sm">
+            <CardHeader className="pb-4 border-b border-gray-100">
+              <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <DollarSign className="h-5 w-5 text-blue-600" />
+                </div>
+                <div>
+                  <div className="font-semibold">Exchange Rates Management</div>
+                  <p className="text-sm font-normal text-gray-600 mt-1">
+                    Configure rates used throughout the platform
+                  </p>
+                </div>
               </CardTitle>
-              <p className="text-sm text-gray-600">
-                Configure exchange rates used throughout the platform for calculations and trading
-              </p>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4 sm:p-6">
               {/* Warning Alert */}
-              <Alert className="mb-6">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>
-                  Changing exchange rates will affect all new trades, deposits, and calculations. 
-                  Existing trades will continue using their original rates.
+              <Alert className="mb-4 sm:mb-6 border-amber-200 bg-amber-50">
+                <AlertCircle className="h-4 w-4 text-amber-600" />
+                <AlertDescription className="text-sm">
+                  <span className="font-medium">Important:</span> Rate changes affect new trades only. 
+                  <span className="hidden sm:inline">Existing trades keep their original rates.</span>
                 </AlertDescription>
               </Alert>
 
@@ -187,57 +195,64 @@ export default function AdminSettings() {
 
               {/* Exchange Rates List */}
               {ratesLoading ? (
-                <div className="grid gap-4">
+                <div className="space-y-4">
                   {[1, 2].map(i => (
-                    <div key={i} className="border rounded-lg p-4">
+                    <div key={i} className="border border-gray-200 rounded-xl p-4 sm:p-6 bg-white/50">
                       <div className="animate-pulse">
-                        <div className="h-4 bg-gray-200 rounded w-1/4 mb-2"></div>
-                        <div className="h-6 bg-gray-200 rounded w-1/3 mb-4"></div>
-                        <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className="h-10 w-10 bg-gray-200 rounded-lg"></div>
+                          <div className="flex-1">
+                            <div className="h-4 bg-gray-200 rounded w-1/3 mb-2"></div>
+                            <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                          </div>
+                        </div>
+                        <div className="h-8 bg-gray-200 rounded w-1/4"></div>
                       </div>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="grid gap-4">
+                <div className="space-y-4">
                   {rates.map((rate: any) => (
-                    <div key={rate.id} className="border rounded-lg p-4 bg-white">
-                      <div className="flex items-center justify-between mb-4">
+                    <div key={rate.id} className="border border-gray-200 rounded-xl p-4 sm:p-6 bg-white/80 backdrop-blur-sm hover:bg-white/90 transition-all">
+                      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-4">
                         <div className="flex items-center gap-3">
-                          <div className="p-2 bg-gray-100 rounded-lg">
+                          <div className="p-2 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg">
                             {getRateIcon(rate.name)}
                           </div>
-                          <div>
-                            <h3 className="font-medium text-lg">{rate.name.replace(/_/g, " ")}</h3>
-                            <p className="text-sm text-gray-600">{rate.description}</p>
+                          <div className="min-w-0 flex-1">
+                            <h3 className="font-semibold text-base sm:text-lg truncate">{rate.name.replace(/_/g, " ")}</h3>
+                            <p className="text-xs sm:text-sm text-gray-600 mt-1">{rate.description}</p>
                           </div>
                         </div>
-                        <Badge variant="outline" className="text-green-600">
+                        <Badge variant="outline" className="text-green-600 border-green-200 bg-green-50 self-start">
+                          <div className="h-2 w-2 bg-green-500 rounded-full mr-1"></div>
                           Active
                         </Badge>
                       </div>
                       
-                      <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                          <div className="flex-1">
-                            <Label className="text-sm font-medium text-gray-700">Current Rate</Label>
-                            {editingRates[rate.name] !== undefined ? (
-                              <div className="flex items-center gap-2 mt-1">
-                                <Input
-                                  type="number"
-                                  step="any"
-                                  value={editingRates[rate.name]}
-                                  onChange={(e) => setEditingRates(prev => ({
-                                    ...prev,
-                                    [rate.name]: e.target.value
-                                  }))}
-                                  className="w-40"
-                                  placeholder="Enter new rate"
-                                />
+                      <div className="space-y-3">
+                        <div>
+                          <Label className="text-sm font-medium text-gray-700 mb-2 block">Current Rate</Label>
+                          {editingRates[rate.name] !== undefined ? (
+                            <div className="flex flex-col sm:flex-row gap-2">
+                              <Input
+                                type="number"
+                                step="any"
+                                value={editingRates[rate.name]}
+                                onChange={(e) => setEditingRates(prev => ({
+                                  ...prev,
+                                  [rate.name]: e.target.value
+                                }))}
+                                className="flex-1 sm:max-w-xs"
+                                placeholder="Enter new rate"
+                              />
+                              <div className="flex gap-2">
                                 <Button
                                   size="sm"
                                   onClick={() => handleSaveRate(rate.name)}
                                   disabled={savingRates[rate.name]}
+                                  className="flex-1 sm:flex-none"
                                 >
                                   {savingRates[rate.name] ? (
                                     <RefreshCw className="h-4 w-4 mr-1 animate-spin" />
@@ -251,29 +266,35 @@ export default function AdminSettings() {
                                   variant="outline"
                                   onClick={() => handleCancelEdit(rate.name)}
                                   disabled={savingRates[rate.name]}
+                                  className="flex-1 sm:flex-none"
                                 >
                                   Cancel
                                 </Button>
                               </div>
-                            ) : (
-                              <div className="flex items-center gap-2 mt-1">
-                                <p className="text-2xl font-bold text-gray-900">
-                                  {getRateDisplay(rate.name, rate.rate)}
-                                </p>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => handleEditRate(rate.name, rate.rate)}
-                                >
-                                  Edit
-                                </Button>
+                            </div>
+                          ) : (
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                              <div className="text-2xl sm:text-3xl font-bold text-gray-900">
+                                {getRateDisplay(rate.name, rate.rate)}
                               </div>
-                            )}
-                          </div>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleEditRate(rate.name, rate.rate)}
+                                className="self-start sm:self-auto"
+                              >
+                                <Settings className="h-4 w-4 mr-1" />
+                                Edit Rate
+                              </Button>
+                            </div>
+                          )}
                         </div>
                         
-                        <div className="text-xs text-gray-500 space-y-1">
-                          <p>{getRateDescription(rate.name)}</p>
+                        <div className="text-xs text-gray-500 space-y-1 pt-2 border-t border-gray-100">
+                          <p className="flex items-center gap-1">
+                            <Smartphone className="h-3 w-3" />
+                            {getRateDescription(rate.name)}
+                          </p>
                           <p>Last updated: {new Date(rate.updatedAt).toLocaleString()}</p>
                         </div>
                       </div>
@@ -283,31 +304,40 @@ export default function AdminSettings() {
               )}
 
               {rates.length === 0 && !ratesLoading && (
-                <div className="text-center py-8">
-                  <DollarSign className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No exchange rates found</h3>
-                  <p className="text-gray-600">Exchange rates will be automatically created when the system starts.</p>
+                <div className="text-center py-8 sm:py-12">
+                  <div className="p-4 bg-gray-100 rounded-full w-fit mx-auto mb-4">
+                    <DollarSign className="h-8 w-8 sm:h-12 sm:w-12 text-gray-400" />
+                  </div>
+                  <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">No exchange rates found</h3>
+                  <p className="text-sm sm:text-base text-gray-600 max-w-md mx-auto">Exchange rates will be automatically created when the system starts.</p>
                 </div>
               )}
             </CardContent>
           </Card>
 
           {/* Future Settings Sections */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Settings className="h-5 w-5 text-gray-600" />
-                Platform Settings
+          <Card className="border-0 shadow-lg bg-white/90 backdrop-blur-sm">
+            <CardHeader className="pb-4 border-b border-gray-100">
+              <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+                <div className="p-2 bg-gray-100 rounded-lg">
+                  <Settings className="h-5 w-5 text-gray-600" />
+                </div>
+                <div>
+                  <div className="font-semibold">Platform Settings</div>
+                  <p className="text-sm font-normal text-gray-600 mt-1">
+                    Additional platform configuration options
+                  </p>
+                </div>
               </CardTitle>
-              <p className="text-sm text-gray-600">
-                Additional platform configuration options
-              </p>
             </CardHeader>
-            <CardContent>
-              <div className="text-center py-8 text-gray-500">
-                <Settings className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                <p>Additional settings will be added here in future updates</p>
-                <p className="text-sm">Such as: Platform fees, Trading limits, KYC requirements, etc.</p>
+            <CardContent className="p-4 sm:p-6">
+              <div className="text-center py-8 sm:py-12 text-gray-500">
+                <div className="p-4 bg-gray-100 rounded-full w-fit mx-auto mb-4">
+                  <Settings className="h-8 w-8 sm:h-12 sm:w-12 text-gray-300" />
+                </div>
+                <p className="font-medium mb-2">Coming Soon</p>
+                <p className="text-sm sm:text-base mb-1">Additional settings will be added here in future updates</p>
+                <p className="text-xs sm:text-sm">Such as: Platform fees, Trading limits, KYC requirements, etc.</p>
               </div>
             </CardContent>
           </Card>

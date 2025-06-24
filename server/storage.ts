@@ -191,24 +191,30 @@ export class DatabaseStorage implements IStorage {
         console.log("✅ Created trader2 user (no balance)");
       }
 
-      // Seed exchange rates if they don't exist
-      const existingRates = await db.select().from(exchangeRates);
-      if (existingRates.length === 0) {
-        await db.insert(exchangeRates).values([
-          {
-            name: "USDT_TO_NGN",
-            rate: "1485.00000000",
-            description: "USDT to Nigerian Naira exchange rate",
-            isActive: true
-          },
-          {
-            name: "NGN_TO_USD", 
-            rate: "0.00067000",
-            description: "Nigerian Naira to USD exchange rate",
-            isActive: true
-          }
-        ]);
-        console.log("💱 Seeded initial exchange rates");
+      // Seed exchange rates if they don't exist - with error handling
+      try {
+        const existingRates = await db.select().from(exchangeRates);
+        if (existingRates.length === 0) {
+          await db.insert(exchangeRates).values([
+            {
+              name: "USDT_TO_NGN",
+              rate: "1485.00000000",
+              description: "USDT to Nigerian Naira exchange rate",
+              isActive: true
+            },
+            {
+              name: "NGN_TO_USD", 
+              rate: "0.00067000",
+              description: "Nigerian Naira to USD exchange rate",
+              isActive: true
+            }
+          ]);
+          console.log("💱 Seeded initial exchange rates");
+        } else {
+          console.log("💱 Exchange rates already exist");
+        }
+      } catch (error) {
+        console.log("⚠️ Exchange rates table may not exist yet - will be created on next restart");
       }
 
       // Always refresh offers to ensure they exist

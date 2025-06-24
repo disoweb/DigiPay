@@ -48,6 +48,7 @@ export function Navbar() {
     { name: "Users", href: "/admin/users", icon: User },
     { name: "Wallet", href: "/admin/wallet", icon: Wallet },
     { name: "Approvals", href: "/admin/approvals", icon: Settings },
+    { name: "Settings", href: "/admin/settings", icon: Settings },
     { name: "Guide", href: "/admin/guide", icon: Settings },
     { name: "Disputes", href: "/admin/disputes", icon: Settings },
   ];
