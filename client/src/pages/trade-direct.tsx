@@ -88,32 +88,39 @@ export default function DirectTrade() {
     return (
       <div className="min-h-screen bg-gray-50">
         <Navbar />
-        <div className="container mx-auto px-4 py-8 text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p>Loading offer details...</p>
+        <div className="container mx-auto px-4 py-8">
+          <Card className="max-w-md mx-auto">
+            <CardContent className="p-6 text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <h2 className="text-xl font-semibold mb-2">Loading offer...</h2>
+              <p className="text-gray-600">Please wait while we fetch the offer details.</p>
+            </CardContent>
+          </Card>
         </div>
       </div>
     );
   }
 
-  if (!currentOffer && !isLoading) {
+  if (offerError || !currentOffer) {
     return (
       <div className="min-h-screen bg-gray-50">
         <Navbar />
         <div className="container mx-auto px-4 py-8">
-          <Card>
+          <Card className="max-w-md mx-auto">
             <CardContent className="p-6 text-center">
               <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-              <div className="space-y-2 mb-4">
-                <p className="text-gray-500">Offer not found</p>
-                <p className="text-sm text-gray-400">Offer ID: {offerId || 'undefined'}</p>
-                <p className="text-sm text-gray-400">Is Loading: {isLoading.toString()}</p>
-                <p className="text-sm text-gray-400">Has Selected Offer: {!!selectedOffer ? 'yes' : 'no'}</p>
-                <p className="text-sm text-gray-400">Query Error: {queryError?.message || 'none'}</p>
-                <p className="text-sm text-gray-400">Error: {error || 'none'}</p>
-              </div>
-              <Button onClick={() => setLocation('/dashboard')}>
-                Back to Dashboard
+              <h2 className="text-xl font-semibold mb-2">Offer not found</h2>
+              <p className="text-gray-600 mb-4">
+                The requested offer could not be loaded. It may have been removed or is no longer available.
+              </p>
+              <p className="text-sm text-gray-500 mb-2">Offer ID: {offerId || 'undefined'}</p>
+              <p className="text-sm text-gray-500 mb-2">Error: {offerError?.message || 'Offer not found'}</p>
+              <Button 
+                onClick={() => setLocation("/market")}
+                className="w-full"
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to Market
               </Button>
             </CardContent>
           </Card>
