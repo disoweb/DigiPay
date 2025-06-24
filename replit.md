@@ -38,6 +38,7 @@ A peer-to-peer cryptocurrency trading platform enabling direct trading between u
   - **NEW**: Improved admin navigation with centralized settings management accessible from main admin dashboard
   - **NEW**: Auto-calculation feature - when updating one exchange rate, the system automatically calculates and stores the inverse rate (USDT_TO_NGN ↔ NGN_TO_USD)
   - **ENHANCED**: Exchange rate management with real-time inverse calculation, modern mobile-optimized UI, and proper API endpoints
+  - **NEW**: Consistent portfolio display across dashboard and wallet - same calculation logic, currency toggle, and visual design for unified user experience
 
 ## User Preferences
 - Non-technical user communication preferred
