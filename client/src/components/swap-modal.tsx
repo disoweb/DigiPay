@@ -144,8 +144,10 @@ export function SwapModal({ open, onOpenChange, nairaBalance, usdtBalance }: Swa
                   onClick={() => setFromCurrency("NGN")}
                 >
                   <CardContent className="p-4 text-center">
-                    <DollarSign className="h-6 w-6 mx-auto mb-2 text-green-600" />
-                    <p className="font-medium">Nigerian Naira</p>
+                    <div className="flex items-center justify-center gap-2 mb-2">
+                      <DollarSign className="h-6 w-6 text-green-600" />
+                      <p className="font-medium">NGN</p>
+                    </div>
                     <p className="text-sm text-gray-500">₦{parseFloat(nairaBalance).toLocaleString()}</p>
                   </CardContent>
                 </Card>
@@ -154,8 +156,10 @@ export function SwapModal({ open, onOpenChange, nairaBalance, usdtBalance }: Swa
                   onClick={() => setFromCurrency("USDT")}
                 >
                   <CardContent className="p-4 text-center">
-                    <Coins className="h-6 w-6 mx-auto mb-2 text-blue-600" />
-                    <p className="font-medium">USDT</p>
+                    <div className="flex items-center justify-center gap-2 mb-2">
+                      <Coins className="h-6 w-6 text-blue-600" />
+                      <p className="font-medium">USDT</p>
+                    </div>
                     <p className="text-sm text-gray-500">{parseFloat(usdtBalance).toFixed(6)}</p>
                   </CardContent>
                 </Card>
