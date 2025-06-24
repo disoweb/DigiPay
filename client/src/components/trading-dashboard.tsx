@@ -351,15 +351,18 @@ export function TradingDashboard() {
                         size="sm" 
                         variant="outline"
                         onClick={(e) => {
+                          e.preventDefault();
                           e.stopPropagation(); // Prevent card click
+                          console.log("Dashboard chat button clicked for trade:", trade.id);
+                          console.log("About to navigate to:", `/chat/${trade.id}`);
                           if (trade && trade.id) {
-                            console.log("Chat button clicked - navigating to chat for trade ID:", trade.id);
                             setLocation(`/chat/${trade.id}`);
+                            console.log("Navigation command sent to:", `/chat/${trade.id}`);
                           } else {
                             console.error("Invalid trade data for chat navigation:", trade);
                           }
                         }}
-                        className="px-3 py-1 h-7 text-xs ml-auto"
+                        className="px-3 py-1 h-7 text-xs ml-auto z-10 relative"
                       >
                         <MessageCircle className="h-3 w-3 mr-1" />
                         Chat
