@@ -33,7 +33,8 @@ import {
   Plus,
   Trash2,
   RefreshCw,
-  ChevronDown
+  ChevronDown,
+  Key
 } from "lucide-react";
 
 interface User {
@@ -84,9 +85,12 @@ export default function AdminUsersFixed() {
   const [showActionModal, setShowActionModal] = useState(false);
   const [showUserDetail, setShowUserDetail] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [actionType, setActionType] = useState<"ban" | "freeze" | "view" | "edit" | "delete">("view");
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [actionType, setActionType] = useState<"ban" | "freeze" | "view" | "edit" | "delete" | "password">("view");
   const [actionReason, setActionReason] = useState("");
   const [dropdownOpen, setDropdownOpen] = useState<number | null>(null);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
   // Close dropdown when clicking outside
   React.useEffect(() => {
@@ -109,6 +113,38 @@ export default function AdminUsersFixed() {
     usdtBalance: "",
     isAdmin: false,
     kycVerified: false
+  });
+
+  // Password update mutation
+  const passwordUpdateMutation = useMutation({
+    mutationFn: async ({ userId, newPassword }: { userId: number; newPassword: string }) => {
+      const response = await apiRequest("PATCH", `/api/admin/users/${userId}/password`, {
+        newPassword
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to update password");
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Password Updated",
+        description: "User password has been successfully updated",
+        className: "border-green-200 bg-green-50 text-green-800",
+      });
+      setShowPasswordModal(false);
+      setNewPassword("");
+      setConfirmPassword("");
+      setSelectedUser(null);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Password Update Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
   });
 
   const { data: users = [], isLoading, error, refetch } = useQuery({
@@ -297,7 +333,7 @@ export default function AdminUsersFixed() {
     `${user.first_name || ''} ${user.last_name || ''}`.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleAction = (user: User, action: "ban" | "freeze" | "view" | "edit" | "delete") => {
+  const handleAction = (user: User, action: "ban" | "freeze" | "view" | "edit" | "delete" | "password") => {
     setSelectedUser(user);
     setActionType(action);
     if (action === "view") {
@@ -315,6 +351,8 @@ export default function AdminUsersFixed() {
         kycVerified: user.kyc_verified
       });
       setShowEditModal(true);
+    } else if (action === "password") {
+      setShowPasswordModal(true);
     } else {
       setShowActionModal(true);
     }
@@ -534,6 +572,15 @@ export default function AdminUsersFixed() {
                                 className="w-full text-left px-4 py-2 hover:bg-gray-100"
                               >
                                 Edit User
+                              </button>
+                              <button
+                                onClick={() => {
+                                  handleAction(user, "password");
+                                  setDropdownOpen(null);
+                                }}
+                                className="w-full text-left px-4 py-2 hover:bg-gray-100 text-purple-600"
+                              >
+                                Reset Password
                               </button>
                               {!user.is_admin && (
                                 <>
