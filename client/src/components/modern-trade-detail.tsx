@@ -35,7 +35,9 @@ import {
   CreditCard,
   Banknote,
   RefreshCw,
-  CheckCircle2
+  CheckCircle2,
+  Star,
+  Flag
 } from "lucide-react";
 
 interface Trade {
