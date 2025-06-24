@@ -14,7 +14,7 @@ A peer-to-peer cryptocurrency trading platform enabling direct trading between u
 ## Recent Changes
 - **2025-06-24**: Enhanced animations with dynamic hero text rotation and refined user experience
   - Removed entrance animations from hero section for immediate content visibility
-  - Added dynamic text rotation for hero subtitle cycling through: "Complete Security", "Complete Confidence", "Complete Trust", "Complete Protection", "Complete Peace of Mind"
+  - Added dynamic text rotation for hero subtitle cycling through: "Complete Security", "Complete Confidence", "Complete Trust"
   - Retained hover effects with scale transforms, rotations, and color transitions on interactive elements
   - Maintained animated live market data with real-time rate updates and trader count changes
   - Kept card hover animations with lift effects (-translate-y-2) and enhanced shadows
@@ -23,6 +23,8 @@ A peer-to-peer cryptocurrency trading platform enabling direct trading between u
   - Kept animated FAQ expansion with smooth slide-in-from-top transitions
   - Retained animated pulse effects on security indicators and online status
   - All animations use smooth duration-300 to duration-700 timing for professional feel
+  - Fixed header button spacing between Sign In and Get Started buttons
+  - Hero buttons are w-auto width instead of full width on mobile
 - **2025-06-24**: Enhanced trade management with expiration handling and improved UI/UX
   - Added "Expired" tab to trades page showing expired trades for 24 hours with reopen functionality
   - Enhanced status badge colors across all components (green for completed, red for expired/disputed, blue for payment_made, yellow for pending)
