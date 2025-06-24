@@ -339,7 +339,7 @@ export function ModernTradeManagement() {
       <div className="p-4 bg-white border-b">
         <ScrollArea className="w-full">
           <div className="flex gap-3 pb-2 overflow-x-auto">
-            {quickFilters.filter(filter => (filter.count > 0 || filter.key === 'all')).map((filter) => {
+            {quickFilters.filter(filter => filter.count > 0).map((filter) => {
               const Icon = filter.icon;
               const isActive = selectedStatus === filter.key;
               return (
@@ -362,6 +362,25 @@ export function ModernTradeManagement() {
                 </Button>
               );
             })}
+            {/* Always show "All" filter if not already visible */}
+            {!quickFilters.filter(filter => filter.count > 0).find(f => f.key === 'all') && (
+              <Button
+                variant={selectedStatus === 'all' ? "default" : "outline"}
+                size="sm"
+                onClick={() => setSelectedStatus('all')}
+                className={`flex-shrink-0 whitespace-nowrap ${selectedStatus === 'all' ? '' : 'border-gray-200'}`}
+              >
+                <Users className={`h-3 w-3 mr-2 ${selectedStatus === 'all' ? 'text-white' : 'text-purple-600'}`} />
+                <span className="hidden sm:inline">All</span>
+                <span className="sm:hidden">All</span>
+                <Badge 
+                  variant="secondary" 
+                  className={`ml-2 ${selectedStatus === 'all' ? 'bg-white/20 text-white' : ''}`}
+                >
+                  {trades.length}
+                </Badge>
+              </Button>
+            )}
           </div>
         </ScrollArea>
       </div>
@@ -475,7 +494,7 @@ export function ModernTradeManagement() {
                             </AvatarFallback>
                           </Avatar>
                           <span className="font-medium text-sm text-gray-900 truncate max-w-24">
-                            {partner?.email?.split('@')[0] || 'Unknown'}
+                            {partner?.username || partner?.email?.split('@')[0] || 'Unknown'}
                           </span>
                         </div>
                       </div>
