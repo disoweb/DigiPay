@@ -86,6 +86,7 @@ export function ModernTradeDetail() {
       return response.json();
     },
     enabled: !!user && !!id,
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
 
   const { data: trade, isLoading, error, refetch } = useQuery<Trade>({
@@ -95,15 +96,11 @@ export function ModernTradeDetail() {
       if (!response.ok) throw new Error('Failed to fetch trade');
       return response.json();
     },
-    refetchInterval: 10000,
-    enabled: !!user && !!id, // Only run query when user is authenticated and ID exists
-    retry: (failureCount, error: any) => {
-      if (error?.message?.includes('401') || error?.message?.includes('Unauthorized')) {
-        return false;
-      }
-      return failureCount < 2;
-    },
-    retryDelay: 1000,
+    refetchInterval: false, // Disable automatic refetching to prevent infinite loops
+    enabled: !!user && !!id && id !== 'undefined',
+    retry: false, // Disable retry to prevent loops
+    staleTime: 30000, // Cache for 30 seconds
+    gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
   });
 
   const markPaymentMadeMutation = useMutation({
@@ -144,8 +141,10 @@ export function ModernTradeDetail() {
     },
   });
 
-  // Always call useEffect hooks consistently
+  // Timer effect for payment deadline
   useEffect(() => {
+    if (!trade?.paymentDeadline) return;
+    
     let interval: NodeJS.Timeout | null = null;
 
     if (trade?.paymentDeadline && trade.status === 'payment_pending') {
@@ -185,16 +184,25 @@ export function ModernTradeDetail() {
     };
   }, [trade?.paymentDeadline, trade?.status]);
 
-  // Define trade-related variables after all hooks
-  const isBuyer = trade?.buyerId === user?.id;
-  const isSeller = trade?.sellerId === user?.id;
-  const isUserInTrade = isBuyer || isSeller;
-  const partner = isBuyer ? trade?.seller : trade?.buyer;
-
-  // Define action capabilities
-  const canMarkPaymentMade = user && trade && isBuyer && trade.status === 'payment_pending';
-  const canComplete = user && trade && isSeller && trade.status === 'payment_made';
-  const canCancel = user && trade && isUserInTrade && ['payment_pending', 'payment_made'].includes(trade.status);
+  // Memoize trade-related calculations to prevent re-renders
+  const tradeData = useMemo(() => {
+    if (!trade || !user) return null;
+    
+    const isBuyer = trade.buyerId === user.id;
+    const isSeller = trade.sellerId === user.id;
+    const isUserInTrade = isBuyer || isSeller;
+    const partner = isBuyer ? trade.seller : trade.buyer;
+    
+    return {
+      isBuyer,
+      isSeller,
+      isUserInTrade,
+      partner,
+      canMarkPaymentMade: isBuyer && trade.status === 'payment_pending',
+      canComplete: isSeller && trade.status === 'payment_made',
+      canCancel: isUserInTrade && ['payment_pending', 'payment_made'].includes(trade.status)
+    };
+  }, [trade, user]);
 
   // Show loading while authentication is being checked
   if (!user) {
@@ -284,22 +292,28 @@ export function ModernTradeDetail() {
     );
   }
 
-  // Mock online status - in real app this would come from WebSocket or API
-  const getOnlineStatus = () => {
-    const lastSeen = Math.floor(Math.random() * 10); // Random minutes for demo
-    if (lastSeen < 1) return { status: 'online', text: 'Online', color: 'bg-green-500', textColor: 'text-green-600' };
-    if (lastSeen < 5) return { status: 'recent', text: 'Active', color: 'bg-yellow-500', textColor: 'text-yellow-600' };
-    return { status: 'offline', text: 'Offline', color: 'bg-gray-400', textColor: 'text-gray-500' };
-  };
+  // Return early if no trade data is available
+  if (!tradeData) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <Card className="w-full max-w-md">
+          <CardContent className="p-6 text-center">
+            <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+            <h2 className="text-xl font-semibold mb-2">Access Denied</h2>
+            <p className="text-gray-600 mb-4">You don't have permission to view this trade.</p>
+            <Button onClick={() => setLocation('/trades')}>
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Trades
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
-  const onlineStatus = getOnlineStatus();
-
-  // Mock completion rate - in real app this would come from user stats
-  const getCompletionRate = () => {
-    return Math.floor(Math.random() * 20) + 80; // 80-100% for demo
-  };
-
-  const completionRate = getCompletionRate();
+  // Static values to prevent re-renders
+  const onlineStatus = { status: 'offline', text: 'Offline', color: 'bg-gray-400', textColor: 'text-gray-500' };
+  const completionRate = 95;
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -419,19 +433,19 @@ export function ModernTradeDetail() {
                 <div className="relative">
                   <Avatar className="h-8 w-8">
                     <AvatarFallback className="bg-blue-100 text-blue-600 text-xs">
-                      {(partner?.email || 'U').charAt(0).toUpperCase()}
+                      {(tradeData?.partner?.email || 'U').charAt(0).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                   <div className={`absolute -bottom-0.5 -right-0.5 w-2 h-2 ${onlineStatus.color} border border-white rounded-full`}></div>
                 </div>
                 <div>
-                  <p className="font-medium text-sm">{partner?.email?.split('@')[0] || 'Unknown'}</p>
+                  <p className="font-medium text-sm">{tradeData?.partner?.email?.split('@')[0] || 'Unknown'}</p>
                   <div className="flex items-center gap-1">
                     <span className={`text-xs ${onlineStatus.textColor}`}>{onlineStatus.text}</span>
-                    {partner?.averageRating && (
+                    {tradeData?.partner?.averageRating && (
                       <>
                         <span className="text-xs text-gray-400">•</span>
-                        <span className="text-xs text-yellow-600">★{parseFloat(partner.averageRating).toFixed(1)}</span>
+                        <span className="text-xs text-yellow-600">★{parseFloat(tradeData.partner.averageRating).toFixed(1)}</span>
                       </>
                     )}
                   </div>
