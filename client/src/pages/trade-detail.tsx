@@ -376,6 +376,16 @@ export default function TradeDetail() {
               <Card>
                 <CardContent className="pt-4">
                   <div className="flex flex-col sm:flex-row gap-3">
+                    {/* Chat Button - Always available for trade participants */}
+                    <Button 
+                      onClick={() => setLocation(`/chat/${trade.id}`)}
+                      variant="outline"
+                      className="flex-1 flex items-center gap-2"
+                    >
+                      <MessageCircle className="h-4 w-4" />
+                      Chat with {isBuyer ? "Seller" : "Buyer"}
+                    </Button>
+                    
                     {canComplete && (
                       <Button 
                         onClick={() => completeTradeMutation.mutate()}
