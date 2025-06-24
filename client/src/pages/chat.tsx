@@ -228,8 +228,8 @@ export default function ChatPage() {
         />
       </div>
 
-      {/* Full-screen Chat */}
-      <div className="flex-1 min-h-0">
+      {/* Chat Component - Takes remaining space */}
+      <div className="flex-1 min-h-0 overflow-hidden">
         <RealTimeChat tradeId={trade.id} />
       </div>
     </div>
