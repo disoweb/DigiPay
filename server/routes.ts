@@ -3789,6 +3789,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get user's ratings received
+  app.get("/api/users/:userId/ratings", authenticateToken, async (req, res) => {
+    try {
+      const { userId } = req.params;
+      
+      const ratings = await storage.getUserRatings(parseInt(userId));
+      
+      res.json(ratings);
+    } catch (error) {
+      console.error("Get user ratings error:", error);
+      res.status(500).json({ error: "Failed to fetch user ratings" });
+    }
+  });
+
   app.post("/api/ratings", authenticateToken, async (req, res) => {
     try{
       const { tradeId, rating, comment } = req.body;

@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
+import { RatingForm } from "@/components/rating-form";
+import { DisputeResolution } from "@/components/dispute-resolution";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { useAuth } from "@/hooks/use-auth";
@@ -68,6 +70,21 @@ export function ModernTradeDetail() {
   const { toast } = useToast();
   const [timeLeft, setTimeLeft] = useState<string>("");
   const [isExpired, setIsExpired] = useState(false);
+  const [showRatingForm, setShowRatingForm] = useState(false);
+  const [showDisputeForm, setShowDisputeForm] = useState(false);
+  const [hasRated, setHasRated] = useState(false);
+
+  // Check if user has already rated this trade
+  const { data: existingRating } = useQuery({
+    queryKey: [`/api/trades/${id}/rating`],
+    queryFn: async () => {
+      const response = await apiRequest("GET", `/api/trades/${id}/rating`);
+      if (response.status === 404) return null;
+      if (!response.ok) throw new Error('Failed to fetch rating');
+      return response.json();
+    },
+    enabled: !!user && !!id,
+  });
 
   const { data: trade, isLoading, error, refetch } = useQuery<Trade>({
     queryKey: ['/api/trades', id],
@@ -108,6 +125,8 @@ export function ModernTradeDetail() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/trades', id] });
       toast({ title: "Success", description: "Trade completed successfully" });
+      // Show rating form after successful completion
+      setTimeout(() => setShowRatingForm(true), 1000);
     },
   });
 
@@ -613,6 +632,41 @@ export function ModernTradeDetail() {
               </Button>
             )}
 
+            {/* Rating Button for Completed Trades */}
+            {trade.status === 'completed' && !existingRating && (
+              <Button
+                onClick={() => setShowRatingForm(true)}
+                className="w-full h-10 bg-yellow-600 hover:bg-yellow-700 text-sm"
+              >
+                <Star className="h-3 w-3 mr-2" />
+                Rate Your Trading Partner
+              </Button>
+            )}
+
+            {/* Show rating if already rated */}
+            {trade.status === 'completed' && existingRating && (
+              <Card className="border-yellow-200 bg-yellow-50">
+                <CardContent className="p-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-yellow-800">You rated this trade:</span>
+                    <div className="flex items-center gap-1">
+                      {Array.from({ length: 5 }, (_, i) => (
+                        <Star
+                          key={i}
+                          className={`h-3 w-3 ${
+                            i < existingRating.rating ? "text-yellow-400 fill-current" : "text-gray-300"
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                  {existingRating.comment && (
+                    <p className="text-xs text-yellow-700 mt-1">{existingRating.comment}</p>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
             <div className="flex gap-2">
               <Button
                 variant="outline"
@@ -622,6 +676,18 @@ export function ModernTradeDetail() {
                 <MessageCircle className="h-3 w-3 mr-1" />
                 Chat
               </Button>
+              
+              {/* Dispute Button for Active Trades */}
+              {['payment_pending', 'payment_made'].includes(trade.status) && (
+                <Button
+                  variant="outline"
+                  onClick={() => setShowDisputeForm(true)}
+                  className="flex-1 h-8 border-red-300 text-red-600 hover:bg-red-50 text-xs"
+                >
+                  <Flag className="h-3 w-3 mr-1" />
+                  Dispute
+                </Button>
+              )}
               
               {canCancel && (
                 <Button
@@ -642,6 +708,33 @@ export function ModernTradeDetail() {
               )}
             </div>
           </div>
+        )}
+
+        {/* Rating Form Modal */}
+        {showRatingForm && trade && (
+          <RatingForm
+            tradeId={trade.id}
+            ratedUserId={isBuyer ? trade.seller?.id : trade.buyer?.id}
+            ratedUserEmail={isBuyer ? trade.seller?.email : trade.buyer?.email}
+            open={showRatingForm}
+            onOpenChange={setShowRatingForm}
+            onSubmit={() => {
+              queryClient.invalidateQueries({ queryKey: [`/api/trades/${id}/rating`] });
+              setShowRatingForm(false);
+            }}
+          />
+        )}
+
+        {/* Dispute Form Modal */}
+        {showDisputeForm && trade && (
+          <DisputeResolution
+            trade={trade as any}
+            userRole={isBuyer ? 'buyer' : 'seller'}
+            onDisputeRaised={() => {
+              refetch();
+              setShowDisputeForm(false);
+            }}
+          />
         )}
       </div>
     </div>

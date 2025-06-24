@@ -4,10 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { User, Settings, Mail, Phone, MapPin, CheckCircle, XCircle, Loader2, ArrowLeft } from "lucide-react";
+import { User, Settings, Mail, Phone, MapPin, CheckCircle, XCircle, Loader2, ArrowLeft, Star, TrendingUp, Shield, Flag } from "lucide-react";
 import { useLocation } from "wouter";
 
 export default function ProfilePage() {
@@ -21,6 +23,39 @@ export default function ProfilePage() {
   const [username, setUsername] = useState(user?.username || "");
   const [userLocation, setUserLocation] = useState(user?.location || "");
   const [phone, setPhone] = useState(user?.phone || "");
+
+  // Fetch user's trading data
+  const { data: userTrades = [] } = useQuery({
+    queryKey: ["/api/trades"],
+    queryFn: async () => {
+      const response = await apiRequest("GET", "/api/trades");
+      if (!response.ok) throw new Error("Failed to fetch trades");
+      return response.json();
+    },
+    enabled: !!user,
+  });
+
+  // Fetch user's ratings received
+  const { data: userRatings = [] } = useQuery({
+    queryKey: [`/api/users/${user?.id}/ratings`],
+    queryFn: async () => {
+      const response = await apiRequest("GET", `/api/users/${user?.id}/ratings`);
+      if (!response.ok) throw new Error("Failed to fetch ratings");
+      return response.json();
+    },
+    enabled: !!user,
+  });
+
+  // Fetch all ratings to show what user has given
+  const { data: allRatings = [] } = useQuery({
+    queryKey: ["/api/ratings"],
+    queryFn: async () => {
+      const response = await apiRequest("GET", "/api/ratings");
+      if (!response.ok) throw new Error("Failed to fetch all ratings");
+      return response.json();
+    },
+    enabled: !!user,
+  });
   const [usernameStatus, setUsernameStatus] = useState<{
     checking: boolean;
     available: boolean | null;
@@ -302,65 +337,321 @@ export default function ProfilePage() {
           </CardContent>
         </Card>
 
-        {/* Account Information */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <Mail className="w-5 h-5" />
-              <span>Account Information</span>
-            </CardTitle>
-            <CardDescription>
-              Your account details and verification status.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label>Email Address</Label>
-              <Input
-                value={user.email}
-                disabled
-                className="bg-muted"
-              />
-              <p className="text-sm text-muted-foreground mt-1">
-                Email cannot be changed. Contact support if needed.
-              </p>
-            </div>
-            
-            <div>
-              <Label>Account Balance</Label>
-              <div className="grid grid-cols-2 gap-2">
-                <Input
-                  value={`₦${parseFloat(user.nairaBalance || "0").toLocaleString()}`}
-                  disabled
-                  className="bg-muted"
-                />
-                <Input
-                  value={`${parseFloat(user.usdtBalance || "0").toFixed(2)} USDT`}
-                  disabled
-                  className="bg-muted"
-                />
-              </div>
-            </div>
-            
-            <div>
-              <Label>KYC Status</Label>
-              <Input
-                value={user.kycVerified ? "Verified" : "Not Verified"}
-                disabled
-                className={user.kycVerified ? "bg-green-50 text-green-700" : "bg-yellow-50 text-yellow-700"}
-              />
-            </div>
-            
-            <div>
-              <Label>Member Since</Label>
-              <Input
-                value={new Date(user.createdAt || "").toLocaleDateString()}
-                disabled
-                className="bg-muted"
-              />
-            </div>
-          </CardContent>
-        </Card>
+        {/* Enhanced Profile with Tabs */}
+        <Tabs defaultValue="account" className="w-full">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="account">Account</TabsTrigger>
+            <TabsTrigger value="trading">Trading</TabsTrigger>
+            <TabsTrigger value="ratings">Ratings</TabsTrigger>
+            <TabsTrigger value="disputes">History</TabsTrigger>
+          </TabsList>
+
+          {/* Account Tab */}
+          <TabsContent value="account" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Mail className="w-5 h-5" />
+                  <span>Account Information</span>
+                </CardTitle>
+                <CardDescription>
+                  Your account details and verification status.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <Label>Email Address</Label>
+                  <Input
+                    value={user.email}
+                    disabled
+                    className="bg-muted"
+                  />
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Email cannot be changed. Contact support if needed.
+                  </p>
+                </div>
+                
+                <div>
+                  <Label>Account Balance</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Input
+                      value={`₦${parseFloat(user.nairaBalance || "0").toLocaleString()}`}
+                      disabled
+                      className="bg-muted"
+                    />
+                    <Input
+                      value={`${parseFloat(user.usdtBalance || "0").toFixed(2)} USDT`}
+                      disabled
+                      className="bg-muted"
+                    />
+                  </div>
+                </div>
+                
+                <div>
+                  <Label>KYC Status</Label>
+                  <Input
+                    value={user.kycVerified ? "Verified" : "Not Verified"}
+                    disabled
+                    className={user.kycVerified ? "bg-green-50 text-green-700" : "bg-yellow-50 text-yellow-700"}
+                  />
+                </div>
+                
+                <div>
+                  <Label>Member Since</Label>
+                  <Input
+                    value={new Date(user.createdAt || "").toLocaleDateString()}
+                    disabled
+                    className="bg-muted"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Trading Tab */}
+          <TabsContent value="trading" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <TrendingUp className="w-5 h-5" />
+                  <span>Trading Statistics</span>
+                </CardTitle>
+                <CardDescription>
+                  Your trading performance and history.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="text-center p-3 bg-blue-50 rounded-lg">
+                    <p className="text-2xl font-bold text-blue-600">{userTrades.length}</p>
+                    <p className="text-sm text-blue-700">Total Trades</p>
+                  </div>
+                  <div className="text-center p-3 bg-green-50 rounded-lg">
+                    <p className="text-2xl font-bold text-green-600">
+                      {userTrades.filter((t: any) => t.status === 'completed').length}
+                    </p>
+                    <p className="text-sm text-green-700">Completed</p>
+                  </div>
+                  <div className="text-center p-3 bg-yellow-50 rounded-lg">
+                    <p className="text-2xl font-bold text-yellow-600">
+                      {userRatings.length > 0 ? (userRatings.reduce((sum: number, r: any) => sum + r.rating, 0) / userRatings.length).toFixed(1) : "0"}
+                    </p>
+                    <p className="text-sm text-yellow-700">Avg Rating</p>
+                  </div>
+                  <div className="text-center p-3 bg-purple-50 rounded-lg">
+                    <p className="text-2xl font-bold text-purple-600">{userRatings.length}</p>
+                    <p className="text-sm text-purple-700">Reviews</p>
+                  </div>
+                </div>
+
+                {/* Recent Trades */}
+                <div>
+                  <h4 className="font-medium mb-3">Recent Trades</h4>
+                  <div className="space-y-2 max-h-64 overflow-y-auto">
+                    {userTrades.slice(0, 5).map((trade: any) => (
+                      <div key={trade.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div>
+                          <p className="font-medium">Trade #{trade.id}</p>
+                          <p className="text-sm text-gray-600">
+                            {parseFloat(trade.amount).toFixed(2)} USDT @ ₦{parseFloat(trade.rate).toLocaleString()}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <Badge className={
+                            trade.status === 'completed' ? 'bg-green-100 text-green-800' :
+                            trade.status === 'disputed' ? 'bg-red-100 text-red-800' :
+                            'bg-blue-100 text-blue-800'
+                          }>
+                            {trade.status}
+                          </Badge>
+                          <p className="text-xs text-gray-500 mt-1">
+                            {new Date(trade.createdAt).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                    {userTrades.length === 0 && (
+                      <p className="text-gray-500 text-center py-4">No trades yet</p>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Ratings Tab */}
+          <TabsContent value="ratings" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Star className="w-5 h-5" />
+                  <span>Ratings & Reviews</span>
+                </CardTitle>
+                <CardDescription>
+                  Ratings you've received and given to trading partners.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Ratings Received */}
+                <div>
+                  <h4 className="font-medium mb-3 flex items-center gap-2">
+                    <Shield className="w-4 h-4" />
+                    Ratings Received ({userRatings.length})
+                  </h4>
+                  <div className="space-y-3 max-h-64 overflow-y-auto">
+                    {userRatings.map((rating: any) => (
+                      <div key={rating.id} className="p-3 bg-gray-50 rounded-lg">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <div className="flex">
+                              {Array.from({ length: 5 }, (_, i) => (
+                                <Star
+                                  key={i}
+                                  className={`h-4 w-4 ${
+                                    i < rating.rating ? "text-yellow-400 fill-current" : "text-gray-300"
+                                  }`}
+                                />
+                              ))}
+                            </div>
+                            <span className="text-sm font-medium">({rating.rating}/5)</span>
+                          </div>
+                          <Badge variant="outline">Trade #{rating.tradeId}</Badge>
+                        </div>
+                        {rating.comment && (
+                          <p className="text-sm text-gray-600">{rating.comment}</p>
+                        )}
+                        <p className="text-xs text-gray-500 mt-2">
+                          {new Date(rating.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                    ))}
+                    {userRatings.length === 0 && (
+                      <p className="text-gray-500 text-center py-4">No ratings received yet</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Ratings Given */}
+                <div>
+                  <h4 className="font-medium mb-3 flex items-center gap-2">
+                    <Star className="w-4 h-4" />
+                    Ratings Given ({allRatings.filter((r: any) => r.rater?.id === user.id).length})
+                  </h4>
+                  <div className="space-y-3 max-h-64 overflow-y-auto">
+                    {allRatings.filter((r: any) => r.rater?.id === user.id).map((rating: any) => (
+                      <div key={rating.id} className="p-3 bg-blue-50 rounded-lg">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <div className="flex">
+                              {Array.from({ length: 5 }, (_, i) => (
+                                <Star
+                                  key={i}
+                                  className={`h-4 w-4 ${
+                                    i < rating.rating ? "text-yellow-400 fill-current" : "text-gray-300"
+                                  }`}
+                                />
+                              ))}
+                            </div>
+                            <span className="text-sm font-medium">({rating.rating}/5)</span>
+                          </div>
+                          <Badge variant="outline">Trade #{rating.tradeId}</Badge>
+                        </div>
+                        {rating.comment && (
+                          <p className="text-sm text-gray-600">{rating.comment}</p>
+                        )}
+                        <p className="text-xs text-gray-500 mt-2">
+                          Rated {rating.ratedUser?.email?.split('@')[0]} • {new Date(rating.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                    ))}
+                    {allRatings.filter((r: any) => r.rater?.id === user.id).length === 0 && (
+                      <p className="text-gray-500 text-center py-4">No ratings given yet</p>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* History Tab (including disputes) */}
+          <TabsContent value="disputes" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Flag className="w-5 h-5" />
+                  <span>Trade History & Disputes</span>
+                </CardTitle>
+                <CardDescription>
+                  Complete trading history including any disputes.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {userTrades.map((trade: any) => (
+                    <div key={trade.id} className="p-4 border rounded-lg">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-3">
+                          <Badge variant="outline">Trade #{trade.id}</Badge>
+                          <Badge className={
+                            trade.status === 'completed' ? 'bg-green-100 text-green-800' :
+                            trade.status === 'disputed' ? 'bg-red-100 text-red-800' :
+                            trade.status === 'cancelled' ? 'bg-gray-100 text-gray-800' :
+                            'bg-blue-100 text-blue-800'
+                          }>
+                            {trade.status}
+                          </Badge>
+                          {trade.status === 'disputed' && (
+                            <Badge variant="destructive" className="flex items-center gap-1">
+                              <Flag className="w-3 h-3" />
+                              Disputed
+                            </Badge>
+                          )}
+                        </div>
+                        <span className="text-sm text-gray-500">
+                          {new Date(trade.createdAt).toLocaleDateString()}
+                        </span>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                        <div>
+                          <p className="text-gray-600">Amount</p>
+                          <p className="font-medium">{parseFloat(trade.amount).toFixed(2)} USDT</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-600">Rate</p>
+                          <p className="font-medium">₦{parseFloat(trade.rate).toLocaleString()}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-600">Total</p>
+                          <p className="font-medium">₦{(parseFloat(trade.amount) * parseFloat(trade.rate)).toLocaleString()}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-600">Role</p>
+                          <p className="font-medium">{trade.buyerId === user.id ? 'Buyer' : 'Seller'}</p>
+                        </div>
+                      </div>
+
+                      {trade.disputeReason && (
+                        <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded">
+                          <p className="text-sm font-medium text-red-800 mb-1">Dispute Reason:</p>
+                          <p className="text-sm text-red-700">{trade.disputeReason}</p>
+                          {trade.disputeRaisedBy && (
+                            <p className="text-xs text-red-600 mt-1">
+                              Raised by: {trade.disputeRaisedBy}
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                  {userTrades.length === 0 && (
+                    <p className="text-gray-500 text-center py-4">No trading history</p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

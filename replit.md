@@ -12,12 +12,13 @@ A peer-to-peer cryptocurrency trading platform enabling direct trading between u
 - **Security**: JWT authentication, rate limiting, helmet security
 
 ## Recent Changes
-- **2025-01-22**: Fixed trade completion issues and real-time balance updates
-  - Updated trade completion endpoints to properly handle payment_made status
-  - Added WebSocket notifications for balance updates during trade completion
-  - Created transaction records for both buyer and seller on trade completion
-  - Fixed expiration status display to only show for active payment_pending trades
-  - Ensured real-time balance updates work across all trade completion flows
+- **2025-01-24**: Integrated comprehensive rating and dispute mechanisms into trade flow
+  - Added rating prompts after successful trade completion in ModernTradeDetail component
+  - Integrated dispute resolution buttons for active trades (payment_pending, payment_made)
+  - Enhanced user profile with tabbed interface showing trading stats, ratings received/given, and dispute history
+  - Added rating check functionality to prevent duplicate ratings
+  - Enhanced trade history display with dispute information and comprehensive trading statistics
+  - Created unified rating and dispute tracking across the platform
 
 ## User Preferences
 - Non-technical user communication preferred
