@@ -176,9 +176,9 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
-      {/* Mobile-optimized Header */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-3 flex-shrink-0">
+    <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900 overflow-hidden">
+      {/* Fixed Header */}
+      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-3 flex-shrink-0 sticky top-0 z-20 shadow-sm">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Button 
@@ -228,8 +228,8 @@ export default function ChatPage() {
         />
       </div>
 
-      {/* Chat Component - Takes remaining space */}
-      <div className="flex-1 min-h-0 overflow-hidden">
+      {/* Chat Component - Fixed height container */}
+      <div className="flex-1 min-h-0 relative">
         <RealTimeChat tradeId={trade.id} />
       </div>
     </div>

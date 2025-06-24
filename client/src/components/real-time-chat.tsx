@@ -231,7 +231,7 @@ export function RealTimeChat({ tradeId }: RealTimeChatProps) {
   }
 
   return (
-    <div className="flex flex-col h-full bg-white dark:bg-gray-900">
+    <div className="absolute inset-0 flex flex-col bg-white dark:bg-gray-900">
       {/* Fixed Connection Status Header */}
       <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-2 flex-shrink-0">
         <div className="flex items-center justify-between">
@@ -253,7 +253,7 @@ export function RealTimeChat({ tradeId }: RealTimeChatProps) {
       </div>
 
       {/* Scrollable Messages Area */}
-      <div className="flex-1 overflow-y-auto p-4 bg-gray-50 dark:bg-gray-900" style={{ height: 'calc(100vh - 200px)' }}>
+      <div className="flex-1 overflow-y-auto p-4 bg-gray-50 dark:bg-gray-900">
         {messages.length === 0 && pendingMessages.size === 0 ? (
           <div className="text-center py-8">
             <div className="bg-white dark:bg-gray-800 rounded-xl p-4 mx-auto max-w-xs shadow-sm">
