@@ -466,7 +466,36 @@ export class DatabaseStorage implements IStorage {
 
   // Trade methods
   async getTrades(): Promise<Trade[]> {
-    return await db.select().from(trades);
+    const tradesWithUsers = await db
+      .select({
+        trade: trades,
+        buyer: users,
+        seller: users,
+      })
+      .from(trades)
+      .leftJoin(users, eq(trades.buyerId, users.id))
+      .leftJoin(users, eq(trades.sellerId, users.id));
+
+    // Since we can't join the same table twice with different aliases easily,
+    // let's get trades and then fetch user data separately
+    const allTrades = await db.select().from(trades);
+    const userIds = new Set([
+      ...allTrades.map(t => t.buyerId),
+      ...allTrades.map(t => t.sellerId)
+    ]);
+    
+    const usersData = await db
+      .select()
+      .from(users)
+      .where(inArray(users.id, Array.from(userIds)));
+
+    const usersMap = new Map(usersData.map(u => [u.id, u]));
+
+    return allTrades.map(trade => ({
+      ...trade,
+      buyer: usersMap.get(trade.buyerId),
+      seller: usersMap.get(trade.sellerId)
+    }));
   }
 
   async getTrade(id: number): Promise<Trade | undefined> {
@@ -475,12 +504,39 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUserTrades(userId: number): Promise<Trade[]> {
-    return await db
+    const userTrades = await db
       .select()
       .from(trades)
       .where(or(eq(trades.buyerId, userId), eq(trades.sellerId, userId)))
       .orderBy(desc(trades.createdAt))
       .limit(20);
+
+    // Get all unique user IDs from the trades
+    const userIds = new Set([
+      ...userTrades.map(t => t.buyerId),
+      ...userTrades.map(t => t.sellerId)
+    ]);
+    
+    // Fetch user data for all participants
+    const usersData = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, [...userIds][0]));
+
+    // Get all users individually since we can't use inArray easily
+    const allUsers = [];
+    for (const id of userIds) {
+      const [user] = await db.select().from(users).where(eq(users.id, id));
+      if (user) allUsers.push(user);
+    }
+
+    const usersMap = new Map(allUsers.map(u => [u.id, u]));
+
+    return userTrades.map(trade => ({
+      ...trade,
+      buyer: usersMap.get(trade.buyerId),
+      seller: usersMap.get(trade.sellerId)
+    }));
   }
 
   async createTrade(insertTrade: InsertTrade): Promise<Trade> {
