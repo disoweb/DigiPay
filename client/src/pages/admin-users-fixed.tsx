@@ -33,8 +33,7 @@ import {
   Plus,
   Trash2,
   RefreshCw,
-  ChevronDown,
-  Key
+  ChevronDown
 } from "lucide-react";
 
 interface User {
@@ -85,12 +84,9 @@ export default function AdminUsersFixed() {
   const [showActionModal, setShowActionModal] = useState(false);
   const [showUserDetail, setShowUserDetail] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [showPasswordModal, setShowPasswordModal] = useState(false);
-  const [actionType, setActionType] = useState<"ban" | "freeze" | "view" | "edit" | "delete" | "password">("view");
+  const [actionType, setActionType] = useState<"ban" | "freeze" | "view" | "edit" | "delete">("view");
   const [actionReason, setActionReason] = useState("");
   const [dropdownOpen, setDropdownOpen] = useState<number | null>(null);
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
 
   // Close dropdown when clicking outside
   React.useEffect(() => {
@@ -295,30 +291,13 @@ export default function AdminUsersFixed() {
     },
   });
 
-  const updatePasswordMutation = useMutation({
-    mutationFn: async ({ userId, password }: { userId: number; password: string }) => {
-      const response = await apiRequest("PATCH", `/api/admin/users/${userId}/password`, { password });
-      if (!response.ok) throw new Error("Failed to update password");
-      return response.json();
-    },
-    onSuccess: () => {
-      toast({ title: "Success", description: "Password updated successfully" });
-      setShowPasswordModal(false);
-      setNewPassword("");
-      setConfirmPassword("");
-    },
-    onError: () => {
-      toast({ title: "Error", description: "Failed to update password", variant: "destructive" });
-    },
-  });
-
   const filteredUsers = users.filter((user: User) =>
     user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     `${user.first_name || ''} ${user.last_name || ''}`.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleAction = (user: User, action: "ban" | "freeze" | "view" | "edit" | "delete" | "password") => {
+  const handleAction = (user: User, action: "ban" | "freeze" | "view" | "edit" | "delete") => {
     setSelectedUser(user);
     setActionType(action);
     if (action === "view") {
@@ -336,8 +315,6 @@ export default function AdminUsersFixed() {
         kycVerified: user.kyc_verified
       });
       setShowEditModal(true);
-    } else if (action === "password") {
-      setShowPasswordModal(true);
     } else {
       setShowActionModal(true);
     }
@@ -557,16 +534,6 @@ export default function AdminUsersFixed() {
                                 className="w-full text-left px-4 py-2 hover:bg-gray-100"
                               >
                                 Edit User
-                              </button>
-                              <button
-                                onClick={() => {
-                                  handleAction(user, "password");
-                                  setDropdownOpen(null);
-                                }}
-                                className="w-full text-left px-4 py-2 hover:bg-gray-100 text-blue-600 flex items-center gap-2"
-                              >
-                                <Key className="h-4 w-4" />
-                                Update Password
                               </button>
                               {!user.is_admin && (
                                 <>
@@ -998,88 +965,6 @@ export default function AdminUsersFixed() {
                 </Button>
                 <Button variant="outline" onClick={() => setShowActionModal(false)} className="flex-1 w-full">
                   Cancel
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
-
-        {/* Password Update Modal */}
-        <Dialog open={showPasswordModal} onOpenChange={setShowPasswordModal}>
-          <DialogContent className="w-full max-w-md">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <Key className="h-5 w-5" />
-                Update Password
-              </DialogTitle>
-              <DialogDescription>
-                Set a new password for {selectedUser?.email}
-              </DialogDescription>
-            </DialogHeader>
-
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="newPassword">New Password</Label>
-                <Input
-                  id="newPassword"
-                  type="password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder="Enter new password"
-                  className="mt-1"
-                />
-              </div>
-              <div>
-                <Label htmlFor="confirmPassword">Confirm Password</Label>
-                <Input
-                  id="confirmPassword"
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Confirm new password"
-                  className="mt-1"
-                />
-              </div>
-              
-              <div className="flex justify-end gap-2 pt-4">
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setShowPasswordModal(false);
-                    setNewPassword("");
-                    setConfirmPassword("");
-                  }}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={() => {
-                    if (!newPassword || newPassword !== confirmPassword) {
-                      toast({ 
-                        title: "Error", 
-                        description: "Passwords don't match or are empty", 
-                        variant: "destructive" 
-                      });
-                      return;
-                    }
-                    if (newPassword.length < 6) {
-                      toast({ 
-                        title: "Error", 
-                        description: "Password must be at least 6 characters", 
-                        variant: "destructive" 
-                      });
-                      return;
-                    }
-                    if (selectedUser) {
-                      updatePasswordMutation.mutate({ 
-                        userId: selectedUser.id, 
-                        password: newPassword 
-                      });
-                    }
-                  }}
-                  disabled={updatePasswordMutation.isPending}
-                >
-                  {updatePasswordMutation.isPending ? "Updating..." : "Update Password"}
                 </Button>
               </div>
             </div>
