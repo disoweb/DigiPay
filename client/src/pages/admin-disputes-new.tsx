@@ -88,11 +88,15 @@ export default function AdminDisputesNew() {
     },
   });
 
-  const filteredDisputes = disputes.filter((dispute: Dispute) => {
+  const filteredDisputes = disputes.filter((dispute: any) => {
+    const buyerEmail = dispute.buyer?.email || dispute.buyer_email || "";
+    const sellerEmail = dispute.seller?.email || dispute.seller_email || "";
+    const disputeReason = dispute.disputeReason || dispute.dispute_reason || "";
+    
     const matchesSearch = 
-      dispute.buyer_email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      dispute.seller_email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      dispute.dispute_reason.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      buyerEmail.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      sellerEmail.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      disputeReason.toLowerCase().includes(searchTerm.toLowerCase()) ||
       dispute.id.toString().includes(searchTerm);
     
     const matchesFilter = filterStatus === "all" || dispute.status === filterStatus;
@@ -296,34 +300,34 @@ export default function AdminDisputesNew() {
                         <TableCell>
                           <div className="font-medium">#{dispute.id}</div>
                           <div className="text-xs text-gray-500">
-                            {new Date(dispute.dispute_created_at).toLocaleDateString()}
+                            {new Date(dispute.createdAt || dispute.dispute_created_at || Date.now()).toLocaleDateString()}
                           </div>
                         </TableCell>
                         <TableCell>
                           <div className="space-y-1">
                             <div className="text-sm">
-                              <span className="text-green-600">B:</span> {dispute.buyer_email.split('@')[0]}
+                              <span className="text-green-600">B:</span> {(dispute.buyer?.email || dispute.buyer_email || "Unknown").split('@')[0]}
                             </div>
                             <div className="text-sm">
-                              <span className="text-red-600">S:</span> {dispute.seller_email.split('@')[0]}
+                              <span className="text-red-600">S:</span> {(dispute.seller?.email || dispute.seller_email || "Unknown").split('@')[0]}
                             </div>
                           </div>
                         </TableCell>
                         <TableCell className="hidden sm:table-cell">
                           <div className="flex items-center gap-2">
-                            {getCategoryIcon(dispute.dispute_category)}
+                            {getCategoryIcon(dispute.dispute_category || "general")}
                             <span className="text-sm capitalize">{dispute.dispute_category || 'General'}</span>
                           </div>
                         </TableCell>
                         <TableCell className="hidden lg:table-cell">
                           <div className="text-sm">
-                            <div className="font-medium">{dispute.amount} USDT</div>
-                            <div className="text-gray-500">₦{dispute.rate}/USDT</div>
+                            <div className="font-medium">{dispute.amount || "0"} USDT</div>
+                            <div className="text-gray-500">₦{dispute.rate || "0"}/USDT</div>
                           </div>
                         </TableCell>
                         <TableCell className="hidden md:table-cell">
                           <Badge variant="outline" className="text-xs">
-                            {dispute.dispute_raised_by}
+                            {dispute.dispute_raised_by || dispute.disputeRaisedBy || "Unknown"}
                           </Badge>
                         </TableCell>
                         <TableCell>
@@ -399,20 +403,20 @@ export default function AdminDisputesNew() {
                       </div>
                       <div>
                         <label className="font-medium text-gray-700">Amount</label>
-                        <p className="text-gray-600">{selectedDispute.amount} USDT</p>
+                        <p className="text-gray-600">{selectedDispute.amount || "0"} USDT</p>
                       </div>
                       <div>
                         <label className="font-medium text-gray-700">Rate</label>
-                        <p className="text-gray-600">₦{selectedDispute.rate}/USDT</p>
+                        <p className="text-gray-600">₦{selectedDispute.rate || "0"}/USDT</p>
                       </div>
                       <div>
                         <label className="font-medium text-gray-700">Payment Method</label>
-                        <p className="text-gray-600 capitalize">{selectedDispute.payment_method.replace('_', ' ')}</p>
+                        <p className="text-gray-600 capitalize">{(selectedDispute.payment_method || selectedDispute.offer?.paymentMethod || "Unknown").replace('_', ' ')}</p>
                       </div>
                       <div>
                         <label className="font-medium text-gray-700">Total Value</label>
                         <p className="text-gray-600 font-bold">
-                          ₦{(parseFloat(selectedDispute.amount) * parseFloat(selectedDispute.rate)).toLocaleString()}
+                          ₦{(parseFloat(selectedDispute.amount || "0") * parseFloat(selectedDispute.rate || "0")).toLocaleString()}
                         </p>
                       </div>
                       <div>
@@ -437,11 +441,11 @@ export default function AdminDisputesNew() {
                     <div className="space-y-2">
                       <div className="p-3 bg-green-50 rounded-lg">
                         <p className="text-xs text-gray-600">Buyer</p>
-                        <p className="font-medium text-green-700">{selectedDispute.buyer_email}</p>
+                        <p className="font-medium text-green-700">{selectedDispute.buyer?.email || selectedDispute.buyer_email || "Unknown"}</p>
                       </div>
                       <div className="p-3 bg-red-50 rounded-lg">
                         <p className="text-xs text-gray-600">Seller</p>
-                        <p className="font-medium text-red-700">{selectedDispute.seller_email}</p>
+                        <p className="font-medium text-red-700">{selectedDispute.seller?.email || selectedDispute.seller_email || "Unknown"}</p>
                       </div>
                     </div>
                   </CardContent>
@@ -459,13 +463,13 @@ export default function AdminDisputesNew() {
                     <div>
                       <label className="font-medium text-gray-700">Raised By</label>
                       <Badge variant="outline" className="ml-2 text-xs">
-                        {selectedDispute.dispute_raised_by}
+                        {selectedDispute.dispute_raised_by || selectedDispute.disputeRaisedBy || "Unknown"}
                       </Badge>
                     </div>
                     <div>
                       <label className="font-medium text-gray-700">Category</label>
                       <div className="flex items-center gap-2 mt-1">
-                        {getCategoryIcon(selectedDispute.dispute_category)}
+                        {getCategoryIcon(selectedDispute.dispute_category || "general")}
                         <span className="text-sm capitalize">{selectedDispute.dispute_category || 'General'}</span>
                       </div>
                     </div>
@@ -473,13 +477,13 @@ export default function AdminDisputesNew() {
                       <label className="font-medium text-gray-700">Dispute Date</label>
                       <div className="flex items-center gap-2 mt-1">
                         <Calendar className="h-4 w-4 text-gray-400" />
-                        <span className="text-sm">{new Date(selectedDispute.dispute_created_at).toLocaleString()}</span>
+                        <span className="text-sm">{new Date(selectedDispute.dispute_created_at || selectedDispute.createdAt || Date.now()).toLocaleString()}</span>
                       </div>
                     </div>
                     <div>
                       <label className="font-medium text-gray-700">Reason</label>
                       <p className="text-sm text-gray-600 mt-1 p-3 bg-gray-50 rounded">
-                        {selectedDispute.dispute_reason}
+                        {selectedDispute.dispute_reason || selectedDispute.disputeReason || "No reason provided"}
                       </p>
                     </div>
                     {selectedDispute.dispute_evidence && (
