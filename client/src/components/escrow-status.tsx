@@ -15,6 +15,19 @@ interface EscrowStatusProps {
 export function EscrowStatus({ trade, userRole, onReleaseEscrow, onRefundEscrow }: EscrowStatusProps) {
   const [escrowBalance, setEscrowBalance] = useState<number>(0);
 
+  const formatStatusDisplay = (status: string) => {
+    const statusMap: { [key: string]: string } = {
+      'payment_pending': 'Payment Pending',
+      'payment_made': 'Payment Made',
+      'completed': 'Completed',
+      'expired': 'Expired',
+      'disputed': 'Disputed',
+      'canceled': 'Canceled',
+      'cancelled': 'Cancelled'
+    };
+    return statusMap[status] || status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+  };
+
   useEffect(() => {
     // Simulate checking escrow balance
     if (trade.escrowAddress) {
@@ -52,7 +65,7 @@ export function EscrowStatus({ trade, userRole, onReleaseEscrow, onRefundEscrow 
       case "cancelled":
         return <Badge variant="destructive">Cancelled</Badge>;
       default:
-        return <Badge variant="outline">Unknown</Badge>;
+        return <Badge variant="outline">{formatStatusDisplay(trade.status)}</Badge>;
     }
   };
 

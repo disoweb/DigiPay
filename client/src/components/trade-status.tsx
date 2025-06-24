@@ -72,9 +72,27 @@ export function TradeStatus({ trade, userRole, onUpdate }: TradeStatusProps) {
         return <Badge variant="outline" className="bg-green-50 text-green-600 border-green-200"><CheckCircle className="h-3 w-3 mr-1" />Completed</Badge>;
       case "expired":
         return <Badge variant="outline" className="bg-red-50 text-red-600 border-red-200"><AlertCircle className="h-3 w-3 mr-1" />Expired</Badge>;
+      case "disputed":
+        return <Badge variant="outline" className="bg-red-50 text-red-600 border-red-200"><AlertCircle className="h-3 w-3 mr-1" />Disputed</Badge>;
+      case "canceled":
+      case "cancelled":
+        return <Badge variant="outline" className="bg-gray-50 text-gray-600 border-gray-200"><AlertCircle className="h-3 w-3 mr-1" />Canceled</Badge>;
       default:
-        return <Badge variant="outline">{trade.status}</Badge>;
+        return <Badge variant="outline">{formatStatusDisplay(trade.status)}</Badge>;
     }
+  };
+
+  const formatStatusDisplay = (status: string) => {
+    const statusMap: { [key: string]: string } = {
+      'payment_pending': 'Payment Pending',
+      'payment_made': 'Payment Made',
+      'completed': 'Completed',
+      'expired': 'Expired',
+      'disputed': 'Disputed',
+      'canceled': 'Canceled',
+      'cancelled': 'Cancelled'
+    };
+    return statusMap[status] || status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
   };
 
   const getTimeRemaining = () => {

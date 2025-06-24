@@ -197,7 +197,16 @@ export function ModernTradeManagement() {
   };
 
   const formatStatus = (status: string) => {
-    return status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+    const statusMap: { [key: string]: string } = {
+      'payment_pending': 'Payment Pending',
+      'payment_made': 'Payment Made',
+      'completed': 'Completed',
+      'expired': 'Expired',
+      'disputed': 'Disputed',
+      'canceled': 'Canceled',
+      'cancelled': 'Cancelled'
+    };
+    return statusMap[status] || status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
   };
 
   const getTradeRole = (trade: Trade) => {
