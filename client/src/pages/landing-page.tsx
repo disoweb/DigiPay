@@ -106,7 +106,7 @@ export default function LandingPage() {
               <Button 
                 size="lg" 
                 onClick={() => setLocation("/auth")}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 text-base font-semibold rounded-xl shadow-lg"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 text-base font-semibold rounded-xl shadow-lg w-auto"
               >
                 Start Trading Free
                 <ArrowRight className="ml-2 h-4 w-4" />
@@ -114,7 +114,7 @@ export default function LandingPage() {
               <Button 
                 size="lg" 
                 variant="outline"
-                className="border-2 border-gray-300 text-gray-700 hover:bg-gray-50 px-6 py-3 text-base font-semibold rounded-xl"
+                className="border-2 border-gray-300 text-gray-700 hover:bg-gray-50 px-6 py-3 text-base font-semibold rounded-xl w-auto"
               >
                 View Live Rates
                 <TrendingUp className="ml-2 h-4 w-4" />
