@@ -891,31 +891,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/trades", authenticateToken, async (req, res) => {
-    try {
-      const trades = await storage.getUserTrades(req.user!.id);
+  // LEGACY ENDPOINT - Remove this duplicate
+  // app.get("/api/trades", authenticateToken, async (req, res) => {
+  //   try {
+  //     const trades = await storage.getUserTrades(req.user!.id);
 
-      // Enrich trades with offer and user data
-      const enrichedTrades = await Promise.all(
-        trades.map(async (trade) => {
-          const offer = await storage.getOffer(trade.offerId);
-          const buyer = await storage.getUser(trade.buyerId);
-          const seller = await storage.getUser(trade.sellerId);
+  //     // Enrich trades with offer and user data
+  //     const enrichedTrades = await Promise.all(
+  //       trades.map(async (trade) => {
+  //         const offer = await storage.getOffer(trade.offerId);
+  //         const buyer = await storage.getUser(trade.buyerId);
+  //         const seller = await storage.getUser(trade.sellerId);
 
-          return {
-            ...trade,
-            offer,
-            buyer: buyer ? { id: buyer.id, email: buyer.email } : null,
-            seller: seller ? { id: seller.id, email: seller.email } : null,
-          };
-        })
-      );
+  //         return {
+  //           ...trade,
+  //           offer,
+  //           buyer: buyer ? { id: buyer.id, email: buyer.email } : null,
+  //           seller: seller ? { id: seller.id, email: seller.email } : null,
+  //         };
+  //       })
+  //     );
 
-      res.json(enrichedTrades);
-    } catch (error) {
-      res.status(500).json({ error: "Failed to fetch trades" });
-    }
-  });
+  //     res.json(enrichedTrades);
+  //   } catch (error) {
+  //     res.status(500).json({ error: "Failed to fetch trades" });
+  //   }
+  // });
 
   app.post("/api/trades", authenticateToken, async (req, res) => {
     try {

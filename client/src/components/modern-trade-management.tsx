@@ -82,22 +82,6 @@ export function ModernTradeManagement() {
     refetchOnWindowFocus: false,
   });
 
-  // Reopen trade mutation
-  const reopenTradeMutation = useMutation({
-    mutationFn: async (tradeId: number) => {
-      const response = await apiRequest("POST", `/api/trades/${tradeId}/reopen`);
-      if (!response.ok) throw new Error('Failed to reopen trade');
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/trades"] });
-      toast({ title: "Success", description: "Trade reopened successfully" });
-    },
-    onError: () => {
-      toast({ title: "Error", description: "Failed to reopen trade", variant: "destructive" });
-    },
-  });
-
   // Auto-hide canceled trades after 9 minutes
   useEffect(() => {
     const canceledTrades = trades.filter(trade => trade.status === 'canceled');
@@ -116,6 +100,27 @@ export function ModernTradeManagement() {
       }
     });
   }, [trades, hiddenCanceledTrades]);
+
+  // Debug: Log trades data
+  console.log('All trades:', trades.length);
+  console.log('Expired trades in data:', trades.filter(t => t.status === 'expired'));
+  console.log('User ID:', user?.id);
+
+  // Reopen trade mutation
+  const reopenTradeMutation = useMutation({
+    mutationFn: async (tradeId: number) => {
+      const response = await apiRequest("POST", `/api/trades/${tradeId}/reopen`);
+      if (!response.ok) throw new Error('Failed to reopen trade');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/trades"] });
+      toast({ title: "Success", description: "Trade reopened successfully" });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to reopen trade", variant: "destructive" });
+    },
+  });
 
   // Filter trades
   const visibleTrades = trades.filter(trade => 
