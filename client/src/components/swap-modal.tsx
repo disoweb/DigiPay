@@ -121,212 +121,200 @@ export function SwapModal({ open, onOpenChange, nairaBalance, usdtBalance }: Swa
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md mx-auto p-0">
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b">
-          <div className="flex items-center gap-2">
+      <DialogContent className="max-w-md mx-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
             <ArrowUpDown className="h-5 w-5" />
-            <h2 className="text-lg font-semibold">Currency Swap</h2>
-          </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => onOpenChange(false)}
-            className="h-8 w-8 p-0"
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
-
-        <div className="p-6">
-          <p className="text-sm text-gray-600 mb-6">
+            Currency Swap {step === 2 && "- Review"}
+          </DialogTitle>
+          <DialogDescription>
             Exchange between NGN and USDT at current market rates
-          </p>
+          </DialogDescription>
+        </DialogHeader>
 
-          {step === 1 ? (
-            // Step 1: Currency Selection and Amount Entry
-            <div className="space-y-6">
-              {/* Currency Toggle Buttons - Send Modal Style */}
-              <div className="flex gap-2">
-                <Button
-                  variant={fromCurrency === "NGN" ? "default" : "outline"}
+        {step === 1 ? (
+          // Step 1: Currency Selection and Amount Entry
+          <div className="space-y-6">
+            {/* Currency Selection */}
+            <div className="space-y-3">
+              <Label>Swap From</Label>
+              <div className="grid grid-cols-2 gap-3">
+                <Card 
+                  className={`cursor-pointer transition-all ${fromCurrency === "NGN" ? "ring-2 ring-blue-500 bg-blue-50" : "hover:bg-gray-50"}`}
                   onClick={() => setFromCurrency("NGN")}
-                  className="flex-1 h-12"
                 >
-                  ₦ NGN
-                </Button>
-                <Button
-                  variant={fromCurrency === "USDT" ? "default" : "outline"}
+                  <CardContent className="p-4 text-center">
+                    <DollarSign className="h-6 w-6 mx-auto mb-2 text-green-600" />
+                    <p className="font-medium">Nigerian Naira</p>
+                    <p className="text-sm text-gray-500">₦{parseFloat(nairaBalance).toLocaleString()}</p>
+                  </CardContent>
+                </Card>
+                <Card 
+                  className={`cursor-pointer transition-all ${fromCurrency === "USDT" ? "ring-2 ring-blue-500 bg-blue-50" : "hover:bg-gray-50"}`}
                   onClick={() => setFromCurrency("USDT")}
-                  className="flex-1 h-12"
                 >
-                  <Coins className="h-4 w-4 mr-2" />
-                  USDT
-                </Button>
+                  <CardContent className="p-4 text-center">
+                    <Coins className="h-6 w-6 mx-auto mb-2 text-blue-600" />
+                    <p className="font-medium">USDT</p>
+                    <p className="text-sm text-gray-500">{parseFloat(usdtBalance).toFixed(6)}</p>
+                  </CardContent>
+                </Card>
               </div>
+            </div>
 
-              {/* Swap Direction Indicator */}
-              <div className="text-center">
-                <Label className="text-sm font-medium">Swap From {fromCurrency}</Label>
-              </div>
-
-              {/* Amount Input - Send Modal Style */}
-              <div className="space-y-2">
-                <Label htmlFor="amount" className="text-sm font-medium">
-                  Amount ({fromCurrency})
-                </Label>
-                <div className="relative">
-                  <span className="absolute left-3 top-3 text-gray-500">
-                    {fromCurrency === "NGN" ? "₦" : "$"}
-                  </span>
-                  <Input
-                    id="amount"
-                    type="number"
-                    placeholder="0.00"
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
-                    className="pl-8 h-12 text-lg"
-                    min="0"
-                    step={fromCurrency === "NGN" ? "1" : "0.000001"}
-                  />
-                </div>
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-gray-600">
-                    Available: {fromCurrency === "NGN" ? "₦" : ""}{getAvailableBalance().toLocaleString()} {fromCurrency}
-                  </span>
-                  <span className="text-orange-500 text-xs">
-                    1% fee applies
-                  </span>
-                </div>
-              </div>
-
-              {/* Exchange Preview - Optional field style */}
-              <div className="space-y-2">
-                <Label className="text-sm font-medium">
-                  Exchange Preview (Optional)
-                </Label>
-                {amount && parseFloat(amount) > 0 ? (
-                  <div className="p-4 bg-gray-50 rounded-lg">
-                    <div className="text-center space-y-2">
-                      <p className="text-sm text-gray-600">You will receive approximately</p>
-                      <p className="text-lg font-semibold text-green-600">
-                        {fromCurrency === "NGN" ? "" : "₦"}
-                        {fromCurrency === "NGN" 
-                          ? exchangeDetails.receiveAmount.toFixed(6) 
-                          : exchangeDetails.receiveAmount.toLocaleString()
-                        } {exchangeDetails.receiveCurrency}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        Fee: {fromCurrency === "NGN" ? "₦" : ""}{exchangeDetails.fee.toLocaleString()} {fromCurrency} (1%)
-                      </p>
-                    </div>
-                  </div>
+            {/* Amount Input */}
+            <div className="space-y-2">
+              <Label htmlFor="amount">Amount to Swap</Label>
+              <div className="relative">
+                {fromCurrency === "NGN" ? (
+                  <DollarSign className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                 ) : (
-                  <div className="p-4 bg-gray-50 rounded-lg text-center text-gray-500 text-sm">
-                    Enter amount to see exchange preview
-                  </div>
+                  <Coins className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                 )}
+                <Input
+                  id="amount"
+                  type="number"
+                  placeholder="0.00"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  className="pl-10"
+                  min="0"
+                  step={fromCurrency === "NGN" ? "1" : "0.000001"}
+                />
               </div>
-
-              {/* Action Buttons - Send Modal Style */}
-              <div className="flex gap-3 pt-4">
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600">
+                  Available: {fromCurrency === "NGN" ? "₦" : ""}{getAvailableBalance().toLocaleString()} {fromCurrency}
+                </span>
                 <Button
-                  variant="outline"
-                  onClick={() => onOpenChange(false)}
-                  className="flex-1 h-12"
+                  variant="link"
+                  size="sm"
+                  className="h-auto p-0 text-blue-600"
+                  onClick={() => setAmount(getAvailableBalance().toString())}
                 >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={handleProceedToPreview}
-                  disabled={!amount || parseFloat(amount) <= 0}
-                  className="flex-1 h-12 bg-blue-600 hover:bg-blue-700"
-                >
-                  <ArrowUpDown className="h-4 w-4 mr-2" />
-                  Continue
+                  Use Max
                 </Button>
               </div>
             </div>
-          ) : (
-            // Step 2: Preview and Confirmation
-            <div className="space-y-6">
-              {/* Swap Summary */}
-              <Card>
-                <CardContent className="p-6">
-                  <div className="text-center space-y-4">
-                    <div className="flex items-center justify-center space-x-4">
-                      <div className="text-center">
-                        <p className="text-sm text-gray-600">From</p>
-                        <p className="text-lg font-semibold">
-                          {fromCurrency === "NGN" ? "₦" : ""}{parseFloat(amount).toLocaleString()} {fromCurrency}
-                        </p>
-                      </div>
-                      <ArrowUpDown className="h-6 w-6 text-gray-400" />
-                      <div className="text-center">
-                        <p className="text-sm text-gray-600">To</p>
-                        <p className="text-lg font-semibold text-green-600">
-                          {fromCurrency === "NGN" ? "" : "₦"}
-                          {fromCurrency === "NGN" 
-                            ? exchangeDetails.receiveAmount.toFixed(6)
-                            : exchangeDetails.receiveAmount.toLocaleString()
-                          } {exchangeDetails.receiveCurrency}
-                        </p>
-                      </div>
-                    </div>
 
-                    <div className="border-t pt-4 space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span>Exchange Rate:</span>
-                        <span>1 USDT = ₦{USDT_RATE.toLocaleString()}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Fee (1%):</span>
-                        <span>
-                          {fromCurrency === "NGN" ? "₦" : ""}{exchangeDetails.fee.toLocaleString()} {fromCurrency}
-                        </span>
-                      </div>
-                      <div className="flex justify-between font-semibold">
-                        <span>You will receive:</span>
-                        <span className="text-green-600">
-                          {fromCurrency === "NGN" ? "" : "₦"}
-                          {fromCurrency === "NGN" 
-                            ? exchangeDetails.receiveAmount.toFixed(6)
-                            : exchangeDetails.receiveAmount.toLocaleString()
-                          } {exchangeDetails.receiveCurrency}
-                        </span>
-                      </div>
-                    </div>
+            {/* Exchange Preview */}
+            {amount && parseFloat(amount) > 0 && (
+              <Card className="bg-gray-50">
+                <CardContent className="p-4">
+                  <div className="text-center space-y-2">
+                    <p className="text-sm text-gray-600">You will receive approximately</p>
+                    <p className="text-2xl font-bold text-green-600">
+                      {fromCurrency === "NGN" ? "" : "₦"}
+                      {fromCurrency === "NGN" 
+                        ? exchangeDetails.receiveAmount.toFixed(6) 
+                        : exchangeDetails.receiveAmount.toLocaleString()
+                      } {exchangeDetails.receiveCurrency}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      Fee: {fromCurrency === "NGN" ? "₦" : ""}{exchangeDetails.fee.toLocaleString()} {fromCurrency} (1%)
+                    </p>
                   </div>
                 </CardContent>
               </Card>
+            )}
 
-              {/* Action Buttons */}
-              <div className="flex gap-3">
-                <Button
-                  variant="outline"
-                  onClick={() => setStep(1)}
-                  className="flex-1 h-12"
-                  disabled={swapMutation.isPending}
-                >
-                  <ChevronLeft className="h-4 w-4 mr-2" />
-                  Back
-                </Button>
-                <Button
-                  onClick={handleConfirmSwap}
-                  disabled={swapMutation.isPending}
-                  className="flex-1 h-12 bg-green-600 hover:bg-green-700"
-                >
-                  {swapMutation.isPending ? (
-                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                  ) : (
-                    <Check className="h-4 w-4 mr-2" />
-                  )}
-                  {swapMutation.isPending ? "Processing..." : "Confirm Swap"}
-                </Button>
-              </div>
+            {/* Action Buttons */}
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleProceedToPreview}
+                disabled={!amount || parseFloat(amount) <= 0}
+                className="flex-1"
+              >
+                Continue
+              </Button>
             </div>
-          )}
-        </div>
+          </div>
+        ) : (
+          // Step 2: Preview and Confirmation
+          <div className="space-y-6">
+            {/* Swap Summary */}
+            <Card>
+              <CardContent className="p-6">
+                <div className="text-center space-y-4">
+                  <div className="flex items-center justify-center space-x-4">
+                    <div className="text-center">
+                      <p className="text-sm text-gray-600">From</p>
+                      <p className="text-lg font-semibold">
+                        {fromCurrency === "NGN" ? "₦" : ""}{parseFloat(amount).toLocaleString()} {fromCurrency}
+                      </p>
+                    </div>
+                    <ArrowUpDown className="h-6 w-6 text-gray-400" />
+                    <div className="text-center">
+                      <p className="text-sm text-gray-600">To</p>
+                      <p className="text-lg font-semibold text-green-600">
+                        {fromCurrency === "NGN" ? "" : "₦"}
+                        {fromCurrency === "NGN" 
+                          ? exchangeDetails.receiveAmount.toFixed(6)
+                          : exchangeDetails.receiveAmount.toLocaleString()
+                        } {exchangeDetails.receiveCurrency}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="border-t pt-4 space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span>Exchange Rate:</span>
+                      <span>1 USDT = ₦{USDT_RATE.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Fee (1%):</span>
+                      <span>
+                        {fromCurrency === "NGN" ? "₦" : ""}{exchangeDetails.fee.toLocaleString()} {fromCurrency}
+                      </span>
+                    </div>
+                    <div className="flex justify-between font-semibold">
+                      <span>You will receive:</span>
+                      <span className="text-green-600">
+                        {fromCurrency === "NGN" ? "" : "₦"}
+                        {fromCurrency === "NGN" 
+                          ? exchangeDetails.receiveAmount.toFixed(6)
+                          : exchangeDetails.receiveAmount.toLocaleString()
+                        } {exchangeDetails.receiveCurrency}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Action Buttons */}
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                onClick={() => setStep(1)}
+                className="flex-1"
+                disabled={swapMutation.isPending}
+              >
+                <ChevronLeft className="h-4 w-4 mr-2" />
+                Back
+              </Button>
+              <Button
+                onClick={handleConfirmSwap}
+                disabled={swapMutation.isPending}
+                className="flex-1 bg-green-600 hover:bg-green-700"
+              >
+                {swapMutation.isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                ) : (
+                  <Check className="h-4 w-4 mr-2" />
+                )}
+                {swapMutation.isPending ? "Processing..." : "Confirm Swap"}
+              </Button>
+            </div>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );
