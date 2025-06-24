@@ -59,7 +59,7 @@ const RESOLUTION_ACTIONS = [
   { value: 'escalate', label: 'Escalate to Senior Admin', description: 'Complex case requiring review' }
 ];
 
-export function DisputeSystemV2({ trade, userRole, onDisputeUpdate }: DisputeSystemProps) {
+export default function DisputeSystemV2({ trade, userRole, onDisputeUpdate }: DisputeSystemProps) {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showDisputeForm, setShowDisputeForm] = useState(false);

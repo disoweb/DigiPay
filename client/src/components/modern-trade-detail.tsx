@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
 import { RatingForm } from "@/components/rating-form";
-import { DisputeResolution } from "@/components/dispute-resolution";
+import DisputeSystemV2 from "@/components/dispute-system-v2";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { useAuth } from "@/hooks/use-auth";
