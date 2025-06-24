@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { useRealtimeBalance } from "@/hooks/use-realtime-balance";
+import { useExchangeRates } from "@/hooks/use-exchange-rates";
 import { apiRequest } from "@/lib/queryClient";
 import { Navbar } from "@/components/navbar";
 import { EnhancedDepositModal } from "@/components/enhanced-deposit-modal";
@@ -184,9 +185,8 @@ export default function Wallet() {
 
 
 
-  // Exchange rates
-  const USDT_TO_NGN_RATE = 1485;
-  const NGN_TO_USD_RATE = 0.00067; // Approximate USD rate
+  // Exchange rates from database
+  const { USDT_TO_NGN_RATE, NGN_TO_USD_RATE } = useExchangeRates();
 
   // Check if PIN setup is needed before withdrawal
   const handleWithdrawClick = () => {

@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Users, Handshake, AlertTriangle, Shield, Star, TrendingUp, Award, Crown, RefreshCw, AlertCircle, Search, Filter, ChevronRight, Mail, Phone, CheckCircle, XCircle, MoreVertical, Eye, Edit, UserX } from "lucide-react";
+import { Users, Handshake, AlertTriangle, Shield, Star, TrendingUp, Award, Crown, RefreshCw, AlertCircle, Search, Filter, ChevronRight, Mail, Phone, CheckCircle, XCircle, MoreVertical, Eye, Edit, UserX, DollarSign } from "lucide-react";
 import { useLocation } from "wouter";
 import { UserDetailModal } from "@/components/user-detail-modal";
 import type { Trade } from "@shared/schema";

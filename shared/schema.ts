@@ -211,6 +211,17 @@ export const notifications = pgTable("notifications", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Exchange Rates
+export const exchangeRates = pgTable("exchange_rates", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull().unique(), // e.g., "USDT_TO_NGN", "NGN_TO_USD"
+  rate: decimal("rate", { precision: 18, scale: 8 }).notNull(),
+  description: text("description"),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -272,6 +283,12 @@ export const insertRatingSchema = createInsertSchema(ratings).omit({
   createdAt: true,
 });
 
+export const insertExchangeRateSchema = createInsertSchema(exchangeRates).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -287,3 +304,5 @@ export type Transaction = typeof transactions.$inferSelect;
 export type InsertTransaction = z.infer<typeof insertTransactionSchema>;
 export type Rating = typeof ratings.$inferSelect;
 export type InsertRating = z.infer<typeof insertRatingSchema>;
+export type ExchangeRate = typeof exchangeRates.$inferSelect;
+export type InsertExchangeRate = z.infer<typeof insertExchangeRateSchema>;

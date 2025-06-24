@@ -1,8 +1,9 @@
 import { 
-  users, offers, trades, messages, transactions, ratings,
+  users, offers, trades, messages, transactions, ratings, exchangeRates,
   type User, type InsertUser, type Offer, type InsertOffer,
   type Trade, type InsertTrade, type Message, type InsertMessage,
-  type Transaction, type InsertTransaction, type Rating, type InsertRating
+  type Transaction, type InsertTransaction, type Rating, type InsertRating,
+  type ExchangeRate, type InsertExchangeRate
 } from "../shared/schema.js";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
@@ -60,6 +61,12 @@ export interface IStorage {
   getUserProfile(id: number): Promise<User | undefined>;
   getUserTrades(id: number): Promise<Trade[]>;
   getUserPublicRatings(id: number): Promise<any[]>;
+
+  // Exchange rate methods
+  getExchangeRates(): Promise<ExchangeRate[]>;
+  getExchangeRate(name: string): Promise<ExchangeRate | null>;
+  updateExchangeRate(name: string, rate: string): Promise<ExchangeRate | null>;
+  createExchangeRate(data: InsertExchangeRate): Promise<ExchangeRate>;
 
   sessionStore: any;
 }
@@ -182,6 +189,26 @@ export class DatabaseStorage implements IStorage {
           ratingCount: 42
         });
         console.log("✅ Created trader2 user (no balance)");
+      }
+
+      // Seed exchange rates if they don't exist
+      const existingRates = await db.select().from(exchangeRates);
+      if (existingRates.length === 0) {
+        await db.insert(exchangeRates).values([
+          {
+            name: "USDT_TO_NGN",
+            rate: "1485.00000000",
+            description: "USDT to Nigerian Naira exchange rate",
+            isActive: true
+          },
+          {
+            name: "NGN_TO_USD", 
+            rate: "0.00067000",
+            description: "Nigerian Naira to USD exchange rate",
+            isActive: true
+          }
+        ]);
+        console.log("💱 Seeded initial exchange rates");
       }
 
       // Always refresh offers to ensure they exist
@@ -867,6 +894,36 @@ export class DatabaseStorage implements IStorage {
       .where(eq(transactions.paystackRef, reference))
       .limit(1);
     return result[0] || null;
+  }
+
+  async getExchangeRates(): Promise<ExchangeRate[]> {
+    return await db.select().from(exchangeRates).where(eq(exchangeRates.isActive, true));
+  }
+
+  async getExchangeRate(name: string): Promise<ExchangeRate | null> {
+    const [rate] = await db
+      .select()
+      .from(exchangeRates)
+      .where(and(eq(exchangeRates.name, name), eq(exchangeRates.isActive, true)))
+      .limit(1);
+    return rate || null;
+  }
+
+  async updateExchangeRate(name: string, rate: string): Promise<ExchangeRate | null> {
+    const [updated] = await db
+      .update(exchangeRates)
+      .set({ 
+        rate: rate,
+        updatedAt: new Date()
+      })
+      .where(eq(exchangeRates.name, name))
+      .returning();
+    return updated || null;
+  }
+
+  async createExchangeRate(data: InsertExchangeRate): Promise<ExchangeRate> {
+    const [created] = await db.insert(exchangeRates).values(data).returning();
+    return created;
   }
 
   async deleteTransactionByReference(reference: string): Promise<void> {
