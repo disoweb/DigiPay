@@ -4051,6 +4051,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update rating
+  app.put("/api/ratings/:id", authenticateToken, async (req, res) => {
+    try {
+      const ratingId = parseInt(req.params.id);
+      const { rating: newRating, comment } = req.body;
+      const user = req.user!;
+
+      // Get existing rating
+      const existingRating = await db.select().from(ratings).where(eq(ratings.id, ratingId));
+      if (!existingRating[0]) {
+        return res.status(404).json({ message: "Rating not found" });
+      }
+
+      // Check if user owns this rating
+      if (existingRating[0].raterId !== user.id) {
+        return res.status(403).json({ message: "You can only edit your own ratings" });
+      }
+
+      // Validate rating value
+      if (newRating < 1 || newRating > 5) {
+        return res.status(400).json({ message: "Rating must be between 1 and 5" });
+      }
+
+      const updatedRating = await storage.updateRating(ratingId, {
+        rating: newRating,
+        comment: comment || null,
+      });
+
+      if (!updatedRating) {
+        return res.status(500).json({ message: "Failed to update rating" });
+      }
+
+      res.json(updatedRating);
+    } catch (error) {
+      console.error("Rating update error:", error);
+      res.status(500).json({ error: "Failed to update rating" });
+    }
+  });
+
   // Get user ratings
   app.get("/api/users/:id/ratings", async (req, res) => {
     try {

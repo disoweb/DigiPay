@@ -23,10 +23,22 @@ interface RatingFormProps {
   ratingId?: number;
 }
 
-export function RatingForm({ tradeId, ratedUserId, ratedUserEmail, ratedUserUsername, open = false, onOpenChange, onSubmit }: RatingFormProps) {
-  const [rating, setRating] = useState(0);
+export function RatingForm({ 
+  tradeId, 
+  ratedUserId, 
+  ratedUserEmail, 
+  ratedUserUsername, 
+  open = false, 
+  onOpenChange, 
+  onSubmit,
+  initialRating = 0,
+  initialComment = "",
+  isEditing = false,
+  ratingId
+}: RatingFormProps) {
+  const [rating, setRating] = useState(initialRating);
   const [hoveredRating, setHoveredRating] = useState(0);
-  const [comment, setComment] = useState("");
+  const [comment, setComment] = useState(initialComment);
   const { toast } = useToast();
 
   const ratingMutation = useMutation({
@@ -67,6 +79,12 @@ export function RatingForm({ tradeId, ratedUserId, ratedUserEmail, ratedUserUser
         description: "Please select a star rating before submitting.",
         variant: "destructive",
       });
+      return;
+    }
+
+    if (isEditing) {
+      // For editing, call onSubmit directly with the data
+      onSubmit?.({ rating, comment: comment.trim() });
       return;
     }
 
