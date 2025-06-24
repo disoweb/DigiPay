@@ -19,8 +19,10 @@ A peer-to-peer cryptocurrency trading platform enabling direct trading between u
   - Fixed mobile responsiveness for expired trades filter with dynamic visibility and horizontal scrolling
   - Fixed trade reopen functionality with proper date formatting and balance validation
   - Added seller balance verification before allowing trade reopening for sell offers
-  - Fixed reopen timer to use original offer's timeLimit (not paymentDeadline) ensuring consistency
+  - Fixed reopen timer to use original offer's timeLimit ensuring consistency with original trade duration
   - Fixed database query alias conflicts in getTrades method affecting market stats
+  - Implemented most recent first sorting for all trade filters to show latest activity
+  - Cleaned up debugging logs for production readiness
   - Added comprehensive rating and dispute mechanisms integrated into trade flow and user profiles
 
 ## User Preferences

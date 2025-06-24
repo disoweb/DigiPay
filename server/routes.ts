@@ -2226,11 +2226,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const timeLimitMinutes = offer.timeLimit || 30; // Default to 30 minutes if not set
       const newDeadline = new Date(Date.now() + timeLimitMinutes * 60 * 1000);
       
-      console.log(`Setting new deadline for trade ${trade.id}:`, {
-        originalTimeLimit: offer.timeLimit,
-        timeLimitMinutes,
-        newDeadline: newDeadline.toISOString()
-      });
+
 
       const updateResult = await storage.updateTrade(tradeId, {
         status: "payment_pending",
