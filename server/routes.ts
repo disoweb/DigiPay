@@ -2206,7 +2206,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const sellerBalance = parseFloat(seller.usdtBalance || "0");
         const tradeAmount = parseFloat(trade.amount);
         
-        if (sellerBalance < tradeAmount) {
+        console.log(`Balance check for trade ${trade.id}:`, {
+          sellerId: trade.sellerId,
+          requestUserId: userId,
+          sellerBalance,
+          tradeAmount,
+          offerType: offer.type
+        });
+        
+        // Only check balance if current user is the seller
+        if (trade.sellerId === userId && sellerBalance < tradeAmount) {
           return res.status(400).json({ 
             error: `Insufficient USDT balance. You have ${sellerBalance} USDT but need ${tradeAmount} USDT to reopen this trade.` 
           });
