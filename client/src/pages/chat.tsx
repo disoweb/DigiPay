@@ -199,7 +199,10 @@ export default function ChatPage() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            {getStatusIcon(trade.status)}
+            <div className="flex items-center space-x-2">
+              <Wifi className="h-4 w-4 text-green-500" />
+              <span className="text-xs text-green-500 font-medium">Online</span>
+            </div>
             {getStatusBadge(trade.status)}
           </div>
         </div>

@@ -231,51 +231,30 @@ export function RealTimeChat({ tradeId }: RealTimeChatProps) {
   }
 
   return (
-    <div className="flex flex-col h-full bg-gray-50 dark:bg-gray-900 min-h-0">
-      {/* Chat Header */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Trade Chat</h3>
-          <div className="flex items-center space-x-2">
-            {isConnected ? (
-              <>
-                <Wifi className="h-4 w-4 text-green-500" />
-                <span className="text-xs text-green-500 font-medium">Online</span>
-              </>
-            ) : (
-              <>
-                <WifiOff className="h-4 w-4 text-red-500" />
-                <span className="text-xs text-red-500 font-medium">Offline</span>
-              </>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Messages Area - Compact for mobile */}
-      <div className="flex-1 overflow-y-auto p-3 pb-0">
+    <div className="flex flex-col h-full bg-gray-50 dark:bg-gray-900">
+      {/* Messages Area - Compact mobile layout */}
+      <div className="flex-1 overflow-y-auto p-4 flex flex-col">
         {messages.length === 0 && pendingMessages.size === 0 ? (
-          <div className="text-center py-4">
-            <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 mx-auto max-w-xs">
-              <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center mx-auto mb-2">
-                <Send className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-              </div>
-              <p className="text-gray-600 dark:text-gray-300 text-sm">
-                No messages yet. Start the conversation!
-              </p>
+          <div className="flex-1 flex flex-col items-center justify-end pb-8">
+            <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center mb-3">
+              <Send className="h-6 w-6 text-blue-600 dark:text-blue-400" />
             </div>
+            <p className="text-gray-600 dark:text-gray-300 text-sm text-center">
+              No messages yet. Start the conversation!
+            </p>
           </div>
         ) : (
-          <div className="space-y-2">
-            {(() => {
-              // Sort all messages by timestamp to ensure proper ordering
-              const allMessages = [
-                ...messages.map(m => ({...m, isPending: false})),
-                ...Array.from(pendingMessages.values()).map(m => ({...m, isPending: true}))
-              ].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
-              
-              return allMessages;
-            })().map((msg, index) => {
+          <div className="flex-1 flex flex-col justify-end">
+            <div className="space-y-2">
+              {(() => {
+                // Sort all messages by timestamp to ensure proper ordering
+                const allMessages = [
+                  ...messages.map(m => ({...m, isPending: false})),
+                  ...Array.from(pendingMessages.values()).map(m => ({...m, isPending: true}))
+                ].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+                
+                return allMessages;
+              })().map((msg, index) => {
                 const isOwnMessage = msg.senderId === user?.id;
                 const isPending = msg.status === 'sending' || (msg as any).isPending;
                 const isFailed = msg.status === 'failed';
@@ -315,7 +294,8 @@ export function RealTimeChat({ tradeId }: RealTimeChatProps) {
                   </div>
                 );
               })}
-            <div ref={messagesEndRef} />
+              <div ref={messagesEndRef} />
+            </div>
           </div>
         )}
       </div>
