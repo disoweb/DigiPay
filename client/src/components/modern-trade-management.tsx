@@ -120,9 +120,10 @@ export function ModernTradeManagement() {
   });
 
   // Filter trades
-  const visibleTrades = trades.filter(trade => 
+  // Only calculate filters when trades data is successfully loaded
+  const visibleTrades = isSuccess ? trades.filter(trade => 
     trade.status !== 'canceled' || !hiddenCanceledTrades.has(trade.id)
-  );
+  ) : [];
 
   const activeTrades = visibleTrades.filter(trade => 
     ["payment_pending", "payment_made"].includes(trade.status) && trade.status !== "expired"
@@ -322,7 +323,7 @@ export function ModernTradeManagement() {
       <div className="p-4 bg-white border-b">
         <ScrollArea className="w-full">
           <div className="flex gap-3 pb-2 overflow-x-auto">
-            {quickFilters.filter(filter => filter.count > 0 || filter.key === 'all' || selectedStatus === filter.key).map((filter) => {
+            {quickFilters.filter(filter => isSuccess && (filter.count > 0 || filter.key === 'all' || selectedStatus === filter.key)).map((filter) => {
               const Icon = filter.icon;
               const isActive = selectedStatus === filter.key;
               return (
