@@ -1993,14 +1993,90 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const tradeAmount = parseFloat(trade.amount);
         const fiatAmount = parseFloat(trade.fiatAmount);
 
-        // Buyer gets USDT, Seller gets Naira
+        // Update balances
+        const newBuyerUsdtBalance = (parseFloat(buyer.usdtBalance || "0") + tradeAmount).toString();
+        const newSellerNairaBalance = (parseFloat(seller.nairaBalance || "0") + fiatAmount).toString();
+
         await storage.updateUser(buyer.id, {
-          usdtBalance: (parseFloat(buyer.usdtBalance || "0") + tradeAmount).toString()
+          usdtBalance: newBuyerUsdtBalance
         });
 
         await storage.updateUser(seller.id, {
-          nairaBalance: (parseFloat(seller.nairaBalance || "0") + fiatAmount).toString()
+          nairaBalance: newSellerNairaBalance
         });
+
+        // Create transaction records for both parties
+        await storage.createTransaction({
+          userId: buyer.id,
+          type: "transfer",
+          amount: tradeAmount.toString(),
+          status: "completed",
+          adminNotes: `Trade #${trade.id} completed - Received ${tradeAmount} USDT`,
+          paymentMethod: "p2p_trade",
+          rate: trade.rate
+        });
+
+        await storage.createTransaction({
+          userId: seller.id,
+          type: "transfer", 
+          amount: fiatAmount.toString(),
+          status: "completed",
+          adminNotes: `Trade #${trade.id} completed - Received ₦${fiatAmount.toLocaleString()}`,
+          paymentMethod: "p2p_trade",
+          rate: trade.rate
+        });
+
+        // Send real-time balance updates via WebSocket
+        setTimeout(() => {
+          const wsServerGlobal = (global as any).wsServer;
+          if (wsServerGlobal && wsServerGlobal.clients) {
+            console.log(`Broadcasting trade completion balance updates to ${wsServerGlobal.clients.size} connected clients`);
+            
+            // Update buyer's USDT balance
+            const buyerUpdateMessage = {
+              type: 'balance_updated',
+              userId: buyer.id,
+              nairaBalance: buyer.nairaBalance || "0",
+              usdtBalance: newBuyerUsdtBalance,
+              previousBalance: buyer.usdtBalance || "0",
+              lastTransaction: {
+                type: 'trade_completion',
+                amount: tradeAmount.toString(),
+                status: 'completed',
+                tradeId: trade.id,
+                currency: 'USDT'
+              }
+            };
+
+            // Update seller's NGN balance  
+            const sellerUpdateMessage = {
+              type: 'balance_updated',
+              userId: seller.id,
+              nairaBalance: newSellerNairaBalance,
+              usdtBalance: seller.usdtBalance || "0",
+              previousBalance: seller.nairaBalance || "0",
+              lastTransaction: {
+                type: 'trade_completion',
+                amount: fiatAmount.toString(),
+                status: 'completed',
+                tradeId: trade.id,
+                currency: 'NGN'
+              }
+            };
+
+            wsServerGlobal.clients.forEach((client: any) => {
+              if (client.readyState === 1) { // WebSocket.OPEN
+                if (client.userId === buyer.id) {
+                  console.log('Sending balance update to buyer:', buyer.id);
+                  client.send(JSON.stringify(buyerUpdateMessage));
+                } else if (client.userId === seller.id) {
+                  console.log('Sending balance update to seller:', seller.id);
+                  client.send(JSON.stringify(sellerUpdateMessage));
+                }
+              }
+            });
+          }
+        }, 100);
       }
 
       // If escrow exists, release funds
