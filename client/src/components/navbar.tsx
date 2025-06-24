@@ -120,13 +120,11 @@ export function Navbar() {
               <Button 
                 onClick={() => {
                   setLocation("/marketplace");
-                  // Scroll to top and set buy filter after navigation
+                  // Set buy filter and scroll to filter section after navigation
                   setTimeout(() => {
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                    // Trigger buy filter selection
                     const event = new CustomEvent('marketplaceFilter', { detail: { filter: 'buy' } });
                     window.dispatchEvent(event);
-                  }, 100);
+                  }, 300);
                 }} 
                 className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 h-8 text-sm"
               >
@@ -135,13 +133,11 @@ export function Navbar() {
               <Button 
                 onClick={() => {
                   setLocation("/marketplace");
-                  // Scroll to top and set sell filter after navigation
+                  // Set sell filter and scroll to filter section after navigation
                   setTimeout(() => {
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                    // Trigger sell filter selection
                     const event = new CustomEvent('marketplaceFilter', { detail: { filter: 'sell' } });
                     window.dispatchEvent(event);
-                  }, 100);
+                  }, 300);
                 }} 
                 className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 h-8 text-sm"
               >
