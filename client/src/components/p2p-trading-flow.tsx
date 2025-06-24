@@ -13,6 +13,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { DisputeSystem } from "@/components/dispute-system";
 import { TradeCompletionFlow } from "@/components/trade-completion-flow";
 import { EnhancedDisputeSystem } from "@/components/enhanced-dispute-system";
+import { TradeActionButtons } from "@/components/trade-action-buttons";
 import { useAuth } from "@/lib/auth";
 interface Trade {
   id: number;
@@ -425,14 +426,16 @@ export function P2PTradingFlow({ tradeId, userRole }: P2PTradingFlowProps) {
         </Card>
       )}
 
-      {/* Enhanced Dispute System */}
-      <EnhancedDisputeSystem 
-        trade={trade} 
-        currentUserId={user?.id || 0}
-        onDisputeUpdated={() => {
-          queryClient.invalidateQueries({ queryKey: [`/api/trades/${tradeId}`] });
-        }} 
-      />
+      {/* Show dispute status if trade is disputed */}
+      {trade.status === 'disputed' && (
+        <EnhancedDisputeSystem 
+          trade={trade} 
+          currentUserId={user?.id || 0}
+          onDisputeUpdated={() => {
+            queryClient.invalidateQueries({ queryKey: [`/api/trades/${tradeId}`] });
+          }} 
+        />
+      )}
 
       {/* Trade Completed */}
       {trade.status === 'completed' && (

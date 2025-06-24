@@ -20,6 +20,7 @@ import {
   User
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
+import { RatingPrompt } from "@/components/rating-prompt";
 
 interface Trade {
   id: number;
@@ -43,8 +44,9 @@ export function TradeCompletionFlow({ trade, currentUserId, onTradeUpdated }: Tr
   const queryClient = useQueryClient();
   
   // State management
-  const [showRatingModal, setShowRatingModal] = useState(false);
+  const [showRatingPrompt, setShowRatingPrompt] = useState(true);
   const [showDisputeModal, setShowDisputeModal] = useState(false);
+  const [hasRated, setHasRated] = useState(false);
   const [rating, setRating] = useState(0);
   const [hoveredRating, setHoveredRating] = useState(0);
   const [ratingComment, setRatingComment] = useState("");
@@ -206,13 +208,22 @@ export function TradeCompletionFlow({ trade, currentUserId, onTradeUpdated }: Tr
             </p>
             
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Button 
-                onClick={() => setShowRatingModal(true)}
-                className="bg-green-600 hover:bg-green-700 text-white"
-              >
-                <Star className="h-4 w-4 mr-2" />
-                Rate Trading Partner
-              </Button>
+              {!hasRated && (
+                <Button 
+                  onClick={() => setShowRatingPrompt(true)}
+                  className="bg-green-600 hover:bg-green-700 text-white"
+                >
+                  <Star className="h-4 w-4 mr-2" />
+                  Rate Trading Partner
+                </Button>
+              )}
+              
+              {hasRated && (
+                <Badge className="bg-green-100 text-green-800 px-4 py-2">
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  Rating Submitted
+                </Badge>
+              )}
               
               <Button 
                 variant="outline" 
@@ -272,8 +283,17 @@ export function TradeCompletionFlow({ trade, currentUserId, onTradeUpdated }: Tr
         </Card>
       )}
 
-      {/* Rating Modal */}
-      <Dialog open={showRatingModal} onOpenChange={setShowRatingModal}>
+      {/* Rating Prompt */}
+      <RatingPrompt
+        trade={trade}
+        currentUserId={currentUserId}
+        show={showRatingPrompt && !hasRated}
+        onClose={() => setShowRatingPrompt(false)}
+        onRatingSubmitted={() => {
+          setHasRated(true);
+          onTradeUpdated();
+        }}
+      />
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
