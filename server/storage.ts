@@ -538,12 +538,28 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateTrade(id: number, updates: Partial<Trade>): Promise<Trade | undefined> {
-    const [trade] = await db
-      .update(trades)
-      .set(updates)
-      .where(eq(trades.id, id))
-      .returning();
-    return trade || undefined;
+    try {
+      // Convert string dates to Date objects for Drizzle ORM
+      const processedUpdates = { ...updates };
+      
+      if (processedUpdates.paymentDeadline && typeof processedUpdates.paymentDeadline === 'string') {
+        processedUpdates.paymentDeadline = new Date(processedUpdates.paymentDeadline);
+      }
+      
+      if (processedUpdates.updatedAt && typeof processedUpdates.updatedAt === 'string') {
+        processedUpdates.updatedAt = new Date(processedUpdates.updatedAt);
+      }
+
+      const [trade] = await db
+        .update(trades)
+        .set(processedUpdates)
+        .where(eq(trades.id, id))
+        .returning();
+      return trade || undefined;
+    } catch (error) {
+      console.error('Error updating trade:', error);
+      return undefined;
+    }
   }
 
   // Message methods

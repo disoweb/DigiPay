@@ -2196,7 +2196,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const updateResult = await storage.updateTrade(tradeId, {
         status: "payment_pending",
         paymentDeadline: newDeadline.toISOString(),
-        cancelReason: null
+        cancelReason: null,
+        updatedAt: new Date().toISOString()
       });
 
       if (!updateResult) {
