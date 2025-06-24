@@ -466,30 +466,21 @@ export class DatabaseStorage implements IStorage {
 
   // Trade methods
   async getTrades(): Promise<Trade[]> {
-    const tradesWithUsers = await db
-      .select({
-        trade: trades,
-        buyer: users,
-        seller: users,
-      })
-      .from(trades)
-      .leftJoin(users, eq(trades.buyerId, users.id))
-      .leftJoin(users, eq(trades.sellerId, users.id));
-
-    // Since we can't join the same table twice with different aliases easily,
-    // let's get trades and then fetch user data separately
+    // Get trades and then fetch user data separately to avoid alias conflicts
     const allTrades = await db.select().from(trades);
     const userIds = new Set([
       ...allTrades.map(t => t.buyerId),
       ...allTrades.map(t => t.sellerId)
     ]);
     
-    const usersData = await db
-      .select()
-      .from(users)
-      .where(inArray(users.id, Array.from(userIds)));
+    // Get all users individually to avoid complex join issues
+    const allUsers = [];
+    for (const id of userIds) {
+      const [user] = await db.select().from(users).where(eq(users.id, id));
+      if (user) allUsers.push(user);
+    }
 
-    const usersMap = new Map(usersData.map(u => [u.id, u]));
+    const usersMap = new Map(allUsers.map(u => [u.id, u]));
 
     return allTrades.map(trade => ({
       ...trade,

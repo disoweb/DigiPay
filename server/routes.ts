@@ -2222,10 +2222,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      // Use original offer's payment deadline duration instead of fixed 24 hours
-      // Get payment deadline from offer (should be in minutes)
-      const paymentDeadlineMinutes = offer.paymentDeadline || 30; // Default to 30 minutes
-      const newDeadline = new Date(Date.now() + paymentDeadlineMinutes * 60 * 1000);
+      // Use original offer's time limit for the new deadline
+      const timeLimitMinutes = offer.timeLimit || 30; // Default to 30 minutes if not set
+      const newDeadline = new Date(Date.now() + timeLimitMinutes * 60 * 1000);
+      
+      console.log(`Setting new deadline for trade ${trade.id}:`, {
+        originalTimeLimit: offer.timeLimit,
+        timeLimitMinutes,
+        newDeadline: newDeadline.toISOString()
+      });
 
       const updateResult = await storage.updateTrade(tradeId, {
         status: "payment_pending",
