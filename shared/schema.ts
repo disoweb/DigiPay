@@ -114,6 +114,8 @@ export const trades = pgTable("trades", {
   disputeRaisedBy: varchar("dispute_raised_by", { length: 50 }),
   disputeEvidence: text("dispute_evidence"),
   disputeCreatedAt: timestamp("dispute_created_at"),
+  disputeResolution: text("dispute_resolution"),
+  disputeWinner: text("dispute_winner"),
   lastAdminUpdate: timestamp("last_admin_update"),
   cancelReason: text("cancel_reason"),
   paymentReference: varchar("payment_reference", { length: 255 }),
