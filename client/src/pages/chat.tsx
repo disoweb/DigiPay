@@ -16,7 +16,8 @@ import {
   Clock,
   CheckCircle,
   XCircle,
-  AlertTriangle
+  AlertTriangle,
+  Wifi
 } from "lucide-react";
 
 type EnrichedTrade = {
