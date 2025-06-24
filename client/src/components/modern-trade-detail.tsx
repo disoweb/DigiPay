@@ -735,57 +735,81 @@ export function ModernTradeDetail() {
           </Card>
         )}
 
-        {/* Countdown Timer */}
-        {trade.paymentDeadline && trade.status === "payment_pending" && (
-          <div
-            className={`flex items-center justify-between p-2 rounded-lg border ${
-              isExpired
-                ? "bg-red-50 border-red-200"
-                : timeLeft.includes(":") && !timeLeft.startsWith("0:")
-                  ? "bg-orange-50 border-orange-200"
-                  : "bg-red-50 border-red-200"
-            }`}
-          >
-            <div className="flex items-center gap-2">
-              <Timer
-                className={`h-3 w-3 ${
-                  isExpired
-                    ? "text-red-600"
-                    : timeLeft.includes(":") && !timeLeft.startsWith("0:")
-                      ? "text-orange-600"
-                      : "text-red-600"
-                }`}
-              />
-              <span
-                className={`text-xs font-medium ${
-                  isExpired
-                    ? "text-red-900"
-                    : timeLeft.includes(":") && !timeLeft.startsWith("0:")
-                      ? "text-orange-900"
-                      : "text-red-900"
-                }`}
-              >
-                {isExpired ? "Payment Expired" : "Time Remaining"}
-              </span>
-            </div>
-            <p
-              className={`text-xs font-mono font-bold ${
-                isExpired
-                  ? "text-red-800"
-                  : timeLeft.includes(":") && !timeLeft.startsWith("0:")
-                    ? "text-orange-800"
-                    : "text-red-800"
-              }`}
-            >
-              {timeLeft}
-            </p>
-          </div>
-        )}
-
-        {/* Compact Action Buttons */}
+        {/* Payment Actions with Timer - Side by Side Layout */}
         {isUserInTrade && (
           <div className="space-y-2 mt-auto">
-            {canMarkPaymentMade && (
+            {/* Timer and Payment Button on Same Line */}
+            {trade.paymentDeadline && trade.status === "payment_pending" && (
+              <div className="flex items-center gap-3">
+                {/* Countdown Timer */}
+                <div
+                  className={`flex items-center justify-between p-2 rounded-lg border flex-1 ${
+                    isExpired
+                      ? "bg-red-50 border-red-200"
+                      : timeLeft.includes(":") && !timeLeft.startsWith("0:")
+                        ? "bg-orange-50 border-orange-200"
+                        : "bg-red-50 border-red-200"
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <Timer
+                      className={`h-3 w-3 ${
+                        isExpired
+                          ? "text-red-600"
+                          : timeLeft.includes(":") && !timeLeft.startsWith("0:")
+                            ? "text-orange-600"
+                            : "text-red-600"
+                      }`}
+                    />
+                    <span
+                      className={`text-xs font-medium ${
+                        isExpired
+                          ? "text-red-900"
+                          : timeLeft.includes(":") && !timeLeft.startsWith("0:")
+                            ? "text-orange-900"
+                            : "text-red-900"
+                      }`}
+                    >
+                      {isExpired ? "Payment Expired" : "Time Remaining"}
+                    </span>
+                  </div>
+                  <p
+                    className={`text-xs font-mono font-bold ${
+                      isExpired
+                        ? "text-red-800"
+                        : timeLeft.includes(":") && !timeLeft.startsWith("0:")
+                          ? "text-orange-800"
+                          : "text-red-800"
+                    }`}
+                  >
+                    {timeLeft}
+                  </p>
+                </div>
+
+                {/* Payment Made Button */}
+                {canMarkPaymentMade && (
+                  <Button
+                    onClick={() => markPaymentMadeMutation.mutate()}
+                    disabled={markPaymentMadeMutation.isPending}
+                    className="h-10 bg-blue-600 hover:bg-blue-700 text-sm whitespace-nowrap"
+                  >
+                    {markPaymentMadeMutation.isPending ? (
+                      <>
+                        <RefreshCw className="h-3 w-3 mr-2 animate-spin" />
+                        Confirming...
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle className="h-3 w-3 mr-2" />I Have Made Payment
+                      </>
+                    )}
+                  </Button>
+                )}
+              </div>
+            )}
+
+            {/* Other Action Buttons */}
+            {canMarkPaymentMade && (!trade.paymentDeadline || trade.status !== "payment_pending") && (
               <Button
                 onClick={() => markPaymentMadeMutation.mutate()}
                 disabled={markPaymentMadeMutation.isPending}
