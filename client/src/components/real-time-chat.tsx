@@ -231,29 +231,26 @@ export function RealTimeChat({ tradeId }: RealTimeChatProps) {
   }
 
   return (
-    <div className="flex flex-col h-full bg-gray-50 dark:bg-gray-900">
-      {/* Chat Header */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Trade Chat</h3>
-          <div className="flex items-center space-x-2">
-            {isConnected ? (
-              <>
-                <Wifi className="h-4 w-4 text-green-500" />
-                <span className="text-xs text-green-500 font-medium">Online</span>
-              </>
-            ) : (
-              <>
-                <WifiOff className="h-4 w-4 text-red-500" />
-                <span className="text-xs text-red-500 font-medium">Offline</span>
-              </>
-            )}
-          </div>
+    <div className="flex flex-col h-full bg-white">
+      {/* Compact connection status */}
+      <div className="bg-gray-50 border-b border-gray-200 px-3 py-1 flex-shrink-0">
+        <div className="flex items-center justify-center">
+          {isConnected ? (
+            <div className="flex items-center gap-1">
+              <Wifi className="h-3 w-3 text-green-500" />
+              <span className="text-xs text-green-600 font-medium">Connected</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-1">
+              <WifiOff className="h-3 w-3 text-red-500" />
+              <span className="text-xs text-red-600 font-medium">Connecting...</span>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Messages Area - Takes up available space above fixed input */}
-      <div className="flex-1 overflow-y-auto p-3 pb-0">
+      {/* Messages Area - Mobile optimized */}
+      <div className="flex-1 overflow-y-auto p-3">
         {messages.length === 0 && pendingMessages.size === 0 ? (
           <div className="text-center py-8">
             <div className="bg-white dark:bg-gray-800 rounded-xl p-4 mx-auto max-w-xs shadow-sm">
@@ -286,13 +283,13 @@ export function RealTimeChat({ tradeId }: RealTimeChatProps) {
                     key={messageKey}
                     className={`flex ${isOwnMessage ? "justify-end" : "justify-start"} mb-1`}
                   >
-                    <div className={`max-w-[80%] sm:max-w-xs ${isPending ? "opacity-70" : ""} ${isFailed ? "opacity-50" : ""}`}>
+                    <div className={`max-w-[75%] ${isPending ? "opacity-70" : ""} ${isFailed ? "opacity-50" : ""}`}>
                       <div className={`rounded-2xl px-3 py-2 ${
                         isOwnMessage 
                           ? isFailed 
                             ? "bg-red-500 text-white"
                             : "bg-blue-500 text-white"
-                          : "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white"
+                          : "bg-gray-200 text-gray-900"
                       }`}>
                         <p className="text-sm break-words">{msg.message}</p>
                       </div>
@@ -320,20 +317,20 @@ export function RealTimeChat({ tradeId }: RealTimeChatProps) {
         )}
       </div>
 
-      {/* Fixed Input Area at Bottom */}
-      <div className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4 flex-shrink-0">
-        <form onSubmit={handleSendMessage} className="flex items-center space-x-3">
+      {/* Input Area - Mobile optimized */}
+      <div className="bg-white border-t border-gray-200 p-3 flex-shrink-0">
+        <form onSubmit={handleSendMessage} className="flex items-center gap-2">
           <div className="flex-1 relative">
             <Input
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               placeholder="Type your message..."
               disabled={sendMessageMutation.isPending || !isConnected}
-              className="w-full rounded-full border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent px-4 py-3 pr-12 text-sm"
+              className="w-full rounded-full border-gray-300 bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-transparent px-4 py-2 pr-10 text-sm"
             />
             {sendMessageMutation.isPending && (
-              <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
-                <Clock className="h-4 w-4 text-gray-400 animate-spin" />
+              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                <Clock className="h-3 w-3 text-gray-400 animate-spin" />
               </div>
             )}
           </div>
@@ -341,15 +338,15 @@ export function RealTimeChat({ tradeId }: RealTimeChatProps) {
           <Button
             type="submit"
             disabled={!message.trim() || sendMessageMutation.isPending || !isConnected}
-            className="rounded-full w-12 h-12 bg-blue-500 hover:bg-blue-600 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
+            className="rounded-full w-10 h-10 bg-blue-500 hover:bg-blue-600 shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <Send className="h-5 w-5" />
+            <Send className="h-4 w-4" />
           </Button>
         </form>
         
         {!isConnected && (
-          <div className="mt-2 flex items-center justify-center space-x-2 text-red-500">
-            <WifiOff className="h-4 w-4" />
+          <div className="mt-2 flex items-center justify-center space-x-1 text-red-500">
+            <WifiOff className="h-3 w-3" />
             <span className="text-xs">Connection lost. Trying to reconnect...</span>
           </div>
         )}

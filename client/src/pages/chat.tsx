@@ -176,61 +176,54 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
-      {/* Mobile-optimized Header */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-3 flex-shrink-0">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Button 
-              variant="ghost" 
-              size="sm"
-              onClick={() => setLocation(`/trades/${trade.id}`)}
-              className="p-2"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <div>
-              <h1 className="text-lg font-bold text-gray-900 dark:text-white">
-                Trade #{trade.id}
-              </h1>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                {otherParty?.email} • {isBuyer ? "Buying" : "Selling"} USDT
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
+    <div className="min-h-screen bg-gray-50">
+      {/* Mobile Header - Same style as trade detail */}
+      <div className="sticky top-0 z-50 bg-white shadow-sm border-b">
+        <div className="flex items-center justify-between p-4">
+          <Button variant="ghost" size="sm" onClick={() => setLocation(`/trades/${trade.id}`)}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back
+          </Button>
+          <h1 className="text-lg font-semibold">Trade #{trade.id} Chat</h1>
+          <div className="flex items-center gap-1">
             {getStatusIcon(trade.status)}
             {getStatusBadge(trade.status)}
           </div>
         </div>
       </div>
 
-      {/* Compact Trade Info */}
-      <div className="bg-blue-50 dark:bg-blue-900/20 border-b border-blue-200 dark:border-blue-800 px-4 py-2 flex-shrink-0">
-        <div className="flex items-center justify-between text-sm mb-2">
-          <div className="flex items-center gap-4">
-            <span className="font-medium text-blue-900 dark:text-blue-100">
-              {parseFloat(trade.amount).toFixed(2)} USDT
-            </span>
-            <span className="text-blue-700 dark:text-blue-300">
-              @ ₦{parseFloat(trade.rate).toLocaleString()}
+      {/* Single viewport container */}
+      <div className="h-[calc(100vh-64px)] flex flex-col">
+        {/* Ultra-compact trade info */}
+        <div className="bg-blue-50 border-b border-blue-200 px-3 py-2 flex-shrink-0">
+          <div className="flex items-center justify-between text-xs">
+            <div className="flex items-center gap-3">
+              <span className="font-medium text-blue-900">
+                {parseFloat(trade.amount).toFixed(1)} USDT
+              </span>
+              <span className="text-blue-700">
+                @ ₦{parseFloat(trade.rate).toLocaleString()}
+              </span>
+            </div>
+            <span className="font-bold text-blue-900">
+              ₦{parseFloat(trade.fiatAmount).toLocaleString()}
             </span>
           </div>
-          <span className="font-bold text-blue-900 dark:text-blue-100">
-            ₦{parseFloat(trade.fiatAmount).toLocaleString()}
-          </span>
+          <div className="flex items-center justify-between mt-1">
+            <span className="text-xs text-blue-600">
+              {isBuyer ? "Buying from" : "Selling to"} {otherParty?.email?.split('@')[0]}
+            </span>
+            <TradeTimer 
+              paymentDeadline={trade.paymentDeadline} 
+              tradeStatus={trade.status} 
+            />
+          </div>
         </div>
 
-        {/* Trade Timer */}
-        <TradeTimer 
-          paymentDeadline={trade.paymentDeadline} 
-          tradeStatus={trade.status} 
-        />
-      </div>
-
-      {/* Full-screen Chat */}
-      <div className="flex-1 min-h-0">
-        <RealTimeChat tradeId={trade.id} />
+        {/* Chat area - takes remaining height */}
+        <div className="flex-1 min-h-0">
+          <RealTimeChat tradeId={trade.id} />
+        </div>
       </div>
     </div>
   );
