@@ -2921,8 +2921,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const hashedPassword = await hashPassword(password);
 
       await pool.query(
-        "UPDATE users SET password_hash = $1, updated_at = $2 WHERE id = $3",
-        [hashedPassword, new Date(), userId]
+        "UPDATE users SET password = $1 WHERE id = $2",
+        [hashedPassword, userId]
       );
 
       console.log(`Admin ${req.user!.email} updated password for user ${user.email}`);
