@@ -12,18 +12,16 @@ A peer-to-peer cryptocurrency trading platform enabling direct trading between u
 - **Security**: JWT authentication, rate limiting, helmet security
 
 ## Recent Changes
-- **2025-06-24**: Added premium animations and micro-interactions for enhanced user engagement
-  - Implemented strategic entrance animations with staggered timing for visual hierarchy
-  - Added hover effects with scale transforms, rotations, and color transitions on interactive elements
-  - Created animated live market data with real-time rate updates and trader count changes
-  - Added smooth slide-in animations for hero content with progressive reveal (badge → title → description → buttons → indicators)
-  - Implemented floating animations on trust indicators and CTA buttons with hover scale effects
-  - Added card hover animations with lift effects (-translate-y-2) and enhanced shadows
-  - Created icon rotation and scale animations on hover for better visual feedback
-  - Added arrow translation effects on button hover for directional guidance
-  - Implemented animated FAQ expansion with smooth slide-in-from-top transitions
-  - Added gradient text animation for hero title with pulse effects for premium feel
-  - Included animated pulse effects on security indicators and online status
+- **2025-06-24**: Enhanced animations with dynamic hero text rotation and refined user experience
+  - Removed entrance animations from hero section for immediate content visibility
+  - Added dynamic text rotation for hero subtitle cycling through: "Complete Security", "Complete Confidence", "Complete Trust", "Complete Protection", "Complete Peace of Mind"
+  - Retained hover effects with scale transforms, rotations, and color transitions on interactive elements
+  - Maintained animated live market data with real-time rate updates and trader count changes
+  - Kept card hover animations with lift effects (-translate-y-2) and enhanced shadows
+  - Preserved icon rotation and scale animations on hover for visual feedback
+  - Maintained arrow translation effects on button hover for directional guidance
+  - Kept animated FAQ expansion with smooth slide-in-from-top transitions
+  - Retained animated pulse effects on security indicators and online status
   - All animations use smooth duration-300 to duration-700 timing for professional feel
 - **2025-06-24**: Enhanced trade management with expiration handling and improved UI/UX
   - Added "Expired" tab to trades page showing expired trades for 24 hours with reopen functionality

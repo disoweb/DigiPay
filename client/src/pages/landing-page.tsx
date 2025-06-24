@@ -45,20 +45,23 @@ const faqData: FAQItem[] = [
 export default function LandingPage() {
   const [, setLocation] = useLocation();
   const [openFAQ, setOpenFAQ] = useState<number | null>(null);
-  const [isVisible, setIsVisible] = useState(false);
   const [currentRate, setCurrentRate] = useState(1583);
   const [onlineTraders, setOnlineTraders] = useState(1247);
+  const [heroTextIndex, setHeroTextIndex] = useState(0);
+
+  const heroTexts = [
+    "Complete Security",
+    "Complete Confidence", 
+    "Complete Trust",
+    "Complete Protection",
+    "Complete Peace of Mind"
+  ];
 
   const toggleFAQ = (index: number) => {
     setOpenFAQ(openFAQ === index ? null : index);
   };
 
-  // Entrance animation
-  useEffect(() => {
-    setIsVisible(true);
-  }, []);
-
-  // Animate numbers
+  // Animate numbers and hero text
   useEffect(() => {
     const rateInterval = setInterval(() => {
       setCurrentRate(prev => prev + Math.floor(Math.random() * 3) - 1);
@@ -68,9 +71,14 @@ export default function LandingPage() {
       setOnlineTraders(prev => prev + Math.floor(Math.random() * 10) - 5);
     }, 3000);
 
+    const heroTextInterval = setInterval(() => {
+      setHeroTextIndex(prev => (prev + 1) % heroTexts.length);
+    }, 3000);
+
     return () => {
       clearInterval(rateInterval);
       clearInterval(tradersInterval);
+      clearInterval(heroTextInterval);
     };
   }, []);
 
@@ -111,22 +119,22 @@ export default function LandingPage() {
       {/* Hero Section */}
       <section className="pt-20 pb-8 bg-gradient-to-b from-gray-50 to-white overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
-          <div className={`text-center mb-8 transition-all duration-1000 ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
-            <Badge className="mb-4 bg-blue-50 text-blue-700 border-blue-200 px-4 py-2 animate-in fade-in zoom-in duration-700 delay-300">
+          <div className="text-center mb-8">
+            <Badge className="mb-4 bg-blue-50 text-blue-700 border-blue-200 px-4 py-2">
               Nigeria's Leading P2P Exchange
             </Badge>
-            <h1 className="text-3xl sm:text-4xl lg:text-7xl font-extrabold text-gray-900 mb-4 leading-tight animate-in fade-in slide-in-from-bottom duration-1000 delay-500">
+            <h1 className="text-3xl sm:text-4xl lg:text-7xl font-extrabold text-gray-900 mb-4 leading-tight">
               Trade USDT with
-              <span className="block bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent animate-gradient bg-300% animate-pulse">
-                Complete Security
+              <span className="block bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent transition-all duration-500">
+                {heroTexts[heroTextIndex]}
               </span>
             </h1>
-            <p className="text-base sm:text-lg lg:text-xl text-gray-600 mb-6 max-w-3xl mx-auto leading-relaxed animate-in fade-in slide-in-from-bottom duration-1000 delay-700">
+            <p className="text-base sm:text-lg lg:text-xl text-gray-600 mb-6 max-w-3xl mx-auto leading-relaxed">
               Nigeria's most trusted peer-to-peer cryptocurrency exchange. Join 25,000+ verified traders 
               using advanced smart contracts and bank-grade security for safe USDT transactions.
             </p>
             
-            <div className="flex flex-col sm:flex-row gap-3 justify-center mb-6 animate-in fade-in slide-in-from-bottom duration-1000 delay-1000">
+            <div className="flex flex-col sm:flex-row gap-3 justify-center mb-6">
               <Button 
                 size="lg" 
                 onClick={() => setLocation("/auth")}
@@ -146,7 +154,7 @@ export default function LandingPage() {
             </div>
 
             {/* Trust Indicators - 2x2 Grid on Mobile */}
-            <div className="grid grid-cols-2 lg:flex lg:justify-center gap-4 lg:gap-8 text-xs sm:text-sm text-gray-600 animate-in fade-in slide-in-from-bottom duration-1000 delay-1200">
+            <div className="grid grid-cols-2 lg:flex lg:justify-center gap-4 lg:gap-8 text-xs sm:text-sm text-gray-600">
               <div className="flex items-center justify-center lg:justify-start hover:scale-105 transition-transform duration-200">
                 <Shield className="h-4 w-4 text-green-500 mr-1 sm:mr-2 animate-pulse" />
                 <span>Smart Contract Protected</span>
@@ -167,7 +175,7 @@ export default function LandingPage() {
           </div>
 
           {/* Live Trading Dashboard Preview */}
-          <div className={`max-w-5xl mx-auto transition-all duration-1000 delay-1500 ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
+          <div className="max-w-5xl mx-auto">
             <Card className="shadow-2xl border-0 bg-white/80 backdrop-blur-sm hover:shadow-3xl transition-all duration-500">
               <CardContent className="p-4 sm:p-6">
                 <div className="grid lg:grid-cols-3 gap-4 sm:gap-6">
