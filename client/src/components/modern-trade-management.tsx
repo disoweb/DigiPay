@@ -63,7 +63,7 @@ export function ModernTradeManagement() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
-  const [selectedStatus, setSelectedStatus] = useState<'all' | 'active' | 'completed' | 'disputed'>('active');
+  const [selectedStatus, setSelectedStatus] = useState<'all' | 'active' | 'completed' | 'disputed' | 'expired'>('active');
   const [searchTerm, setSearchTerm] = useState('');
   const [hiddenCanceledTrades, setHiddenCanceledTrades] = useState<Set<number>>(new Set());
 
@@ -80,6 +80,22 @@ export function ModernTradeManagement() {
     retry: 2,
     staleTime: 10000,
     refetchOnWindowFocus: false,
+  });
+
+  // Reopen trade mutation
+  const reopenTradeMutation = useMutation({
+    mutationFn: async (tradeId: number) => {
+      const response = await apiRequest("POST", `/api/trades/${tradeId}/reopen`);
+      if (!response.ok) throw new Error('Failed to reopen trade');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/trades"] });
+      toast({ title: "Success", description: "Trade reopened successfully" });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to reopen trade", variant: "destructive" });
+    },
   });
 
   // Auto-hide canceled trades after 9 minutes
@@ -110,6 +126,16 @@ export function ModernTradeManagement() {
     ["payment_pending", "payment_made"].includes(trade.status) && trade.status !== "expired"
   );
 
+  // Filter expired trades (expired within last 1 hour)
+  const expiredTrades = visibleTrades.filter(trade => {
+    if (trade.status !== 'expired') return false;
+    
+    // Check if expired within last hour
+    const updatedAt = new Date(trade.updatedAt || trade.createdAt);
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+    return updatedAt > oneHourAgo;
+  });
+
   const filteredTrades = (() => {
     let filtered;
     switch (selectedStatus) {
@@ -121,6 +147,9 @@ export function ModernTradeManagement() {
         break;
       case 'disputed':
         filtered = visibleTrades.filter(trade => trade.status === 'disputed');
+        break;
+      case 'expired':
+        filtered = expiredTrades;
         break;
       default:
         filtered = visibleTrades;
@@ -143,6 +172,7 @@ export function ModernTradeManagement() {
       case 'payment_pending': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
       case 'payment_made': return 'bg-blue-100 text-blue-800 border-blue-200';
       case 'completed': return 'bg-green-100 text-green-800 border-green-200';
+      case 'expired': return 'bg-red-100 text-red-800 border-red-200';
       case 'disputed': return 'bg-red-100 text-red-800 border-red-200';
       case 'canceled': return 'bg-gray-100 text-gray-800 border-gray-200';
       default: return 'bg-gray-100 text-gray-800 border-gray-200';
@@ -154,6 +184,7 @@ export function ModernTradeManagement() {
       case 'payment_pending': return <Timer className="h-3 w-3" />;
       case 'payment_made': return <Clock className="h-3 w-3" />;
       case 'completed': return <CheckCircle2 className="h-3 w-3" />;
+      case 'expired': return <XCircle className="h-3 w-3" />;
       case 'disputed': return <AlertTriangle className="h-3 w-3" />;
       case 'canceled': return <XCircle className="h-3 w-3" />;
       default: return <Activity className="h-3 w-3" />;
@@ -175,6 +206,7 @@ export function ModernTradeManagement() {
   const quickFilters = [
     { key: 'active', label: 'Active', count: activeTrades.length, icon: Activity, color: 'text-green-600' },
     { key: 'completed', label: 'Completed', count: visibleTrades.filter(t => t.status === 'completed').length, icon: CheckCircle2, color: 'text-blue-600' },
+    { key: 'expired', label: 'Expired', count: expiredTrades.length, icon: Timer, color: 'text-red-600' },
     { key: 'disputed', label: 'Disputed', count: visibleTrades.filter(t => t.status === 'disputed').length, icon: AlertTriangle, color: 'text-orange-600' },
     { key: 'all', label: 'All', count: visibleTrades.length, icon: Users, color: 'text-purple-600' },
   ];
