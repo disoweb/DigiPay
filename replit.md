@@ -13,13 +13,13 @@ DigiPay is a peer-to-peer cryptocurrency trading platform that enables direct tr
 - **Security**: Helmet for security headers, rate limiting, input validation
 
 ## Recent Changes
-- **2025-01-22**: Modernized trade management page with mobile-optimized responsive design
+- **2025-01-22**: Completely redesigned /trades page with modern mobile-first UI
+- **2025-01-22**: Added sticky mobile header with back navigation and refresh
+- **2025-01-22**: Implemented horizontal scrolling filter pills for better mobile UX
+- **2025-01-22**: Enhanced trade cards with avatars and improved visual hierarchy
 - **2025-01-22**: Added auto-removal of canceled trades after 9 minutes
-- **2025-01-22**: Enhanced trade list with search functionality and improved filters
+- **2025-01-22**: Enhanced search with placeholder text and better visual feedback
 - **2025-01-22**: Fixed dashboard Active Trades navigation (chat button vs card click)
-- **2025-01-22**: Fixed trade creation flow to redirect to trade detail page instead of chat
-- **2025-01-22**: Added chat button in trade detail page for contacting counterparty
-- **2025-01-22**: Fixed database schema mismatch for messages table (receiver_id vs recipient_id)
 
 ## Key Features
 - User registration and KYC verification
