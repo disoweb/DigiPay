@@ -38,9 +38,17 @@ export function EscrowStatus({ trade, userRole, onReleaseEscrow, onRefundEscrow 
   const getStatusBadge = () => {
     switch (trade.status) {
       case "pending":
-        return <Badge variant="secondary">Pending</Badge>;
+        return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">Pending</Badge>;
+      case "payment_pending":
+        return <Badge variant="outline" className="bg-blue-100 text-blue-800">Payment Pending</Badge>;
+      case "payment_made":
+        return <Badge variant="outline" className="bg-orange-100 text-orange-800">Payment Made</Badge>;
       case "completed":
         return <Badge variant="default" className="bg-green-100 text-green-800">Completed</Badge>;
+      case "expired":
+        return <Badge variant="outline" className="bg-red-100 text-red-800">Expired</Badge>;
+      case "disputed":
+        return <Badge variant="destructive" className="bg-red-100 text-red-800">Disputed</Badge>;
       case "cancelled":
         return <Badge variant="destructive">Cancelled</Badge>;
       default:
@@ -81,7 +89,7 @@ export function EscrowStatus({ trade, userRole, onReleaseEscrow, onRefundEscrow 
             <span className="text-sm font-medium">Status</span>
             <div className="flex items-center space-x-2">
               {getStatusIcon()}
-              <span className="text-sm capitalize">{trade.status}</span>
+              {getStatusBadge()}
             </div>
           </div>
           
