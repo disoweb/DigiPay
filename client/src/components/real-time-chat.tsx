@@ -232,19 +232,13 @@ export function RealTimeChat({ tradeId }: RealTimeChatProps) {
 
   return (
     <div className="flex flex-col h-full bg-gray-50 dark:bg-gray-900">
-      {/* Messages Area - Compact mobile layout */}
-      <div className="flex-1 overflow-y-auto p-4 flex flex-col">
+      {/* Messages Area - No empty space, messages only */}
+      <div className="flex-1 overflow-y-auto">
         {messages.length === 0 && pendingMessages.size === 0 ? (
-          <div className="flex-1 flex flex-col items-center justify-end pb-8">
-            <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center mb-3">
-              <Send className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-            </div>
-            <p className="text-gray-600 dark:text-gray-300 text-sm text-center">
-              No messages yet. Start the conversation!
-            </p>
-          </div>
+          // No empty state shown, just empty container
+          <div className="p-4"></div>
         ) : (
-          <div className="flex-1 flex flex-col justify-end">
+          <div className="p-4">
             <div className="space-y-2">
               {(() => {
                 // Sort all messages by timestamp to ensure proper ordering
