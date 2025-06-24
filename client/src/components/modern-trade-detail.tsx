@@ -78,7 +78,12 @@ export function ModernTradeDetail() {
     },
     refetchInterval: 10000,
     enabled: !!user && !!id, // Only run query when user is authenticated and ID exists
-    retry: 3,
+    retry: (failureCount, error: any) => {
+      if (error?.message?.includes('401') || error?.message?.includes('Unauthorized')) {
+        return false;
+      }
+      return failureCount < 2;
+    },
     retryDelay: 1000,
   });
 
@@ -117,6 +122,11 @@ export function ModernTradeDetail() {
       toast({ title: "Success", description: "Trade cancelled" });
     },
   });
+
+  // Ensure hooks are always called in the same order
+  const canMarkPaymentMade = user && trade && isBuyer && trade.status === 'payment_pending';
+  const canComplete = user && trade && isSeller && trade.status === 'payment_made';
+  const canCancel = user && trade && isUserInTrade && ['payment_pending', 'payment_made'].includes(trade.status);
 
   // Show loading while authentication is being checked
   if (!user) {
@@ -206,10 +216,10 @@ export function ModernTradeDetail() {
     );
   }
 
-  const isBuyer = trade.buyerId === user?.id;
-  const isSeller = trade.sellerId === user?.id;
+  const isBuyer = trade?.buyerId === user?.id;
+  const isSeller = trade?.sellerId === user?.id;
   const isUserInTrade = isBuyer || isSeller;
-  const partner = isBuyer ? trade.seller : trade.buyer;
+  const partner = isBuyer ? trade?.seller : trade?.buyer;
 
   // Mock online status - in real app this would come from WebSocket or API
   const getOnlineStatus = () => {
@@ -309,9 +319,7 @@ export function ModernTradeDetail() {
     };
   }, [trade?.paymentDeadline, trade?.status]);
 
-  const canMarkPaymentMade = isBuyer && trade.status === 'payment_pending';
-  const canComplete = isSeller && trade.status === 'payment_made';
-  const canCancel = isUserInTrade && ['payment_pending', 'payment_made'].includes(trade.status);
+  
 
   return (
     <div className="min-h-screen bg-gray-50">
