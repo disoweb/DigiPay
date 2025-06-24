@@ -333,8 +333,10 @@ export function ModernTradeManagement() {
             {filteredTrades.map((trade) => {
               const role = getTradeRole(trade);
               const partner = getTradePartner(trade);
-              const isExpiringSoon = trade.paymentDeadline && 
-                new Date(trade.paymentDeadline).getTime() - Date.now() < 5 * 60 * 1000;
+              const isExpiringSoon = trade.status === 'payment_pending' && 
+                trade.paymentDeadline && 
+                new Date(trade.paymentDeadline).getTime() - Date.now() < 5 * 60 * 1000 &&
+                new Date(trade.paymentDeadline).getTime() > Date.now();
 
               return (
                 <Card 
