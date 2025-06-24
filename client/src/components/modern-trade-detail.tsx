@@ -77,6 +77,9 @@ export function ModernTradeDetail() {
       return response.json();
     },
     refetchInterval: 10000,
+    enabled: !!user && !!id, // Only run query when user is authenticated and ID exists
+    retry: 3,
+    retryDelay: 1000,
   });
 
   const markPaymentMadeMutation = useMutation({
@@ -114,6 +117,34 @@ export function ModernTradeDetail() {
       toast({ title: "Success", description: "Trade cancelled" });
     },
   });
+
+  // Show loading while authentication is being checked
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="sticky top-0 z-50 bg-white shadow-sm border-b">
+          <div className="flex items-center justify-between p-4">
+            <Button variant="ghost" size="sm" onClick={() => setLocation('/trades')}>
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back
+            </Button>
+            <h1 className="text-lg font-semibold">Trade Details</h1>
+            <div className="w-8" />
+          </div>
+        </div>
+        
+        <div className="p-4 space-y-4">
+          <Card className="border-yellow-200 bg-yellow-50">
+            <CardContent className="p-6 text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-600 mx-auto mb-3"></div>
+              <h3 className="font-medium text-yellow-900 mb-2">Authenticating...</h3>
+              <p className="text-yellow-700 text-sm">Please wait while we verify your session</p>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
