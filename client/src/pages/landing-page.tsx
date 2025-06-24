@@ -100,7 +100,7 @@ export default function LandingPage() {
                 <p className="text-xs text-gray-500 -mt-1">Trusted P2P Trading</p>
               </div>
             </div>
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2">
               <Button 
                 variant="ghost" 
                 onClick={() => setLocation("/auth")}
