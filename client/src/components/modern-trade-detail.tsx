@@ -1,5 +1,5 @@
 import { useParams, useLocation } from "wouter";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -66,6 +66,8 @@ export function ModernTradeDetail() {
   const [, setLocation] = useLocation();
   const { user } = useAuth();
   const { toast } = useToast();
+  const [timeLeft, setTimeLeft] = useState<string>("");
+  const [isExpired, setIsExpired] = useState(false);
 
   const { data: trade, isLoading, error, refetch } = useQuery<Trade>({
     queryKey: ['/api/trades', id],
@@ -235,6 +237,40 @@ export function ModernTradeDetail() {
     }
   };
 
+  // Countdown timer effect
+  useEffect(() => {
+    if (!trade?.paymentDeadline || trade.status !== 'payment_pending') {
+      return;
+    }
+
+    const updateTimer = () => {
+      const now = new Date().getTime();
+      const deadline = new Date(trade.paymentDeadline!).getTime();
+      const difference = deadline - now;
+
+      if (difference <= 0) {
+        setTimeLeft("Expired");
+        setIsExpired(true);
+        return;
+      }
+
+      const hours = Math.floor(difference / (1000 * 60 * 60));
+      const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+
+      if (hours > 0) {
+        setTimeLeft(`${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
+      } else {
+        setTimeLeft(`${minutes}:${seconds.toString().padStart(2, '0')}`);
+      }
+    };
+
+    updateTimer();
+    const interval = setInterval(updateTimer, 1000);
+
+    return () => clearInterval(interval);
+  }, [trade?.paymentDeadline, trade?.status]);
+
   const canMarkPaymentMade = isBuyer && trade.status === 'payment_pending';
   const canComplete = isSeller && trade.status === 'payment_made';
   const canCancel = isUserInTrade && ['payment_pending', 'payment_made'].includes(trade.status);
@@ -292,9 +328,19 @@ export function ModernTradeDetail() {
               </div>
               <div className="text-center">
                 <p className="text-xs text-gray-600">Total</p>
-                <p className="font-bold text-sm text-green-600">
-                  ₦{(parseFloat(trade.amount) * parseFloat(trade.rate)).toLocaleString()}
-                </p>
+                <div className="flex items-center justify-center gap-1">
+                  <p className="font-bold text-sm text-green-600">
+                    ₦{(parseFloat(trade.amount) * parseFloat(trade.rate)).toLocaleString()}
+                  </p>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => copyToClipboard((parseFloat(trade.amount) * parseFloat(trade.rate)).toString(), "Total amount")}
+                    className="h-4 w-4 p-0 text-green-600"
+                  >
+                    <Copy className="h-3 w-3" />
+                  </Button>
+                </div>
                 <Badge variant="outline" className="text-xs mt-1 capitalize">
                   {isBuyer ? 'Buyer' : 'Seller'}
                 </Badge>
@@ -389,10 +435,25 @@ export function ModernTradeDetail() {
               </div>
 
               <div className="bg-amber-50 p-2 rounded border border-amber-200">
-                <p className="text-xs text-amber-800 font-medium mb-1 flex items-center gap-1">
-                  <AlertTriangle className="h-3 w-3" />
-                  Send ₦{(parseFloat(trade.amount) * parseFloat(trade.rate)).toLocaleString()} exactly
-                </p>
+                <div className="flex items-center justify-between mb-1">
+                  <p className="text-xs text-amber-800 font-medium flex items-center gap-1">
+                    <AlertTriangle className="h-3 w-3" />
+                    Send exactly:
+                  </p>
+                  <div className="flex items-center gap-1">
+                    <span className="text-xs font-bold text-amber-900">
+                      ₦{(parseFloat(trade.amount) * parseFloat(trade.rate)).toLocaleString()}
+                    </span>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => copyToClipboard((parseFloat(trade.amount) * parseFloat(trade.rate)).toString(), "Payment amount")}
+                      className="h-4 w-4 p-0 text-amber-700"
+                    >
+                      <Copy className="h-3 w-3" />
+                    </Button>
+                  </div>
+                </div>
                 <p className="text-xs text-amber-700">Save receipt & click "Payment Made" after sending</p>
               </div>
             </CardContent>
@@ -425,15 +486,41 @@ export function ModernTradeDetail() {
           </Card>
         )}
 
-        {/* Deadline Inline */}
-        {trade.paymentDeadline && (
-          <div className="flex items-center justify-between p-2 bg-orange-50 rounded-lg border border-orange-200">
+        {/* Countdown Timer */}
+        {trade.paymentDeadline && trade.status === 'payment_pending' && (
+          <div className={`flex items-center justify-between p-2 rounded-lg border ${
+            isExpired 
+              ? 'bg-red-50 border-red-200' 
+              : timeLeft.includes(':') && !timeLeft.startsWith('0:') 
+                ? 'bg-orange-50 border-orange-200'
+                : 'bg-red-50 border-red-200'
+          }`}>
             <div className="flex items-center gap-2">
-              <Clock className="h-3 w-3 text-orange-600" />
-              <span className="text-xs font-medium text-orange-900">Deadline</span>
+              <Timer className={`h-3 w-3 ${
+                isExpired 
+                  ? 'text-red-600' 
+                  : timeLeft.includes(':') && !timeLeft.startsWith('0:')
+                    ? 'text-orange-600'
+                    : 'text-red-600'
+              }`} />
+              <span className={`text-xs font-medium ${
+                isExpired 
+                  ? 'text-red-900' 
+                  : timeLeft.includes(':') && !timeLeft.startsWith('0:')
+                    ? 'text-orange-900'
+                    : 'text-red-900'
+              }`}>
+                {isExpired ? 'Payment Expired' : 'Time Remaining'}
+              </span>
             </div>
-            <p className="text-xs text-orange-800">
-              {new Date(trade.paymentDeadline).toLocaleTimeString()}
+            <p className={`text-xs font-mono font-bold ${
+              isExpired 
+                ? 'text-red-800' 
+                : timeLeft.includes(':') && !timeLeft.startsWith('0:')
+                  ? 'text-orange-800'
+                  : 'text-red-800'
+            }`}>
+              {timeLeft}
             </p>
           </div>
         )}
