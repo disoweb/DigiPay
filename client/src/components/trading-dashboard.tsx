@@ -494,7 +494,11 @@ export function TradingDashboard() {
                 const partner = isUserBuyer ? trade.seller : trade.buyer;
 
                 return (
-                  <div key={trade.id} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div 
+                    key={trade.id} 
+                    className="flex items-center justify-between p-3 border rounded-lg cursor-pointer hover:bg-gray-50 hover:border-blue-300 transition-colors"
+                    onClick={() => setLocation(`/trades/${trade.id}`)}
+                  >
                     <div className="flex items-center space-x-3">
                       <div className={`w-2 h-2 rounded-full ${
                         trade.status === 'completed' ? 'bg-green-500' :
