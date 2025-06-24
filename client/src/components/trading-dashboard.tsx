@@ -446,7 +446,11 @@ export function TradingDashboard() {
                   </div>
                 </div>
                 {activeOffers.slice(0, 3).map((offer: any) => (
-                  <div key={offer.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div 
+                    key={offer.id} 
+                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 hover:border hover:border-blue-300 transition-all duration-200"
+                    onClick={() => setLocation(`/manage-offers`)}
+                  >
                     <div>
                       <p className="font-medium capitalize">{offer.type} USDT</p>
                       <p className="text-sm text-gray-600">
