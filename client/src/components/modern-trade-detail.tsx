@@ -422,7 +422,7 @@ export function ModernTradeDetail() {
                   </Button>
                 </div>
                 <Badge variant="outline" className="text-xs mt-1 capitalize">
-                  {isBuyer ? 'Buyer' : 'Seller'}
+                  {tradeData?.isBuyer ? 'Buyer' : 'Seller'}
                 </Badge>
               </div>
             </div>
