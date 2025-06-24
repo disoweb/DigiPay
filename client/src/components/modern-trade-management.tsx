@@ -63,7 +63,7 @@ export function ModernTradeManagement() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
-  const [selectedStatus, setSelectedStatus] = useState<'all' | 'active' | 'completed' | 'disputed' | 'expired'>('active');
+  const [selectedStatus, setSelectedStatus] = useState<'all' | 'active' | 'completed' | 'disputed' | 'expired'>('completed');
   const [searchTerm, setSearchTerm] = useState('');
   const [hiddenCanceledTrades, setHiddenCanceledTrades] = useState<Set<number>>(new Set());
 
