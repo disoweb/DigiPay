@@ -96,11 +96,12 @@ export function ModernTradeDetail() {
       if (!response.ok) throw new Error('Failed to fetch trade');
       return response.json();
     },
-    refetchInterval: false, // Disable automatic refetching to prevent infinite loops
     enabled: !!user && !!id && id !== 'undefined',
-    retry: false, // Disable retry to prevent loops
-    staleTime: 30000, // Cache for 30 seconds
-    gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
+    refetchOnWindowFocus: false,
+    refetchOnMount: true,
+    refetchOnReconnect: false,
+    staleTime: Infinity, // Never consider data stale
+    gcTime: Infinity, // Keep in cache indefinitely
   });
 
   const markPaymentMadeMutation = useMutation({
@@ -110,7 +111,7 @@ export function ModernTradeDetail() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/trades', id] });
+      refetch();
       toast({ title: "Success", description: "Payment marked as made" });
     },
   });
@@ -122,9 +123,8 @@ export function ModernTradeDetail() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/trades', id] });
+      refetch();
       toast({ title: "Success", description: "Trade completed successfully" });
-      // Show rating form after successful completion
       setTimeout(() => setShowRatingForm(true), 1000);
     },
   });
@@ -136,55 +136,53 @@ export function ModernTradeDetail() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/trades', id] });
+      refetch();
       toast({ title: "Success", description: "Trade cancelled" });
     },
   });
 
-  // Timer effect for payment deadline
+  // Timer effect for payment deadline - simplified to prevent re-renders
   useEffect(() => {
-    if (!trade?.paymentDeadline) return;
+    if (!trade?.paymentDeadline || trade.status !== 'payment_pending') {
+      setTimeLeft("");
+      setIsExpired(false);
+      return;
+    }
     
     let interval: NodeJS.Timeout | null = null;
 
-    if (trade?.paymentDeadline && trade.status === 'payment_pending') {
-      const updateTimer = () => {
-        const now = new Date().getTime();
-        const deadline = new Date(trade.paymentDeadline!).getTime();
-        const difference = deadline - now;
+    const updateTimer = () => {
+      const now = new Date().getTime();
+      const deadline = new Date(trade.paymentDeadline!).getTime();
+      const difference = deadline - now;
 
-        if (difference <= 0) {
-          setTimeLeft("Expired");
-          setIsExpired(true);
-          return;
-        }
+      if (difference <= 0) {
+        setTimeLeft("Expired");
+        setIsExpired(true);
+        if (interval) clearInterval(interval);
+        return;
+      }
 
-        const hours = Math.floor(difference / (1000 * 60 * 60));
-        const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+      const hours = Math.floor(difference / (1000 * 60 * 60));
+      const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((difference % (1000 * 60)) / 1000);
 
-        if (hours > 0) {
-          setTimeLeft(`${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
-        } else {
-          setTimeLeft(`${minutes}:${seconds.toString().padStart(2, '0')}`);
-        }
-      };
-
-      updateTimer();
-      interval = setInterval(updateTimer, 1000);
-    } else {
-      setTimeLeft("");
-      setIsExpired(false);
-    }
-
-    return () => {
-      if (interval) {
-        clearInterval(interval);
+      if (hours > 0) {
+        setTimeLeft(`${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
+      } else {
+        setTimeLeft(`${minutes}:${seconds.toString().padStart(2, '0')}`);
       }
     };
-  }, [trade?.paymentDeadline, trade?.status]);
 
-  // Memoize trade-related calculations to prevent re-renders
+    updateTimer();
+    interval = setInterval(updateTimer, 1000);
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [trade?.id]);
+
+  // Simplify trade calculations to prevent re-renders
   const tradeData = useMemo(() => {
     if (!trade || !user) return null;
     
@@ -202,7 +200,7 @@ export function ModernTradeDetail() {
       canComplete: isSeller && trade.status === 'payment_made',
       canCancel: isUserInTrade && ['payment_pending', 'payment_made'].includes(trade.status)
     };
-  }, [trade, user]);
+  }, [trade?.id, trade?.status, user?.id]);
 
   // Show loading while authentication is being checked
   if (!user) {
