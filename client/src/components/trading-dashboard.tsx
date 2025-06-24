@@ -264,42 +264,6 @@ export function TradingDashboard() {
 
   return (
     <div className="space-y-6">
-      {/* Dashboard Header with DigiPay and Buy/Sell buttons */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-        <div className="flex items-center gap-4">
-          <h1 
-            className="text-2xl font-bold text-gray-900 cursor-pointer hover:text-blue-600 transition-colors" 
-            onClick={() => setLocation("/")}
-          >
-            DigiPay
-          </h1>
-          <div className="flex gap-2">
-            <Button 
-              onClick={() => setLocation("/marketplace")} 
-              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 h-8 text-sm"
-            >
-              Buy
-            </Button>
-            <Button 
-              onClick={() => setLocation("/marketplace")} 
-              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 h-8 text-sm"
-            >
-              Sell
-            </Button>
-          </div>
-        </div>
-        {user && (
-          <div className="flex items-center gap-2 text-sm text-gray-600">
-            <div className="flex items-center gap-1">
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-              <span>Live</span>
-            </div>
-            <span>•</span>
-            <span>Welcome, {user.username || user.email}</span>
-          </div>
-        )}
-      </div>
-
       {/* Total Portfolio Card - Same as Wallet */}
       <Card className="bg-gradient-to-r from-blue-600 to-purple-600 text-white border-0 shadow-lg">
         <CardContent className="p-6">
