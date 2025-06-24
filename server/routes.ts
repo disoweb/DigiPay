@@ -2029,6 +2029,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Send real-time balance updates via WebSocket
         setTimeout(() => {
           const wsServerGlobal = (global as any).wsServer;
+          console.log(`WebSocket server available for trade completion:`, !!wsServerGlobal);
+          console.log(`WebSocket clients available:`, wsServerGlobal?.clients?.size || 0);
           if (wsServerGlobal && wsServerGlobal.clients) {
             console.log(`Broadcasting trade completion balance updates to ${wsServerGlobal.clients.size} connected clients`);
             
@@ -2064,17 +2066,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
               }
             };
 
+            console.log(`Total WebSocket clients: ${wsServerGlobal.clients.size}`);
+            let sentToBuyer = false, sentToSeller = false;
+            
             wsServerGlobal.clients.forEach((client: any) => {
+              console.log(`Checking client - readyState: ${client.readyState}, userId: ${client.userId}`);
               if (client.readyState === 1) { // WebSocket.OPEN
                 if (client.userId === buyer.id) {
                   console.log('Sending balance update to buyer:', buyer.id);
+                  console.log('Buyer update message:', JSON.stringify(buyerUpdateMessage, null, 2));
                   client.send(JSON.stringify(buyerUpdateMessage));
+                  sentToBuyer = true;
                 } else if (client.userId === seller.id) {
                   console.log('Sending balance update to seller:', seller.id);
+                  console.log('Seller update message:', JSON.stringify(sellerUpdateMessage, null, 2));
                   client.send(JSON.stringify(sellerUpdateMessage));
+                  sentToSeller = true;
                 }
               }
             });
+            
+            console.log(`Balance updates sent - Buyer: ${sentToBuyer}, Seller: ${sentToSeller}`);
           }
         }, 100);
       }
@@ -4222,8 +4234,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Setup WebSocket for real-time updates (only if not already setup)
   if (!(global as any).wsServer) {
     const websocketModule = await import("./middleware/websocket.js");
-    websocketModule.setupWebSocket(httpServer);
+    const wsServer = websocketModule.setupWebSocket(httpServer);
+    (global as any).wsServer = wsServer;
+    console.log('WebSocket server setup completed and stored globally');
   }
+
+  // Test endpoint for WebSocket balance updates
+  app.post("/api/test/balance-update", authenticateToken, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      const { amount = "50000", type = 'test' } = req.body;
+      
+      console.log(`[TEST] Creating test balance update for user ${userId}`);
+      
+      // Send test balance update
+      setTimeout(() => {
+        const wsServerGlobal = (global as any).wsServer;
+        if (wsServerGlobal && wsServerGlobal.clients) {
+          console.log(`[TEST] Broadcasting test balance update to ${wsServerGlobal.clients.size} connected clients`);
+          
+          const updateMessage = {
+            type: 'balance_updated',
+            userId: userId,
+            nairaBalance: amount.toString(),
+            usdtBalance: "100.50",
+            previousBalance: "0",
+            lastTransaction: {
+              type: 'test_update',
+              amount: amount.toString(),
+              status: 'completed',
+              currency: 'NGN'
+            }
+          };
+
+          let messagesSent = 0;
+          wsServerGlobal.clients.forEach((client: any) => {
+            console.log(`[TEST] Checking client - readyState: ${client.readyState}, userId: ${client.userId}`);
+            if (client.readyState === 1 && client.userId === userId) {
+              console.log(`[TEST] Sending test balance update to user: ${userId}`);
+              client.send(JSON.stringify(updateMessage));
+              messagesSent++;
+            }
+          });
+          
+          console.log(`[TEST] Test balance update sent to ${messagesSent} clients`);
+        } else {
+          console.log(`[TEST] No WebSocket server found - server:`, !!wsServerGlobal, 'clients:', wsServerGlobal?.clients?.size);
+        }
+      }, 100);
+
+      res.json({ success: true, message: "Test balance update sent" });
+    } catch (error) {
+      console.error("Test balance update error:", error);
+      res.status(500).json({ error: "Failed to send test update" });
+    }
+  });
 
   return httpServer;
 }

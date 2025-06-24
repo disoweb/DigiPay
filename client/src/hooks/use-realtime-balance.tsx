@@ -69,9 +69,11 @@ export function useRealtimeBalance() {
         ws.onmessage = (event) => {
           try {
             const data = JSON.parse(event.data);
+            console.log('WebSocket message received:', data);
             
             if (data.type === 'balance_updated' && data.userId === user.id) {
-              console.log('Real-time balance update received - NGN:', data.nairaBalance, 'USDT:', data.usdtBalance);
+              console.log('Real-time balance update received for user:', user.id);
+              console.log('Balance data - NGN:', data.nairaBalance, 'USDT:', data.usdtBalance);
               console.log('Updating balance from', latestBalance, 'to', data.nairaBalance);
               
               // Update local state immediately
@@ -96,12 +98,27 @@ export function useRealtimeBalance() {
               queryClient.invalidateQueries({ queryKey: ["/api/user"] });
               queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
               
-              // Show notification
+              // Show notification based on transaction type
               if (data.lastTransaction?.type === 'deposit') {
                 toast({
                   title: "Deposit Successful!",
                   description: `₦${parseFloat(data.depositAmount).toLocaleString()} credited to your wallet`,
                   className: "border-green-200 bg-green-50 text-green-800",
+                });
+              } else if (data.lastTransaction?.type === 'trade_completion') {
+                const currency = data.lastTransaction.currency;
+                const amount = parseFloat(data.lastTransaction.amount);
+                toast({
+                  title: "Trade Completed!",
+                  description: `${currency === 'NGN' ? '₦' : ''}${amount.toLocaleString()}${currency === 'USDT' ? ' USDT' : ''} credited to your wallet`,
+                  className: "border-green-200 bg-green-50 text-green-800",
+                });
+              } else if (data.lastTransaction?.type === 'test_update') {
+                const amount = parseFloat(data.lastTransaction.amount);
+                toast({
+                  title: "Balance Updated!",
+                  description: `Test update: ₦${amount.toLocaleString()} balance`,
+                  className: "border-blue-200 bg-blue-50 text-blue-800",
                 });
               }
             }
