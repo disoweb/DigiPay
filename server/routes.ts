@@ -2190,8 +2190,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Trade expired too long ago to reopen" });
       }
 
-      // Reopen trade with new deadline (24 hours from now)
-      const newDeadline = new Date(Date.now() + 24 * 60 * 60 * 1000);
+      // Get the original offer to check payment deadline and seller balance
+      const offer = await storage.getOffer(trade.offerId);
+      if (!offer) {
+        return res.status(404).json({ error: "Original offer not found" });
+      }
+
+      // Check if seller still has enough USDT balance for sell offers
+      if (offer.type === "sell") {
+        const seller = await storage.getUser(trade.sellerId);
+        if (!seller) {
+          return res.status(404).json({ error: "Seller not found" });
+        }
+        
+        const sellerBalance = parseFloat(seller.usdtBalance || "0");
+        const tradeAmount = parseFloat(trade.amount);
+        
+        if (sellerBalance < tradeAmount) {
+          return res.status(400).json({ 
+            error: `Insufficient USDT balance. You have ${sellerBalance} USDT but need ${tradeAmount} USDT to reopen this trade.` 
+          });
+        }
+      }
+
+      // Use original offer's payment deadline duration instead of fixed 24 hours
+      // Get payment deadline from offer (should be in minutes)
+      const paymentDeadlineMinutes = offer.paymentDeadline || 30; // Default to 30 minutes
+      const newDeadline = new Date(Date.now() + paymentDeadlineMinutes * 60 * 1000);
 
       const updateResult = await storage.updateTrade(tradeId, {
         status: "payment_pending",
