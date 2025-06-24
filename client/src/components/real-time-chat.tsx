@@ -231,7 +231,7 @@ export function RealTimeChat({ tradeId }: RealTimeChatProps) {
   }
 
   return (
-    <div className="flex flex-col h-full bg-gray-50 dark:bg-gray-900">
+    <div className="flex flex-col h-full bg-gray-50 dark:bg-gray-900 min-h-0">
       {/* Chat Header */}
       <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4">
         <div className="flex items-center justify-between">
@@ -252,13 +252,13 @@ export function RealTimeChat({ tradeId }: RealTimeChatProps) {
         </div>
       </div>
 
-      {/* Messages Area - Takes up available space above fixed input */}
+      {/* Messages Area - Compact for mobile */}
       <div className="flex-1 overflow-y-auto p-3 pb-0">
         {messages.length === 0 && pendingMessages.size === 0 ? (
-          <div className="text-center py-8">
-            <div className="bg-white dark:bg-gray-800 rounded-xl p-4 mx-auto max-w-xs shadow-sm">
-              <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center mx-auto mb-3">
-                <Send className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+          <div className="text-center py-4">
+            <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 mx-auto max-w-xs">
+              <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center mx-auto mb-2">
+                <Send className="h-5 w-5 text-blue-600 dark:text-blue-400" />
               </div>
               <p className="text-gray-600 dark:text-gray-300 text-sm">
                 No messages yet. Start the conversation!
