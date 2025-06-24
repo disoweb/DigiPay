@@ -2127,6 +2127,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Check and handle expired trades
+  app.post("/api/trades/:id/check-expiration", authenticateToken, async (req, res) => {
+    try {
+      const tradeId = parseInt(req.params.id);
+      const trade = await storage.getTrade(tradeId);
+      
+      if (!trade) {
+        return res.status(404).json({ error: "Trade not found" });
+      }
+
+      // Check if trade has expired and should be auto-cancelled
+      if (trade.status === "payment_pending" && trade.paymentDeadline) {
+        const deadline = new Date(trade.paymentDeadline);
+        const now = new Date();
+        
+        if (now > deadline) {
+          // Auto-cancel expired trade
+          await storage.updateTrade(tradeId, {
+            status: "expired",
+            cancelReason: "Payment deadline exceeded"
+          });
+          
+          const updatedTrade = await storage.getTrade(tradeId);
+          return res.json({ expired: true, trade: updatedTrade });
+        }
+      }
+      
+      res.json({ expired: false, trade });
+    } catch (error) {
+      console.error("Check expiration error:", error);
+      res.status(500).json({ error: "Failed to check expiration" });
+    }
+  });
+
   // Cancel trade
   app.post("/api/trades/:id/cancel", authenticateToken, async (req, res) => {
     try {

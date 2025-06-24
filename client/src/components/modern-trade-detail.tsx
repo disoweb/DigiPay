@@ -163,6 +163,9 @@ export function ModernTradeDetail() {
     },
   });
 
+  // Track if expiration check has been performed to avoid duplicate calls
+  const [expirationChecked, setExpirationChecked] = useState(false);
+
   // Always call useEffect hooks consistently
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
@@ -176,8 +179,11 @@ export function ModernTradeDetail() {
         if (difference <= 0) {
           setTimeLeft("Expired");
           setIsExpired(true);
-          // Auto-check expiration on server
-          checkExpirationMutation.mutate();
+          // Auto-check expiration on server only once
+          if (!expirationChecked) {
+            setExpirationChecked(true);
+            checkExpirationMutation.mutate();
+          }
           return;
         }
 
