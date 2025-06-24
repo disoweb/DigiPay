@@ -143,24 +143,24 @@ export function SwapModal({ open, onOpenChange, nairaBalance, usdtBalance }: Swa
                   className={`cursor-pointer transition-all ${fromCurrency === "NGN" ? "ring-2 ring-blue-500 bg-blue-50" : "hover:bg-gray-50"}`}
                   onClick={() => setFromCurrency("NGN")}
                 >
-                  <CardContent className="p-4 text-center">
-                    <div className="flex items-center justify-center gap-2 mb-2">
-                      <DollarSign className="h-6 w-6 text-green-600" />
+                  <CardContent className="p-3 text-center">
+                    <div className="flex items-center justify-center gap-2 mb-1">
+                      <DollarSign className="h-5 w-5 text-green-600" />
                       <p className="font-medium">NGN</p>
                     </div>
-                    <p className="text-sm text-gray-500">₦{parseFloat(nairaBalance).toLocaleString()}</p>
+                    <p className="text-xs text-gray-500">₦{parseFloat(nairaBalance).toLocaleString()}</p>
                   </CardContent>
                 </Card>
                 <Card 
                   className={`cursor-pointer transition-all ${fromCurrency === "USDT" ? "ring-2 ring-blue-500 bg-blue-50" : "hover:bg-gray-50"}`}
                   onClick={() => setFromCurrency("USDT")}
                 >
-                  <CardContent className="p-4 text-center">
-                    <div className="flex items-center justify-center gap-2 mb-2">
-                      <Coins className="h-6 w-6 text-blue-600" />
+                  <CardContent className="p-3 text-center">
+                    <div className="flex items-center justify-center gap-2 mb-1">
+                      <Coins className="h-5 w-5 text-blue-600" />
                       <p className="font-medium">USDT</p>
                     </div>
-                    <p className="text-sm text-gray-500">{parseFloat(usdtBalance).toFixed(6)}</p>
+                    <p className="text-xs text-gray-500">${parseFloat(usdtBalance).toFixed(2)}</p>
                   </CardContent>
                 </Card>
               </div>
@@ -188,7 +188,7 @@ export function SwapModal({ open, onOpenChange, nairaBalance, usdtBalance }: Swa
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600">
-                  Available: {fromCurrency === "NGN" ? "₦" : ""}{getAvailableBalance().toLocaleString()} {fromCurrency}
+                  Available: {fromCurrency === "NGN" ? "₦" + getAvailableBalance().toLocaleString() : "$" + getAvailableBalance().toFixed(2)} {fromCurrency}
                 </span>
                 <Button
                   variant="link"
