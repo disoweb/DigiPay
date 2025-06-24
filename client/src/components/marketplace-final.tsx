@@ -248,6 +248,26 @@ export function MarketplaceFinal() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState<"all" | "buy" | "sell">("all");
   const [paymentMethodFilter, setPaymentMethodFilter] = useState("all");
+  
+  // Listen for navigation filter events from navbar
+  useEffect(() => {
+    const handleMarketplaceFilter = (event: any) => {
+      const filter = event.detail?.filter;
+      if (filter === 'buy' || filter === 'sell') {
+        setFilterType(filter);
+        // Scroll to the filter section after setting the filter
+        setTimeout(() => {
+          const filterSection = document.querySelector('[data-marketplace-filters]');
+          if (filterSection) {
+            filterSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        }, 200);
+      }
+    };
+
+    window.addEventListener('marketplaceFilter', handleMarketplaceFilter);
+    return () => window.removeEventListener('marketplaceFilter', handleMarketplaceFilter);
+  }, []);
   const [minAmount, setMinAmount] = useState("");
   const [maxAmount, setMaxAmount] = useState("");
 
@@ -473,7 +493,34 @@ export function MarketplaceFinal() {
             </div>
             
             {/* Mobile-Optimized Filter Bar */}
-            <div className="flex items-center gap-3 overflow-x-auto pb-2">
+            <div className="flex items-center gap-3 overflow-x-auto pb-2" data-marketplace-filters>
+              <Button
+                variant={filterType === "buy" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setFilterType("buy")}
+                className="flex-shrink-0 rounded-xl font-medium bg-green-600 hover:bg-green-700 text-white"
+              >
+                Buy USDT
+              </Button>
+              
+              <Button
+                variant={filterType === "sell" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setFilterType("sell")}
+                className="flex-shrink-0 rounded-xl font-medium bg-red-600 hover:bg-red-700 text-white"
+              >
+                Sell USDT
+              </Button>
+              
+              <Button
+                variant={filterType === "all" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setFilterType("all")}
+                className="flex-shrink-0 rounded-xl font-medium"
+              >
+                All Offers
+              </Button>
+              
               <Button
                 variant={showFilters ? "default" : "outline"}
                 size="sm"
@@ -481,7 +528,7 @@ export function MarketplaceFinal() {
                 className="flex-shrink-0 rounded-xl font-medium"
               >
                 <Filter className="h-4 w-4 mr-2" />
-                Filters
+                More Filters
                 <ChevronDown className={`h-4 w-4 ml-2 transition-transform duration-200 ${showFilters ? 'rotate-180' : ''}`} />
               </Button>
               
