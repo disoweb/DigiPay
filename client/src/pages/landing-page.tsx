@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -45,19 +45,43 @@ const faqData: FAQItem[] = [
 export default function LandingPage() {
   const [, setLocation] = useLocation();
   const [openFAQ, setOpenFAQ] = useState<number | null>(null);
+  const [isVisible, setIsVisible] = useState(false);
+  const [currentRate, setCurrentRate] = useState(1583);
+  const [onlineTraders, setOnlineTraders] = useState(1247);
 
   const toggleFAQ = (index: number) => {
     setOpenFAQ(openFAQ === index ? null : index);
   };
 
+  // Entrance animation
+  useEffect(() => {
+    setIsVisible(true);
+  }, []);
+
+  // Animate numbers
+  useEffect(() => {
+    const rateInterval = setInterval(() => {
+      setCurrentRate(prev => prev + Math.floor(Math.random() * 3) - 1);
+    }, 5000);
+
+    const tradersInterval = setInterval(() => {
+      setOnlineTraders(prev => prev + Math.floor(Math.random() * 10) - 5);
+    }, 3000);
+
+    return () => {
+      clearInterval(rateInterval);
+      clearInterval(tradersInterval);
+    };
+  }, []);
+
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
-      <header className="fixed top-0 w-full bg-white/95 backdrop-blur-md border-b border-gray-100 z-50">
+      <header className="fixed top-0 w-full bg-white/95 backdrop-blur-md border-b border-gray-100 z-50 animate-in slide-in-from-top duration-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-20">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
+            <div className="flex items-center space-x-3 animate-in fade-in slide-in-from-left duration-1000">
+              <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg hover:scale-110 transition-transform duration-300">
                 <Wallet className="h-6 w-6 text-white" />
               </div>
               <div>
@@ -65,17 +89,17 @@ export default function LandingPage() {
                 <p className="text-xs text-gray-500 -mt-1">Trusted P2P Trading</p>
               </div>
             </div>
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-4 animate-in fade-in slide-in-from-right duration-1000">
               <Button 
                 variant="ghost" 
                 onClick={() => setLocation("/auth")}
-                className="text-gray-700 hover:text-gray-900"
+                className="text-gray-700 hover:text-gray-900 hover:scale-105 transition-all duration-200"
               >
                 Sign In
               </Button>
               <Button 
                 onClick={() => setLocation("/auth")}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium shadow-sm"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium shadow-sm hover:scale-105 hover:shadow-lg transition-all duration-200"
               >
                 Get Started
               </Button>
@@ -85,57 +109,57 @@ export default function LandingPage() {
       </header>
 
       {/* Hero Section */}
-      <section className="pt-20 pb-8 bg-gradient-to-b from-gray-50 to-white">
+      <section className="pt-20 pb-8 bg-gradient-to-b from-gray-50 to-white overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
-          <div className="text-center mb-8">
-            <Badge className="mb-4 bg-blue-50 text-blue-700 border-blue-200 px-4 py-2">
+          <div className={`text-center mb-8 transition-all duration-1000 ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
+            <Badge className="mb-4 bg-blue-50 text-blue-700 border-blue-200 px-4 py-2 animate-in fade-in zoom-in duration-700 delay-300">
               Nigeria's Leading P2P Exchange
             </Badge>
-            <h1 className="text-3xl sm:text-4xl lg:text-7xl font-extrabold text-gray-900 mb-4 leading-tight">
+            <h1 className="text-3xl sm:text-4xl lg:text-7xl font-extrabold text-gray-900 mb-4 leading-tight animate-in fade-in slide-in-from-bottom duration-1000 delay-500">
               Trade USDT with
-              <span className="block bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+              <span className="block bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent animate-gradient bg-300% animate-pulse">
                 Complete Security
               </span>
             </h1>
-            <p className="text-base sm:text-lg lg:text-xl text-gray-600 mb-6 max-w-3xl mx-auto leading-relaxed">
+            <p className="text-base sm:text-lg lg:text-xl text-gray-600 mb-6 max-w-3xl mx-auto leading-relaxed animate-in fade-in slide-in-from-bottom duration-1000 delay-700">
               Nigeria's most trusted peer-to-peer cryptocurrency exchange. Join 25,000+ verified traders 
               using advanced smart contracts and bank-grade security for safe USDT transactions.
             </p>
             
-            <div className="flex flex-col sm:flex-row gap-3 justify-center mb-6">
+            <div className="flex flex-col sm:flex-row gap-3 justify-center mb-6 animate-in fade-in slide-in-from-bottom duration-1000 delay-1000">
               <Button 
                 size="lg" 
                 onClick={() => setLocation("/auth")}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 text-base font-semibold rounded-xl shadow-lg w-auto"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 text-base font-semibold rounded-xl shadow-lg w-auto hover:scale-105 hover:shadow-xl transition-all duration-300 group"
               >
                 Start Trading Free
-                <ArrowRight className="ml-2 h-4 w-4" />
+                <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform duration-200" />
               </Button>
               <Button 
                 size="lg" 
                 variant="outline"
-                className="border-2 border-gray-300 text-gray-700 hover:bg-gray-50 px-6 py-3 text-base font-semibold rounded-xl w-auto"
+                className="border-2 border-gray-300 text-gray-700 hover:bg-gray-50 px-6 py-3 text-base font-semibold rounded-xl w-auto hover:scale-105 hover:border-blue-400 transition-all duration-300 group"
               >
                 View Live Rates
-                <TrendingUp className="ml-2 h-4 w-4" />
+                <TrendingUp className="ml-2 h-4 w-4 group-hover:scale-110 transition-transform duration-200" />
               </Button>
             </div>
 
             {/* Trust Indicators - 2x2 Grid on Mobile */}
-            <div className="grid grid-cols-2 lg:flex lg:justify-center gap-4 lg:gap-8 text-xs sm:text-sm text-gray-600">
-              <div className="flex items-center justify-center lg:justify-start">
-                <Shield className="h-4 w-4 text-green-500 mr-1 sm:mr-2" />
+            <div className="grid grid-cols-2 lg:flex lg:justify-center gap-4 lg:gap-8 text-xs sm:text-sm text-gray-600 animate-in fade-in slide-in-from-bottom duration-1000 delay-1200">
+              <div className="flex items-center justify-center lg:justify-start hover:scale-105 transition-transform duration-200">
+                <Shield className="h-4 w-4 text-green-500 mr-1 sm:mr-2 animate-pulse" />
                 <span>Smart Contract Protected</span>
               </div>
-              <div className="flex items-center justify-center lg:justify-start">
+              <div className="flex items-center justify-center lg:justify-start hover:scale-105 transition-transform duration-200">
                 <UserCheck className="h-4 w-4 text-blue-500 mr-1 sm:mr-2" />
                 <span>KYC Verified Traders Only</span>
               </div>
-              <div className="flex items-center justify-center lg:justify-start">
+              <div className="flex items-center justify-center lg:justify-start hover:scale-105 transition-transform duration-200">
                 <Award className="h-4 w-4 text-purple-500 mr-1 sm:mr-2" />
                 <span>SEC Nigeria Compliant</span>
               </div>
-              <div className="flex items-center justify-center lg:justify-start">
+              <div className="flex items-center justify-center lg:justify-start hover:scale-105 transition-transform duration-200">
                 <Clock className="h-4 w-4 text-orange-500 mr-1 sm:mr-2" />
                 <span>24/7 Live Support</span>
               </div>
@@ -143,42 +167,42 @@ export default function LandingPage() {
           </div>
 
           {/* Live Trading Dashboard Preview */}
-          <div className="max-w-5xl mx-auto">
-            <Card className="shadow-2xl border-0 bg-white/80 backdrop-blur-sm">
+          <div className={`max-w-5xl mx-auto transition-all duration-1000 delay-1500 ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
+            <Card className="shadow-2xl border-0 bg-white/80 backdrop-blur-sm hover:shadow-3xl transition-all duration-500">
               <CardContent className="p-4 sm:p-6">
                 <div className="grid lg:grid-cols-3 gap-4 sm:gap-6">
                   <div className="lg:col-span-2">
                     <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-4">Live Market Data</h3>
                     <div className="grid grid-cols-2 gap-3 mb-4">
-                      <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-3 rounded-xl border border-green-200">
+                      <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-3 rounded-xl border border-green-200 hover:scale-105 transition-transform duration-300 cursor-pointer">
                         <div className="flex items-center justify-between">
                           <div>
                             <p className="text-xs text-green-700 font-medium">Best Buy Rate</p>
-                            <p className="text-lg font-bold text-green-800">₦1,583</p>
+                            <p className="text-lg font-bold text-green-800 transition-all duration-500">₦{currentRate.toLocaleString()}</p>
                           </div>
-                          <TrendingUp className="h-6 w-6 text-green-600" />
+                          <TrendingUp className="h-6 w-6 text-green-600 animate-bounce" />
                         </div>
                       </div>
-                      <div className="bg-gradient-to-r from-red-50 to-rose-50 p-3 rounded-xl border border-red-200">
+                      <div className="bg-gradient-to-r from-red-50 to-rose-50 p-3 rounded-xl border border-red-200 hover:scale-105 transition-transform duration-300 cursor-pointer">
                         <div className="flex items-center justify-between">
                           <div>
                             <p className="text-xs text-red-700 font-medium">Best Sell Rate</p>
-                            <p className="text-lg font-bold text-red-800">₦1,578</p>
+                            <p className="text-lg font-bold text-red-800 transition-all duration-500">₦{(currentRate - 5).toLocaleString()}</p>
                           </div>
-                          <TrendingUp className="h-6 w-6 text-red-600 rotate-180" />
+                          <TrendingUp className="h-6 w-6 text-red-600 rotate-180 animate-bounce" />
                         </div>
                       </div>
                     </div>
                     <div className="grid grid-cols-3 gap-3 text-center">
-                      <div>
+                      <div className="hover:scale-105 transition-transform duration-200">
                         <p className="text-lg sm:text-xl font-bold text-gray-900">25,847</p>
                         <p className="text-xs text-gray-600">Active Traders</p>
                       </div>
-                      <div>
+                      <div className="hover:scale-105 transition-transform duration-200">
                         <p className="text-lg sm:text-xl font-bold text-gray-900">₦2.8B</p>
                         <p className="text-xs text-gray-600">Monthly Volume</p>
                       </div>
-                      <div>
+                      <div className="hover:scale-105 transition-transform duration-200">
                         <p className="text-lg sm:text-xl font-bold text-gray-900">99.8%</p>
                         <p className="text-xs text-gray-600">Success Rate</p>
                       </div>
@@ -189,32 +213,32 @@ export default function LandingPage() {
                     <h4 className="text-base font-bold text-gray-900 mb-3">Quick Actions</h4>
                     <div className="space-y-2">
                       <Button 
-                        className="w-full bg-green-600 hover:bg-green-700 text-white justify-between text-sm"
+                        className="w-full bg-green-600 hover:bg-green-700 text-white justify-between text-sm hover:scale-105 transition-all duration-200 group"
                         onClick={() => setLocation("/marketplace")}
                       >
                         Buy USDT
-                        <ChevronRight className="h-3 w-3" />
+                        <ChevronRight className="h-3 w-3 group-hover:translate-x-1 transition-transform duration-200" />
                       </Button>
                       <Button 
-                        className="w-full bg-red-600 hover:bg-red-700 text-white justify-between text-sm"
+                        className="w-full bg-red-600 hover:bg-red-700 text-white justify-between text-sm hover:scale-105 transition-all duration-200 group"
                         onClick={() => setLocation("/marketplace")}
                       >
                         Sell USDT
-                        <ChevronRight className="h-3 w-3" />
+                        <ChevronRight className="h-3 w-3 group-hover:translate-x-1 transition-transform duration-200" />
                       </Button>
                       <Button 
                         variant="outline" 
-                        className="w-full border-gray-300 text-gray-700 justify-between text-sm"
+                        className="w-full border-gray-300 text-gray-700 justify-between text-sm hover:scale-105 transition-all duration-200 group"
                         onClick={() => setLocation("/auth")}
                       >
                         Create Account
-                        <ChevronRight className="h-3 w-3" />
+                        <ChevronRight className="h-3 w-3 group-hover:translate-x-1 transition-transform duration-200" />
                       </Button>
                     </div>
                     <div className="mt-3 p-2 bg-white/60 rounded-lg">
                       <div className="flex items-center text-xs text-gray-600">
                         <div className="w-1.5 h-1.5 bg-green-400 rounded-full mr-2 animate-pulse"></div>
-                        <span>1,247 traders online now</span>
+                        <span className="transition-all duration-500">{onlineTraders.toLocaleString()} traders online now</span>
                       </div>
                     </div>
                   </div>
@@ -282,15 +306,19 @@ export default function LandingPage() {
                 bg: "bg-pink-50"
               }
             ].map((feature, index) => (
-              <Card key={index} className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 group">
+              <Card 
+                key={index} 
+                className={`border-0 shadow-lg hover:shadow-xl transition-all duration-500 group cursor-pointer hover:-translate-y-2 animate-in fade-in slide-in-from-bottom duration-700`}
+                style={{ animationDelay: `${index * 100 + 200}ms` }}
+              >
                 <CardContent className="p-6">
                   <div className="flex items-center mb-4">
-                    <div className={`inline-flex p-3 ${feature.bg} rounded-xl mr-4 group-hover:scale-110 transition-transform`}>
-                      <feature.icon className={`h-6 w-6 ${feature.color}`} />
+                    <div className={`inline-flex p-3 ${feature.bg} rounded-xl mr-4 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300`}>
+                      <feature.icon className={`h-6 w-6 ${feature.color} group-hover:scale-110 transition-transform duration-300`} />
                     </div>
-                    <h3 className="text-lg font-bold text-gray-900">{feature.title}</h3>
+                    <h3 className="text-lg font-bold text-gray-900 group-hover:text-blue-600 transition-colors duration-300">{feature.title}</h3>
                   </div>
-                  <p className="text-gray-600 leading-relaxed">{feature.description}</p>
+                  <p className="text-gray-600 leading-relaxed group-hover:text-gray-700 transition-colors duration-300">{feature.description}</p>
                 </CardContent>
               </Card>
             ))}
@@ -334,21 +362,25 @@ export default function LandingPage() {
                 color: "from-green-500 to-green-600"
               }
             ].map((step, index) => (
-              <Card key={index} className="relative border-0 shadow-lg hover:shadow-xl transition-all duration-300 group overflow-hidden">
+              <Card 
+                key={index} 
+                className={`relative border-0 shadow-lg hover:shadow-xl transition-all duration-500 group overflow-hidden cursor-pointer hover:-translate-y-2 animate-in fade-in slide-in-from-bottom duration-700`}
+                style={{ animationDelay: `${index * 200 + 300}ms` }}
+              >
                 <CardContent className="p-6 text-center">
                   <div className="relative mb-6">
-                    <div className={`w-16 h-16 bg-gradient-to-r ${step.color} text-white rounded-2xl flex items-center justify-center text-xl font-bold mx-auto shadow-lg group-hover:scale-105 transition-transform`}>
+                    <div className={`w-16 h-16 bg-gradient-to-r ${step.color} text-white rounded-2xl flex items-center justify-center text-xl font-bold mx-auto shadow-lg group-hover:scale-110 group-hover:rotate-6 transition-all duration-300`}>
                       {step.step}
                     </div>
-                    <div className="absolute -top-1 -right-1 w-6 h-6 bg-white rounded-full flex items-center justify-center shadow-md">
-                      <step.icon className="h-3 w-3 text-gray-700" />
+                    <div className="absolute -top-1 -right-1 w-6 h-6 bg-white rounded-full flex items-center justify-center shadow-md group-hover:scale-110 transition-transform duration-300">
+                      <step.icon className="h-3 w-3 text-gray-700 group-hover:scale-110 transition-transform duration-300" />
                     </div>
                   </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-3">{step.title}</h3>
-                  <p className="text-gray-600 leading-relaxed text-sm">{step.description}</p>
+                  <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-blue-600 transition-colors duration-300">{step.title}</h3>
+                  <p className="text-gray-600 leading-relaxed text-sm group-hover:text-gray-700 transition-colors duration-300">{step.description}</p>
                   {index < 2 && (
                     <div className="hidden md:block absolute top-1/2 -right-4 transform -translate-y-1/2 z-10">
-                      <ArrowRight className="h-6 w-6 text-gray-400" />
+                      <ArrowRight className="h-6 w-6 text-gray-400 group-hover:text-blue-500 group-hover:translate-x-1 transition-all duration-300" />
                     </div>
                   )}
                 </CardContent>
@@ -372,21 +404,25 @@ export default function LandingPage() {
           
           <div className="space-y-4">
             {faqData.map((faq, index) => (
-              <Card key={index} className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+              <Card 
+                key={index} 
+                className={`border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300 hover:border-blue-200 animate-in fade-in slide-in-from-left duration-500`}
+                style={{ animationDelay: `${index * 100}ms` }}
+              >
                 <CardContent className="p-0">
                   <button
                     onClick={() => toggleFAQ(index)}
-                    className="w-full p-4 text-left flex justify-between items-center hover:bg-gray-50 transition-colors"
+                    className="w-full p-4 text-left flex justify-between items-center hover:bg-gray-50 transition-all duration-200 group"
                   >
-                    <h3 className="text-base font-semibold text-gray-900 pr-4">{faq.question}</h3>
+                    <h3 className="text-base font-semibold text-gray-900 pr-4 group-hover:text-blue-600 transition-colors duration-200">{faq.question}</h3>
                     <ChevronDown 
-                      className={`h-4 w-4 text-gray-500 transition-transform duration-200 ${
-                        openFAQ === index ? 'rotate-180' : ''
+                      className={`h-4 w-4 text-gray-500 transition-all duration-300 group-hover:text-blue-500 ${
+                        openFAQ === index ? 'rotate-180 text-blue-500' : ''
                       }`} 
                     />
                   </button>
                   {openFAQ === index && (
-                    <div className="px-4 pb-4 border-t border-gray-100">
+                    <div className="px-4 pb-4 border-t border-gray-100 animate-in slide-in-from-top duration-300">
                       <p className="text-gray-600 leading-relaxed pt-3 text-sm">{faq.answer}</p>
                     </div>
                   )}
@@ -407,22 +443,22 @@ export default function LandingPage() {
             Start trading USDT safely today. Join 25,000+ verified traders who trust DigiPay 
             for secure, fast, and reliable cryptocurrency transactions.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center animate-in fade-in slide-in-from-bottom duration-700 delay-500">
             <Button 
               size="lg" 
               onClick={() => setLocation("/auth")}
-              className="bg-white text-blue-600 hover:bg-gray-100 px-6 py-3 text-base font-semibold rounded-xl shadow-lg"
+              className="bg-white text-blue-600 hover:bg-gray-100 px-6 py-3 text-base font-semibold rounded-xl shadow-lg hover:scale-105 hover:shadow-xl transition-all duration-300 group"
             >
               Create Free Account
-              <ArrowRight className="ml-2 h-4 w-4" />
+              <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform duration-200" />
             </Button>
             <Button 
               size="lg" 
               variant="outline"
-              className="border-2 border-white text-white hover:bg-white hover:text-blue-600 px-6 py-3 text-base font-semibold rounded-xl"
+              className="border-2 border-white text-white hover:bg-white hover:text-blue-600 px-6 py-3 text-base font-semibold rounded-xl hover:scale-105 transition-all duration-300 group"
             >
               Contact Support
-              <Phone className="ml-2 h-4 w-4" />
+              <Phone className="ml-2 h-4 w-4 group-hover:rotate-12 transition-transform duration-200" />
             </Button>
           </div>
         </div>
