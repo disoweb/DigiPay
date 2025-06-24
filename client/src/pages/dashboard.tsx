@@ -1,6 +1,5 @@
 import { Navbar } from "@/components/navbar";
 import { TradingDashboard } from "@/components/trading-dashboard";
-import { MessagingSystem } from "@/components/messaging-system";
 import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from "@/hooks/use-auth";
 import { Redirect } from "wouter";
@@ -47,11 +46,6 @@ export default function Dashboard() {
             </ErrorBoundary>
           </div>
         </div>
-        
-        {/* Mobile floating messaging system */}
-        <ErrorBoundary>
-          <MessagingSystem />
-        </ErrorBoundary>
       </div>
     </div>
   );
