@@ -506,7 +506,7 @@ export function TradingDashboard() {
                           {isUserBuyer ? 'Bought' : 'Sold'} ${parseFloat(trade.amount).toFixed(2)}
                         </p>
                         <p className="text-sm text-gray-600">
-                          {isUserBuyer ? 'from' : 'to'} {partner?.email} • {new Date(trade.createdAt).toLocaleDateString()}
+                          {isUserBuyer ? 'from' : 'to'} {partner?.username || partner?.email} • {new Date(trade.createdAt).toLocaleDateString()}
                         </p>
                       </div>
                     </div>
