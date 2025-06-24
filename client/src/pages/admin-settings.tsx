@@ -19,16 +19,36 @@ export default function AdminSettings() {
   const [editingRates, setEditingRates] = useState<{ [key: string]: string }>({});
   const [savingRates, setSavingRates] = useState<{ [key: string]: boolean }>({});
 
-  const { data: rates = [], isLoading: ratesLoading, error: ratesError } = useQuery({
+  const { data: rates = [], isLoading: ratesLoading, error: ratesError, refetch } = useQuery({
     queryKey: ["/api/exchange-rates"],
     queryFn: async () => {
-      const response = await apiRequest("GET", "/api/exchange-rates");
-      if (!response.ok) {
-        throw new Error("Failed to fetch exchange rates");
+      try {
+        const response = await fetch("/api/exchange-rates", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${localStorage.getItem("digipay_token") || localStorage.getItem("auth_token")}`,
+          },
+        });
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error("Exchange rates fetch error:", response.status, errorText);
+          throw new Error(`HTTP ${response.status}: ${errorText}`);
+        }
+        
+        const data = await response.json();
+        console.log("Exchange rates loaded:", data);
+        return data;
+      } catch (error) {
+        console.error("Exchange rates query error:", error);
+        throw error;
       }
-      return response.json();
     },
-    refetchInterval: 30000, // Refresh every 30 seconds
+    refetchInterval: 30000,
+    retry: 3,
+    retryDelay: 1000,
+    staleTime: 10000,
   });
 
   const updateRateMutation = useMutation({
@@ -185,10 +205,21 @@ export default function AdminSettings() {
 
               {/* Error State */}
               {ratesError && (
-                <Alert variant="destructive" className="mb-6">
+                <Alert variant="destructive" className="mb-4 sm:mb-6">
                   <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>
-                    Failed to load exchange rates. Please try refreshing the page.
+                  <AlertDescription className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                    <span className="text-sm">
+                      Failed to load exchange rates: {ratesError.message}
+                    </span>
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      onClick={() => refetch()}
+                      className="self-start sm:self-auto"
+                    >
+                      <RefreshCw className="h-4 w-4 mr-1" />
+                      Retry
+                    </Button>
                   </AlertDescription>
                 </Alert>
               )}
@@ -303,13 +334,25 @@ export default function AdminSettings() {
                 </div>
               )}
 
-              {rates.length === 0 && !ratesLoading && (
+              {rates.length === 0 && !ratesLoading && !ratesError && (
                 <div className="text-center py-8 sm:py-12">
                   <div className="p-4 bg-gray-100 rounded-full w-fit mx-auto mb-4">
                     <DollarSign className="h-8 w-8 sm:h-12 sm:w-12 text-gray-400" />
                   </div>
                   <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">No exchange rates found</h3>
                   <p className="text-sm sm:text-base text-gray-600 max-w-md mx-auto">Exchange rates will be automatically created when the system starts.</p>
+                  <Button onClick={() => refetch()} className="mt-4">
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Reload Rates
+                  </Button>
+                </div>
+              )}
+
+              {/* Debug Info (remove in production) */}
+              {process.env.NODE_ENV === 'development' && (
+                <div className="text-xs text-gray-400 mt-4 p-2 bg-gray-50 rounded">
+                  Debug: Loading={ratesLoading.toString()}, Error={!!ratesError}, Rates Count={rates.length}
+                  {ratesError && <div>Error: {ratesError.message}</div>}
                 </div>
               )}
             </CardContent>
