@@ -65,28 +65,24 @@ function App() {
             <ProtectedRoute path="/admin/disputes" component={AdminDisputesNew} adminOnly />
             <ProtectedRoute path="/profile-setup" component={ProfileSetup} />
             <ProtectedRoute path="/create-offer" component={OfferCreation} />
-            <Route path="/chat/:tradeId" component={({ params }) => (
-              <ProtectedRoute>
-                <ChatPage />
-              </ProtectedRoute>
-            )} />
+            <Route path="/chat/:tradeId" component={({ params }) => {
+              console.log("Chat route accessed with params:", params);
+              return (
+                <ProtectedRoute>
+                  <ChatPage />
+                </ProtectedRoute>
+              );
+            }} />
             <Route path="/user-chat/:userId" component={({ params }) => (
               <ProtectedRoute>
                 <UserChatPage />
               </ProtectedRoute>
             )} />
-            <ProtectedRoute path="/admin-kyc" component={AdminKYC} />
-            <ProtectedRoute path="/manage-offers" component={ManageOffers} />
             <ProtectedRoute path="/trade-direct/:offerId" component={DirectTrade} />
             <Route path="/payment/callback" component={PaymentCallback} />
-
             <Route path="/settings" component={UserSettings} />
             <ProtectedRoute path="/profile" component={ProfilePage} />
             <ProtectedRoute path="/manage-offers" component={ManageOffers} />
-            <Route path="/admin-guide" component={AdminGuide} />
-          <Route path="/admin" component={Admin} />
-          <Route path="/admin/approvals" component={AdminApprovalsNew} />
-          <Route path="/admin/users" component={AdminUsersFixed} />
           <Route path="*" component={NotFound} />
         </Switch>
 

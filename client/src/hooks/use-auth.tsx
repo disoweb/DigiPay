@@ -56,9 +56,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     queryFn: async () => {
       try {
         const token = localStorage.getItem("digipay_token") || localStorage.getItem("auth_token");
+        console.log("Auth query - token exists:", !!token);
+
         if (!token) {
           console.log("No auth token found");
-          return null;
+          throw new Error('No auth token found');
         }
 
         const response = await fetch("/api/user", {
@@ -66,19 +68,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             Authorization: `Bearer ${token}`,
           },
         });
+        console.log("Auth query - response status:", response.status);
 
         if (!response.ok) {
           if (response.status === 401) {
-            console.log("Token expired or invalid, clearing storage");
+            console.log("Auth token invalid, clearing");
             localStorage.removeItem("digipay_token");
             localStorage.removeItem("auth_token");
-            throw new Error("Unauthorized");
+            throw new Error('Unauthorized');
           }
           throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
-
         const userData = await response.json();
-        console.log("User data loaded successfully:", { id: userData.id, email: userData.email });
+        console.log("Auth query - user data:", !!userData, userData?.id);
         return userData;
       } catch (err: any) {
         console.error("User data fetch error:", err);
