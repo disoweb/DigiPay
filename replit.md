@@ -12,7 +12,7 @@ A peer-to-peer cryptocurrency trading platform enabling direct trading between u
 - **Security**: JWT authentication, rate limiting, helmet security
 
 ## Recent Changes
-- **2025-06-24**: Completely revamped dispute system to be production-ready and comprehensive
+- **2025-06-24**: Completely revamped dispute system and fixed critical UI issues
   - Created DisputeSystemV2 with mobile-optimized modern design and robust validation
   - Enhanced admin dispute management with priority levels, case tracking, and detailed resolution actions
   - Added comprehensive evidence upload system with file validation and descriptions
@@ -20,6 +20,8 @@ A peer-to-peer cryptocurrency trading platform enabling direct trading between u
   - Created AdminDisputesV2 with advanced filtering, search, and case management features
   - Added audit trails, transaction logging, and detailed notification system for all dispute activities
   - Integrated dispute priority classification (high/medium/low) based on category severity
+  - Fixed infinite re-render issues by creating simplified TradeDetailSimple component
+  - Resolved trade-direct page routing and parameter extraction problems
 
 ## User Preferences
 - Non-technical user communication preferred
