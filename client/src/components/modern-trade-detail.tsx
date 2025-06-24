@@ -328,13 +328,18 @@ export function ModernTradeDetail() {
 
   const completionRate = getCompletionRate();
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: string, isExpired: boolean = false) => {
+    if (status === 'payment_pending' && isExpired) {
+      return 'bg-red-100 text-red-800 border-red-200';
+    }
+    
     switch (status) {
       case 'payment_pending': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
       case 'payment_made': return 'bg-blue-100 text-blue-800 border-blue-200';
       case 'completed': return 'bg-green-100 text-green-800 border-green-200';
       case 'disputed': return 'bg-red-100 text-red-800 border-red-200';
-      case 'canceled': return 'bg-gray-100 text-gray-800 border-gray-200';
+      case 'cancelled': return 'bg-gray-100 text-gray-800 border-gray-200';
+      case 'expired': return 'bg-red-100 text-red-800 border-red-200';
       default: return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
@@ -344,6 +349,9 @@ export function ModernTradeDetail() {
       case 'payment_pending': return <Timer className="h-3 w-3" />;
       case 'payment_made': return <Clock className="h-3 w-3" />;
       case 'completed': return <CheckCircle2 className="h-3 w-3" />;
+      case 'disputed': return <AlertCircle className="h-3 w-3" />;
+      case 'cancelled': return <XCircle className="h-3 w-3" />;
+      case 'expired': return <XCircle className="h-3 w-3" />;
       case 'disputed': return <AlertTriangle className="h-3 w-3" />;
       case 'canceled': return <XCircle className="h-3 w-3" />;
       default: return <Activity className="h-3 w-3" />;

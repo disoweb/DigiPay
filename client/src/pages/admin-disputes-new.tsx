@@ -125,10 +125,13 @@ export default function AdminDisputesNew() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "disputed": return "bg-red-100 text-red-800";
-      case "resolved": return "bg-green-100 text-green-800";
-      case "pending": return "bg-yellow-100 text-yellow-800";
-      default: return "bg-gray-100 text-gray-800";
+      case "disputed": return "bg-red-100 text-red-800 border-red-200";
+      case "resolved": return "bg-green-100 text-green-800 border-green-200";
+      case "pending": return "bg-yellow-100 text-yellow-800 border-yellow-200";
+      case "expired": return "bg-red-100 text-red-800 border-red-200";
+      case "cancelled": return "bg-gray-100 text-gray-800 border-gray-200";
+      case "completed": return "bg-green-100 text-green-800 border-green-200";
+      default: return "bg-gray-100 text-gray-800 border-gray-200";
     }
   };
 
@@ -331,8 +334,13 @@ export default function AdminDisputesNew() {
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          <Badge className={`text-xs ${getStatusColor(dispute.status)}`}>
-                            {dispute.status}
+                          <Badge className={`text-xs border ${getStatusColor(dispute.status)}`}>
+                            {dispute.status === 'expired' ? 'Expired' :
+                             dispute.status === 'disputed' ? 'Disputed' :
+                             dispute.status === 'resolved' ? 'Resolved' :
+                             dispute.status === 'cancelled' ? 'Cancelled' :
+                             dispute.status === 'completed' ? 'Completed' :
+                             dispute.status.charAt(0).toUpperCase() + dispute.status.slice(1)}
                           </Badge>
                         </TableCell>
                         <TableCell>
