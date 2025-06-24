@@ -17,6 +17,7 @@ A peer-to-peer cryptocurrency trading platform enabling direct trading between u
   - Enhanced status badge colors across all components (green for completed, red for expired/disputed, blue for payment_made, yellow for pending)
   - Implemented automatic trade expiration handling with server-side checks
   - Fixed mobile responsiveness for expired trades filter with dynamic visibility and horizontal scrolling
+  - Enhanced mobile filter scrolling with smooth horizontal scroll, snap behavior, and gradient fade indicators
   - Fixed trade reopen functionality with proper date formatting and balance validation
   - Added seller balance verification before allowing trade reopening for sell offers
   - Fixed reopen timer to use original offer's timeLimit ensuring consistency with original trade duration

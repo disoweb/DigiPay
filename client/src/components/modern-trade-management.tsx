@@ -337,8 +337,12 @@ export function ModernTradeManagement() {
 
       {/* Quick Filter Pills */}
       <div className="p-4 bg-white border-b">
-        <ScrollArea className="w-full">
-          <div className="flex gap-3 pb-2 overflow-x-auto">
+        <div className="relative">
+          {/* Gradient fade indicators for mobile scrolling */}
+          <div className="absolute left-0 top-0 bottom-0 w-4 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none sm:hidden"></div>
+          <div className="absolute right-0 top-0 bottom-0 w-4 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none sm:hidden"></div>
+          
+          <div className="flex gap-3 pb-2 overflow-x-auto scrollbar-hide scroll-smooth snap-x snap-mandatory">
             {quickFilters.filter(filter => filter.count > 0).map((filter) => {
               const Icon = filter.icon;
               const isActive = selectedStatus === filter.key;
@@ -348,7 +352,7 @@ export function ModernTradeManagement() {
                   variant={isActive ? "default" : "outline"}
                   size="sm"
                   onClick={() => setSelectedStatus(filter.key as any)}
-                  className={`flex-shrink-0 whitespace-nowrap ${isActive ? '' : 'border-gray-200'}`}
+                  className={`flex-shrink-0 whitespace-nowrap snap-start ${isActive ? '' : 'border-gray-200'}`}
                 >
                   <Icon className={`h-3 w-3 mr-2 ${isActive ? 'text-white' : filter.color}`} />
                   <span className="hidden sm:inline">{filter.label}</span>
@@ -368,7 +372,7 @@ export function ModernTradeManagement() {
                 variant={selectedStatus === 'all' ? "default" : "outline"}
                 size="sm"
                 onClick={() => setSelectedStatus('all')}
-                className={`flex-shrink-0 whitespace-nowrap ${selectedStatus === 'all' ? '' : 'border-gray-200'}`}
+                className={`flex-shrink-0 whitespace-nowrap snap-start ${selectedStatus === 'all' ? '' : 'border-gray-200'}`}
               >
                 <Users className={`h-3 w-3 mr-2 ${selectedStatus === 'all' ? 'text-white' : 'text-purple-600'}`} />
                 <span className="hidden sm:inline">All</span>
@@ -382,7 +386,7 @@ export function ModernTradeManagement() {
               </Button>
             )}
           </div>
-        </ScrollArea>
+        </div>
       </div>
 
       {/* Trade List */}
