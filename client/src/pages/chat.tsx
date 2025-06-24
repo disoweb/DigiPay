@@ -206,7 +206,7 @@ export default function ChatPage() {
                 Trade #{trade.id}
               </h1>
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                {otherParty?.email} • {isBuyer ? "Buying" : "Selling"} USDT
+                {otherParty?.username || otherParty?.email} • {isBuyer ? "Buying" : "Selling"} USDT
               </p>
             </div>
           </div>

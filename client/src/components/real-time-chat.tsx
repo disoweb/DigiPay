@@ -234,7 +234,7 @@ export function RealTimeChat({ tradeId }: RealTimeChatProps) {
     <div 
       className="flex flex-col bg-white dark:bg-gray-900" 
       style={{ 
-        height: '70%',
+        height: '85%',
         width: '100%',
         maxHeight: '100%',
         display: 'flex',
@@ -339,7 +339,7 @@ export function RealTimeChat({ tradeId }: RealTimeChatProps) {
 
       {/* Fixed Input Footer */}
       <div 
-        className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4 flex-shrink-0 shadow-lg" 
+        className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-8 flex-shrink-0 shadow-lg" 
         style={{ 
           flexShrink: 0,
           minHeight: 'auto',
@@ -354,7 +354,7 @@ export function RealTimeChat({ tradeId }: RealTimeChatProps) {
               onChange={(e) => setMessage(e.target.value)}
               placeholder="Type your message..."
               disabled={sendMessageMutation.isPending || !isConnected}
-              className="w-full rounded-full border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent px-4 py-6 pr-120"
+              className="w-full rounded-lg border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent px-6 py-6 pr-120"
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                   e.preventDefault();
