@@ -41,6 +41,7 @@ type Offer = {
   remainingAmount?: string;
   totalTraded?: string;
   isFullyTraded?: boolean;
+  hasActiveTrades?: boolean;
   user: {
     id: number;
     email: string;
@@ -387,6 +388,12 @@ export default function ManageOffers() {
                             Terms: {offer.terms}
                           </p>
                         )}
+                        {offer.hasActiveTrades && (
+                          <div className="flex items-center gap-1 mt-2">
+                            <div className="h-2 w-2 bg-orange-500 rounded-full animate-pulse"></div>
+                            <span className="text-xs text-orange-600 font-medium">Active Trade in Progress</span>
+                          </div>
+                        )}
                       </div>
                     </div>
                     <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0">
@@ -400,6 +407,8 @@ export default function ManageOffers() {
                               variant="outline" 
                               size="sm"
                               onClick={() => handleEditOffer(offer)}
+                              disabled={offer.hasActiveTrades}
+                              title={offer.hasActiveTrades ? "Cannot edit offer with active trades" : "Edit offer"}
                             >
                               <Edit className="h-4 w-4 sm:mr-2" />
                               <span className="hidden sm:inline">Edit</span>
@@ -409,6 +418,14 @@ export default function ManageOffers() {
                             <DialogHeader>
                               <DialogTitle>Edit Offer</DialogTitle>
                             </DialogHeader>
+                            {editingOffer?.hasActiveTrades && (
+                              <Alert className="mb-4">
+                                <AlertCircle className="h-4 w-4" />
+                                <AlertDescription>
+                                  This offer cannot be edited as it has active trades in progress. Please wait for trades to complete before making changes.
+                                </AlertDescription>
+                              </Alert>
+                            )}
                             <div className="space-y-4">
                               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
@@ -475,7 +492,7 @@ export default function ManageOffers() {
                               <div className="flex gap-2 pt-2">
                                 <Button 
                                   onClick={handleUpdateOffer}
-                                  disabled={updateOfferMutation.isPending}
+                                  disabled={updateOfferMutation.isPending || editingOffer?.hasActiveTrades}
                                   className="flex-1"
                                   size="sm"
                                 >
@@ -489,8 +506,9 @@ export default function ManageOffers() {
                           variant="outline" 
                           size="sm"
                           onClick={() => handleDeleteOffer(offer.id)}
-                          disabled={deleteOfferMutation.isPending}
+                          disabled={deleteOfferMutation.isPending || offer.hasActiveTrades}
                           className="text-red-600 hover:text-red-700"
+                          title={offer.hasActiveTrades ? "Cannot delete offer with active trades" : "Delete offer"}
                         >
                           <Trash2 className="h-4 w-4 sm:mr-2" />
                           <span className="hidden sm:inline">Delete</span>

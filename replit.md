@@ -27,6 +27,10 @@ A peer-to-peer cryptocurrency trading platform enabling direct trading between u
   - Added comprehensive rating and dispute mechanisms integrated into trade flow and user profiles
   - **FIXED**: Status display JSON format issue - corrected server-side updateTradeStatus function call and cleaned database records containing JSON status values
   - **RESOLVED**: Trade #47 and #48 status now display as "Expired" instead of {"status":"expired"} across all pages and components
+  - **NEW**: Dashboard improvements - removed problematic messaging section, made Recent Trading Activity clickable with usernames
+  - **NEW**: Individual offer detail modals on dashboard with comprehensive information display
+  - **NEW**: Manage-offers page filters out completed offers and shows latest first with scroll-to-top functionality
+  - **NEW**: Edit protection - offers with active trades cannot be modified to prevent conflicts during trading
 
 ## User Preferences
 - Non-technical user communication preferred

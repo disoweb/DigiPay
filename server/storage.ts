@@ -462,11 +462,28 @@ export class DatabaseStorage implements IStorage {
         // Mark as completed if no amount remaining
         const isCompleted = remainingAmount <= 0;
 
+        // Check for active trades
+        const activeTrades = await db
+          .select()
+          .from(trades)
+          .where(and(
+            eq(trades.offerId, offer.id),
+            or(
+              eq(trades.status, 'pending'),
+              eq(trades.status, 'payment_pending'),
+              eq(trades.status, 'payment_made'),
+              eq(trades.status, 'escrow_funded')
+            )
+          ));
+
+        const hasActiveTrades = activeTrades.length > 0;
+
         return {
           ...offer,
           remainingAmount: remainingAmount.toString(),
           totalTraded: totalTraded.toString(),
-          isFullyTraded: isCompleted
+          isFullyTraded: isCompleted,
+          hasActiveTrades: hasActiveTrades
         };
       })
     );
