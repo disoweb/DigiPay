@@ -21,7 +21,7 @@ import {
 } from "lucide-react";
 
 export default function DirectTrade() {
-  const params = useParams();
+  const params = useParams<{ offerId: string }>();
   const { user } = useAuth();
   const [, setLocation] = useLocation();
   const [amount, setAmount] = useState("");
@@ -29,18 +29,24 @@ export default function DirectTrade() {
   const [error, setError] = useState("");
   const queryClient = useQueryClient();
 
-  // Extract offerId from params
-  const offerId = params.offerId;
+  // Extract offerId from params - handle both offerId and id parameters
+  const offerId = params.offerId || params.id;
   console.log("DirectTrade params:", params);
   console.log("DirectTrade offerId:", offerId);
+  console.log("Current URL:", window.location.pathname);
+  
+  // Also try to extract from window location as fallback
+  const urlOfferId = window.location.pathname.split('/').pop();
+  const finalOfferId = offerId || urlOfferId;
+  console.log("Final offer ID:", finalOfferId);
 
   // Fetch offer data from API
   const { data: selectedOffer, isLoading: offerLoading, error: offerError } = useQuery({
-    queryKey: ["/api/offers", offerId],
+    queryKey: ["/api/offers", finalOfferId],
     queryFn: async () => {
-      if (!offerId) throw new Error("No offer ID provided");
-      console.log("Fetching offer for ID:", offerId);
-      const response = await apiRequest("GET", `/api/offers/${offerId}`);
+      if (!finalOfferId) throw new Error("No offer ID provided");
+      console.log("Fetching offer for ID:", finalOfferId);
+      const response = await apiRequest("GET", `/api/offers/${finalOfferId}`);
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.error || "Failed to fetch offer");
@@ -49,7 +55,7 @@ export default function DirectTrade() {
       console.log("Fetched offer data:", data);
       return data;
     },
-    enabled: !!offerId
+    enabled: !!finalOfferId
   });
 
   useEffect(() => {
@@ -113,7 +119,7 @@ export default function DirectTrade() {
               <p className="text-gray-600 mb-4">
                 The requested offer could not be loaded. It may have been removed or is no longer available.
               </p>
-              <p className="text-sm text-gray-500 mb-2">Offer ID: {offerId || 'undefined'}</p>
+              <p className="text-sm text-gray-500 mb-2">Offer ID: {finalOfferId || 'undefined'}</p>
               <p className="text-sm text-gray-500 mb-2">Error: {offerError?.message || 'Offer not found'}</p>
               <Button 
                 onClick={() => setLocation("/market")}
