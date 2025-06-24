@@ -255,328 +255,206 @@ export function ModernTradeDetail() {
         </div>
       </div>
 
-      <div className="p-4 space-y-4">
-        {/* Trade Status Card */}
+      <div className="p-2 space-y-2 h-[calc(100vh-120px)] overflow-hidden">
+        {/* Compact Header with Status and Progress */}
         <Card className="border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <Badge className={`${getStatusColor(trade.status)} flex items-center gap-1`}>
-                  {getStatusIcon(trade.status)}
-                  {formatStatus(trade.status)}
-                </Badge>
-              </div>
-              <span className="text-sm text-gray-600">
+          <CardContent className="p-3">
+            <div className="flex items-center justify-between mb-2">
+              <Badge className={`${getStatusColor(trade.status)} flex items-center gap-1 text-xs`}>
+                {getStatusIcon(trade.status)}
+                {formatStatus(trade.status)}
+              </Badge>
+              <span className="text-xs text-gray-600">
                 {new Date(trade.createdAt).toLocaleDateString()}
               </span>
             </div>
-            
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Progress</span>
-                <span className="font-medium">{getTradeProgress()}%</span>
-              </div>
-              <Progress value={getTradeProgress()} className="h-2" />
+            <Progress value={getTradeProgress()} className="h-1.5" />
+            <div className="flex justify-between text-xs mt-1">
+              <span className="text-gray-600">Progress</span>
+              <span className="font-medium">{getTradeProgress()}%</span>
             </div>
           </CardContent>
         </Card>
 
-        {/* Trade Details Card */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <DollarSign className="h-5 w-5 text-green-600" />
-              Trade Overview
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <p className="text-sm text-gray-600">Amount</p>
-                <p className="font-semibold text-lg">${parseFloat(trade.amount).toFixed(2)}</p>
+        {/* Compact Trade Overview */}
+        <Card className="flex-1">
+          <CardContent className="p-3">
+            <div className="grid grid-cols-3 gap-2 mb-3">
+              <div className="text-center">
+                <p className="text-xs text-gray-600">Amount</p>
+                <p className="font-bold text-sm">${parseFloat(trade.amount).toFixed(1)}</p>
                 <p className="text-xs text-gray-500">USDT</p>
               </div>
-              <div className="space-y-1">
-                <p className="text-sm text-gray-600">Rate</p>
-                <p className="font-semibold text-lg">₦{parseFloat(trade.rate).toLocaleString()}</p>
+              <div className="text-center">
+                <p className="text-xs text-gray-600">Rate</p>
+                <p className="font-bold text-sm">₦{parseFloat(trade.rate).toLocaleString()}</p>
                 <p className="text-xs text-gray-500">per USDT</p>
               </div>
-            </div>
-            
-            <Separator />
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <p className="text-sm text-gray-600">Total Amount</p>
-                <p className="font-bold text-xl text-green-600">
+              <div className="text-center">
+                <p className="text-xs text-gray-600">Total</p>
+                <p className="font-bold text-sm text-green-600">
                   ₦{(parseFloat(trade.amount) * parseFloat(trade.rate)).toLocaleString()}
                 </p>
-              </div>
-              <div className="space-y-1">
-                <p className="text-sm text-gray-600">Your Role</p>
-                <Badge variant="outline" className="capitalize">
+                <Badge variant="outline" className="text-xs mt-1 capitalize">
                   {isBuyer ? 'Buyer' : 'Seller'}
                 </Badge>
               </div>
             </div>
-          </CardContent>
-        </Card>
 
-        {/* Partner Details Card */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <User className="h-5 w-5 text-blue-600" />
-              Trading Partner
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="relative">
-                <Avatar className="h-10 w-10">
-                  <AvatarFallback className="bg-blue-100 text-blue-600">
-                    {(partner?.email || 'U').charAt(0).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-                {/* Online Status Indicator */}
-                <div className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 ${onlineStatus.color} border-2 border-white rounded-full`}></div>
-              </div>
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <p className="font-medium">{partner?.email?.split('@')[0] || 'Unknown'}</p>
+            {/* Partner Info Inline */}
+            <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
+              <div className="flex items-center gap-2">
+                <div className="relative">
+                  <Avatar className="h-8 w-8">
+                    <AvatarFallback className="bg-blue-100 text-blue-600 text-xs">
+                      {(partner?.email || 'U').charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className={`absolute -bottom-0.5 -right-0.5 w-2 h-2 ${onlineStatus.color} border border-white rounded-full`}></div>
+                </div>
+                <div>
+                  <p className="font-medium text-sm">{partner?.email?.split('@')[0] || 'Unknown'}</p>
                   <div className="flex items-center gap-1">
-                    <div className={`w-2 h-2 ${onlineStatus.color} rounded-full`}></div>
                     <span className={`text-xs ${onlineStatus.textColor}`}>{onlineStatus.text}</span>
+                    {partner?.averageRating && (
+                      <>
+                        <span className="text-xs text-gray-400">•</span>
+                        <span className="text-xs text-yellow-600">★{parseFloat(partner.averageRating).toFixed(1)}</span>
+                      </>
+                    )}
                   </div>
                 </div>
-                <p className="text-xs text-gray-500">
-                  {onlineStatus.status === 'online' ? 'Active now' : 
-                   onlineStatus.status === 'recent' ? 'Active 3 min ago' : 
-                   'Last seen 2 hours ago'}
-                </p>
               </div>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setLocation(`/chat/${trade.id}`)}
+                className="h-8 px-3 text-xs"
               >
                 <MessageCircle className="h-3 w-3 mr-1" />
                 Chat
               </Button>
             </div>
-            
-            <div className="grid grid-cols-2 gap-4 pt-2">
-              {partner?.averageRating && (
-                <div className="space-y-1">
-                  <p className="text-sm text-gray-600">Rating</p>
-                  <div className="flex items-center gap-2">
-                    <div className="flex">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <span
-                          key={star}
-                          className={`text-sm ${
-                            star <= Math.floor(parseFloat(partner.averageRating || '0'))
-                              ? 'text-yellow-400'
-                              : 'text-gray-300'
-                          }`}
-                        >
-                          ★
-                        </span>
-                      ))}
-                    </div>
-                    <span className="text-sm text-gray-600">
-                      {parseFloat(partner.averageRating).toFixed(1)}
-                    </span>
-                  </div>
-                </div>
-              )}
-              <div className="space-y-1">
-                <p className="text-sm text-gray-600">Completion Rate</p>
-                <div className="flex items-center gap-2">
-                  <span className={`font-medium ${completionRate >= 90 ? 'text-green-600' : completionRate >= 70 ? 'text-yellow-600' : 'text-red-600'}`}>
-                    {completionRate}%
-                  </span>
-                  <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                    <div 
-                      className={`h-full rounded-full ${completionRate >= 90 ? 'bg-green-500' : completionRate >= 70 ? 'bg-yellow-500' : 'bg-red-500'}`} 
-                      style={{ width: `${completionRate}%` }}
-                    ></div>
-                  </div>
-                </div>
-              </div>
-            </div>
           </CardContent>
         </Card>
 
-        {/* Payment Details Card - Enhanced for Buyers */}
+        {/* Compact Payment Details for Buyers */}
         {isBuyer && (
           <Card className="border-blue-200 bg-blue-50">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <CreditCard className="h-5 w-5 text-blue-600" />
-                Seller's Payment Details
-              </CardTitle>
-              <div className="text-sm text-blue-700 mt-1">
-                Send payment to these details
+            <CardContent className="p-3">
+              <div className="flex items-center gap-2 mb-2">
+                <CreditCard className="h-4 w-4 text-blue-600" />
+                <span className="font-medium text-sm text-blue-900">Payment Details</span>
               </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="bg-blue-100 p-4 rounded-lg border border-blue-300">
-                <div className="flex items-center gap-2 mb-2">
-                  <Badge variant="secondary" className="bg-blue-200 text-blue-800">
-                    Amount to Pay
-                  </Badge>
+              
+              <div className="grid grid-cols-3 gap-2 mb-3">
+                <div className="bg-white p-2 rounded border border-blue-200">
+                  <p className="text-xs text-blue-700 font-medium">Bank</p>
+                  <p className="text-xs font-mono truncate">{trade.bankName || "First Bank"}</p>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => copyToClipboard(trade.bankName || "First Bank", "Bank name")}
+                    className="h-5 w-5 p-0 text-blue-600"
+                  >
+                    <Copy className="h-3 w-3" />
+                  </Button>
                 </div>
-                <p className="text-2xl font-bold text-blue-900">
-                  ₦{(parseFloat(trade.amount) * parseFloat(trade.rate)).toLocaleString()}
+                
+                <div className="bg-white p-2 rounded border border-blue-200">
+                  <p className="text-xs text-blue-700 font-medium">Account</p>
+                  <p className="text-xs font-mono truncate">{trade.accountNumber || "1234567890"}</p>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => copyToClipboard(trade.accountNumber || "1234567890", "Account number")}
+                    className="h-5 w-5 p-0 text-blue-600"
+                  >
+                    <Copy className="h-3 w-3" />
+                  </Button>
+                </div>
+                
+                <div className="bg-white p-2 rounded border border-blue-200">
+                  <p className="text-xs text-blue-700 font-medium">Name</p>
+                  <p className="text-xs font-mono truncate">{trade.accountName || "John Doe"}</p>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => copyToClipboard(trade.accountName || "John Doe", "Account name")}
+                    className="h-5 w-5 p-0 text-blue-600"
+                  >
+                    <Copy className="h-3 w-3" />
+                  </Button>
+                </div>
+              </div>
+
+              <div className="bg-amber-50 p-2 rounded border border-amber-200">
+                <p className="text-xs text-amber-800 font-medium mb-1 flex items-center gap-1">
+                  <AlertTriangle className="h-3 w-3" />
+                  Send ₦{(parseFloat(trade.amount) * parseFloat(trade.rate)).toLocaleString()} exactly
                 </p>
-                <p className="text-sm text-blue-700 mt-1">
-                  For {parseFloat(trade.amount).toFixed(2)} USDT at ₦{parseFloat(trade.rate).toLocaleString()}/USDT
-                </p>
-              </div>
-
-              <div className="grid grid-cols-1 gap-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-blue-700">Bank Name</label>
-                  <div className="flex items-center justify-between p-3 bg-white rounded-lg border border-blue-200">
-                    <span className="font-mono text-gray-900">{trade.bankName || "First Bank"}</span>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => copyToClipboard(trade.bankName || "First Bank", "Bank name")}
-                      className="text-blue-600 hover:bg-blue-100"
-                    >
-                      <Copy className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-blue-700">Account Number</label>
-                  <div className="flex items-center justify-between p-3 bg-white rounded-lg border border-blue-200">
-                    <span className="font-mono text-gray-900">{trade.accountNumber || "1234567890"}</span>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => copyToClipboard(trade.accountNumber || "1234567890", "Account number")}
-                      className="text-blue-600 hover:bg-blue-100"
-                    >
-                      <Copy className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-blue-700">Account Name</label>
-                  <div className="flex items-center justify-between p-3 bg-white rounded-lg border border-blue-200">
-                    <span className="font-mono text-gray-900">{trade.accountName || "John Doe"}</span>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => copyToClipboard(trade.accountName || "John Doe", "Account name")}
-                      className="text-blue-600 hover:bg-blue-100"
-                    >
-                      <Copy className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-amber-50 p-4 rounded-lg border border-amber-200">
-                <div className="text-sm text-amber-800">
-                  <p className="font-medium mb-2 flex items-center gap-2">
-                    <AlertTriangle className="h-4 w-4" />
-                    Payment Instructions:
-                  </p>
-                  <ul className="list-disc list-inside space-y-1 text-xs">
-                    <li>Send exactly ₦{(parseFloat(trade.amount) * parseFloat(trade.rate)).toLocaleString()}</li>
-                    <li>Use the account details shown above</li>
-                    <li>Save your payment receipt</li>
-                    <li>Click "I Have Made Payment" after sending</li>
-                  </ul>
-                </div>
+                <p className="text-xs text-amber-700">Save receipt & click "Payment Made" after sending</p>
               </div>
             </CardContent>
           </Card>
         )}
 
-        {/* Payment Details Card for Sellers */}
+        {/* Compact Payment Details for Sellers */}
         {isSeller && (trade.bankName || trade.accountNumber) && (
           <Card className="border-green-200 bg-green-50">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <CreditCard className="h-5 w-5 text-green-600" />
-                Your Payment Details
-              </CardTitle>
-              <div className="text-sm text-green-700 mt-1">
-                Buyer will send payment to these details
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {trade.bankName && (
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Bank</span>
-                  <span className="font-medium">{trade.bankName}</span>
-                </div>
-              )}
-              {trade.accountName && (
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Account Name</span>
-                  <span className="font-medium">{trade.accountName}</span>
-                </div>
-              )}
-              {trade.accountNumber && (
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Account Number</span>
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium font-mono">{trade.accountNumber}</span>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => copyToClipboard(trade.accountNumber!, 'Account number')}
-                      className="h-6 w-6 p-0"
-                    >
-                      <Copy className="h-3 w-3" />
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Deadline Card */}
-        {trade.paymentDeadline && (
-          <Card className="border-orange-200 bg-orange-50">
-            <CardContent className="p-4">
+            <CardContent className="p-3">
               <div className="flex items-center gap-2 mb-2">
-                <Clock className="h-4 w-4 text-orange-600" />
-                <span className="font-medium text-orange-900">Payment Deadline</span>
+                <CreditCard className="h-4 w-4 text-green-600" />
+                <span className="font-medium text-sm text-green-900">Your Payment Details</span>
               </div>
-              <p className="text-sm text-orange-800">
-                {new Date(trade.paymentDeadline).toLocaleString()}
-              </p>
+              <div className="grid grid-cols-3 gap-2">
+                <div className="text-center">
+                  <p className="text-xs text-green-700">Bank</p>
+                  <p className="text-xs font-mono">{trade.bankName}</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-xs text-green-700">Account</p>
+                  <p className="text-xs font-mono">{trade.accountNumber}</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-xs text-green-700">Name</p>
+                  <p className="text-xs font-mono">{trade.accountName}</p>
+                </div>
+              </div>
             </CardContent>
           </Card>
         )}
 
-        {/* Action Buttons */}
+        {/* Deadline Inline */}
+        {trade.paymentDeadline && (
+          <div className="flex items-center justify-between p-2 bg-orange-50 rounded-lg border border-orange-200">
+            <div className="flex items-center gap-2">
+              <Clock className="h-3 w-3 text-orange-600" />
+              <span className="text-xs font-medium text-orange-900">Deadline</span>
+            </div>
+            <p className="text-xs text-orange-800">
+              {new Date(trade.paymentDeadline).toLocaleTimeString()}
+            </p>
+          </div>
+        )}
+
+        {/* Compact Action Buttons */}
         {isUserInTrade && (
-          <div className="space-y-3">
+          <div className="space-y-2 mt-auto">
             {canMarkPaymentMade && (
               <Button
                 onClick={() => markPaymentMadeMutation.mutate()}
                 disabled={markPaymentMadeMutation.isPending}
-                className="w-full h-12 bg-blue-600 hover:bg-blue-700"
+                className="w-full h-10 bg-blue-600 hover:bg-blue-700 text-sm"
               >
                 {markPaymentMadeMutation.isPending ? (
                   <>
-                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                    Confirming Payment...
+                    <RefreshCw className="h-3 w-3 mr-2 animate-spin" />
+                    Confirming...
                   </>
                 ) : (
                   <>
-                    <CheckCircle className="h-4 w-4 mr-2" />
+                    <CheckCircle className="h-3 w-3 mr-2" />
                     I Have Made Payment
                   </>
                 )}
@@ -587,29 +465,29 @@ export function ModernTradeDetail() {
               <Button
                 onClick={() => completeTradeMultation.mutate()}
                 disabled={completeTradeMultation.isPending}
-                className="w-full h-12 bg-green-600 hover:bg-green-700"
+                className="w-full h-10 bg-green-600 hover:bg-green-700 text-sm"
               >
                 {completeTradeMultation.isPending ? (
                   <>
-                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                    Completing Trade...
+                    <RefreshCw className="h-3 w-3 mr-2 animate-spin" />
+                    Completing...
                   </>
                 ) : (
                   <>
-                    <CheckCircle2 className="h-4 w-4 mr-2" />
+                    <CheckCircle2 className="h-3 w-3 mr-2" />
                     Complete Trade
                   </>
                 )}
               </Button>
             )}
 
-            <div className="flex gap-3">
+            <div className="flex gap-2">
               <Button
                 variant="outline"
                 onClick={() => setLocation(`/chat/${trade.id}`)}
-                className="flex-1 h-10"
+                className="flex-1 h-8 text-xs"
               >
-                <MessageCircle className="h-4 w-4 mr-2" />
+                <MessageCircle className="h-3 w-3 mr-1" />
                 Chat
               </Button>
               
@@ -618,13 +496,13 @@ export function ModernTradeDetail() {
                   variant="outline"
                   onClick={() => cancelTradeMutation.mutate()}
                   disabled={cancelTradeMutation.isPending}
-                  className="flex-1 h-10 border-red-300 text-red-600 hover:bg-red-50"
+                  className="flex-1 h-8 border-red-300 text-red-600 hover:bg-red-50 text-xs"
                 >
                   {cancelTradeMutation.isPending ? (
-                    <RefreshCw className="h-4 w-4 animate-spin" />
+                    <RefreshCw className="h-3 w-3 animate-spin" />
                   ) : (
                     <>
-                      <XCircle className="h-4 w-4 mr-2" />
+                      <XCircle className="h-3 w-3 mr-1" />
                       Cancel
                     </>
                   )}
@@ -634,9 +512,6 @@ export function ModernTradeDetail() {
           </div>
         )}
       </div>
-
-      {/* Bottom Padding */}
-      <div className="h-20" />
     </div>
   );
 }
