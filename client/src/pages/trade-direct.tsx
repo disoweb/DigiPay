@@ -21,7 +21,7 @@ import {
 } from "lucide-react";
 
 export default function DirectTrade() {
-  const params = useParams<{ offerId: string }>();
+  const params = useParams();
   const { user } = useAuth();
   const [, setLocation] = useLocation();
   const [amount, setAmount] = useState("");
@@ -29,41 +29,50 @@ export default function DirectTrade() {
   const [error, setError] = useState("");
   const queryClient = useQueryClient();
 
-  // Extract offerId from params - handle both offerId and id parameters
-  const offerId = params.offerId || params.id;
+  // Extract offerId from params
+  const offerId = params.offerId;
   console.log("DirectTrade params:", params);
   console.log("DirectTrade offerId:", offerId);
-  console.log("Current URL:", window.location.pathname);
-  
-  // Also try to extract from window location as fallback
-  const urlOfferId = window.location.pathname.split('/').pop();
-  const finalOfferId = offerId || urlOfferId;
-  console.log("Final offer ID:", finalOfferId);
 
-  // Fetch offer data from API
-  const { data: selectedOffer, isLoading: offerLoading, error: offerError } = useQuery({
-    queryKey: ["/api/offers", finalOfferId],
-    queryFn: async () => {
-      if (!finalOfferId) throw new Error("No offer ID provided");
-      console.log("Fetching offer for ID:", finalOfferId);
-      const response = await apiRequest("GET", `/api/offers/${finalOfferId}`);
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || "Failed to fetch offer");
+  // Get offer from sessionStorage or fetch it
+  const [selectedOffer, setSelectedOffer] = useState(null);
+
+  useEffect(() => {
+    console.log("DirectTrade component mounted, offerId:", offerId);
+    const storedOffer = sessionStorage.getItem('selectedOffer');
+    if (storedOffer) {
+      console.log("Found stored offer:", storedOffer);
+      try {
+        const parsed = JSON.parse(storedOffer);
+        console.log("Parsed offer:", parsed);
+        setSelectedOffer(parsed);
+        // Clear after use
+        sessionStorage.removeItem('selectedOffer');
+      } catch (e) {
+        console.error("Error parsing stored offer:", e);
       }
+    }
+  }, [offerId]);
+
+  const { data: offer, isLoading, error: queryError } = useQuery({
+    queryKey: [`/api/offers/${offerId}`],
+    queryFn: async () => {
+      console.log("Fetching offer for ID:", offerId);
+      const response = await apiRequest("GET", `/api/offers/${offerId}`);
+      if (!response.ok) throw new Error("Failed to fetch offer");
       const data = await response.json();
       console.log("Fetched offer data:", data);
       return data;
     },
-    enabled: !!finalOfferId
+    enabled: !!offerId && !selectedOffer,
   });
 
   useEffect(() => {
-    if (offerError) {
-      console.error("Offer fetch error:", offerError);
-      setError(`Failed to load offer: ${offerError.message}`);
+    if (queryError) {
+      console.error("Query error:", queryError);
+      setError(`Failed to load offer: ${queryError.message}`);
     }
-  }, [offerError]);
+  }, [queryError]);
 
   const createTradeMutation = useMutation({
     mutationFn: async (tradeData: any) => {
@@ -88,45 +97,38 @@ export default function DirectTrade() {
     },
   });
 
-  const currentOffer = selectedOffer;
+  const currentOffer = selectedOffer || offer;
 
-  if (offerLoading) {
+  if (isLoading && !selectedOffer) {
     return (
       <div className="min-h-screen bg-gray-50">
         <Navbar />
-        <div className="container mx-auto px-4 py-8">
-          <Card className="max-w-md mx-auto">
-            <CardContent className="p-6 text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-              <h2 className="text-xl font-semibold mb-2">Loading offer...</h2>
-              <p className="text-gray-600">Please wait while we fetch the offer details.</p>
-            </CardContent>
-          </Card>
+        <div className="container mx-auto px-4 py-8 text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p>Loading offer details...</p>
         </div>
       </div>
     );
   }
 
-  if (offerError || !currentOffer) {
+  if (!currentOffer && !isLoading) {
     return (
       <div className="min-h-screen bg-gray-50">
         <Navbar />
         <div className="container mx-auto px-4 py-8">
-          <Card className="max-w-md mx-auto">
+          <Card>
             <CardContent className="p-6 text-center">
               <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-              <h2 className="text-xl font-semibold mb-2">Offer not found</h2>
-              <p className="text-gray-600 mb-4">
-                The requested offer could not be loaded. It may have been removed or is no longer available.
-              </p>
-              <p className="text-sm text-gray-500 mb-2">Offer ID: {finalOfferId || 'undefined'}</p>
-              <p className="text-sm text-gray-500 mb-2">Error: {offerError?.message || 'Offer not found'}</p>
-              <Button 
-                onClick={() => setLocation("/market")}
-                className="w-full"
-              >
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Market
+              <div className="space-y-2 mb-4">
+                <p className="text-gray-500">Offer not found</p>
+                <p className="text-sm text-gray-400">Offer ID: {offerId || 'undefined'}</p>
+                <p className="text-sm text-gray-400">Is Loading: {isLoading.toString()}</p>
+                <p className="text-sm text-gray-400">Has Selected Offer: {!!selectedOffer ? 'yes' : 'no'}</p>
+                <p className="text-sm text-gray-400">Query Error: {queryError?.message || 'none'}</p>
+                <p className="text-sm text-gray-400">Error: {error || 'none'}</p>
+              </div>
+              <Button onClick={() => setLocation('/dashboard')}>
+                Back to Dashboard
               </Button>
             </CardContent>
           </Card>

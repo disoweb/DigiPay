@@ -1,5 +1,5 @@
 import { useParams, useLocation } from "wouter";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
 import { RatingForm } from "@/components/rating-form";
-import DisputeSystemV2 from "@/components/dispute-system-v2";
+import { DisputeResolution } from "@/components/dispute-resolution";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { useAuth } from "@/hooks/use-auth";
@@ -86,7 +86,6 @@ export function ModernTradeDetail() {
       return response.json();
     },
     enabled: !!user && !!id,
-    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
 
   const { data: trade, isLoading, error, refetch } = useQuery<Trade>({
@@ -96,12 +95,15 @@ export function ModernTradeDetail() {
       if (!response.ok) throw new Error('Failed to fetch trade');
       return response.json();
     },
-    enabled: !!user && !!id && id !== 'undefined',
-    refetchOnWindowFocus: false,
-    refetchOnMount: true,
-    refetchOnReconnect: false,
-    staleTime: Infinity, // Never consider data stale
-    gcTime: Infinity, // Keep in cache indefinitely
+    refetchInterval: 10000,
+    enabled: !!user && !!id, // Only run query when user is authenticated and ID exists
+    retry: (failureCount, error: any) => {
+      if (error?.message?.includes('401') || error?.message?.includes('Unauthorized')) {
+        return false;
+      }
+      return failureCount < 2;
+    },
+    retryDelay: 1000,
   });
 
   const markPaymentMadeMutation = useMutation({
@@ -111,7 +113,7 @@ export function ModernTradeDetail() {
       return response.json();
     },
     onSuccess: () => {
-      refetch();
+      queryClient.invalidateQueries({ queryKey: ['/api/trades', id] });
       toast({ title: "Success", description: "Payment marked as made" });
     },
   });
@@ -123,8 +125,9 @@ export function ModernTradeDetail() {
       return response.json();
     },
     onSuccess: () => {
-      refetch();
+      queryClient.invalidateQueries({ queryKey: ['/api/trades', id] });
       toast({ title: "Success", description: "Trade completed successfully" });
+      // Show rating form after successful completion
       setTimeout(() => setShowRatingForm(true), 1000);
     },
   });
@@ -136,71 +139,62 @@ export function ModernTradeDetail() {
       return response.json();
     },
     onSuccess: () => {
-      refetch();
+      queryClient.invalidateQueries({ queryKey: ['/api/trades', id] });
       toast({ title: "Success", description: "Trade cancelled" });
     },
   });
 
-  // Timer effect for payment deadline - simplified to prevent re-renders
+  // Always call useEffect hooks consistently
   useEffect(() => {
-    if (!trade?.paymentDeadline || trade.status !== 'payment_pending') {
-      setTimeLeft("");
-      setIsExpired(false);
-      return;
-    }
-    
     let interval: NodeJS.Timeout | null = null;
 
-    const updateTimer = () => {
-      const now = new Date().getTime();
-      const deadline = new Date(trade.paymentDeadline!).getTime();
-      const difference = deadline - now;
+    if (trade?.paymentDeadline && trade.status === 'payment_pending') {
+      const updateTimer = () => {
+        const now = new Date().getTime();
+        const deadline = new Date(trade.paymentDeadline!).getTime();
+        const difference = deadline - now;
 
-      if (difference <= 0) {
-        setTimeLeft("Expired");
-        setIsExpired(true);
-        if (interval) clearInterval(interval);
-        return;
-      }
+        if (difference <= 0) {
+          setTimeLeft("Expired");
+          setIsExpired(true);
+          return;
+        }
 
-      const hours = Math.floor(difference / (1000 * 60 * 60));
-      const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+        const hours = Math.floor(difference / (1000 * 60 * 60));
+        const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((difference % (1000 * 60)) / 1000);
 
-      if (hours > 0) {
-        setTimeLeft(`${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
-      } else {
-        setTimeLeft(`${minutes}:${seconds.toString().padStart(2, '0')}`);
-      }
-    };
+        if (hours > 0) {
+          setTimeLeft(`${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
+        } else {
+          setTimeLeft(`${minutes}:${seconds.toString().padStart(2, '0')}`);
+        }
+      };
 
-    updateTimer();
-    interval = setInterval(updateTimer, 1000);
+      updateTimer();
+      interval = setInterval(updateTimer, 1000);
+    } else {
+      setTimeLeft("");
+      setIsExpired(false);
+    }
 
     return () => {
-      if (interval) clearInterval(interval);
+      if (interval) {
+        clearInterval(interval);
+      }
     };
-  }, [trade?.id]);
+  }, [trade?.paymentDeadline, trade?.status]);
 
-  // Simplify trade calculations to prevent re-renders
-  const tradeData = useMemo(() => {
-    if (!trade || !user) return null;
-    
-    const isBuyer = trade.buyerId === user.id;
-    const isSeller = trade.sellerId === user.id;
-    const isUserInTrade = isBuyer || isSeller;
-    const partner = isBuyer ? trade.seller : trade.buyer;
-    
-    return {
-      isBuyer,
-      isSeller,
-      isUserInTrade,
-      partner,
-      canMarkPaymentMade: isBuyer && trade.status === 'payment_pending',
-      canComplete: isSeller && trade.status === 'payment_made',
-      canCancel: isUserInTrade && ['payment_pending', 'payment_made'].includes(trade.status)
-    };
-  }, [trade?.id, trade?.status, user?.id]);
+  // Define trade-related variables after all hooks
+  const isBuyer = trade?.buyerId === user?.id;
+  const isSeller = trade?.sellerId === user?.id;
+  const isUserInTrade = isBuyer || isSeller;
+  const partner = isBuyer ? trade?.seller : trade?.buyer;
+
+  // Define action capabilities
+  const canMarkPaymentMade = user && trade && isBuyer && trade.status === 'payment_pending';
+  const canComplete = user && trade && isSeller && trade.status === 'payment_made';
+  const canCancel = user && trade && isUserInTrade && ['payment_pending', 'payment_made'].includes(trade.status);
 
   // Show loading while authentication is being checked
   if (!user) {
@@ -290,28 +284,22 @@ export function ModernTradeDetail() {
     );
   }
 
-  // Return early if no trade data is available
-  if (!tradeData) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Card className="w-full max-w-md">
-          <CardContent className="p-6 text-center">
-            <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-            <h2 className="text-xl font-semibold mb-2">Access Denied</h2>
-            <p className="text-gray-600 mb-4">You don't have permission to view this trade.</p>
-            <Button onClick={() => setLocation('/trades')}>
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Trades
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  // Mock online status - in real app this would come from WebSocket or API
+  const getOnlineStatus = () => {
+    const lastSeen = Math.floor(Math.random() * 10); // Random minutes for demo
+    if (lastSeen < 1) return { status: 'online', text: 'Online', color: 'bg-green-500', textColor: 'text-green-600' };
+    if (lastSeen < 5) return { status: 'recent', text: 'Active', color: 'bg-yellow-500', textColor: 'text-yellow-600' };
+    return { status: 'offline', text: 'Offline', color: 'bg-gray-400', textColor: 'text-gray-500' };
+  };
 
-  // Static values to prevent re-renders
-  const onlineStatus = { status: 'offline', text: 'Offline', color: 'bg-gray-400', textColor: 'text-gray-500' };
-  const completionRate = 95;
+  const onlineStatus = getOnlineStatus();
+
+  // Mock completion rate - in real app this would come from user stats
+  const getCompletionRate = () => {
+    return Math.floor(Math.random() * 20) + 80; // 80-100% for demo
+  };
+
+  const completionRate = getCompletionRate();
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -420,7 +408,7 @@ export function ModernTradeDetail() {
                   </Button>
                 </div>
                 <Badge variant="outline" className="text-xs mt-1 capitalize">
-                  {tradeData?.isBuyer ? 'Buyer' : 'Seller'}
+                  {isBuyer ? 'Buyer' : 'Seller'}
                 </Badge>
               </div>
             </div>
@@ -431,19 +419,19 @@ export function ModernTradeDetail() {
                 <div className="relative">
                   <Avatar className="h-8 w-8">
                     <AvatarFallback className="bg-blue-100 text-blue-600 text-xs">
-                      {(tradeData?.partner?.email || 'U').charAt(0).toUpperCase()}
+                      {(partner?.email || 'U').charAt(0).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                   <div className={`absolute -bottom-0.5 -right-0.5 w-2 h-2 ${onlineStatus.color} border border-white rounded-full`}></div>
                 </div>
                 <div>
-                  <p className="font-medium text-sm">{tradeData?.partner?.email?.split('@')[0] || 'Unknown'}</p>
+                  <p className="font-medium text-sm">{partner?.email?.split('@')[0] || 'Unknown'}</p>
                   <div className="flex items-center gap-1">
                     <span className={`text-xs ${onlineStatus.textColor}`}>{onlineStatus.text}</span>
-                    {tradeData?.partner?.averageRating && (
+                    {partner?.averageRating && (
                       <>
                         <span className="text-xs text-gray-400">•</span>
-                        <span className="text-xs text-yellow-600">★{parseFloat(tradeData.partner.averageRating).toFixed(1)}</span>
+                        <span className="text-xs text-yellow-600">★{parseFloat(partner.averageRating).toFixed(1)}</span>
                       </>
                     )}
                   </div>
@@ -463,7 +451,7 @@ export function ModernTradeDetail() {
         </Card>
 
         {/* Compact Payment Details for Buyers */}
-        {tradeData?.isBuyer && (
+        {isBuyer && (
           <Card className="border-blue-200 bg-blue-50">
             <CardContent className="p-3">
               <div className="flex items-center gap-2 mb-2">
@@ -539,7 +527,7 @@ export function ModernTradeDetail() {
         )}
 
         {/* Compact Payment Details for Sellers */}
-        {tradeData?.isSeller && (trade.bankName || trade.accountNumber) && (
+        {isSeller && (trade.bankName || trade.accountNumber) && (
           <Card className="border-green-200 bg-green-50">
             <CardContent className="p-3">
               <div className="flex items-center gap-2 mb-2">
@@ -604,9 +592,9 @@ export function ModernTradeDetail() {
         )}
 
         {/* Compact Action Buttons */}
-        {tradeData?.isUserInTrade && (
+        {isUserInTrade && (
           <div className="space-y-2 mt-auto">
-            {tradeData?.canMarkPaymentMade && (
+            {canMarkPaymentMade && (
               <Button
                 onClick={() => markPaymentMadeMutation.mutate()}
                 disabled={markPaymentMadeMutation.isPending}
@@ -626,7 +614,7 @@ export function ModernTradeDetail() {
               </Button>
             )}
 
-            {tradeData?.canComplete && (
+            {canComplete && (
               <Button
                 onClick={() => completeTradeMultation.mutate()}
                 disabled={completeTradeMultation.isPending}
@@ -703,7 +691,7 @@ export function ModernTradeDetail() {
                 </Button>
               )}
               
-              {tradeData?.canCancel && (
+              {canCancel && (
                 <Button
                   variant="outline"
                   onClick={() => cancelTradeMutation.mutate()}
@@ -728,8 +716,8 @@ export function ModernTradeDetail() {
         {showRatingForm && trade && (
           <RatingForm
             tradeId={trade.id}
-            ratedUserId={tradeData?.isBuyer ? trade.seller?.id : trade.buyer?.id}
-            ratedUserEmail={tradeData?.isBuyer ? trade.seller?.email : trade.buyer?.email}
+            ratedUserId={isBuyer ? trade.seller?.id : trade.buyer?.id}
+            ratedUserEmail={isBuyer ? trade.seller?.email : trade.buyer?.email}
             open={showRatingForm}
             onOpenChange={setShowRatingForm}
             onSubmit={() => {
@@ -739,14 +727,34 @@ export function ModernTradeDetail() {
           />
         )}
 
-        {/* Enhanced Dispute System */}
-        <DisputeSystemV2
-          trade={trade as any}
-          userRole={tradeData?.isBuyer ? 'buyer' : 'seller'}
-          onDisputeUpdate={() => {
-            refetch();
-          }}
-        />
+        {/* Dispute Form Modal */}
+        {showDisputeForm && trade && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
+              <div className="p-4">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold">Raise Dispute</h3>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowDisputeForm(false)}
+                    className="h-8 w-8 p-0"
+                  >
+                    <XCircle className="h-4 w-4" />
+                  </Button>
+                </div>
+                <DisputeResolution
+                  trade={trade as any}
+                  userRole={isBuyer ? 'buyer' : 'seller'}
+                  onDisputeRaised={() => {
+                    refetch();
+                    setShowDisputeForm(false);
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
