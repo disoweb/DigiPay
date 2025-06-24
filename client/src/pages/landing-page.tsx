@@ -137,7 +137,7 @@ export default function LandingPage() {
               using advanced smart contracts and bank-grade security for safe USDT transactions.
             </p>
             
-            <div className="flex flex-col sm:flex-row gap-3 justify-center mb-6">
+            <div className="flex flex-col sm:flex-row gap-3 justify-center items-center mb-6">
               <Button 
                 size="lg" 
                 onClick={() => setLocation("/auth")}
