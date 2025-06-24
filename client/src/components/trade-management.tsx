@@ -123,6 +123,20 @@ export function TradeManagement() {
     }
   };
 
+  const getStatusBadge = (status: string) => {
+    const colorClass = getStatusColor(status);
+    const icon = getStatusIcon(status);
+    
+    const statusText = status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+    
+    return (
+      <Badge variant="secondary" className={`${colorClass} flex items-center gap-1`}>
+        {icon}
+        {statusText}
+      </Badge>
+    );
+  };
+
   const filteredTrades = trades.filter(trade => {
     if (selectedStatus === 'all') return true;
     if (selectedStatus === 'active') {
