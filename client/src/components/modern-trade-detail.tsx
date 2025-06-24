@@ -423,14 +423,11 @@ export function ModernTradeDetail() {
       case "completed":
         return <CheckCircle2 className="h-3 w-3" />;
       case "disputed":
-        return <AlertCircle className="h-3 w-3" />;
+        return <AlertTriangle className="h-3 w-3" />;
       case "cancelled":
+      case "canceled":
         return <XCircle className="h-3 w-3" />;
       case "expired":
-        return <XCircle className="h-3 w-3" />;
-      case "disputed":
-        return <AlertTriangle className="h-3 w-3" />;
-      case "canceled":
         return <XCircle className="h-3 w-3" />;
       default:
         return <Activity className="h-3 w-3" />;
@@ -438,7 +435,16 @@ export function ModernTradeDetail() {
   };
 
   const formatStatus = (status: string) => {
-    return status.replace("_", " ").replace(/\b\w/g, (l) => l.toUpperCase());
+    const statusMap: { [key: string]: string } = {
+      'payment_pending': 'Payment Pending',
+      'payment_made': 'Payment Made',
+      'completed': 'Completed',
+      'expired': 'Expired',
+      'disputed': 'Disputed',
+      'canceled': 'Canceled',
+      'cancelled': 'Cancelled'
+    };
+    return statusMap[status] || status.replace("_", " ").replace(/\b\w/g, (l) => l.toUpperCase());
   };
 
   const copyToClipboard = (text: string, label: string) => {

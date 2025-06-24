@@ -4284,7 +4284,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (trade.paymentDeadline && 
             new Date(trade.paymentDeadline) < now && 
             ["payment_pending"].includes(trade.status)) {
-          await storage.updateTradeStatus(trade.id, { status: "expired" });
+          await storage.updateTradeStatus(trade.id, "expired");
           trade.status = "expired"; // Update the local object
         }
       }
