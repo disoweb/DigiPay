@@ -2167,21 +2167,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Message routes
   app.get("/api/trades/:id/messages", authenticateToken, async (req, res) => {
-
     try {
       const tradeId = parseInt(req.params.id);
+      console.log("Fetching messages for trade:", tradeId, "User:", req.user?.id);
+      
       const trade = await storage.getTrade(tradeId);
 
       if (!trade) {
+        console.log("Trade not found:", tradeId);
         return res.status(404).json({ message: "Trade not found" });
       }
 
       // Check if user is part of the trade
       if (trade.buyerId !== req.user!.id && trade.sellerId !== req.user!.id) {
+        console.log("User not authorized for trade:", req.user!.id, "Trade buyers/sellers:", trade.buyerId, trade.sellerId);
         return res.status(403).json({ message: "Not authorized" });
       }
 
       const messages = await storage.getTradeMessages(tradeId);
+      console.log("Found messages:", messages.length);
 
       // Enrich messages with sender info
       const enrichedMessages = await Promise.all(
@@ -2196,12 +2200,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.json(enrichedMessages);
     } catch (error) {
-      res.status(500).json({ message: "Failed to fetch messages" });
+      console.error("Get trade messages error:", error);
+      res.status(500).json({ message: "Failed to fetch messages", error: error instanceof Error ? error.message : "Unknown error" });
     }
   });
 
   app.post("/api/trades/:id/messages", authenticateToken, async (req, res) => {
-
     try {
       const tradeId = parseInt(req.params.id);
       const trade = await storage.getTrade(tradeId);
@@ -2218,13 +2222,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const messageData = insertMessageSchema.parse({
         tradeId,
         senderId: req.user!.id,
-        message: req.body.message,
+        receiverId: trade.buyerId === req.user!.id ? trade.sellerId : trade.buyerId,
+        content: req.body.message,
       });
 
       const message = await storage.createMessage(messageData);
       res.status(201).json(message);
     } catch (error) {
-      res.status(400).json({ message: "Failed to send message" });
+      console.error("Send message error:", error);
+      res.status(400).json({ message: "Failed to send message", error: error instanceof Error ? error.message : "Unknown error" });
     }
   });
 
