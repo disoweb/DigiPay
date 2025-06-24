@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useLocation } from "wouter";
 import { TransactionDetailModal } from "@/components/transaction-detail-modal";
 import {
@@ -28,15 +29,19 @@ import {
   XCircle,
   Eye,
   RefreshCw,
-  Shield
+  Shield,
+  Edit,
+  Trash2,
+  Calendar
 } from "lucide-react";
-import { MessagingSystem } from "@/components/messaging-system";
 
 export function TradingDashboard() {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
   const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
   const [showTransactionModal, setShowTransactionModal] = useState(false);
+  const [selectedOffer, setSelectedOffer] = useState<any>(null);
+  const [showOfferModal, setShowOfferModal] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
   const { currency: portfolioCurrency, toggleCurrency } = useCurrencyPreference();
 
@@ -449,7 +454,10 @@ export function TradingDashboard() {
                   <div 
                     key={offer.id} 
                     className="flex items-center justify-between p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 hover:border hover:border-blue-300 transition-all duration-200"
-                    onClick={() => setLocation(`/manage-offers`)}
+                    onClick={() => {
+                      setSelectedOffer(offer);
+                      setShowOfferModal(true);
+                    }}
                   >
                     <div>
                       <p className="font-medium capitalize">{offer.type} USDT</p>
@@ -921,6 +929,115 @@ export function TradingDashboard() {
           setSelectedTransaction(null);
         }}
       />
+
+      {/* Offer Detail Modal */}
+      <Dialog open={showOfferModal} onOpenChange={setShowOfferModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              {selectedOffer?.type === 'buy' ? (
+                <TrendingUp className="h-5 w-5 text-green-600" />
+              ) : (
+                <TrendingDown className="h-5 w-5 text-red-600" />
+              )}
+              Offer Details
+            </DialogTitle>
+          </DialogHeader>
+          
+          {selectedOffer && (
+            <div className="space-y-4">
+              {/* Offer Type and Status */}
+              <div className="flex items-center justify-between">
+                <Badge 
+                  className={selectedOffer.type === 'buy' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}
+                  size="lg"
+                >
+                  {selectedOffer.type.toUpperCase()} USDT
+                </Badge>
+                <Badge variant={selectedOffer.status === 'active' ? 'default' : 'secondary'}>
+                  {selectedOffer.status.toUpperCase()}
+                </Badge>
+              </div>
+
+              {/* Main Details Grid */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <p className="text-sm text-gray-600">Amount</p>
+                  <p className="font-semibold">${parseFloat(selectedOffer.amount || 0).toFixed(2)} USDT</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-sm text-gray-600">Rate</p>
+                  <p className="font-semibold text-green-600">₦{parseFloat(selectedOffer.rate || 0).toLocaleString()}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-sm text-gray-600">Min Amount</p>
+                  <p className="font-semibold">${parseFloat(selectedOffer.minAmount || 0).toFixed(2)}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-sm text-gray-600">Max Amount</p>
+                  <p className="font-semibold">${parseFloat(selectedOffer.maxAmount || 0).toFixed(2)}</p>
+                </div>
+              </div>
+
+              {/* Payment Method */}
+              <div className="space-y-1">
+                <p className="text-sm text-gray-600">Payment Method</p>
+                <Badge variant="outline" className="text-blue-600 border-blue-600">
+                  <DollarSign className="h-3 w-3 mr-1" />
+                  {selectedOffer.paymentMethod?.replace('_', ' ').toUpperCase() || 'Bank Transfer'}
+                </Badge>
+              </div>
+
+              {/* Total Value */}
+              <div className="bg-gray-50 p-3 rounded-lg">
+                <p className="text-sm text-gray-600 mb-1">Total Value</p>
+                <p className="text-lg font-bold text-blue-600">
+                  ₦{(parseFloat(selectedOffer.amount || 0) * parseFloat(selectedOffer.rate || 0)).toLocaleString()}
+                </p>
+              </div>
+
+              {/* Terms */}
+              {selectedOffer.terms && (
+                <div className="space-y-1">
+                  <p className="text-sm text-gray-600">Terms & Conditions</p>
+                  <p className="text-sm bg-gray-50 p-2 rounded">{selectedOffer.terms}</p>
+                </div>
+              )}
+
+              {/* Created Date */}
+              <div className="flex items-center gap-2 text-sm text-gray-500">
+                <Calendar className="h-4 w-4" />
+                Created on {new Date(selectedOffer.createdAt).toLocaleDateString()}
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-2 pt-2">
+                <Button 
+                  variant="outline" 
+                  className="flex-1"
+                  onClick={() => {
+                    setShowOfferModal(false);
+                    setLocation('/manage-offers');
+                  }}
+                >
+                  <Edit className="h-4 w-4 mr-2" />
+                  Edit Offer
+                </Button>
+                <Button 
+                  onClick={() => {
+                    setShowOfferModal(false);
+                    setLocation('/marketplace');
+                  }}
+                  className="flex-1"
+                >
+                  <Eye className="h-4 w-4 mr-2" />
+                  View in Market
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
