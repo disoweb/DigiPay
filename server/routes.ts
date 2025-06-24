@@ -1596,6 +1596,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Exchange rates endpoints - public access
+  app.get("/api/exchange-rates", async (req: Request, res: Response) => {
+    try {
+      console.log("Fetching exchange rates...");
+      const rates = await storage.getExchangeRates();
+      console.log("Exchange rates found:", rates.length);
+      res.json(rates);
+    } catch (error) {
+      console.error("Error fetching exchange rates:", error);
+      res.status(500).json({ message: "Failed to fetch exchange rates", error: error.message });
+    }
+  });
+
+  // Update exchange rate - admin only
+  app.put("/api/exchange-rates/:name", authenticateToken, requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const { name } = req.params;
+      const { rate } = req.body;
+
+      if (!rate || isNaN(parseFloat(rate))) {
+        return res.status(400).json({ error: "Valid rate is required" });
+      }
+
+      const updatedRate = await storage.updateExchangeRate(name, rate);
+      if (!updatedRate) {
+        return res.status(404).json({ error: "Exchange rate not found" });
+      }
+
+      res.json(updatedRate);
+    } catch (error) {
+      console.error("Error updating exchange rate:", error);
+      res.status(500).json({ message: "Failed to update exchange rate", error: error.message });
+    }
+  });
+
   // Cancel trade (before payment)
   app.post("/api/trades/:id/cancel", authenticateToken, async (req, res) => {
     try {

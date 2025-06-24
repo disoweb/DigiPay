@@ -11,7 +11,7 @@ export async function apiRequest(method: string, url: string, data?: any) {
   try {
     const token = localStorage.getItem("digipay_token");
 
-    if (!token && !url.includes('/auth/login') && !url.includes('/auth/register')) {
+    if (!token && !url.includes('/auth/login') && !url.includes('/auth/register') && !url.includes('/exchange-rates')) {
       console.log("No auth token found for protected route");
       throw new Error("No authentication token");
     }

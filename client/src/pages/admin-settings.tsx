@@ -22,28 +22,11 @@ export default function AdminSettings() {
   const { data: rates = [], isLoading: ratesLoading, error: ratesError, refetch } = useQuery({
     queryKey: ["/api/exchange-rates"],
     queryFn: async () => {
-      try {
-        const response = await fetch("/api/exchange-rates", {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${localStorage.getItem("digipay_token") || localStorage.getItem("auth_token")}`,
-          },
-        });
-        
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error("Exchange rates fetch error:", response.status, errorText);
-          throw new Error(`HTTP ${response.status}: ${errorText}`);
-        }
-        
-        const data = await response.json();
-        console.log("Exchange rates loaded:", data);
-        return data;
-      } catch (error) {
-        console.error("Exchange rates query error:", error);
-        throw error;
+      const response = await apiRequest("GET", "/api/exchange-rates");
+      if (!response.ok) {
+        throw new Error("Failed to fetch exchange rates");
       }
+      return response.json();
     },
     refetchInterval: 30000,
     retry: 3,
@@ -348,13 +331,12 @@ export default function AdminSettings() {
                 </div>
               )}
 
-              {/* Debug Info (remove in production) */}
-              {process.env.NODE_ENV === 'development' && (
-                <div className="text-xs text-gray-400 mt-4 p-2 bg-gray-50 rounded">
-                  Debug: Loading={ratesLoading.toString()}, Error={!!ratesError}, Rates Count={rates.length}
-                  {ratesError && <div>Error: {ratesError.message}</div>}
-                </div>
-              )}
+              {/* Debug Info */}
+              <div className="text-xs text-gray-400 mt-4 p-2 bg-gray-50 rounded">
+                Debug: Loading={ratesLoading.toString()}, Error={!!ratesError}, Rates Count={rates.length}
+                {ratesError && <div className="text-red-600">Error: {ratesError.message}</div>}
+                {rates.length > 0 && <div className="text-green-600">Rates loaded successfully</div>}
+              </div>
             </CardContent>
           </Card>
 
