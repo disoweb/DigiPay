@@ -1619,12 +1619,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Valid rate is required" });
       }
 
+      const rateValue = parseFloat(rate);
+      
+      // Update the primary rate
       const updatedRate = await storage.updateExchangeRate(name, rate);
       if (!updatedRate) {
         return res.status(404).json({ error: "Exchange rate not found" });
       }
 
-      res.json(updatedRate);
+      // Calculate and update the inverse rate
+      let inverseUpdated = null;
+      if (name === "USDT_TO_NGN") {
+        // If updating USDT to NGN, calculate NGN to USD (inverse)
+        const inverseRate = (1 / rateValue).toFixed(8);
+        inverseUpdated = await storage.updateExchangeRate("NGN_TO_USD", inverseRate);
+        console.log(`Auto-updated NGN_TO_USD to ${inverseRate} (inverse of ${rate})`);
+      } else if (name === "NGN_TO_USD") {
+        // If updating NGN to USD, calculate USDT to NGN (inverse)
+        const inverseRate = (1 / rateValue).toFixed(2);
+        inverseUpdated = await storage.updateExchangeRate("USDT_TO_NGN", inverseRate);
+        console.log(`Auto-updated USDT_TO_NGN to ${inverseRate} (inverse of ${rate})`);
+      }
+
+      res.json({ 
+        primary: updatedRate,
+        inverse: inverseUpdated,
+        message: `Updated ${name} and calculated inverse rate automatically`
+      });
     } catch (error) {
       console.error("Error updating exchange rate:", error);
       res.status(500).json({ message: "Failed to update exchange rate", error: error.message });

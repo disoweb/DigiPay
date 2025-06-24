@@ -54,9 +54,14 @@ export default function AdminSettings() {
         delete newSaving[variables.name];
         return newSaving;
       });
+      
+      // Show success message with inverse calculation info
+      const inverseMessage = data.inverse ? 
+        ` and calculated inverse rate automatically` : '';
+      
       toast({
         title: "Success",
-        description: `Exchange rate ${variables.name.replace(/_/g, " ")} updated successfully`,
+        description: `Exchange rate ${variables.name.replace(/_/g, " ")} updated successfully${inverseMessage}`,
       });
     },
     onError: (error, variables) => {
@@ -178,11 +183,11 @@ export default function AdminSettings() {
             </CardHeader>
             <CardContent className="p-4 sm:p-6">
               {/* Warning Alert */}
-              <Alert className="mb-4 sm:mb-6 border-amber-200 bg-amber-50">
-                <AlertCircle className="h-4 w-4 text-amber-600" />
+              <Alert className="mb-4 sm:mb-6 border-blue-200 bg-blue-50">
+                <AlertCircle className="h-4 w-4 text-blue-600" />
                 <AlertDescription className="text-sm">
-                  <span className="font-medium">Important:</span> Rate changes affect new trades only. 
-                  <span className="hidden sm:inline">Existing trades keep their original rates.</span>
+                  <span className="font-medium">Auto-calculation:</span> When you update one rate, the inverse rate is automatically calculated. 
+                  <span className="hidden sm:inline">Rate changes affect new trades only.</span>
                 </AlertDescription>
               </Alert>
 
@@ -310,6 +315,9 @@ export default function AdminSettings() {
                             {getRateDescription(rate.name)}
                           </p>
                           <p>Last updated: {new Date(rate.updatedAt).toLocaleString()}</p>
+                          <p className="text-blue-600 font-medium">
+                            ⚡ Auto-calculates inverse rate when updated
+                          </p>
                         </div>
                       </div>
                     </div>
