@@ -48,6 +48,7 @@ export default function LandingPage() {
   const [currentRate, setCurrentRate] = useState(1583);
   const [onlineTraders, setOnlineTraders] = useState(1247);
   const [heroTextIndex, setHeroTextIndex] = useState(0);
+  const [isTextVisible, setIsTextVisible] = useState(true);
 
   const heroTexts = [
     "Complete Security",
@@ -61,7 +62,7 @@ export default function LandingPage() {
     setOpenFAQ(openFAQ === index ? null : index);
   };
 
-  // Animate numbers and hero text
+  // Animate numbers and hero text with fade effect
   useEffect(() => {
     const rateInterval = setInterval(() => {
       setCurrentRate(prev => prev + Math.floor(Math.random() * 3) - 1);
@@ -72,8 +73,12 @@ export default function LandingPage() {
     }, 3000);
 
     const heroTextInterval = setInterval(() => {
-      setHeroTextIndex(prev => (prev + 1) % heroTexts.length);
-    }, 3000);
+      setIsTextVisible(false); // Start fade out
+      setTimeout(() => {
+        setHeroTextIndex(prev => (prev + 1) % heroTexts.length);
+        setIsTextVisible(true); // Fade in new text
+      }, 500); // Half second delay for fade out before changing text
+    }, 4000); // Change every 4 seconds
 
     return () => {
       clearInterval(rateInterval);
@@ -85,10 +90,10 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
-      <header className="fixed top-0 w-full bg-white/95 backdrop-blur-md border-b border-gray-100 z-50 animate-in slide-in-from-top duration-700">
+      <header className="fixed top-0 w-full bg-white/95 backdrop-blur-md border-b border-gray-100 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-20">
-            <div className="flex items-center space-x-3 animate-in fade-in slide-in-from-left duration-1000">
+            <div className="flex items-center space-x-3">
               <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg hover:scale-110 transition-transform duration-300">
                 <Wallet className="h-6 w-6 text-white" />
               </div>
@@ -97,7 +102,7 @@ export default function LandingPage() {
                 <p className="text-xs text-gray-500 -mt-1">Trusted P2P Trading</p>
               </div>
             </div>
-            <div className="flex items-center space-x-4 animate-in fade-in slide-in-from-right duration-1000">
+            <div className="flex items-center space-x-4">
               <Button 
                 variant="ghost" 
                 onClick={() => setLocation("/auth")}
@@ -125,7 +130,7 @@ export default function LandingPage() {
             </Badge>
             <h1 className="text-3xl sm:text-4xl lg:text-7xl font-extrabold text-gray-900 mb-4 leading-tight">
               Trade USDT with
-              <span className="block bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent transition-all duration-500">
+              <span className={`block bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent transition-opacity duration-500 ${isTextVisible ? 'opacity-100' : 'opacity-0'}`}>
                 {heroTexts[heroTextIndex]}
               </span>
             </h1>
