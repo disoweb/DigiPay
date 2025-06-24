@@ -267,7 +267,7 @@ export function TradingDashboard() {
               </div>
               <div className="text-center">
                 <p className="text-white/90 text-sm mb-1">USDT</p>
-                <p className="text-xl font-semibold">{currencySymbol}{usdtBalanceInPreferredCurrency.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                <p className="text-xl font-semibold">${parseFloat(user?.usdtBalance || "0").toFixed(2)}</p>
               </div>
             </div>
           </div>

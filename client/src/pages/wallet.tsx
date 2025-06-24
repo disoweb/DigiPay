@@ -346,8 +346,8 @@ export default function Wallet() {
                       )}
                     </div>
                     <div className="text-center">
-                      <p className="text-blue-100">USDT (TRON)</p>
-                      <p className="font-semibold">{parseFloat(user.usdtBalance || "0").toFixed(2)} USDT</p>
+                      <p className="text-blue-100">USDT</p>
+                      <p className="font-semibold">${parseFloat(user.usdtBalance || "0").toFixed(2)}</p>
                       {portfolioCurrency === "NGN" && (
                         <p className="text-xs text-blue-200">
                           ≈ ₦{(parseFloat(user.usdtBalance || "0") * USDT_TO_NGN_RATE).toLocaleString()}
@@ -438,20 +438,20 @@ export default function Wallet() {
                       </div>
                       <div>
                         <h3 className="font-semibold text-gray-900">USDT</h3>
-                        <p className="text-xs text-gray-500">Tether (TRC-20)</p>
+                        <p className="text-xs text-gray-500">Tether USD</p>
                       </div>
                     </div>
                     <Badge variant="secondary" className="bg-green-100 text-green-800 text-xs">
-                      TRC-20
+                      USD
                     </Badge>
                   </div>
 
                   <div className="space-y-2 mb-4">
                     <p className="text-2xl font-bold text-gray-900">
-                      {parseFloat(user.usdtBalance || "0").toFixed(2)} USDT
+                      ${parseFloat(user.usdtBalance || "0").toFixed(2)}
                     </p>
                     <p className="text-sm text-gray-600">
-                      ≈ ₦{(parseFloat(user.usdtBalance || "0") * 1485).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      ≈ ₦{(parseFloat(user.usdtBalance || "0") * USDT_TO_NGN_RATE).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </p>
                   </div>
 
@@ -495,9 +495,9 @@ export default function Wallet() {
                     </Button>
                   </div>
 
-                  {/* TRON Address Display */}
+                  {/* USDT Address Display */}
                   <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-                    <p className="text-xs text-gray-600 mb-1">Your TRON Address:</p>
+                    <p className="text-xs text-gray-600 mb-1">Your USDT Address:</p>
                     <div className="flex items-center justify-between">
                       <code className="text-xs text-gray-800 truncate flex-1">
                         {(user as any).tronAddress || "Generating..."}
