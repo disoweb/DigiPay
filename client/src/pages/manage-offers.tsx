@@ -38,6 +38,9 @@ type Offer = {
   maxAmount?: string;
   terms?: string;
   createdAt: string;
+  remainingAmount?: string;
+  totalTraded?: string;
+  isFullyTraded?: boolean;
   user: {
     id: number;
     email: string;
@@ -75,7 +78,7 @@ export default function ManageOffers() {
   }, [authLoading]);
 
   // Fetch user's offers with delay to prevent race condition
-  const { data: offers = [], isLoading, error } = useQuery<Offer[]>({
+  const { data: allOffers = [], isLoading, error } = useQuery<Offer[]>({
     queryKey: [`/api/users/${user?.id}/offers`],
     enabled: !!user?.id && !authLoading,
     retry: 3,
@@ -97,6 +100,9 @@ export default function ManageOffers() {
       return response.json();
     },
   });
+
+  // Filter out completed offers (where all amount has been traded)
+  const offers = allOffers.filter((offer: any) => !offer.isFullyTraded);
 
   // Update offer mutation
   const updateOfferMutation = useMutation({

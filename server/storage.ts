@@ -431,11 +431,47 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUserOffers(userId: number): Promise<Offer[]> {
-    return await db
+    // Get offers with remaining amount calculation
+    const userOffers = await db
       .select()
       .from(offers)
       .where(eq(offers.userId, userId))
       .orderBy(desc(offers.createdAt));
+
+    // Calculate remaining amount for each offer
+    const offersWithRemaining = await Promise.all(
+      userOffers.map(async (offer) => {
+        // Get completed trades for this offer
+        const completedTrades = await db
+          .select()
+          .from(trades)
+          .where(and(
+            eq(trades.offerId, offer.id),
+            eq(trades.status, 'completed')
+          ));
+
+        // Calculate total traded amount
+        const totalTraded = completedTrades.reduce((sum, trade) => {
+          return sum + parseFloat(trade.amount || "0");
+        }, 0);
+
+        // Calculate remaining amount
+        const originalAmount = parseFloat(offer.amount);
+        const remainingAmount = originalAmount - totalTraded;
+
+        // Mark as completed if no amount remaining
+        const isCompleted = remainingAmount <= 0;
+
+        return {
+          ...offer,
+          remainingAmount: remainingAmount.toString(),
+          totalTraded: totalTraded.toString(),
+          isFullyTraded: isCompleted
+        };
+      })
+    );
+
+    return offersWithRemaining;
   }
 
   async createOffer(insertOffer: InsertOffer): Promise<Offer> {
