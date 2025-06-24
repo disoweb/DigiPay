@@ -101,11 +101,7 @@ export function ModernTradeManagement() {
     });
   }, [trades, hiddenCanceledTrades]);
 
-  // Debug: Log trades data
-  console.log('All trades:', trades.length);
-  console.log('All trade statuses:', trades.map(t => `${t.id}: ${t.status}`));
-  console.log('Expired trades in data:', trades.filter(t => t.status === 'expired'));
-  console.log('User ID:', user?.id);
+
 
   // Reopen trade mutation
   const reopenTradeMutation = useMutation({
@@ -139,12 +135,10 @@ export function ModernTradeManagement() {
     // Check if expired within last 24 hours (more practical for users)
     const updatedAt = new Date(trade.updatedAt || trade.createdAt);
     const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-    const isRecent = updatedAt > twentyFourHoursAgo;
-    console.log(`Trade ${trade.id}: expired ${updatedAt}, recent: ${isRecent}`);
-    return isRecent;
+    return updatedAt > twentyFourHoursAgo;
   });
 
-  console.log('Filtered expired trades:', expiredTrades.length);
+
 
   const filteredTrades = (() => {
     let filtered;
@@ -221,8 +215,7 @@ export function ModernTradeManagement() {
     { key: 'all', label: 'All', count: visibleTrades.length, icon: Users, color: 'text-purple-600' },
   ];
 
-  console.log('Quick filters with counts:', quickFilters.map(f => `${f.label}: ${f.count}`));
-  console.log('Filters shown on mobile:', quickFilters.filter(f => f.count > 0 || f.key === 'all' || selectedStatus === f.key).map(f => f.label));
+
 
   if (isLoading) {
     return (
