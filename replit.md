@@ -12,6 +12,18 @@ A peer-to-peer cryptocurrency trading platform enabling direct trading between u
 - **Security**: JWT authentication, rate limiting, helmet security
 
 ## Recent Changes
+- **2025-06-24**: Completely redesigned landing page with modern, professional design
+  - Added comprehensive FAQ section with 6 common questions and expandable answers
+  - Implemented professional hero section with gradient background and call-to-action buttons
+  - Added features showcase with 6 key platform benefits (security, speed, community, etc.)
+  - Created "How It Works" section with 3-step process visualization
+  - Added customer testimonials section with ratings and feedback
+  - Implemented statistics section showing platform metrics (25k+ traders, ₦2.5B+ volume)
+  - Added sticky navigation with brand logo and authentication buttons
+  - Created comprehensive footer with organized links and legal information
+  - Used modern card-based design with shadows, gradients, and smooth transitions
+  - Maintained consistent color scheme (blue/purple gradients, green/red for buy/sell)
+  - Made fully responsive for all screen sizes with proper mobile optimization
 - **2025-06-24**: Enhanced trade management with expiration handling and improved UI/UX
   - Added "Expired" tab to trades page showing expired trades for 24 hours with reopen functionality
   - Enhanced status badge colors across all components (green for completed, red for expired/disputed, blue for payment_made, yellow for pending)
