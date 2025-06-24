@@ -222,6 +222,7 @@ export function ModernTradeManagement() {
   ];
 
   console.log('Quick filters with counts:', quickFilters.map(f => `${f.label}: ${f.count}`));
+  console.log('Filters shown on mobile:', quickFilters.filter(f => f.count > 0 || f.key === 'all' || selectedStatus === f.key).map(f => f.label));
 
   if (isLoading) {
     return (
@@ -327,8 +328,8 @@ export function ModernTradeManagement() {
       {/* Quick Filter Pills */}
       <div className="p-4 bg-white border-b">
         <ScrollArea className="w-full">
-          <div className="flex gap-3 pb-2">
-            {quickFilters.map((filter) => {
+          <div className="flex gap-3 pb-2 overflow-x-auto">
+            {quickFilters.filter(filter => filter.count > 0 || filter.key === 'all' || selectedStatus === filter.key).map((filter) => {
               const Icon = filter.icon;
               const isActive = selectedStatus === filter.key;
               return (
@@ -337,10 +338,11 @@ export function ModernTradeManagement() {
                   variant={isActive ? "default" : "outline"}
                   size="sm"
                   onClick={() => setSelectedStatus(filter.key as any)}
-                  className={`flex-shrink-0 ${isActive ? '' : 'border-gray-200'}`}
+                  className={`flex-shrink-0 whitespace-nowrap ${isActive ? '' : 'border-gray-200'}`}
                 >
                   <Icon className={`h-3 w-3 mr-2 ${isActive ? 'text-white' : filter.color}`} />
-                  {filter.label}
+                  <span className="hidden sm:inline">{filter.label}</span>
+                  <span className="sm:hidden">{filter.label.slice(0, 3)}</span>
                   <Badge 
                     variant="secondary" 
                     className={`ml-2 ${isActive ? 'bg-white/20 text-white' : ''}`}
