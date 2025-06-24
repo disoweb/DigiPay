@@ -123,7 +123,13 @@ export function ModernTradeDetail() {
     },
   });
 
-  // Ensure hooks are always called in the same order
+  // Define trade-related variables first
+  const isBuyer = trade?.buyerId === user?.id;
+  const isSeller = trade?.sellerId === user?.id;
+  const isUserInTrade = isBuyer || isSeller;
+  const partner = isBuyer ? trade?.seller : trade?.buyer;
+
+  // Now we can safely use these variables in our hook dependencies
   const canMarkPaymentMade = user && trade && isBuyer && trade.status === 'payment_pending';
   const canComplete = user && trade && isSeller && trade.status === 'payment_made';
   const canCancel = user && trade && isUserInTrade && ['payment_pending', 'payment_made'].includes(trade.status);
@@ -215,11 +221,6 @@ export function ModernTradeDetail() {
       </div>
     );
   }
-
-  const isBuyer = trade?.buyerId === user?.id;
-  const isSeller = trade?.sellerId === user?.id;
-  const isUserInTrade = isBuyer || isSeller;
-  const partner = isBuyer ? trade?.seller : trade?.buyer;
 
   // Mock online status - in real app this would come from WebSocket or API
   const getOnlineStatus = () => {
