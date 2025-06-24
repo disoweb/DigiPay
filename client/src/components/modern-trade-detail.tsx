@@ -465,7 +465,7 @@ export function ModernTradeDetail() {
         </Card>
 
         {/* Compact Payment Details for Buyers */}
-        {isBuyer && (
+        {tradeData?.isBuyer && (
           <Card className="border-blue-200 bg-blue-50">
             <CardContent className="p-3">
               <div className="flex items-center gap-2 mb-2">
@@ -541,7 +541,7 @@ export function ModernTradeDetail() {
         )}
 
         {/* Compact Payment Details for Sellers */}
-        {isSeller && (trade.bankName || trade.accountNumber) && (
+        {tradeData?.isSeller && (trade.bankName || trade.accountNumber) && (
           <Card className="border-green-200 bg-green-50">
             <CardContent className="p-3">
               <div className="flex items-center gap-2 mb-2">
@@ -606,9 +606,9 @@ export function ModernTradeDetail() {
         )}
 
         {/* Compact Action Buttons */}
-        {isUserInTrade && (
+        {tradeData?.isUserInTrade && (
           <div className="space-y-2 mt-auto">
-            {canMarkPaymentMade && (
+            {tradeData?.canMarkPaymentMade && (
               <Button
                 onClick={() => markPaymentMadeMutation.mutate()}
                 disabled={markPaymentMadeMutation.isPending}
@@ -628,7 +628,7 @@ export function ModernTradeDetail() {
               </Button>
             )}
 
-            {canComplete && (
+            {tradeData?.canComplete && (
               <Button
                 onClick={() => completeTradeMultation.mutate()}
                 disabled={completeTradeMultation.isPending}
@@ -705,7 +705,7 @@ export function ModernTradeDetail() {
                 </Button>
               )}
               
-              {canCancel && (
+              {tradeData?.canCancel && (
                 <Button
                   variant="outline"
                   onClick={() => cancelTradeMutation.mutate()}
@@ -730,8 +730,8 @@ export function ModernTradeDetail() {
         {showRatingForm && trade && (
           <RatingForm
             tradeId={trade.id}
-            ratedUserId={isBuyer ? trade.seller?.id : trade.buyer?.id}
-            ratedUserEmail={isBuyer ? trade.seller?.email : trade.buyer?.email}
+            ratedUserId={tradeData?.isBuyer ? trade.seller?.id : trade.buyer?.id}
+            ratedUserEmail={tradeData?.isBuyer ? trade.seller?.email : trade.buyer?.email}
             open={showRatingForm}
             onOpenChange={setShowRatingForm}
             onSubmit={() => {
@@ -744,7 +744,7 @@ export function ModernTradeDetail() {
         {/* Enhanced Dispute System */}
         <DisputeSystemV2
           trade={trade as any}
-          userRole={isBuyer ? 'buyer' : 'seller'}
+          userRole={tradeData?.isBuyer ? 'buyer' : 'seller'}
           onDisputeUpdate={() => {
             refetch();
           }}
