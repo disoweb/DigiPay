@@ -83,9 +83,10 @@ export default function DirectTrade() {
       }
       return response.json();
     },
-    onSuccess: (trade) => {
+    onSuccess: (response) => {
       queryClient.invalidateQueries({ queryKey: ["/api/trades"] });
-      setLocation(`/trades/${trade.id}/chat`);
+      console.log("Trade creation response:", response);
+      setLocation(`/chat/${response.trade.id}`);
     },
     onError: (error: any) => {
       setError(error.message);
