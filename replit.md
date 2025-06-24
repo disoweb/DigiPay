@@ -34,6 +34,8 @@ A peer-to-peer cryptocurrency trading platform enabling direct trading between u
   - **NEW**: Admin-configurable exchange rates - USDT_TO_NGN_RATE and NGN_TO_USD_RATE now stored in database with admin UI for updates
   - **NEW**: Exchange rate management page at /admin/exchange-rates for real-time rate configuration
   - **NEW**: All wallet calculations and trading now use database-stored exchange rates instead of hardcoded values
+  - **NEW**: General Settings page at /admin/settings consolidating exchange rates and future platform configuration options
+  - **NEW**: Improved admin navigation with centralized settings management accessible from main admin dashboard
 
 ## User Preferences
 - Non-technical user communication preferred

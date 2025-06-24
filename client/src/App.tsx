@@ -33,6 +33,7 @@ import AdminDisputesNew from "./pages/admin-disputes-new";
 import AdminWallet from "./pages/admin-wallet";
 import AdminGuide from "./pages/admin-guide";
 import AdminExchangeRates from "./pages/admin-exchange-rates";
+import AdminSettings from "./pages/admin-settings";
 
 const queryClient = new QueryClient();
 
@@ -65,6 +66,7 @@ function App() {
             <ProtectedRoute path="/admin/guide" component={AdminGuide} adminOnly />
             <ProtectedRoute path="/admin/disputes" component={AdminDisputesNew} adminOnly />
             <ProtectedRoute path="/admin/exchange-rates" component={AdminExchangeRates} adminOnly />
+            <ProtectedRoute path="/admin/settings" component={AdminSettings} adminOnly />
             <ProtectedRoute path="/profile-setup" component={ProfileSetup} />
             <ProtectedRoute path="/create-offer" component={OfferCreation} />
             <Route path="/chat/:tradeId" component={({ params }) => (
