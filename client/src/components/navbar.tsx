@@ -110,11 +110,25 @@ export function Navbar() {
           <div className="flex items-center">
             <div className="flex-shrink-0">
               <h1 
-                className="text-xl font-bold text-primary cursor-pointer" 
-                onClick={() => setLocation("/dashboard")}
+                className="text-xl font-bold text-primary cursor-pointer hover:text-blue-600 transition-colors" 
+                onClick={() => setLocation("/")}
               >
                 DigiPay
               </h1>
+            </div>
+            <div className="flex gap-2 ml-6">
+              <Button 
+                onClick={() => setLocation("/marketplace")} 
+                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 h-8 text-sm"
+              >
+                Buy
+              </Button>
+              <Button 
+                onClick={() => setLocation("/marketplace")} 
+                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 h-8 text-sm"
+              >
+                Sell
+              </Button>
             </div>
           </div>
 
