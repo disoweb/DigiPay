@@ -26,23 +26,23 @@ export default function Marketplace() {
               <span className="sm:hidden">Back</span>
             </Button>
           </div>
-          <div className="flex items-center justify-between gap-3">
-            <div className="min-w-0 flex-1">
+          <div className="space-y-3">
+            <div className="flex items-center justify-between gap-3">
               <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 truncate">
                 <span className="sm:hidden">P2P</span>
                 <span className="hidden sm:inline">P2P Marketplace</span>
               </h1>
-              <p className="text-gray-600 text-sm sm:text-base">Trade USDT/Naira with verified users instantly</p>
+              <Button 
+                onClick={() => setLocation("/create-offer")} 
+                size="lg" 
+                className="flex-shrink-0"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                <span className="hidden sm:inline">Create Offer</span>
+                <span className="sm:hidden">Create</span>
+              </Button>
             </div>
-            <Button 
-              onClick={() => setLocation("/create-offer")} 
-              size="lg" 
-              className="flex-shrink-0"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              <span className="hidden sm:inline">Create Offer</span>
-              <span className="sm:hidden">Create</span>
-            </Button>
+            <p className="text-gray-600 text-sm sm:text-base">Trade USDT/Naira with verified users instantly</p>
           </div>
         </div>
 
