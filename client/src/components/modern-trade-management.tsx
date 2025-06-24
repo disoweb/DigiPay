@@ -342,7 +342,7 @@ export function ModernTradeManagement() {
           <div className="absolute left-0 top-0 bottom-0 w-4 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none sm:hidden"></div>
           <div className="absolute right-0 top-0 bottom-0 w-4 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none sm:hidden"></div>
           
-          <div className="flex gap-3 pb-2 overflow-x-auto scrollbar-hide scroll-smooth snap-x snap-mandatory">
+          <div className="flex gap-1 pb-2 overflow-x-auto scrollbar-hide scroll-smooth snap-x snap-mandatory">
             {quickFilters.filter(filter => filter.count > 0).map((filter) => {
               const Icon = filter.icon;
               const isActive = selectedStatus === filter.key;
@@ -354,12 +354,12 @@ export function ModernTradeManagement() {
                   onClick={() => setSelectedStatus(filter.key as any)}
                   className={`flex-shrink-0 whitespace-nowrap snap-start ${isActive ? '' : 'border-gray-200'}`}
                 >
-                  <Icon className={`h-3 w-3 mr-2 ${isActive ? 'text-white' : filter.color}`} />
+                  <Icon className={`h-3 w-3 mr-1 ${isActive ? 'text-white' : filter.color}`} />
                   <span className="hidden sm:inline">{filter.label}</span>
                   <span className="sm:hidden">{filter.label.slice(0, 3)}</span>
                   <Badge 
                     variant="secondary" 
-                    className={`ml-2 ${isActive ? 'bg-white/20 text-white' : ''}`}
+                    className={`ml-1 ${isActive ? 'bg-white/20 text-white' : ''}`}
                   >
                     {filter.count}
                   </Badge>
@@ -374,12 +374,12 @@ export function ModernTradeManagement() {
                 onClick={() => setSelectedStatus('all')}
                 className={`flex-shrink-0 whitespace-nowrap snap-start ${selectedStatus === 'all' ? '' : 'border-gray-200'}`}
               >
-                <Users className={`h-3 w-3 mr-2 ${selectedStatus === 'all' ? 'text-white' : 'text-purple-600'}`} />
+                <Users className={`h-3 w-3 mr-1 ${selectedStatus === 'all' ? 'text-white' : 'text-purple-600'}`} />
                 <span className="hidden sm:inline">All</span>
                 <span className="sm:hidden">All</span>
                 <Badge 
                   variant="secondary" 
-                  className={`ml-2 ${selectedStatus === 'all' ? 'bg-white/20 text-white' : ''}`}
+                  className={`ml-1 ${selectedStatus === 'all' ? 'bg-white/20 text-white' : ''}`}
                 >
                   {trades.length}
                 </Badge>
