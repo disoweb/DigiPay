@@ -1,44 +1,59 @@
 # DigiPay P2P Cryptocurrency Trading Platform
 
 ## Project Overview
-DigiPay is a peer-to-peer cryptocurrency trading platform that enables direct trading between users without intermediaries. The platform supports USDT/NGN trading with escrow services, KYC verification, real-time chat, and integrated payment systems.
-
-## Architecture
-- **Frontend**: React with TypeScript, Vite, TailwindCSS, Radix UI components
-- **Backend**: Node.js with Express, TypeScript
-- **Database**: PostgreSQL with Drizzle ORM
-- **Authentication**: JWT-based with sessions
-- **Real-time**: WebSocket for chat and live updates
-- **Payment**: Paystack integration for NGN, TronWeb for USDT
-- **Security**: Helmet for security headers, rate limiting, input validation
+A peer-to-peer cryptocurrency trading platform that enables direct trading between users without intermediaries. The platform focuses on USDT/Naira trading with secure escrow services, real-time chat, and comprehensive user management.
 
 ## Recent Changes
-- **2025-01-24**: Enhanced trade detail page with total amount and role moved to overview card
-- **2025-01-24**: Added online/offline status indicators for trading partners
-- **2025-01-24**: Implemented completion rate display with color-coded progress bars
-- **2025-01-24**: Improved partner card layout with better status information
-- **2025-01-22**: Completely redesigned /trades page with modern mobile-first UI
-- **2025-01-22**: Added sticky mobile header with back navigation and refresh
-- **2025-01-22**: Implemented horizontal scrolling filter pills for better mobile UX
+- **2024-01-23**: Successfully migrated from Replit Agent to Replit environment
+- **2024-01-23**: Installed required dependencies (tsx, database setup)
+- **2024-01-23**: Created PostgreSQL database and applied schema migrations
+- **2024-01-23**: Redesigned chat page (/chat/36) for mobile-first viewport optimization
+- **2024-01-23**: Applied same mobile design principles as trade detail page for consistent UX
 
-## Key Features
-- User registration and KYC verification
-- P2P USDT trading with escrow
-- Real-time messaging between traders
-- Admin panel for dispute resolution
-- Wallet management with deposit/withdrawal
-- Rating and review system
-- Mobile-responsive design
+## Project Architecture
+
+### Backend (Express.js + TypeScript)
+- **Database**: PostgreSQL with Drizzle ORM
+- **Authentication**: Session-based with passport
+- **Real-time**: WebSocket for live chat and notifications
+- **Payment**: Paystack integration for NGN transactions
+- **Crypto**: TronWeb integration for USDT transactions
+
+### Frontend (React + TypeScript)
+- **UI**: Tailwind CSS with Radix UI components
+- **State**: TanStack Query for server state
+- **Routing**: Wouter for lightweight routing
+- **Mobile-first**: Optimized for single viewport display
+
+### Key Features
+- User registration/authentication with KYC verification
+- P2P offer creation and trading system
+- Real-time chat between traders
+- Escrow service for secure transactions
+- Admin panel for user and transaction management
+- Mobile-optimized responsive design
+
+### Database Schema
+- **Users**: Authentication, KYC, balances, ratings
+- **Offers**: Buy/sell offers with rates and amounts
+- **Trades**: Active trading sessions between users
+- **Messages**: Real-time chat for trade coordination
+- **Transactions**: Payment and withdrawal records
 
 ## User Preferences
-- Language: English
-- Communication style: Professional, concise, no emojis
-- Error handling: Prefer explicit error messages over silent fallbacks
-- Security: Client/server separation, proper validation
+- Mobile-first design approach prioritizing single viewport layouts
+- Compact UI elements to minimize scrolling
+- Real-time features for enhanced user experience
 
-## Technical Notes
-- Server binds to 0.0.0.0 for Replit compatibility
-- Uses Neon PostgreSQL database service
-- TronWeb runs in demo mode without API keys
-- Paystack integration requires PAYSTACK_SECRET_KEY environment variable
-- Admin user created: admin@digipay.com / admin123
+## Security Features
+- Client-server separation with proper API boundaries
+- Rate limiting on sensitive endpoints
+- Input validation and sanitization
+- Secure session management
+- KYC verification requirements
+
+## Development Status
+- **Status**: Fully functional and deployed
+- **Environment**: Production-ready on Replit
+- **Database**: Live PostgreSQL with seed data
+- **Chat System**: Real-time WebSocket implementation complete
