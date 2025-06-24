@@ -385,6 +385,93 @@ export default function Admin() {
             </CardContent>
           </Card>
 
+          {/* Quick Actions Grid */}
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => setLocation("/admin/users")}>
+              <CardContent className="p-6">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-blue-100 rounded-lg">
+                    <Users className="h-6 w-6 text-blue-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-lg mb-1">User Management</h3>
+                    <p className="text-gray-600 text-sm">Manage users and view detailed profiles</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => setLocation("/admin/wallet")}>
+              <CardContent className="p-6">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-green-100 rounded-lg">
+                    <DollarSign className="h-6 w-6 text-green-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-lg mb-1">Wallet Management</h3>
+                    <p className="text-gray-600 text-sm">Credit/debit user balances and transactions</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => setLocation("/admin/approvals")}>
+              <CardContent className="p-6">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-yellow-100 rounded-lg">
+                    <Shield className="h-6 w-6 text-yellow-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-lg mb-1">Approvals</h3>
+                    <p className="text-gray-600 text-sm">Review and approve pending transactions</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => setLocation("/admin/disputes")}>
+              <CardContent className="p-6">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-red-100 rounded-lg">
+                    <AlertTriangle className="h-6 w-6 text-red-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-lg mb-1">Disputes</h3>
+                    <p className="text-gray-600 text-sm">Handle trade disputes and conflicts</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => setLocation("/admin/guide")}>
+              <CardContent className="p-6">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-purple-100 rounded-lg">
+                    <RefreshCw className="h-6 w-6 text-purple-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-lg mb-1">Admin Guide</h3>
+                    <p className="text-gray-600 text-sm">View admin documentation and guides</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => setLocation("/admin/settings")}>
+              <CardContent className="p-6">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-gray-100 rounded-lg">
+                    <Settings className="h-6 w-6 text-gray-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-lg mb-1">General Settings</h3>
+                    <p className="text-gray-600 text-sm">Configure exchange rates and platform settings</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
           {/* All Users Section - Modern Mobile-Optimized */}
           <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
             <CardHeader className="pb-4 border-b border-gray-100">
