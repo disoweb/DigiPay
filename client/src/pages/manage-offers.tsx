@@ -77,6 +77,11 @@ export default function ManageOffers() {
     }
   }, [authLoading]);
 
+  // Scroll to top when page loads
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   // Fetch user's offers with delay to prevent race condition
   const { data: allOffers = [], isLoading, error } = useQuery<Offer[]>({
     queryKey: [`/api/users/${user?.id}/offers`],
@@ -101,8 +106,10 @@ export default function ManageOffers() {
     },
   });
 
-  // Filter out completed offers (where all amount has been traded)
-  const offers = allOffers.filter((offer: any) => !offer.isFullyTraded);
+  // Filter out completed offers and sort by latest first
+  const offers = allOffers
+    .filter((offer: any) => !offer.isFullyTraded)
+    .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   // Update offer mutation
   const updateOfferMutation = useMutation({

@@ -89,7 +89,7 @@ export function TradingDashboard() {
     }
   }, [user?.id, refetchTrades]);
 
-  const { data: offers = [], error: offersError } = useQuery({
+  const { data: allUserOffers = [], error: offersError } = useQuery({
     queryKey: [`/api/users/${user?.id}/offers`],
     queryFn: async () => {
       const response = await apiRequest("GET", `/api/users/${user?.id}/offers`);
@@ -104,6 +104,11 @@ export function TradingDashboard() {
     gcTime: 0,
     refetchOnMount: true,
   });
+
+  // Filter and sort offers - latest first
+  const offers = allUserOffers
+    .filter((offer: any) => !offer.isFullyTraded)
+    .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   const { data: featuredOffers } = useQuery({
     queryKey: ['/api/offers/featured'],
