@@ -12,16 +12,17 @@ A peer-to-peer cryptocurrency trading platform enabling direct trading between u
 - **Security**: JWT authentication, rate limiting, helmet security
 
 ## Recent Changes
-- **2025-06-24**: Implemented immediate loading system activating on any user interaction
-  - Created comprehensive loading spinner library with 5 variants (LoadingSpinner, PulseSpinner, DotsSpinner, PageLoader, ButtonSpinner)
-  - Added GlobalLoader component that triggers on every route change and user click
-  - Implemented progress bar system that fills from 0% to 90% with smooth real-time tracking
-  - Enhanced landing page with dedicated loader showing completion percentage
-  - Added premium gradient animations (blue to purple) matching brand theme
-  - Loader activates immediately on website interaction and disappears at 90% completion
-  - Enhanced online traders indicator with premium spinner animation
-  - Fixed all JSX syntax errors and optimized loading performance
-  - Integrated seamless transitions between pages with professional timing
+- **2025-06-24**: Enhanced animations with dynamic hero text rotation and refined user experience
+  - Removed entrance animations from hero section for immediate content visibility
+  - Added dynamic text rotation for hero subtitle cycling through: "Complete Security", "Complete Confidence", "Complete Trust", "Complete Protection", "Complete Peace of Mind"
+  - Retained hover effects with scale transforms, rotations, and color transitions on interactive elements
+  - Maintained animated live market data with real-time rate updates and trader count changes
+  - Kept card hover animations with lift effects (-translate-y-2) and enhanced shadows
+  - Preserved icon rotation and scale animations on hover for visual feedback
+  - Maintained arrow translation effects on button hover for directional guidance
+  - Kept animated FAQ expansion with smooth slide-in-from-top transitions
+  - Retained animated pulse effects on security indicators and online status
+  - All animations use smooth duration-300 to duration-700 timing for professional feel
 - **2025-06-24**: Enhanced trade management with expiration handling and improved UI/UX
   - Added "Expired" tab to trades page showing expired trades for 24 hours with reopen functionality
   - Enhanced status badge colors across all components (green for completed, red for expired/disputed, blue for payment_made, yellow for pending)

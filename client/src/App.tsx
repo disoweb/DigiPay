@@ -5,7 +5,6 @@ import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from "@/hooks/use-auth";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { ProtectedRoute } from "@/lib/protected-route";
-import { GlobalLoader } from "@/components/global-loader";
 // Pages
 import LandingPage from "@/pages/landing-page";
 import AuthPage from "@/pages/auth-page";
@@ -43,9 +42,8 @@ function App() {
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <GlobalLoader>
-            <div className="min-h-screen bg-white">
-            <Switch>
+          <div className="min-h-screen bg-white">
+          <Switch>
             <Route path="/" component={LandingPage} />
             <Route path="/auth" component={AuthPage} />
 
@@ -94,11 +92,11 @@ function App() {
           <Route path="/admin/approvals" component={AdminApprovalsNew} />
           <Route path="/admin/users" component={AdminUsersFixed} />
           <Route path="*" component={NotFound} />
-            </Switch>
-            </div>
-          </GlobalLoader>
+        </Switch>
+
+          <Toaster />
+          </div>
         </AuthProvider>
-        <Toaster />
       </QueryClientProvider>
     </ErrorBoundary>
   );
