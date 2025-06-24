@@ -82,6 +82,19 @@ export default function TradeDetail() {
     retry: 3,
   });
 
+  // Move rating query to top to avoid conditional hook usage
+  const isUserInTrade = user && trade && (trade.buyerId === user.id || trade.sellerId === user.id);
+  const isCompleted = trade?.status === "completed";
+  
+  const { data: existingRating } = useQuery({
+    queryKey: [`/api/trades/${tradeId}/rating`],
+    queryFn: async () => {
+      const response = await apiRequest("GET", `/api/trades/${tradeId}/rating`);
+      return response.json();
+    },
+    enabled: !!tradeId && isCompleted && isUserInTrade,
+  });
+
   const completeTradeMutation = useMutation({
     mutationFn: async () => {
       const response = await apiRequest("POST", `/api/trades/${tradeId}/complete`);
@@ -207,23 +220,10 @@ export default function TradeDetail() {
     }
   };
 
-  const isUserInTrade = user && (trade.buyerId === user.id || trade.sellerId === user.id);
-  const isBuyer = user && trade.buyerId === user.id;
-  const isSeller = user && trade.sellerId === user.id;
-  const canComplete = ["payment_made"].includes(trade.status) && isSeller;
-  const canCancel = ["pending", "payment_pending"].includes(trade.status) && isUserInTrade;
-  const isCompleted = trade.status === "completed";
-
-  // Check if user can rate this trade
-  const { data: existingRating } = useQuery({
-    queryKey: [`/api/trades/${tradeId}/rating`],
-    queryFn: async () => {
-      const response = await apiRequest("GET", `/api/trades/${tradeId}/rating`);
-      return response.json();
-    },
-    enabled: isCompleted && isUserInTrade,
-  });
-
+  const isBuyer = user && trade && trade.buyerId === user.id;
+  const isSeller = user && trade && trade.sellerId === user.id;
+  const canComplete = trade && ["payment_made"].includes(trade.status) && isSeller;
+  const canCancel = trade && ["pending", "payment_pending"].includes(trade.status) && isUserInTrade;
   const canRate = isCompleted && isUserInTrade && !existingRating;
 
   return (
