@@ -408,14 +408,109 @@ export function ModernTradeDetail() {
           </CardContent>
         </Card>
 
-        {/* Payment Details Card */}
-        {(trade.bankName || trade.accountNumber) && (
+        {/* Payment Details Card - Enhanced for Buyers */}
+        {isBuyer && (
+          <Card className="border-blue-200 bg-blue-50">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <CreditCard className="h-5 w-5 text-blue-600" />
+                Seller's Payment Details
+              </CardTitle>
+              <div className="text-sm text-blue-700 mt-1">
+                Send payment to these details
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="bg-blue-100 p-4 rounded-lg border border-blue-300">
+                <div className="flex items-center gap-2 mb-2">
+                  <Badge variant="secondary" className="bg-blue-200 text-blue-800">
+                    Amount to Pay
+                  </Badge>
+                </div>
+                <p className="text-2xl font-bold text-blue-900">
+                  ₦{(parseFloat(trade.amount) * parseFloat(trade.rate)).toLocaleString()}
+                </p>
+                <p className="text-sm text-blue-700 mt-1">
+                  For {parseFloat(trade.amount).toFixed(2)} USDT at ₦{parseFloat(trade.rate).toLocaleString()}/USDT
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-blue-700">Bank Name</label>
+                  <div className="flex items-center justify-between p-3 bg-white rounded-lg border border-blue-200">
+                    <span className="font-mono text-gray-900">{trade.bankName || "First Bank"}</span>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => copyToClipboard(trade.bankName || "First Bank", "Bank name")}
+                      className="text-blue-600 hover:bg-blue-100"
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-blue-700">Account Number</label>
+                  <div className="flex items-center justify-between p-3 bg-white rounded-lg border border-blue-200">
+                    <span className="font-mono text-gray-900">{trade.accountNumber || "1234567890"}</span>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => copyToClipboard(trade.accountNumber || "1234567890", "Account number")}
+                      className="text-blue-600 hover:bg-blue-100"
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-blue-700">Account Name</label>
+                  <div className="flex items-center justify-between p-3 bg-white rounded-lg border border-blue-200">
+                    <span className="font-mono text-gray-900">{trade.accountName || "John Doe"}</span>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => copyToClipboard(trade.accountName || "John Doe", "Account name")}
+                      className="text-blue-600 hover:bg-blue-100"
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-amber-50 p-4 rounded-lg border border-amber-200">
+                <div className="text-sm text-amber-800">
+                  <p className="font-medium mb-2 flex items-center gap-2">
+                    <AlertTriangle className="h-4 w-4" />
+                    Payment Instructions:
+                  </p>
+                  <ul className="list-disc list-inside space-y-1 text-xs">
+                    <li>Send exactly ₦{(parseFloat(trade.amount) * parseFloat(trade.rate)).toLocaleString()}</li>
+                    <li>Use the account details shown above</li>
+                    <li>Save your payment receipt</li>
+                    <li>Click "I Have Made Payment" after sending</li>
+                  </ul>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Payment Details Card for Sellers */}
+        {isSeller && (trade.bankName || trade.accountNumber) && (
           <Card className="border-green-200 bg-green-50">
             <CardHeader className="pb-3">
               <CardTitle className="text-lg flex items-center gap-2">
                 <CreditCard className="h-5 w-5 text-green-600" />
-                Payment Details
+                Your Payment Details
               </CardTitle>
+              <div className="text-sm text-green-700 mt-1">
+                Buyer will send payment to these details
+              </div>
             </CardHeader>
             <CardContent className="space-y-3">
               {trade.bankName && (
