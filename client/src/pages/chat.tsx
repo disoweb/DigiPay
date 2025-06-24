@@ -61,6 +61,7 @@ export default function ChatPage() {
         }
         const data = await response.json();
         console.log("Trade data for chat:", data);
+        console.log("Trade status specifically:", data.status);
 
         // Validate the trade data
         if (!data || !data.id) {
