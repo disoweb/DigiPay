@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -34,7 +34,7 @@ import {
   Timer,
   Users,
 } from "lucide-react";
-import { useMutation } from "@tanstack/react-query";
+
 
 interface Trade {
   id: number;
@@ -103,8 +103,10 @@ export function ModernTradeManagement() {
 
   // Debug: Log trades data
   console.log('All trades:', trades.length);
+  console.log('All trade statuses:', trades.map(t => `${t.id}: ${t.status}`));
   console.log('Expired trades in data:', trades.filter(t => t.status === 'expired'));
   console.log('User ID:', user?.id);
+  console.log('Raw trades data:', trades);
 
   // Reopen trade mutation
   const reopenTradeMutation = useMutation({
