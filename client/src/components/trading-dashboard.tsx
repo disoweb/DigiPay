@@ -317,7 +317,18 @@ export function TradingDashboard() {
             ) : (
               <div className="space-y-3">
                 {activeTrades.slice(0, 3).map((trade: any) => (
-                  <div key={trade.id} className="p-3 bg-gray-50 rounded-lg">
+                  <div 
+                    key={trade.id} 
+                    className="p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors"
+                    onClick={() => {
+                      if (trade && trade.id) {
+                        console.log("Card clicked - navigating to trade detail for trade ID:", trade.id);
+                        setLocation(`/trades/${trade.id}`);
+                      } else {
+                        console.error("Invalid trade data for detail navigation:", trade);
+                      }
+                    }}
+                  >
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex-1">
                         <p className="font-medium">Trade #{trade.id}</p>
@@ -339,10 +350,11 @@ export function TradingDashboard() {
                       <Button 
                         size="sm" 
                         variant="outline"
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.stopPropagation(); // Prevent card click
                           if (trade && trade.id) {
-                            console.log("Navigating to trade detail for trade ID:", trade.id);
-                            setLocation(`/trades/${trade.id}`);
+                            console.log("Chat button clicked - navigating to chat for trade ID:", trade.id);
+                            setLocation(`/chat/${trade.id}`);
                           } else {
                             console.error("Invalid trade data for chat navigation:", trade);
                           }
