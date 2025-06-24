@@ -12,6 +12,11 @@ A peer-to-peer cryptocurrency trading platform enabling direct trading between u
 - **Security**: JWT authentication, rate limiting, helmet security
 
 ## Recent Changes
+- **2025-01-24**: Added admin password reset functionality
+  - Created `/api/admin/users/:userId/password` endpoint for secure password updates
+  - Added password reset button to admin users management dropdown menu
+  - Implemented password update modal with validation and confirmation
+  - Enhanced admin users interface with comprehensive user management controls
 - **2025-01-22**: Fixed trade completion issues and real-time balance updates
   - Updated trade completion endpoints to properly handle payment_made status
   - Added WebSocket notifications for balance updates during trade completion

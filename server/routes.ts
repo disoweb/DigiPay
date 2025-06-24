@@ -3944,6 +3944,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin password update endpoint
+  app.patch("/api/admin/users/:userId/password", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const { newPassword } = req.body;
+
+      if (!newPassword || newPassword.length < 6) {
+        return res.status(400).json({ error: "Password must be at least 6 characters long" });
+      }
+
+      // Hash the new password
+      const { hashPassword } = await import("./auth-jwt.js");
+      const hashedPassword = await hashPassword(newPassword);
+
+      // Update user password
+      const updatedUser = await storage.updateUser(userId, { 
+        password: hashedPassword 
+      });
+
+      if (!updatedUser) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      console.log(`Admin updated password for user ${userId}`);
+      res.json({ 
+        success: true, 
+        message: "Password updated successfully",
+        user: {
+          id: updatedUser.id,
+          email: updatedUser.email,
+          username: updatedUser.username
+        }
+      });
+    } catch (error) {
+      console.error("Admin password update error:", error);
+      res.status(500).json({ error: "Failed to update password" });
+    }
+  });
+
   // Admin user management endpoints
   app.patch("/api/admin/users/:userId", authenticateToken, requireAdmin, async (req, res) => {
     try {
