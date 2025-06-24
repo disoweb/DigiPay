@@ -1970,8 +1970,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Trade not found" });
       }
 
-      if (trade.status !== "pending") {
-        return res.status(400).json({ error: "Trade is not in pending status" });
+      if (!["pending", "payment_made"].includes(trade.status)) {
+        return res.status(400).json({ error: "Trade cannot be completed in current status" });
       }
 
       // Check if user is part of this trade
@@ -1980,7 +1980,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Update trade status
-      const updatedTrade = await storage.updateTrade(tradeId, { status: "completed" });
+      const updatedTrade = await storage.updateTrade(tradeId, { 
+        status: "completed",
+        sellerConfirmedAt: new Date()
+      });
+
+      // Release funds and update balances
+      const buyer = await storage.getUser(trade.buyerId);
+      const seller = await storage.getUser(trade.sellerId);
+
+      if (buyer && seller) {
+        const tradeAmount = parseFloat(trade.amount);
+        const fiatAmount = parseFloat(trade.fiatAmount);
+
+        // Buyer gets USDT, Seller gets Naira
+        await storage.updateUser(buyer.id, {
+          usdtBalance: (parseFloat(buyer.usdtBalance || "0") + tradeAmount).toString()
+        });
+
+        await storage.updateUser(seller.id, {
+          nairaBalance: (parseFloat(seller.nairaBalance || "0") + fiatAmount).toString()
+        });
+      }
 
       // If escrow exists, release funds
       if (trade.escrowAddress) {
@@ -1995,8 +2016,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Send completion notifications
-      const buyer = await storage.getUser(trade.buyerId);
-      const seller = await storage.getUser(trade.sellerId);
 
       if (buyer?.email) {
         await emailService.sendTradeNotification(
