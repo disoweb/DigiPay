@@ -144,6 +144,25 @@ export function ModernTradeDetail() {
     },
   });
 
+  // Auto-expiration check mutation
+  const checkExpirationMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest("POST", `/api/trades/${id}/check-expiration`);
+      if (!response.ok) throw new Error('Failed to check expiration');
+      return response.json();
+    },
+    onSuccess: (data) => {
+      if (data.expired) {
+        queryClient.invalidateQueries({ queryKey: ['/api/trades', id] });
+        toast({ 
+          title: "Trade Expired", 
+          description: "This trade has expired due to payment deadline", 
+          variant: "destructive" 
+        });
+      }
+    },
+  });
+
   // Always call useEffect hooks consistently
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
@@ -157,6 +176,8 @@ export function ModernTradeDetail() {
         if (difference <= 0) {
           setTimeLeft("Expired");
           setIsExpired(true);
+          // Auto-check expiration on server
+          checkExpirationMutation.mutate();
           return;
         }
 
