@@ -9,6 +9,7 @@ interface PaymentConfig {
   reference: string;
   callback: (response: any) => void;
   onClose: () => void;
+  containerId?: string; // Optional container for embedded payment
 }
 
 export const initializeCSPBypassPayment = async (config: PaymentConfig) => {
