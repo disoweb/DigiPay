@@ -12,11 +12,13 @@ interface PaymentConfig {
 }
 
 export const initializeCSPBypassPayment = async (config: PaymentConfig) => {
-  console.log("🚀 CSP-Bypass Payment System: Initializing direct payment flow...");
+  console.log("=== CSP-BYPASS PAYMENT SYSTEM ACTIVATED ===");
+  console.log("This system bypasses ALL CSP restrictions by using direct URL redirects");
+  console.log("No external scripts will be loaded - completely CSP-safe");
   
   try {
     // Step 1: Initialize payment via our API
-    console.log("Step 1: Calling payment initialization API...");
+    console.log("STEP 1: Calling payment initialization API...");
     const response = await fetch('/api/payments/initialize', {
       method: 'POST',
       headers: {
@@ -41,13 +43,16 @@ export const initializeCSPBypassPayment = async (config: PaymentConfig) => {
       throw new Error("Invalid payment initialization response");
     }
 
-    // Step 2: Open payment in new tab (more reliable than popup)
-    console.log("Step 2: Opening Paystack checkout in new tab...");
+    // Step 2: Open payment in popup window (better for monitoring)
+    console.log("STEP 2: Opening Paystack checkout in popup window...");
+    console.log("Payment URL:", data.data.authorization_url);
     const paymentWindow = window.open(
       data.data.authorization_url,
-      '_blank',
-      'width=800,height=700,scrollbars=yes,resizable=yes,status=yes,toolbar=no,menubar=no,location=yes'
+      'paystack_checkout',
+      'width=600,height=700,scrollbars=yes,resizable=yes,status=yes,toolbar=no,menubar=no,location=yes'
     );
+
+    console.log("Popup window created:", !!paymentWindow);
 
     if (!paymentWindow) {
       // Fallback: Direct redirect in same window

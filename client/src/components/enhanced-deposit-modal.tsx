@@ -242,16 +242,18 @@ export function EnhancedDepositModal({ open, onOpenChange, user }: EnhancedDepos
         console.log("   - Development environment detected");
       }
       
-      // Use the enhanced Paystack initialization with proper error handling
-      await initializeEnhancedPaystack({
+      console.log("🚀 USING CSP-BYPASS PAYMENT SYSTEM - NO SCRIPT LOADING");
+      console.log("This will open Paystack checkout in a popup window");
+      
+      // Use CSP-Bypass payment system instead of enhanced paystack
+      await initializeCSPBypassPayment({
         key: PAYSTACK_PUBLIC_KEY,
         email: user.email,
         amount: parseFloat(amount) * 100, // Convert to kobo
         currency: 'NGN',
         reference: paystackData.reference,
-        channels: getMobileOptimizedChannels(),
         callback: (response: any) => {
-          console.log("Payment callback received:", response);
+          console.log("CSP-Bypass payment callback received:", response);
           if (response.status === 'success') {
             setPaymentStep('verifying');
             if (!hasVerifiedRef.current) {
@@ -264,7 +266,7 @@ export function EnhancedDepositModal({ open, onOpenChange, user }: EnhancedDepos
           }
         },
         onClose: () => {
-          console.log("Payment modal closed by user");
+          console.log("CSP-Bypass payment cancelled or failed");
           document.body.classList.remove('paystack-open');
           if (paymentStep === 'processing') {
             setPaymentStep('amount');
