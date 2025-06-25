@@ -25,11 +25,17 @@ import { messages as messagesTable } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
-  setupJWTAuth(app);
-
+  
+  // Register payment endpoints BEFORE JWT auth setup to ensure they're registered first
+  console.log("📋 Registering payment endpoints...");
+  
   // CSP-bypass payment endpoints - enhanced with proper authentication and real Paystack integration
   app.post("/api/payments/initialize", (req: any, res: Response, next: NextFunction) => {
+    console.log("🚀 PAYMENT ENDPOINT HIT!");
     console.log("=== PAYMENT INITIALIZATION DEBUG ===");
+    console.log("URL:", req.url);
+    console.log("Path:", req.path);
+    console.log("Method:", req.method);
     console.log("Headers:", JSON.stringify(req.headers, null, 2));
     console.log("Body:", JSON.stringify(req.body, null, 2));
     console.log("Cookies:", JSON.stringify(req.cookies, null, 2));
@@ -114,6 +120,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ success: false, message: "Payment verification failed" });
     }
   });
+  
+  console.log("✅ Payment endpoints registered");
+
+  // Setup JWT auth AFTER payment endpoints are registered
+  setupJWTAuth(app);
 
   // User routes - MUST be first to avoid frontend route conflict
   app.get("/api/user", authenticateToken, async (req, res) => {
@@ -2975,52 +2986,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Enhanced Paystack payment initialization with mobile optimization
-  app.post("/api/payments/initialize", authenticateToken, async (req, res) => {
-    try {
-      const { amount, metadata } = req.body;
-      const user = req.user!;
+  // REMOVED: Duplicate payment endpoint - using CSP-bypass version at top of file
 
-      console.log(`Payment initialization for user ${user.id}, amount: ₦${amount}`);
+  // REMOVED: Duplicate webhook endpoint to prevent route conflicts
 
-      const result = await enhancedPaystackService.initializePayment(
-        user.id,
-        user.email,
-        parseFloat(amount),
-        metadata
-      );
-
-      console.log("Payment initialization result:", result.success ? "success" : "failed");
-      res.json(result);
-
-    } catch (error: any) {
-      console.error("Payment initialization error:", error);
-      res.status(400).json({ 
-        success: false, 
-        message: error.message 
-      });
-    }
-  });
-
-  // Enhanced Paystack webhook for automatic processing
-  app.post("/api/payments/webhook", async (req, res) => {
-    try {
-      const signature = req.headers['x-paystack-signature'] as string;
-      
-      if (!signature) {
-        return res.status(400).send('Missing signature');
-      }
-
-      await enhancedPaystackService.handleWebhook(req.body, signature);
-      
-      res.status(200).send('Webhook processed successfully');
-    } catch (error: any) {
-      console.error('Webhook processing error:', error);
-      res.status(400).send(error.message || 'Webhook processing failed');
-    }
-  });
-
-  // Enhanced Paystack payment verification with automatic balance crediting
+  // REMOVED: Duplicate verify endpoint to prevent route conflicts
+  /*
   app.post("/api/payments/verify", authenticateToken, async (req, res) => {
     try {
       const { reference } = req.body;
@@ -3104,6 +3075,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
+  */
 
   // Payment routes
   registerPaymentRoutes(app);

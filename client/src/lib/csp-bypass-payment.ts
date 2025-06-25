@@ -22,11 +22,13 @@ export const initializeCSPBypassPayment = async (config: PaymentConfig) => {
     console.log("Auth token available:", !!token);
     console.log("Token length:", token?.length || 0);
     console.log("Token first 20 chars:", token ? token.substring(0, 20) + "..." : 'none');
+    console.log("Full token for debugging:", token);
     console.log("Payment data:", {
       amount: config.amount / 100,
       email: config.email,
       reference: config.reference
     });
+    console.log("About to make request to:", '/api/payments/initialize');
     console.log("============================");
     
     const response = await fetch('/api/payments/initialize', {
