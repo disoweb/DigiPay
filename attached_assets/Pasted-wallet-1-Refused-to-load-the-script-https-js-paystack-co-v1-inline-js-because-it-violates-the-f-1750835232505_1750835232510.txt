@@ -1,0 +1,1206 @@
+wallet:1  Refused to load the script 'https://js.paystack.co/v1/inline.js' because it violates the following Content Security Policy directive: "script-src 'self' 'unsafe-inline' 'unsafe-eval'". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback.
+
+[NEW] Explain Console errors by using Copilot in Edge: click
+         
+         to explain an error. 
+        Learn more
+        Don't show again
+wallet:1  Refused to load the script 'https://replit.com/public/js/replit-dev-banner.js' because it violates the following Content Security Policy directive: "script-src 'self' 'unsafe-inline' 'unsafe-eval'". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback.
+
+index-BUYWjaFr.js:453 Fetch finished loading: GET "https://digipay.replit.app/api/user".
+queryFn @ index-BUYWjaFr.js:453
+i @ index-BUYWjaFr.js:48
+y @ index-BUYWjaFr.js:48
+start @ index-BUYWjaFr.js:48
+fetch @ index-BUYWjaFr.js:48
+Pi @ index-BUYWjaFr.js:48
+onSubscribe @ index-BUYWjaFr.js:48
+subscribe @ index-BUYWjaFr.js:48
+(anonymous) @ index-BUYWjaFr.js:48
+T0 @ index-BUYWjaFr.js:38
+Pc @ index-BUYWjaFr.js:40
+Sa @ index-BUYWjaFr.js:40
+Mf @ index-BUYWjaFr.js:40
+yr @ index-BUYWjaFr.js:38
+F2 @ index-BUYWjaFr.js:40
+br @ index-BUYWjaFr.js:40
+iv @ index-BUYWjaFr.js:40
+C @ index-BUYWjaFr.js:25
+S @ index-BUYWjaFr.js:25
+index-BUYWjaFr.js:453 User data loaded successfully: {id: 1, email: 'cyfer33@gmail.com'}
+index-BUYWjaFr.js:502 WebSocket connected for real-time balance updates
+index-BUYWjaFr.js:453 Fetch finished loading: GET "https://digipay.replit.app/api/user".
+se @ index-BUYWjaFr.js:453
+queryFn @ index-BUYWjaFr.js:506
+i @ index-BUYWjaFr.js:48
+y @ index-BUYWjaFr.js:48
+start @ index-BUYWjaFr.js:48
+fetch @ index-BUYWjaFr.js:48
+Pi @ index-BUYWjaFr.js:48
+onSubscribe @ index-BUYWjaFr.js:48
+subscribe @ index-BUYWjaFr.js:48
+(anonymous) @ index-BUYWjaFr.js:48
+T0 @ index-BUYWjaFr.js:38
+Pc @ index-BUYWjaFr.js:40
+Sa @ index-BUYWjaFr.js:40
+F2 @ index-BUYWjaFr.js:40
+br @ index-BUYWjaFr.js:40
+Mf @ index-BUYWjaFr.js:40
+yr @ index-BUYWjaFr.js:38
+(anonymous) @ index-BUYWjaFr.js:40
+setTimeout
+a @ index-BUYWjaFr.js:48
+l @ index-BUYWjaFr.js:48
+batch @ index-BUYWjaFr.js:48
+fn @ index-BUYWjaFr.js:48
+setData @ index-BUYWjaFr.js:48
+onSuccess @ index-BUYWjaFr.js:48
+h @ index-BUYWjaFr.js:48
+Promise.then
+y @ index-BUYWjaFr.js:48
+start @ index-BUYWjaFr.js:48
+fetch @ index-BUYWjaFr.js:48
+Pi @ index-BUYWjaFr.js:48
+onSubscribe @ index-BUYWjaFr.js:48
+subscribe @ index-BUYWjaFr.js:48
+(anonymous) @ index-BUYWjaFr.js:48
+T0 @ index-BUYWjaFr.js:38
+Pc @ index-BUYWjaFr.js:40
+Sa @ index-BUYWjaFr.js:40
+Mf @ index-BUYWjaFr.js:40
+yr @ index-BUYWjaFr.js:38
+F2 @ index-BUYWjaFr.js:40
+br @ index-BUYWjaFr.js:40
+iv @ index-BUYWjaFr.js:40
+C @ index-BUYWjaFr.js:25
+S @ index-BUYWjaFr.js:25
+index-BUYWjaFr.js:453 Fetch finished loading: GET "https://digipay.replit.app/api/exchange-rates".
+se @ index-BUYWjaFr.js:453
+queryFn @ index-BUYWjaFr.js:493
+i @ index-BUYWjaFr.js:48
+y @ index-BUYWjaFr.js:48
+start @ index-BUYWjaFr.js:48
+fetch @ index-BUYWjaFr.js:48
+Pi @ index-BUYWjaFr.js:48
+onSubscribe @ index-BUYWjaFr.js:48
+subscribe @ index-BUYWjaFr.js:48
+(anonymous) @ index-BUYWjaFr.js:48
+T0 @ index-BUYWjaFr.js:38
+Pc @ index-BUYWjaFr.js:40
+Sa @ index-BUYWjaFr.js:40
+F2 @ index-BUYWjaFr.js:40
+br @ index-BUYWjaFr.js:40
+Mf @ index-BUYWjaFr.js:40
+yr @ index-BUYWjaFr.js:38
+(anonymous) @ index-BUYWjaFr.js:40
+setTimeout
+a @ index-BUYWjaFr.js:48
+l @ index-BUYWjaFr.js:48
+batch @ index-BUYWjaFr.js:48
+fn @ index-BUYWjaFr.js:48
+setData @ index-BUYWjaFr.js:48
+onSuccess @ index-BUYWjaFr.js:48
+h @ index-BUYWjaFr.js:48
+Promise.then
+y @ index-BUYWjaFr.js:48
+start @ index-BUYWjaFr.js:48
+fetch @ index-BUYWjaFr.js:48
+Pi @ index-BUYWjaFr.js:48
+onSubscribe @ index-BUYWjaFr.js:48
+subscribe @ index-BUYWjaFr.js:48
+(anonymous) @ index-BUYWjaFr.js:48
+T0 @ index-BUYWjaFr.js:38
+Pc @ index-BUYWjaFr.js:40
+Sa @ index-BUYWjaFr.js:40
+Mf @ index-BUYWjaFr.js:40
+yr @ index-BUYWjaFr.js:38
+F2 @ index-BUYWjaFr.js:40
+br @ index-BUYWjaFr.js:40
+iv @ index-BUYWjaFr.js:40
+C @ index-BUYWjaFr.js:25
+S @ index-BUYWjaFr.js:25
+index-BUYWjaFr.js:502 WebSocket message received: {type: 'connection_established', data: {…}}
+index-BUYWjaFr.js:453 Fetch finished loading: GET "https://digipay.replit.app/api/transactions".
+se @ index-BUYWjaFr.js:453
+queryFn @ index-BUYWjaFr.js:506
+i @ index-BUYWjaFr.js:48
+y @ index-BUYWjaFr.js:48
+start @ index-BUYWjaFr.js:48
+fetch @ index-BUYWjaFr.js:48
+Pi @ index-BUYWjaFr.js:48
+onSubscribe @ index-BUYWjaFr.js:48
+subscribe @ index-BUYWjaFr.js:48
+(anonymous) @ index-BUYWjaFr.js:48
+T0 @ index-BUYWjaFr.js:38
+Pc @ index-BUYWjaFr.js:40
+Sa @ index-BUYWjaFr.js:40
+F2 @ index-BUYWjaFr.js:40
+br @ index-BUYWjaFr.js:40
+Mf @ index-BUYWjaFr.js:40
+yr @ index-BUYWjaFr.js:38
+(anonymous) @ index-BUYWjaFr.js:40
+setTimeout
+a @ index-BUYWjaFr.js:48
+l @ index-BUYWjaFr.js:48
+batch @ index-BUYWjaFr.js:48
+fn @ index-BUYWjaFr.js:48
+setData @ index-BUYWjaFr.js:48
+onSuccess @ index-BUYWjaFr.js:48
+h @ index-BUYWjaFr.js:48
+Promise.then
+y @ index-BUYWjaFr.js:48
+start @ index-BUYWjaFr.js:48
+fetch @ index-BUYWjaFr.js:48
+Pi @ index-BUYWjaFr.js:48
+onSubscribe @ index-BUYWjaFr.js:48
+subscribe @ index-BUYWjaFr.js:48
+(anonymous) @ index-BUYWjaFr.js:48
+T0 @ index-BUYWjaFr.js:38
+Pc @ index-BUYWjaFr.js:40
+Sa @ index-BUYWjaFr.js:40
+Mf @ index-BUYWjaFr.js:40
+yr @ index-BUYWjaFr.js:38
+F2 @ index-BUYWjaFr.js:40
+br @ index-BUYWjaFr.js:40
+iv @ index-BUYWjaFr.js:40
+C @ index-BUYWjaFr.js:25
+S @ index-BUYWjaFr.js:25
+index-BUYWjaFr.js:497  Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+(anonymous) @ index-BUYWjaFr.js:497
+Pc @ index-BUYWjaFr.js:40
+Sa @ index-BUYWjaFr.js:40
+F2 @ index-BUYWjaFr.js:40
+br @ index-BUYWjaFr.js:40
+Mf @ index-BUYWjaFr.js:40
+yr @ index-BUYWjaFr.js:38
+(anonymous) @ index-BUYWjaFr.js:40
+index-BUYWjaFr.js:502 WebSocket message received: {type: 'connected', userId: 1, authenticated: true}
+iframe-index.bundle.js:2 XHR finished loading: GET "chrome-extension://blillmbchncajnhkjfdnincfndboieik/iframe/signup_login.html".
+send @ iframe-index.bundle.js:2
+ajax @ iframe-index.bundle.js:2
+C.each.C.<computed> @ iframe-index.bundle.js:2
+(anonymous) @ iframe-index.bundle.js:2
+Da @ iframe-index.bundle.js:2
+Fa.uid @ iframe-index.bundle.js:2
+Fa @ iframe-index.bundle.js:2
+await in Fa
+window.onload @ iframe-index.bundle.js:2
+index-BUYWjaFr.js:506 === COMPREHENSIVE PAYSTACK DEBUG START ===
+index-BUYWjaFr.js:506 1. Environment Check:
+index-BUYWjaFr.js:506    - NODE_ENV: production
+index-BUYWjaFr.js:506    - User agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 Edg/137.0.0.0
+index-BUYWjaFr.js:506    - Current URL: https://digipay.replit.app/wallet
+index-BUYWjaFr.js:506    - Protocol: https:
+index-BUYWjaFr.js:506    - Hostname: digipay.replit.app
+index-BUYWjaFr.js:506    - Port: 
+index-BUYWjaFr.js:506 2. Browser Capabilities:
+index-BUYWjaFr.js:506    - Fetch available: true
+index-BUYWjaFr.js:506    - LocalStorage available: true
+index-BUYWjaFr.js:506    - CORS support: true
+index-BUYWjaFr.js:506    - Module support: true
+index-BUYWjaFr.js:506    - Is mobile: false
+index-BUYWjaFr.js:506 3. Paystack Configuration:
+index-BUYWjaFr.js:506    - Amount: 5000
+index-BUYWjaFr.js:506    - User email: cyfer33@gmail.com
+index-BUYWjaFr.js:506    - Paystack data: {authorization_url: 'https://checkout.paystack.com/gxc3oya3wkr0iv6', access_code: 'gxc3oya3wkr0iv6', reference: 'dp_1_1750835179211_u9njis'}
+index-BUYWjaFr.js:506    - Public key (first 8 chars): pk_test_
+index-BUYWjaFr.js:506 4. Current Window State:
+index-BUYWjaFr.js:506    - Window.PaystackPop available: false
+index-BUYWjaFr.js:506    - Window.Paystack available: false
+index-BUYWjaFr.js:506    - Window.paystack available: false
+index-BUYWjaFr.js:506    - Document readyState: complete
+index-BUYWjaFr.js:506 5. Script Analysis:
+index-BUYWjaFr.js:506    - Total scripts in document: 3
+index-BUYWjaFr.js:506    - Paystack scripts found: 1
+index-BUYWjaFr.js:506    - Paystack script 1: {src: 'https://js.paystack.co/v1/inline.js', loaded: 'unknown', async: true, defer: true, crossOrigin: null}
+index-BUYWjaFr.js:506 6. Network & CSP Test:
+index-BUYWjaFr.js:506    - Production/Deployed environment detected
+index-BUYWjaFr.js:506  Refused to load the script 'https://js.paystack.co/test-csp.js' because it violates the following Content Security Policy directive: "script-src 'self' 'unsafe-inline' 'unsafe-eval'". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback.
+
+p @ index-BUYWjaFr.js:506
+onSuccess @ index-BUYWjaFr.js:506
+execute @ index-BUYWjaFr.js:48
+await in execute
+mutate @ index-BUYWjaFr.js:48
+(anonymous) @ index-BUYWjaFr.js:48
+b @ index-BUYWjaFr.js:506
+Zb @ index-BUYWjaFr.js:37
+e1 @ index-BUYWjaFr.js:37
+t1 @ index-BUYWjaFr.js:37
+nf @ index-BUYWjaFr.js:37
+m0 @ index-BUYWjaFr.js:37
+(anonymous) @ index-BUYWjaFr.js:37
+jh @ index-BUYWjaFr.js:40
+Ig @ index-BUYWjaFr.js:37
+Rd @ index-BUYWjaFr.js:37
+Gm @ index-BUYWjaFr.js:37
+g1 @ index-BUYWjaFr.js:37
+index-BUYWjaFr.js:506 Initializing Paystack payment...
+index-BUYWjaFr.js:506 Config: {key: 'pk_test_...', email: 'cyfer33@gmail.com', amount: 500000, currency: 'NGN', reference: 'dp_1_1750835179211_u9njis', …}
+index-BUYWjaFr.js:506 Environment: {isProduction: true, isDevelopment: false, hostname: 'digipay.replit.app', protocol: 'https:', userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb…cko) Chrome/137.0.0.0 Safari/537.36 Edg/137.0.0.0', …}
+index-BUYWjaFr.js:506 Loading Paystack script...
+index-BUYWjaFr.js:502 === PAYSTACK SCRIPT LOADING DEBUG ===
+index-BUYWjaFr.js:502 Environment detection: {isProduction: true, isDevelopment: false, hostname: 'digipay.replit.app', protocol: 'https:', userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb…cko) Chrome/137.0.0.0 Safari/537.36 Edg/137.0.0.0', …}
+index-BUYWjaFr.js:502 Starting Paystack script loading process...
+index-BUYWjaFr.js:502 Document state:
+index-BUYWjaFr.js:502   - readyState: complete
+index-BUYWjaFr.js:502   - URL: https://digipay.replit.app/wallet
+index-BUYWjaFr.js:502   - domain: digipay.replit.app
+index-BUYWjaFr.js:502   - referrer: 
+index-BUYWjaFr.js:502 Existing Paystack scripts before loading: 2
+index-BUYWjaFr.js:502   Script 1: https://js.paystack.co/v1/inline.js unknown state
+index-BUYWjaFr.js:502   Script 2: https://js.paystack.co/test-csp.js unknown state
+index-BUYWjaFr.js:502 
+--- STRATEGY 1 ATTEMPT ---
+index-BUYWjaFr.js:503 URL: https://js.paystack.co/v1/inline.js
+index-BUYWjaFr.js:503 Timestamp: 2025-06-25T07:06:20.255Z
+index-BUYWjaFr.js:503 Strategy 1: Script element created with properties: {src: 'https://js.paystack.co/v1/inline.js', async: true, defer: false, crossOrigin: 'anonymous', type: ''}
+index-BUYWjaFr.js:506  Refused to load the script 'https://js.paystack.co/v1/inline.js' because it violates the following Content Security Policy directive: "script-src 'self' 'unsafe-inline' 'unsafe-eval'". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback.
+
+c @ index-BUYWjaFr.js:506
+(anonymous) @ index-BUYWjaFr.js:506
+V3 @ index-BUYWjaFr.js:502
+W3 @ index-BUYWjaFr.js:506
+p @ index-BUYWjaFr.js:506
+onSuccess @ index-BUYWjaFr.js:506
+execute @ index-BUYWjaFr.js:48
+await in execute
+mutate @ index-BUYWjaFr.js:48
+(anonymous) @ index-BUYWjaFr.js:48
+b @ index-BUYWjaFr.js:506
+Zb @ index-BUYWjaFr.js:37
+e1 @ index-BUYWjaFr.js:37
+t1 @ index-BUYWjaFr.js:37
+nf @ index-BUYWjaFr.js:37
+m0 @ index-BUYWjaFr.js:37
+(anonymous) @ index-BUYWjaFr.js:37
+jh @ index-BUYWjaFr.js:40
+Ig @ index-BUYWjaFr.js:37
+Rd @ index-BUYWjaFr.js:37
+Gm @ index-BUYWjaFr.js:37
+g1 @ index-BUYWjaFr.js:37
+index-BUYWjaFr.js:453 Fetch finished loading: POST "https://digipay.replit.app/api/payments/initialize".
+se @ index-BUYWjaFr.js:453
+mutationFn @ index-BUYWjaFr.js:506
+fn @ index-BUYWjaFr.js:48
+y @ index-BUYWjaFr.js:48
+start @ index-BUYWjaFr.js:48
+execute @ index-BUYWjaFr.js:48
+await in execute
+mutate @ index-BUYWjaFr.js:48
+(anonymous) @ index-BUYWjaFr.js:48
+b @ index-BUYWjaFr.js:506
+Zb @ index-BUYWjaFr.js:37
+e1 @ index-BUYWjaFr.js:37
+t1 @ index-BUYWjaFr.js:37
+nf @ index-BUYWjaFr.js:37
+m0 @ index-BUYWjaFr.js:37
+(anonymous) @ index-BUYWjaFr.js:37
+jh @ index-BUYWjaFr.js:40
+Ig @ index-BUYWjaFr.js:37
+Rd @ index-BUYWjaFr.js:37
+Gm @ index-BUYWjaFr.js:37
+g1 @ index-BUYWjaFr.js:37
+index-BUYWjaFr.js:506     - ✗ CSP may be blocking Paystack scripts: Event {isTrusted: true, type: 'error', target: script, currentTarget: script, eventPhase: 2, …}
+M.onerror @ index-BUYWjaFr.js:506
+script
+p @ index-BUYWjaFr.js:506
+onSuccess @ index-BUYWjaFr.js:506
+execute @ index-BUYWjaFr.js:48
+await in execute
+mutate @ index-BUYWjaFr.js:48
+(anonymous) @ index-BUYWjaFr.js:48
+b @ index-BUYWjaFr.js:506
+Zb @ index-BUYWjaFr.js:37
+e1 @ index-BUYWjaFr.js:37
+t1 @ index-BUYWjaFr.js:37
+nf @ index-BUYWjaFr.js:37
+m0 @ index-BUYWjaFr.js:37
+(anonymous) @ index-BUYWjaFr.js:37
+jh @ index-BUYWjaFr.js:40
+Ig @ index-BUYWjaFr.js:37
+Rd @ index-BUYWjaFr.js:37
+Gm @ index-BUYWjaFr.js:37
+g1 @ index-BUYWjaFr.js:37
+index-BUYWjaFr.js:505  
+✗ SCRIPT ERROR: Strategy 1 failed
+m.onerror @ index-BUYWjaFr.js:505
+script
+c @ index-BUYWjaFr.js:503
+(anonymous) @ index-BUYWjaFr.js:506
+V3 @ index-BUYWjaFr.js:502
+W3 @ index-BUYWjaFr.js:506
+p @ index-BUYWjaFr.js:506
+onSuccess @ index-BUYWjaFr.js:506
+execute @ index-BUYWjaFr.js:48
+await in execute
+mutate @ index-BUYWjaFr.js:48
+(anonymous) @ index-BUYWjaFr.js:48
+b @ index-BUYWjaFr.js:506
+Zb @ index-BUYWjaFr.js:37
+e1 @ index-BUYWjaFr.js:37
+t1 @ index-BUYWjaFr.js:37
+nf @ index-BUYWjaFr.js:37
+m0 @ index-BUYWjaFr.js:37
+(anonymous) @ index-BUYWjaFr.js:37
+jh @ index-BUYWjaFr.js:40
+Ig @ index-BUYWjaFr.js:37
+Rd @ index-BUYWjaFr.js:37
+Gm @ index-BUYWjaFr.js:37
+g1 @ index-BUYWjaFr.js:37
+index-BUYWjaFr.js:506  URL: https://js.paystack.co/v1/inline.js
+m.onerror @ index-BUYWjaFr.js:506
+script
+c @ index-BUYWjaFr.js:503
+(anonymous) @ index-BUYWjaFr.js:506
+V3 @ index-BUYWjaFr.js:502
+W3 @ index-BUYWjaFr.js:506
+p @ index-BUYWjaFr.js:506
+onSuccess @ index-BUYWjaFr.js:506
+execute @ index-BUYWjaFr.js:48
+await in execute
+mutate @ index-BUYWjaFr.js:48
+(anonymous) @ index-BUYWjaFr.js:48
+b @ index-BUYWjaFr.js:506
+Zb @ index-BUYWjaFr.js:37
+e1 @ index-BUYWjaFr.js:37
+t1 @ index-BUYWjaFr.js:37
+nf @ index-BUYWjaFr.js:37
+m0 @ index-BUYWjaFr.js:37
+(anonymous) @ index-BUYWjaFr.js:37
+jh @ index-BUYWjaFr.js:40
+Ig @ index-BUYWjaFr.js:37
+Rd @ index-BUYWjaFr.js:37
+Gm @ index-BUYWjaFr.js:37
+g1 @ index-BUYWjaFr.js:37
+index-BUYWjaFr.js:506  Error timestamp: 2025-06-25T07:06:20.412Z
+m.onerror @ index-BUYWjaFr.js:506
+script
+c @ index-BUYWjaFr.js:503
+(anonymous) @ index-BUYWjaFr.js:506
+V3 @ index-BUYWjaFr.js:502
+W3 @ index-BUYWjaFr.js:506
+p @ index-BUYWjaFr.js:506
+onSuccess @ index-BUYWjaFr.js:506
+execute @ index-BUYWjaFr.js:48
+await in execute
+mutate @ index-BUYWjaFr.js:48
+(anonymous) @ index-BUYWjaFr.js:48
+b @ index-BUYWjaFr.js:506
+Zb @ index-BUYWjaFr.js:37
+e1 @ index-BUYWjaFr.js:37
+t1 @ index-BUYWjaFr.js:37
+nf @ index-BUYWjaFr.js:37
+m0 @ index-BUYWjaFr.js:37
+(anonymous) @ index-BUYWjaFr.js:37
+jh @ index-BUYWjaFr.js:40
+Ig @ index-BUYWjaFr.js:37
+Rd @ index-BUYWjaFr.js:37
+Gm @ index-BUYWjaFr.js:37
+g1 @ index-BUYWjaFr.js:37
+index-BUYWjaFr.js:506  Error details: Event {isTrusted: true, type: 'error', target: script, currentTarget: script, eventPhase: 2, …}
+m.onerror @ index-BUYWjaFr.js:506
+script
+c @ index-BUYWjaFr.js:503
+(anonymous) @ index-BUYWjaFr.js:506
+V3 @ index-BUYWjaFr.js:502
+W3 @ index-BUYWjaFr.js:506
+p @ index-BUYWjaFr.js:506
+onSuccess @ index-BUYWjaFr.js:506
+execute @ index-BUYWjaFr.js:48
+await in execute
+mutate @ index-BUYWjaFr.js:48
+(anonymous) @ index-BUYWjaFr.js:48
+b @ index-BUYWjaFr.js:506
+Zb @ index-BUYWjaFr.js:37
+e1 @ index-BUYWjaFr.js:37
+t1 @ index-BUYWjaFr.js:37
+nf @ index-BUYWjaFr.js:37
+m0 @ index-BUYWjaFr.js:37
+(anonymous) @ index-BUYWjaFr.js:37
+jh @ index-BUYWjaFr.js:40
+Ig @ index-BUYWjaFr.js:37
+Rd @ index-BUYWjaFr.js:37
+Gm @ index-BUYWjaFr.js:37
+g1 @ index-BUYWjaFr.js:37
+index-BUYWjaFr.js:506  Error event: {type: 'error', target: script, message: 'No message', filename: 'No filename', lineno: 'No line number'}
+m.onerror @ index-BUYWjaFr.js:506
+script
+c @ index-BUYWjaFr.js:503
+(anonymous) @ index-BUYWjaFr.js:506
+V3 @ index-BUYWjaFr.js:502
+W3 @ index-BUYWjaFr.js:506
+p @ index-BUYWjaFr.js:506
+onSuccess @ index-BUYWjaFr.js:506
+execute @ index-BUYWjaFr.js:48
+await in execute
+mutate @ index-BUYWjaFr.js:48
+(anonymous) @ index-BUYWjaFr.js:48
+b @ index-BUYWjaFr.js:506
+Zb @ index-BUYWjaFr.js:37
+e1 @ index-BUYWjaFr.js:37
+t1 @ index-BUYWjaFr.js:37
+nf @ index-BUYWjaFr.js:37
+m0 @ index-BUYWjaFr.js:37
+(anonymous) @ index-BUYWjaFr.js:37
+jh @ index-BUYWjaFr.js:40
+Ig @ index-BUYWjaFr.js:37
+Rd @ index-BUYWjaFr.js:37
+Gm @ index-BUYWjaFr.js:37
+g1 @ index-BUYWjaFr.js:37
+index-BUYWjaFr.js:506  This appears to be a network or CSP blocking error
+m.onerror @ index-BUYWjaFr.js:506
+script
+c @ index-BUYWjaFr.js:503
+(anonymous) @ index-BUYWjaFr.js:506
+V3 @ index-BUYWjaFr.js:502
+W3 @ index-BUYWjaFr.js:506
+p @ index-BUYWjaFr.js:506
+onSuccess @ index-BUYWjaFr.js:506
+execute @ index-BUYWjaFr.js:48
+await in execute
+mutate @ index-BUYWjaFr.js:48
+(anonymous) @ index-BUYWjaFr.js:48
+b @ index-BUYWjaFr.js:506
+Zb @ index-BUYWjaFr.js:37
+e1 @ index-BUYWjaFr.js:37
+t1 @ index-BUYWjaFr.js:37
+nf @ index-BUYWjaFr.js:37
+m0 @ index-BUYWjaFr.js:37
+(anonymous) @ index-BUYWjaFr.js:37
+jh @ index-BUYWjaFr.js:40
+Ig @ index-BUYWjaFr.js:37
+Rd @ index-BUYWjaFr.js:37
+Gm @ index-BUYWjaFr.js:37
+g1 @ index-BUYWjaFr.js:37
+index-BUYWjaFr.js:506 Moving to strategy 2...
+index-BUYWjaFr.js:502 
+--- STRATEGY 2 ATTEMPT ---
+index-BUYWjaFr.js:503 URL: https://js.paystack.co/v2/inline.js
+index-BUYWjaFr.js:503 Timestamp: 2025-06-25T07:06:20.418Z
+index-BUYWjaFr.js:503 Strategy 2: Script element created with properties: {src: 'https://js.paystack.co/v2/inline.js', async: true, defer: false, crossOrigin: 'anonymous', type: ''}
+index-BUYWjaFr.js:506  Refused to load the script 'https://js.paystack.co/v2/inline.js' because it violates the following Content Security Policy directive: "script-src 'self' 'unsafe-inline' 'unsafe-eval'". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback.
+
+c @ index-BUYWjaFr.js:506
+m.onerror @ index-BUYWjaFr.js:506
+script
+c @ index-BUYWjaFr.js:503
+(anonymous) @ index-BUYWjaFr.js:506
+V3 @ index-BUYWjaFr.js:502
+W3 @ index-BUYWjaFr.js:506
+p @ index-BUYWjaFr.js:506
+onSuccess @ index-BUYWjaFr.js:506
+execute @ index-BUYWjaFr.js:48
+await in execute
+mutate @ index-BUYWjaFr.js:48
+(anonymous) @ index-BUYWjaFr.js:48
+b @ index-BUYWjaFr.js:506
+Zb @ index-BUYWjaFr.js:37
+e1 @ index-BUYWjaFr.js:37
+t1 @ index-BUYWjaFr.js:37
+nf @ index-BUYWjaFr.js:37
+m0 @ index-BUYWjaFr.js:37
+(anonymous) @ index-BUYWjaFr.js:37
+jh @ index-BUYWjaFr.js:40
+Ig @ index-BUYWjaFr.js:37
+Rd @ index-BUYWjaFr.js:37
+Gm @ index-BUYWjaFr.js:37
+g1 @ index-BUYWjaFr.js:37
+index-BUYWjaFr.js:505  
+✗ SCRIPT ERROR: Strategy 2 failed
+m.onerror @ index-BUYWjaFr.js:505
+script
+c @ index-BUYWjaFr.js:503
+m.onerror @ index-BUYWjaFr.js:506
+script
+c @ index-BUYWjaFr.js:503
+(anonymous) @ index-BUYWjaFr.js:506
+V3 @ index-BUYWjaFr.js:502
+W3 @ index-BUYWjaFr.js:506
+p @ index-BUYWjaFr.js:506
+onSuccess @ index-BUYWjaFr.js:506
+execute @ index-BUYWjaFr.js:48
+await in execute
+mutate @ index-BUYWjaFr.js:48
+(anonymous) @ index-BUYWjaFr.js:48
+b @ index-BUYWjaFr.js:506
+Zb @ index-BUYWjaFr.js:37
+e1 @ index-BUYWjaFr.js:37
+t1 @ index-BUYWjaFr.js:37
+nf @ index-BUYWjaFr.js:37
+m0 @ index-BUYWjaFr.js:37
+(anonymous) @ index-BUYWjaFr.js:37
+jh @ index-BUYWjaFr.js:40
+Ig @ index-BUYWjaFr.js:37
+Rd @ index-BUYWjaFr.js:37
+Gm @ index-BUYWjaFr.js:37
+g1 @ index-BUYWjaFr.js:37
+index-BUYWjaFr.js:506  URL: https://js.paystack.co/v2/inline.js
+m.onerror @ index-BUYWjaFr.js:506
+script
+c @ index-BUYWjaFr.js:503
+m.onerror @ index-BUYWjaFr.js:506
+script
+c @ index-BUYWjaFr.js:503
+(anonymous) @ index-BUYWjaFr.js:506
+V3 @ index-BUYWjaFr.js:502
+W3 @ index-BUYWjaFr.js:506
+p @ index-BUYWjaFr.js:506
+onSuccess @ index-BUYWjaFr.js:506
+execute @ index-BUYWjaFr.js:48
+await in execute
+mutate @ index-BUYWjaFr.js:48
+(anonymous) @ index-BUYWjaFr.js:48
+b @ index-BUYWjaFr.js:506
+Zb @ index-BUYWjaFr.js:37
+e1 @ index-BUYWjaFr.js:37
+t1 @ index-BUYWjaFr.js:37
+nf @ index-BUYWjaFr.js:37
+m0 @ index-BUYWjaFr.js:37
+(anonymous) @ index-BUYWjaFr.js:37
+jh @ index-BUYWjaFr.js:40
+Ig @ index-BUYWjaFr.js:37
+Rd @ index-BUYWjaFr.js:37
+Gm @ index-BUYWjaFr.js:37
+g1 @ index-BUYWjaFr.js:37
+index-BUYWjaFr.js:506  Error timestamp: 2025-06-25T07:06:20.429Z
+m.onerror @ index-BUYWjaFr.js:506
+script
+c @ index-BUYWjaFr.js:503
+m.onerror @ index-BUYWjaFr.js:506
+script
+c @ index-BUYWjaFr.js:503
+(anonymous) @ index-BUYWjaFr.js:506
+V3 @ index-BUYWjaFr.js:502
+W3 @ index-BUYWjaFr.js:506
+p @ index-BUYWjaFr.js:506
+onSuccess @ index-BUYWjaFr.js:506
+execute @ index-BUYWjaFr.js:48
+await in execute
+mutate @ index-BUYWjaFr.js:48
+(anonymous) @ index-BUYWjaFr.js:48
+b @ index-BUYWjaFr.js:506
+Zb @ index-BUYWjaFr.js:37
+e1 @ index-BUYWjaFr.js:37
+t1 @ index-BUYWjaFr.js:37
+nf @ index-BUYWjaFr.js:37
+m0 @ index-BUYWjaFr.js:37
+(anonymous) @ index-BUYWjaFr.js:37
+jh @ index-BUYWjaFr.js:40
+Ig @ index-BUYWjaFr.js:37
+Rd @ index-BUYWjaFr.js:37
+Gm @ index-BUYWjaFr.js:37
+g1 @ index-BUYWjaFr.js:37
+index-BUYWjaFr.js:506  Error details: Event {isTrusted: true, type: 'error', target: script, currentTarget: script, eventPhase: 2, …}
+m.onerror @ index-BUYWjaFr.js:506
+script
+c @ index-BUYWjaFr.js:503
+m.onerror @ index-BUYWjaFr.js:506
+script
+c @ index-BUYWjaFr.js:503
+(anonymous) @ index-BUYWjaFr.js:506
+V3 @ index-BUYWjaFr.js:502
+W3 @ index-BUYWjaFr.js:506
+p @ index-BUYWjaFr.js:506
+onSuccess @ index-BUYWjaFr.js:506
+execute @ index-BUYWjaFr.js:48
+await in execute
+mutate @ index-BUYWjaFr.js:48
+(anonymous) @ index-BUYWjaFr.js:48
+b @ index-BUYWjaFr.js:506
+Zb @ index-BUYWjaFr.js:37
+e1 @ index-BUYWjaFr.js:37
+t1 @ index-BUYWjaFr.js:37
+nf @ index-BUYWjaFr.js:37
+m0 @ index-BUYWjaFr.js:37
+(anonymous) @ index-BUYWjaFr.js:37
+jh @ index-BUYWjaFr.js:40
+Ig @ index-BUYWjaFr.js:37
+Rd @ index-BUYWjaFr.js:37
+Gm @ index-BUYWjaFr.js:37
+g1 @ index-BUYWjaFr.js:37
+index-BUYWjaFr.js:506  Error event: {type: 'error', target: script, message: 'No message', filename: 'No filename', lineno: 'No line number'}
+m.onerror @ index-BUYWjaFr.js:506
+script
+c @ index-BUYWjaFr.js:503
+m.onerror @ index-BUYWjaFr.js:506
+script
+c @ index-BUYWjaFr.js:503
+(anonymous) @ index-BUYWjaFr.js:506
+V3 @ index-BUYWjaFr.js:502
+W3 @ index-BUYWjaFr.js:506
+p @ index-BUYWjaFr.js:506
+onSuccess @ index-BUYWjaFr.js:506
+execute @ index-BUYWjaFr.js:48
+await in execute
+mutate @ index-BUYWjaFr.js:48
+(anonymous) @ index-BUYWjaFr.js:48
+b @ index-BUYWjaFr.js:506
+Zb @ index-BUYWjaFr.js:37
+e1 @ index-BUYWjaFr.js:37
+t1 @ index-BUYWjaFr.js:37
+nf @ index-BUYWjaFr.js:37
+m0 @ index-BUYWjaFr.js:37
+(anonymous) @ index-BUYWjaFr.js:37
+jh @ index-BUYWjaFr.js:40
+Ig @ index-BUYWjaFr.js:37
+Rd @ index-BUYWjaFr.js:37
+Gm @ index-BUYWjaFr.js:37
+g1 @ index-BUYWjaFr.js:37
+index-BUYWjaFr.js:506  This appears to be a network or CSP blocking error
+m.onerror @ index-BUYWjaFr.js:506
+script
+c @ index-BUYWjaFr.js:503
+m.onerror @ index-BUYWjaFr.js:506
+script
+c @ index-BUYWjaFr.js:503
+(anonymous) @ index-BUYWjaFr.js:506
+V3 @ index-BUYWjaFr.js:502
+W3 @ index-BUYWjaFr.js:506
+p @ index-BUYWjaFr.js:506
+onSuccess @ index-BUYWjaFr.js:506
+execute @ index-BUYWjaFr.js:48
+await in execute
+mutate @ index-BUYWjaFr.js:48
+(anonymous) @ index-BUYWjaFr.js:48
+b @ index-BUYWjaFr.js:506
+Zb @ index-BUYWjaFr.js:37
+e1 @ index-BUYWjaFr.js:37
+t1 @ index-BUYWjaFr.js:37
+nf @ index-BUYWjaFr.js:37
+m0 @ index-BUYWjaFr.js:37
+(anonymous) @ index-BUYWjaFr.js:37
+jh @ index-BUYWjaFr.js:40
+Ig @ index-BUYWjaFr.js:37
+Rd @ index-BUYWjaFr.js:37
+Gm @ index-BUYWjaFr.js:37
+g1 @ index-BUYWjaFr.js:37
+index-BUYWjaFr.js:506 Moving to strategy 3...
+index-BUYWjaFr.js:502 
+--- STRATEGY 3 ATTEMPT ---
+index-BUYWjaFr.js:503 URL: https://checkout.paystack.com/assets/js/inline.js
+index-BUYWjaFr.js:503 Timestamp: 2025-06-25T07:06:20.438Z
+index-BUYWjaFr.js:503 Strategy 3: Script element created with properties: {src: 'https://checkout.paystack.com/assets/js/inline.js', async: true, defer: false, crossOrigin: 'anonymous', type: ''}
+index-BUYWjaFr.js:506  Refused to load the script 'https://checkout.paystack.com/assets/js/inline.js' because it violates the following Content Security Policy directive: "script-src 'self' 'unsafe-inline' 'unsafe-eval'". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback.
+
+c @ index-BUYWjaFr.js:506
+m.onerror @ index-BUYWjaFr.js:506
+script
+c @ index-BUYWjaFr.js:503
+m.onerror @ index-BUYWjaFr.js:506
+script
+c @ index-BUYWjaFr.js:503
+(anonymous) @ index-BUYWjaFr.js:506
+V3 @ index-BUYWjaFr.js:502
+W3 @ index-BUYWjaFr.js:506
+p @ index-BUYWjaFr.js:506
+onSuccess @ index-BUYWjaFr.js:506
+execute @ index-BUYWjaFr.js:48
+await in execute
+mutate @ index-BUYWjaFr.js:48
+(anonymous) @ index-BUYWjaFr.js:48
+b @ index-BUYWjaFr.js:506
+Zb @ index-BUYWjaFr.js:37
+e1 @ index-BUYWjaFr.js:37
+t1 @ index-BUYWjaFr.js:37
+nf @ index-BUYWjaFr.js:37
+m0 @ index-BUYWjaFr.js:37
+(anonymous) @ index-BUYWjaFr.js:37
+jh @ index-BUYWjaFr.js:40
+Ig @ index-BUYWjaFr.js:37
+Rd @ index-BUYWjaFr.js:37
+Gm @ index-BUYWjaFr.js:37
+g1 @ index-BUYWjaFr.js:37
+index-BUYWjaFr.js:505  
+✗ SCRIPT ERROR: Strategy 3 failed
+m.onerror @ index-BUYWjaFr.js:505
+script
+c @ index-BUYWjaFr.js:503
+m.onerror @ index-BUYWjaFr.js:506
+script
+c @ index-BUYWjaFr.js:503
+m.onerror @ index-BUYWjaFr.js:506
+script
+c @ index-BUYWjaFr.js:503
+(anonymous) @ index-BUYWjaFr.js:506
+V3 @ index-BUYWjaFr.js:502
+W3 @ index-BUYWjaFr.js:506
+p @ index-BUYWjaFr.js:506
+onSuccess @ index-BUYWjaFr.js:506
+execute @ index-BUYWjaFr.js:48
+await in execute
+mutate @ index-BUYWjaFr.js:48
+(anonymous) @ index-BUYWjaFr.js:48
+b @ index-BUYWjaFr.js:506
+Zb @ index-BUYWjaFr.js:37
+e1 @ index-BUYWjaFr.js:37
+t1 @ index-BUYWjaFr.js:37
+nf @ index-BUYWjaFr.js:37
+m0 @ index-BUYWjaFr.js:37
+(anonymous) @ index-BUYWjaFr.js:37
+jh @ index-BUYWjaFr.js:40
+Ig @ index-BUYWjaFr.js:37
+Rd @ index-BUYWjaFr.js:37
+Gm @ index-BUYWjaFr.js:37
+g1 @ index-BUYWjaFr.js:37
+index-BUYWjaFr.js:506  URL: https://checkout.paystack.com/assets/js/inline.js
+m.onerror @ index-BUYWjaFr.js:506
+script
+c @ index-BUYWjaFr.js:503
+m.onerror @ index-BUYWjaFr.js:506
+script
+c @ index-BUYWjaFr.js:503
+m.onerror @ index-BUYWjaFr.js:506
+script
+c @ index-BUYWjaFr.js:503
+(anonymous) @ index-BUYWjaFr.js:506
+V3 @ index-BUYWjaFr.js:502
+W3 @ index-BUYWjaFr.js:506
+p @ index-BUYWjaFr.js:506
+onSuccess @ index-BUYWjaFr.js:506
+execute @ index-BUYWjaFr.js:48
+await in execute
+mutate @ index-BUYWjaFr.js:48
+(anonymous) @ index-BUYWjaFr.js:48
+b @ index-BUYWjaFr.js:506
+Zb @ index-BUYWjaFr.js:37
+e1 @ index-BUYWjaFr.js:37
+t1 @ index-BUYWjaFr.js:37
+nf @ index-BUYWjaFr.js:37
+m0 @ index-BUYWjaFr.js:37
+(anonymous) @ index-BUYWjaFr.js:37
+jh @ index-BUYWjaFr.js:40
+Ig @ index-BUYWjaFr.js:37
+Rd @ index-BUYWjaFr.js:37
+Gm @ index-BUYWjaFr.js:37
+g1 @ index-BUYWjaFr.js:37
+index-BUYWjaFr.js:506  Error timestamp: 2025-06-25T07:06:20.444Z
+m.onerror @ index-BUYWjaFr.js:506
+script
+c @ index-BUYWjaFr.js:503
+m.onerror @ index-BUYWjaFr.js:506
+script
+c @ index-BUYWjaFr.js:503
+m.onerror @ index-BUYWjaFr.js:506
+script
+c @ index-BUYWjaFr.js:503
+(anonymous) @ index-BUYWjaFr.js:506
+V3 @ index-BUYWjaFr.js:502
+W3 @ index-BUYWjaFr.js:506
+p @ index-BUYWjaFr.js:506
+onSuccess @ index-BUYWjaFr.js:506
+execute @ index-BUYWjaFr.js:48
+await in execute
+mutate @ index-BUYWjaFr.js:48
+(anonymous) @ index-BUYWjaFr.js:48
+b @ index-BUYWjaFr.js:506
+Zb @ index-BUYWjaFr.js:37
+e1 @ index-BUYWjaFr.js:37
+t1 @ index-BUYWjaFr.js:37
+nf @ index-BUYWjaFr.js:37
+m0 @ index-BUYWjaFr.js:37
+(anonymous) @ index-BUYWjaFr.js:37
+jh @ index-BUYWjaFr.js:40
+Ig @ index-BUYWjaFr.js:37
+Rd @ index-BUYWjaFr.js:37
+Gm @ index-BUYWjaFr.js:37
+g1 @ index-BUYWjaFr.js:37
+index-BUYWjaFr.js:506  Error details: Event {isTrusted: true, type: 'error', target: script, currentTarget: script, eventPhase: 2, …}isTrusted: truebubbles: falsecancelBubble: falsecancelable: falsecomposed: falsecurrentTarget: nulldefaultPrevented: falseeventPhase: 0returnValue: truesrcElement: scripttarget: scripttimeStamp: 13738.100000023842type: "error"[[Prototype]]: Event
+m.onerror @ index-BUYWjaFr.js:506
+script
+c @ index-BUYWjaFr.js:503
+m.onerror @ index-BUYWjaFr.js:506
+script
+c @ index-BUYWjaFr.js:503
+m.onerror @ index-BUYWjaFr.js:506
+script
+c @ index-BUYWjaFr.js:503
+(anonymous) @ index-BUYWjaFr.js:506
+V3 @ index-BUYWjaFr.js:502
+W3 @ index-BUYWjaFr.js:506
+p @ index-BUYWjaFr.js:506
+onSuccess @ index-BUYWjaFr.js:506
+execute @ index-BUYWjaFr.js:48
+await in execute
+mutate @ index-BUYWjaFr.js:48
+(anonymous) @ index-BUYWjaFr.js:48
+b @ index-BUYWjaFr.js:506
+Zb @ index-BUYWjaFr.js:37
+e1 @ index-BUYWjaFr.js:37
+t1 @ index-BUYWjaFr.js:37
+nf @ index-BUYWjaFr.js:37
+m0 @ index-BUYWjaFr.js:37
+(anonymous) @ index-BUYWjaFr.js:37
+jh @ index-BUYWjaFr.js:40
+Ig @ index-BUYWjaFr.js:37
+Rd @ index-BUYWjaFr.js:37
+Gm @ index-BUYWjaFr.js:37
+g1 @ index-BUYWjaFr.js:37
+index-BUYWjaFr.js:506  Error event: {type: 'error', target: script, message: 'No message', filename: 'No filename', lineno: 'No line number'}
+m.onerror @ index-BUYWjaFr.js:506
+script
+c @ index-BUYWjaFr.js:503
+m.onerror @ index-BUYWjaFr.js:506
+script
+c @ index-BUYWjaFr.js:503
+m.onerror @ index-BUYWjaFr.js:506
+script
+c @ index-BUYWjaFr.js:503
+(anonymous) @ index-BUYWjaFr.js:506
+V3 @ index-BUYWjaFr.js:502
+W3 @ index-BUYWjaFr.js:506
+p @ index-BUYWjaFr.js:506
+onSuccess @ index-BUYWjaFr.js:506
+execute @ index-BUYWjaFr.js:48
+await in execute
+mutate @ index-BUYWjaFr.js:48
+(anonymous) @ index-BUYWjaFr.js:48
+b @ index-BUYWjaFr.js:506
+Zb @ index-BUYWjaFr.js:37
+e1 @ index-BUYWjaFr.js:37
+t1 @ index-BUYWjaFr.js:37
+nf @ index-BUYWjaFr.js:37
+m0 @ index-BUYWjaFr.js:37
+(anonymous) @ index-BUYWjaFr.js:37
+jh @ index-BUYWjaFr.js:40
+Ig @ index-BUYWjaFr.js:37
+Rd @ index-BUYWjaFr.js:37
+Gm @ index-BUYWjaFr.js:37
+g1 @ index-BUYWjaFr.js:37
+index-BUYWjaFr.js:506  This appears to be a network or CSP blocking error
+m.onerror @ index-BUYWjaFr.js:506
+script
+c @ index-BUYWjaFr.js:503
+m.onerror @ index-BUYWjaFr.js:506
+script
+c @ index-BUYWjaFr.js:503
+m.onerror @ index-BUYWjaFr.js:506
+script
+c @ index-BUYWjaFr.js:503
+(anonymous) @ index-BUYWjaFr.js:506
+V3 @ index-BUYWjaFr.js:502
+W3 @ index-BUYWjaFr.js:506
+p @ index-BUYWjaFr.js:506
+onSuccess @ index-BUYWjaFr.js:506
+execute @ index-BUYWjaFr.js:48
+await in execute
+mutate @ index-BUYWjaFr.js:48
+(anonymous) @ index-BUYWjaFr.js:48
+b @ index-BUYWjaFr.js:506
+Zb @ index-BUYWjaFr.js:37
+e1 @ index-BUYWjaFr.js:37
+t1 @ index-BUYWjaFr.js:37
+nf @ index-BUYWjaFr.js:37
+m0 @ index-BUYWjaFr.js:37
+(anonymous) @ index-BUYWjaFr.js:37
+jh @ index-BUYWjaFr.js:40
+Ig @ index-BUYWjaFr.js:37
+Rd @ index-BUYWjaFr.js:37
+Gm @ index-BUYWjaFr.js:37
+g1 @ index-BUYWjaFr.js:37
+index-BUYWjaFr.js:506 Moving to strategy 4...
+index-BUYWjaFr.js:502  All Paystack loading strategies failed
+c @ index-BUYWjaFr.js:502
+m.onerror @ index-BUYWjaFr.js:506
+script
+c @ index-BUYWjaFr.js:503
+m.onerror @ index-BUYWjaFr.js:506
+script
+c @ index-BUYWjaFr.js:503
+m.onerror @ index-BUYWjaFr.js:506
+script
+c @ index-BUYWjaFr.js:503
+(anonymous) @ index-BUYWjaFr.js:506
+V3 @ index-BUYWjaFr.js:502
+W3 @ index-BUYWjaFr.js:506
+p @ index-BUYWjaFr.js:506
+onSuccess @ index-BUYWjaFr.js:506
+execute @ index-BUYWjaFr.js:48
+await in execute
+mutate @ index-BUYWjaFr.js:48
+(anonymous) @ index-BUYWjaFr.js:48
+b @ index-BUYWjaFr.js:506
+Zb @ index-BUYWjaFr.js:37
+e1 @ index-BUYWjaFr.js:37
+t1 @ index-BUYWjaFr.js:37
+nf @ index-BUYWjaFr.js:37
+m0 @ index-BUYWjaFr.js:37
+(anonymous) @ index-BUYWjaFr.js:37
+jh @ index-BUYWjaFr.js:40
+Ig @ index-BUYWjaFr.js:37
+Rd @ index-BUYWjaFr.js:37
+Gm @ index-BUYWjaFr.js:37
+g1 @ index-BUYWjaFr.js:37
+index-BUYWjaFr.js:506  Paystack initialization error: Error: Payment system unavailable. Please check your internet connection and try again.
+    at c (index-BUYWjaFr.js:502:25766)
+    at m.onerror (index-BUYWjaFr.js:506:632)
+W3 @ index-BUYWjaFr.js:506
+await in W3
+p @ index-BUYWjaFr.js:506
+onSuccess @ index-BUYWjaFr.js:506
+execute @ index-BUYWjaFr.js:48
+await in execute
+mutate @ index-BUYWjaFr.js:48
+(anonymous) @ index-BUYWjaFr.js:48
+b @ index-BUYWjaFr.js:506
+Zb @ index-BUYWjaFr.js:37
+e1 @ index-BUYWjaFr.js:37
+t1 @ index-BUYWjaFr.js:37
+nf @ index-BUYWjaFr.js:37
+m0 @ index-BUYWjaFr.js:37
+(anonymous) @ index-BUYWjaFr.js:37
+jh @ index-BUYWjaFr.js:40
+Ig @ index-BUYWjaFr.js:37
+Rd @ index-BUYWjaFr.js:37
+Gm @ index-BUYWjaFr.js:37
+g1 @ index-BUYWjaFr.js:37
+index-BUYWjaFr.js:506  Paystack error: Error: Payment system unavailable. Please check your internet connection and try again.
+    at c (index-BUYWjaFr.js:502:25766)
+    at m.onerror (index-BUYWjaFr.js:506:632)
+p @ index-BUYWjaFr.js:506
+await in p
+onSuccess @ index-BUYWjaFr.js:506
+execute @ index-BUYWjaFr.js:48
+await in execute
+mutate @ index-BUYWjaFr.js:48
+(anonymous) @ index-BUYWjaFr.js:48
+b @ index-BUYWjaFr.js:506
+Zb @ index-BUYWjaFr.js:37
+e1 @ index-BUYWjaFr.js:37
+t1 @ index-BUYWjaFr.js:37
+nf @ index-BUYWjaFr.js:37
+m0 @ index-BUYWjaFr.js:37
+(anonymous) @ index-BUYWjaFr.js:37
+jh @ index-BUYWjaFr.js:40
+Ig @ index-BUYWjaFr.js:37
+Rd @ index-BUYWjaFr.js:37
+Gm @ index-BUYWjaFr.js:37
+g1 @ index-BUYWjaFr.js:37
+index-BUYWjaFr.js:506    - ✓ Network connectivity to Paystack confirmed
+index-BUYWjaFr.js:506  Network connectivity OK - likely CSP blocking
+(anonymous) @ index-BUYWjaFr.js:506
+Promise.then
+m.onerror @ index-BUYWjaFr.js:506
+script
+c @ index-BUYWjaFr.js:503
+(anonymous) @ index-BUYWjaFr.js:506
+V3 @ index-BUYWjaFr.js:502
+W3 @ index-BUYWjaFr.js:506
+p @ index-BUYWjaFr.js:506
+onSuccess @ index-BUYWjaFr.js:506
+execute @ index-BUYWjaFr.js:48
+await in execute
+mutate @ index-BUYWjaFr.js:48
+(anonymous) @ index-BUYWjaFr.js:48
+b @ index-BUYWjaFr.js:506
+Zb @ index-BUYWjaFr.js:37
+e1 @ index-BUYWjaFr.js:37
+t1 @ index-BUYWjaFr.js:37
+nf @ index-BUYWjaFr.js:37
+m0 @ index-BUYWjaFr.js:37
+(anonymous) @ index-BUYWjaFr.js:37
+jh @ index-BUYWjaFr.js:40
+Ig @ index-BUYWjaFr.js:37
+Rd @ index-BUYWjaFr.js:37
+Gm @ index-BUYWjaFr.js:37
+g1 @ index-BUYWjaFr.js:37
+index-BUYWjaFr.js:506  Network connectivity OK - likely CSP blocking
+(anonymous) @ index-BUYWjaFr.js:506
+Promise.then
+m.onerror @ index-BUYWjaFr.js:506
+script
+c @ index-BUYWjaFr.js:503
+m.onerror @ index-BUYWjaFr.js:506
+script
+c @ index-BUYWjaFr.js:503
+(anonymous) @ index-BUYWjaFr.js:506
+V3 @ index-BUYWjaFr.js:502
+W3 @ index-BUYWjaFr.js:506
+p @ index-BUYWjaFr.js:506
+onSuccess @ index-BUYWjaFr.js:506
+execute @ index-BUYWjaFr.js:48
+await in execute
+mutate @ index-BUYWjaFr.js:48
+(anonymous) @ index-BUYWjaFr.js:48
+b @ index-BUYWjaFr.js:506
+Zb @ index-BUYWjaFr.js:37
+e1 @ index-BUYWjaFr.js:37
+t1 @ index-BUYWjaFr.js:37
+nf @ index-BUYWjaFr.js:37
+m0 @ index-BUYWjaFr.js:37
+(anonymous) @ index-BUYWjaFr.js:37
+jh @ index-BUYWjaFr.js:40
+Ig @ index-BUYWjaFr.js:37
+Rd @ index-BUYWjaFr.js:37
+Gm @ index-BUYWjaFr.js:37
+g1 @ index-BUYWjaFr.js:37
+index-BUYWjaFr.js:506 
+            
+            
+            HEAD https://checkout.paystack.com/assets/js/inline.js net::ERR_ABORTED 403 (Forbidden)
+m.onerror @ index-BUYWjaFr.js:506
+script
+c @ index-BUYWjaFr.js:503
+m.onerror @ index-BUYWjaFr.js:506
+script
+c @ index-BUYWjaFr.js:503
+m.onerror @ index-BUYWjaFr.js:506
+script
+c @ index-BUYWjaFr.js:503
+(anonymous) @ index-BUYWjaFr.js:506
+V3 @ index-BUYWjaFr.js:502
+W3 @ index-BUYWjaFr.js:506
+p @ index-BUYWjaFr.js:506
+onSuccess @ index-BUYWjaFr.js:506
+execute @ index-BUYWjaFr.js:48
+await in execute
+mutate @ index-BUYWjaFr.js:48
+(anonymous) @ index-BUYWjaFr.js:48
+b @ index-BUYWjaFr.js:506
+Zb @ index-BUYWjaFr.js:37
+e1 @ index-BUYWjaFr.js:37
+t1 @ index-BUYWjaFr.js:37
+nf @ index-BUYWjaFr.js:37
+m0 @ index-BUYWjaFr.js:37
+(anonymous) @ index-BUYWjaFr.js:37
+jh @ index-BUYWjaFr.js:40
+Ig @ index-BUYWjaFr.js:37
+Rd @ index-BUYWjaFr.js:37
+Gm @ index-BUYWjaFr.js:37
+g1 @ index-BUYWjaFr.js:37
+index-BUYWjaFr.js:506  Network connectivity OK - likely CSP blocking
+(anonymous) @ index-BUYWjaFr.js:506
+Promise.then
+m.onerror @ index-BUYWjaFr.js:506
+script
+c @ index-BUYWjaFr.js:503
+m.onerror @ index-BUYWjaFr.js:506
+script
+c @ index-BUYWjaFr.js:503
+m.onerror @ index-BUYWjaFr.js:506
+script
+c @ index-BUYWjaFr.js:503
+(anonymous) @ index-BUYWjaFr.js:506
+V3 @ index-BUYWjaFr.js:502
+W3 @ index-BUYWjaFr.js:506
+p @ index-BUYWjaFr.js:506
+onSuccess @ index-BUYWjaFr.js:506
+execute @ index-BUYWjaFr.js:48
+await in execute
+mutate @ index-BUYWjaFr.js:48
+(anonymous) @ index-BUYWjaFr.js:48
+b @ index-BUYWjaFr.js:506
+Zb @ index-BUYWjaFr.js:37
+e1 @ index-BUYWjaFr.js:37
+t1 @ index-BUYWjaFr.js:37
+nf @ index-BUYWjaFr.js:37
+m0 @ index-BUYWjaFr.js:37
+(anonymous) @ index-BUYWjaFr.js:37
+jh @ index-BUYWjaFr.js:40
+Ig @ index-BUYWjaFr.js:37
+Rd @ index-BUYWjaFr.js:37
+Gm @ index-BUYWjaFr.js:37
+g1 @ index-BUYWjaFr.js:37
+index-BUYWjaFr.js:506 Fetch failed loading: HEAD "https://js.paystack.co/v1/inline.js".
+p @ index-BUYWjaFr.js:506
+onSuccess @ index-BUYWjaFr.js:506
+execute @ index-BUYWjaFr.js:48
+await in execute
+mutate @ index-BUYWjaFr.js:48
+(anonymous) @ index-BUYWjaFr.js:48
+b @ index-BUYWjaFr.js:506
+Zb @ index-BUYWjaFr.js:37
+e1 @ index-BUYWjaFr.js:37
+t1 @ index-BUYWjaFr.js:37
+nf @ index-BUYWjaFr.js:37
+m0 @ index-BUYWjaFr.js:37
+(anonymous) @ index-BUYWjaFr.js:37
+jh @ index-BUYWjaFr.js:40
+Ig @ index-BUYWjaFr.js:37
+Rd @ index-BUYWjaFr.js:37
+Gm @ index-BUYWjaFr.js:37
+g1 @ index-BUYWjaFr.js:37
+index-BUYWjaFr.js:506 Fetch failed loading: HEAD "https://js.paystack.co/v1/inline.js".
+m.onerror @ index-BUYWjaFr.js:506
+script
+c @ index-BUYWjaFr.js:503
+(anonymous) @ index-BUYWjaFr.js:506
+V3 @ index-BUYWjaFr.js:502
+W3 @ index-BUYWjaFr.js:506
+p @ index-BUYWjaFr.js:506
+onSuccess @ index-BUYWjaFr.js:506
+execute @ index-BUYWjaFr.js:48
+await in execute
+mutate @ index-BUYWjaFr.js:48
+(anonymous) @ index-BUYWjaFr.js:48
+b @ index-BUYWjaFr.js:506
+Zb @ index-BUYWjaFr.js:37
+e1 @ index-BUYWjaFr.js:37
+t1 @ index-BUYWjaFr.js:37
+nf @ index-BUYWjaFr.js:37
+m0 @ index-BUYWjaFr.js:37
+(anonymous) @ index-BUYWjaFr.js:37
+jh @ index-BUYWjaFr.js:40
+Ig @ index-BUYWjaFr.js:37
+Rd @ index-BUYWjaFr.js:37
+Gm @ index-BUYWjaFr.js:37
+g1 @ index-BUYWjaFr.js:37
+index-BUYWjaFr.js:506 Fetch failed loading: HEAD "https://js.paystack.co/v2/inline.js".
+m.onerror @ index-BUYWjaFr.js:506
+script
+c @ index-BUYWjaFr.js:503
+m.onerror @ index-BUYWjaFr.js:506
+script
+c @ index-BUYWjaFr.js:503
+(anonymous) @ index-BUYWjaFr.js:506
+V3 @ index-BUYWjaFr.js:502
+W3 @ index-BUYWjaFr.js:506
+p @ index-BUYWjaFr.js:506
+onSuccess @ index-BUYWjaFr.js:506
+execute @ index-BUYWjaFr.js:48
+await in execute
+mutate @ index-BUYWjaFr.js:48
+(anonymous) @ index-BUYWjaFr.js:48
+b @ index-BUYWjaFr.js:506
+Zb @ index-BUYWjaFr.js:37
+e1 @ index-BUYWjaFr.js:37
+t1 @ index-BUYWjaFr.js:37
+nf @ index-BUYWjaFr.js:37
+m0 @ index-BUYWjaFr.js:37
+(anonymous) @ index-BUYWjaFr.js:37
+jh @ index-BUYWjaFr.js:40
+Ig @ index-BUYWjaFr.js:37
+Rd @ index-BUYWjaFr.js:37
+Gm @ index-BUYWjaFr.js:37
+g1 @ index-BUYWjaFr.js:37
+index-BUYWjaFr.js:506 Fetch failed loading: HEAD "https://checkout.paystack.com/assets/js/inline.js".
+m.onerror @ index-BUYWjaFr.js:506
+script
+c @ index-BUYWjaFr.js:503
+m.onerror @ index-BUYWjaFr.js:506
+script
+c @ index-BUYWjaFr.js:503
+m.onerror @ index-BUYWjaFr.js:506
+script
+c @ index-BUYWjaFr.js:503
+(anonymous) @ index-BUYWjaFr.js:506
+V3 @ index-BUYWjaFr.js:502
+W3 @ index-BUYWjaFr.js:506
+p @ index-BUYWjaFr.js:506
+onSuccess @ index-BUYWjaFr.js:506
+execute @ index-BUYWjaFr.js:48
+await in execute
+mutate @ index-BUYWjaFr.js:48
+(anonymous) @ index-BUYWjaFr.js:48
+b @ index-BUYWjaFr.js:506
+Zb @ index-BUYWjaFr.js:37
+e1 @ index-BUYWjaFr.js:37
+t1 @ index-BUYWjaFr.js:37
+nf @ index-BUYWjaFr.js:37
+m0 @ index-BUYWjaFr.js:37
+(anonymous) @ index-BUYWjaFr.js:37
+jh @ index-BUYWjaFr.js:40
+Ig @ index-BUYWjaFr.js:37
+Rd @ index-BUYWjaFr.js:37
+Gm @ index-BUYWjaFr.js:37
+g1 @ index-BUYWjaFr.js:37

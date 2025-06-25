@@ -10,6 +10,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { initializeEnhancedPaystack, PAYSTACK_PUBLIC_KEY, getMobileOptimizedChannels, validatePaymentAmount } from "@/lib/enhanced-paystack";
+import { initializeCSPBypassPayment } from "@/lib/csp-bypass-payment";
 import { CreditCard, Shield, Clock, CheckCircle, AlertCircle, Loader2, Smartphone, ArrowRight } from "lucide-react";
 import { PaymentStatusIndicator } from "./payment-status-indicator";
 // Removed PendingDepositAlert import - no restrictions
@@ -36,7 +37,7 @@ export function EnhancedDepositModal({ open, onOpenChange, user }: EnhancedDepos
 
   // Removed pending deposit checks - users can make unlimited deposits
 
-  // Reset state when modal opens/closes
+  // Reset state when modal opens/closes and check for payment returns
   useEffect(() => {
     if (open) {
       setPaymentStep('amount');
@@ -52,7 +53,32 @@ export function EnhancedDepositModal({ open, onOpenChange, user }: EnhancedDepos
       // Always ensure scroll lock is removed when modal closes
       document.body.classList.remove('paystack-open');
     }
+    
+    // Check for payment returns on page load
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('reference') && urlParams.get('status')) {
+      handlePaymentReturn();
+    }
   }, [open]);
+
+  const handlePaymentReturn = () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const reference = urlParams.get('reference');
+    const status = urlParams.get('status');
+    
+    if (reference && status === 'success') {
+      setPaymentStep('success');
+      toast({
+        title: "Payment Successful",
+        description: "Your deposit has been processed successfully.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
+      
+      // Clean URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  };
 
   // Initialize payment mutation
   const initializePaymentMutation = useMutation({
