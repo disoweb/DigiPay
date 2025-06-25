@@ -31,16 +31,29 @@ export const loadPaystackScript = (): Promise<void> => {
       return;
     }
 
-    // Wait for script to load (it's already in index.html)
+    // Since script is in HTML, wait for it to load
     let attempts = 0;
     const checkPaystack = () => {
       if (window.PaystackPop) {
         resolve();
-      } else if (attempts < 50) {
+      } else if (attempts < 100) { // Increased attempts
         attempts++;
-        setTimeout(checkPaystack, 100);
+        setTimeout(checkPaystack, 50); // Faster checking
       } else {
-        reject(new Error('Paystack script timeout'));
+        // Try loading script manually as fallback
+        const script = document.createElement('script');
+        script.src = 'https://js.paystack.co/v1/inline.js';
+        script.onload = () => {
+          setTimeout(() => {
+            if (window.PaystackPop) {
+              resolve();
+            } else {
+              reject(new Error('Paystack script loaded but not accessible'));
+            }
+          }, 500);
+        };
+        script.onerror = () => reject(new Error('Failed to load Paystack script'));
+        document.head.appendChild(script);
       }
     };
     checkPaystack();
@@ -50,11 +63,11 @@ export const loadPaystackScript = (): Promise<void> => {
 export const initializeEnhancedPaystack = async (config: PaystackConfig) => {
   console.log("Initializing Paystack payment...");
   
-  // Wait for Paystack to be available
+  // Ensure Paystack is loaded
   await loadPaystackScript();
 
   if (!window.PaystackPop) {
-    throw new Error("Paystack not available");
+    throw new Error("Payment system unavailable. Please refresh the page.");
   }
 
   // Setup and open payment with enhanced styling

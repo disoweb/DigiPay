@@ -149,9 +149,16 @@ export function EnhancedDepositModal({ open, onOpenChange, user }: EnhancedDepos
         throw new Error("User email not available. Please refresh and try again.");
       }
 
-      // Ensure Paystack is available
+      // Wait for Paystack to be available
+      let attempts = 0;
+      while (!window.PaystackPop && attempts < 30) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+        attempts++;
+      }
+      
       if (!window.PaystackPop) {
-        throw new Error("Payment system not ready. Please refresh the page.");
+        console.error("Paystack not available after waiting");
+        throw new Error("Payment system loading failed. Please refresh the page and try again.");
       }
 
       console.log("Setting up Paystack payment with reference:", paystackData.reference);
@@ -242,8 +249,15 @@ export function EnhancedDepositModal({ open, onOpenChange, user }: EnhancedDepos
     } catch (error: any) {
       console.error("Paystack error:", error);
       setPaymentStep('error');
-      setErrorMessage(error.message || "Failed to initialize payment");
+      setErrorMessage(error.message || "Payment initialization failed. Please try again.");
       setIsProcessing(false);
+      
+      // Show more detailed error in toast for debugging
+      toast({
+        title: "Payment Failed",
+        description: error.message || "Payment system error. Please refresh and try again.",
+        variant: "destructive",
+      });
     }
   };
 
