@@ -422,16 +422,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
             console.log('Starting payment verification with reference:', reference);
             console.log('Token available:', !!token);
             
-            // Quick redirect to wallet - verification happens in background
+            // Streamlined verification with quick redirect
             if (reference && reference !== 'undefined' && reference !== 'null' && token) {
-              // Show success message immediately and redirect
-              document.getElementById('status').innerHTML = 'Payment successful! Redirecting to wallet...';
-              document.getElementById('status').className = 'status success';
-              
-              // Immediate redirect - verification will happen via WebSocket updates
-              setTimeout(() => {
-                window.location.href = '/wallet';
-              }, 1000);
+              try {
+                console.log('Making verification request for reference:', reference);
+                const response = await fetch('/api/payments/verify', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                  },
+                  body: JSON.stringify({ reference })
+                });
+                
+                const data = await response.json();
+                console.log('Verification response data:', data);
+                
+                if (data.success && data.data.status === 'success') {
+                  document.getElementById('status').innerHTML = 'Payment successful! ₦' + data.data.amount + ' added to wallet.';
+                  document.getElementById('status').className = 'status success';
+                  
+                  // Quick redirect after successful verification
+                  setTimeout(() => {
+                    window.location.href = '/wallet';
+                  }, 1500);
+                } else {
+                  throw new Error(data.message || 'Verification failed');
+                }
+              } catch (error) {
+                console.error('Quick verification error:', error);
+                // Fallback to wallet with error indication
+                document.getElementById('status').innerHTML = 'Payment may be processing. Check your wallet.';
+                document.getElementById('status').className = 'status error';
+                setTimeout(() => {
+                  window.location.href = '/wallet';
+                }, 2000);
+              }
               return;
             }
             
