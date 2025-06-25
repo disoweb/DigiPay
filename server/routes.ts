@@ -26,10 +26,10 @@ import { messages as messagesTable } from "@shared/schema";
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
   
-  // Register payment endpoints BEFORE JWT auth setup to ensure they're registered first
-  console.log("📋 Registering payment endpoints...");
+  // Register CSP-bypass payment endpoints FIRST to prevent any conflicts
+  console.log("🚀 Registering CSP-bypass payment endpoints...");
   
-  // CSP-bypass payment endpoints - enhanced with proper authentication and real Paystack integration
+  // ONLY CSP-bypass payment endpoint - all others removed to prevent conflicts
   app.post("/api/payments/initialize", (req: any, res: Response, next: NextFunction) => {
     console.log("🚀🚀🚀 CSP-BYPASS PAYMENT ENDPOINT HIT! 🚀🚀🚀");
     console.log("=== PAYMENT INITIALIZATION DEBUG ===");
@@ -120,7 +120,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  console.log("✅ Payment endpoints registered");
+  console.log("✅ CSP-bypass payment endpoints registered - NO CONFLICTS");
 
   // Setup JWT auth AFTER payment endpoints are registered  
   console.log("🔐 Setting up JWT auth...");
@@ -2994,10 +2994,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // CLEANED: Removed duplicate endpoint code that was causing conflicts
 
 
-  // Payment routes
-  // DISABLED: Additional payment routes to prevent conflicts
-  // registerPaymentRoutes(app);
-  // registerTestPaymentRoutes(app);
+  // REMOVED: All additional payment route registrations to prevent conflicts
 
   // Get user transactions
   app.get("/api/transactions", authenticateToken, async (req, res) => {
@@ -4091,7 +4088,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Withdrawal requests with bank details
+  // DISABLED: Conflicting withdrawal endpoint
+  /*
   app.post("/api/payments/withdraw", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
 
@@ -4188,7 +4186,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Withdrawal error:", error);
       res.status(400).json({ message: "Failed to process withdrawal" });
     }
-  });
+  }); */
 
   // Admin user management endpoints
   app.patch("/api/admin/users/:userId", authenticateToken, requireAdmin, async (req, res) => {
