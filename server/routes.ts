@@ -38,8 +38,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     authenticateToken(req, res, next);
   }, async (req: any, res: Response) => {
     try {
+      console.log("🔍 Full request body:", JSON.stringify(req.body, null, 2));
       const { amount, email, reference } = req.body;
-      console.log("💳 Payment data received:", { amount, email, reference, userId: req.user?.id });
+      console.log("💳 Extracted fields:", { amount, email, reference, userId: req.user?.id });
+      console.log("💳 Field types:", { 
+        amount: typeof amount, 
+        email: typeof email, 
+        reference: typeof reference 
+      });
       
       if (!req.user) {
         console.log("❌ No authenticated user found");
@@ -47,8 +53,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       if (!amount || !email || !reference) {
-        console.log("❌ Missing fields:", { amount: !!amount, email: !!email, reference: !!reference });
-        return res.status(400).json({ success: false, message: "Missing required fields: amount, email, reference" });
+        console.log("❌ Missing fields validation failed:");
+        console.log("  - amount:", amount, "present:", !!amount);
+        console.log("  - email:", email, "present:", !!email);  
+        console.log("  - reference:", reference, "present:", !!reference);
+        return res.status(400).json({ 
+          success: false, 
+          message: "Missing required fields", 
+          debug: { amount: !!amount, email: !!email, reference: !!reference }
+        });
       }
       
       // Create Paystack checkout URL with proper parameters
