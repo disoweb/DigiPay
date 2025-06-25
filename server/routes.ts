@@ -31,22 +31,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // CSP-bypass payment endpoints - enhanced with proper authentication and real Paystack integration
   app.post("/api/payments/initialize", (req: any, res: Response, next: NextFunction) => {
-    console.log("🚀 PAYMENT ENDPOINT HIT!");
+    console.log("🚀🚀🚀 PAYMENT ENDPOINT HIT - WORKING! 🚀🚀🚀");
     console.log("=== PAYMENT INITIALIZATION DEBUG ===");
     console.log("URL:", req.url);
     console.log("Path:", req.path);
     console.log("Method:", req.method);
-    console.log("Headers:", JSON.stringify(req.headers, null, 2));
-    console.log("Body:", JSON.stringify(req.body, null, 2));
-    console.log("Cookies:", JSON.stringify(req.cookies, null, 2));
-    console.log("Raw authorization header:", req.headers.authorization);
+    console.log("Authorization header:", req.headers.authorization?.substring(0, 30) + "...");
+    console.log("Request body:", JSON.stringify(req.body, null, 2));
     console.log("=====================================");
     
     authenticateToken(req, res, next);
   }, async (req: any, res: Response) => {
     try {
       const { amount, email, reference } = req.body;
-      console.log("CSP-bypass payment initialization SUCCESS:", { amount, email, reference, userId: req.user?.id });
+      console.log("🎉 CSP-bypass payment initialization SUCCESS:", { amount, email, reference, userId: req.user?.id });
       
       if (!req.user) {
         return res.status(401).json({ success: false, message: "Authentication required" });
@@ -2990,98 +2988,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // REMOVED: Duplicate webhook endpoint to prevent route conflicts
 
-  // REMOVED: Duplicate verify endpoint to prevent route conflicts
-  /*
-  app.post("/api/payments/verify", authenticateToken, async (req, res) => {
-    try {
-      const { reference } = req.body;
-      const userId = req.user!.id;
+  // CLEANED: Removed duplicate endpoint code that was causing conflicts
 
-      console.log(`Verifying payment for user ${userId}, reference: ${reference}`);
-
-      const result = await enhancedPaystackService.verifyPayment(reference, userId);
-      
-      console.log("Payment verification result:", result.success ? "success" : "failed");
-      
-      // If verification succeeded but balance wasn't updated, try manual crediting
-      if (result.success && !result.balanceUpdated && result.data?.status === 'success') {
-        console.log("Attempting manual balance credit for unmatched transaction");
-        try {
-          const amount = result.data.amount / 100;
-          const user = await storage.getUser(userId);
-          if (user) {
-            const currentBalance = parseFloat(user.nairaBalance || '0');
-            const newBalance = currentBalance + amount;
-            
-            await storage.updateUserBalance(userId, { 
-              nairaBalance: newBalance.toString() 
-            });
-            
-            // Create a transaction record
-            await storage.createTransaction({
-              userId,
-              type: 'deposit',
-              amount: amount.toString(),
-              status: 'completed',
-              paystackRef: reference,
-              paymentMethod: 'paystack',
-              adminNotes: `Manual credit for verified payment - ₦${amount.toLocaleString()}`
-            });
-            
-            result.balanceUpdated = true;
-            console.log(`Manually credited ₦${amount.toLocaleString()} to user ${userId}`);
-            
-            // Emit real-time balance update via WebSocket
-            setTimeout(() => {
-              const wsServerGlobal = (global as any).wsServer;
-              if (wsServerGlobal && wsServerGlobal.clients) {
-                console.log(`Broadcasting manual balance update to ${wsServerGlobal.clients.size} connected clients`);
-                wsServerGlobal.clients.forEach((client: any) => {
-                  if (client.readyState === 1) { // WebSocket.OPEN
-                    const updateMessage = {
-                      type: 'balance_updated',
-                      userId: userId,
-                      nairaBalance: newBalance.toString(),
-                      usdtBalance: user.usdtBalance,
-                      lastTransaction: {
-                        type: 'deposit',
-                        amount: amount.toString(),
-                        status: 'completed'
-                      }
-                    };
-                    console.log('Sending manual balance update:', updateMessage);
-                    client.send(JSON.stringify(updateMessage));
-                  }
-                });
-              }
-            }, 100); // Small delay to ensure WebSocket is ready
-          }
-        } catch (manualError) {
-          console.error("Manual crediting failed:", manualError);
-        }
-      }
-      
-      // Include balance update status in response
-      res.json({
-        ...result,
-        balanceUpdated: result.balanceUpdated || false
-      });
-
-    } catch (error: any) {
-      console.error("Payment verification error:", error);
-      res.status(400).json({ 
-        success: false, 
-        message: error.message 
-      });
-    }
-  });
-  */
 
   // Payment routes
-  registerPaymentRoutes(app);
-  
-  // Test payment routes (for demo/testing)
-  registerTestPaymentRoutes(app);
+  // DISABLED: Additional payment routes to prevent conflicts
+  // registerPaymentRoutes(app);
+  // registerTestPaymentRoutes(app);
 
   // Get user transactions
   app.get("/api/transactions", authenticateToken, async (req, res) => {
