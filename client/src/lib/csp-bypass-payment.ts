@@ -73,7 +73,12 @@ export const initializeCSPBypassPayment = async (config: PaymentConfig) => {
         clearInterval(checkPayment);
         window.removeEventListener('message', messageListener);
         
-        // Verify payment immediately
+        // Close iframe and verify payment immediately
+        const container = document.getElementById('paystack-iframe-container');
+        if (container) {
+          document.body.removeChild(container);
+        }
+        
         setTimeout(async () => {
           await verifyAndCompletePayment({ ...config, reference: event.data.reference });
         }, 1000);
@@ -83,49 +88,93 @@ export const initializeCSPBypassPayment = async (config: PaymentConfig) => {
     window.addEventListener('message', messageListener);
     console.log("Message listener added for payment completion");
     
-    const paymentWindow = window.open(
-      data.data.authorization_url,
-      'paystack_checkout',
-      'width=600,height=700,scrollbars=yes,resizable=yes,status=yes,toolbar=no,menubar=no,location=yes'
-    );
+    // Create inline iframe container instead of popup
+    const iframeContainer = document.createElement('div');
+    iframeContainer.id = 'paystack-iframe-container';
+    iframeContainer.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.8);
+      z-index: 9999;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      box-sizing: border-box;
+    `;
+    
+    const iframeWrapper = document.createElement('div');
+    iframeWrapper.style.cssText = `
+      position: relative;
+      width: 100%;
+      max-width: 500px;
+      height: 80%;
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    `;
+    
+    const closeButton = document.createElement('button');
+    closeButton.innerHTML = '×';
+    closeButton.style.cssText = `
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: rgba(255,255,255,0.9);
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      border-radius: 50%;
+      width: 35px;
+      height: 35px;
+      z-index: 10001;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    `;
+    
+    const iframe = document.createElement('iframe');
+    iframe.src = data.data.authorization_url;
+    iframe.style.cssText = `
+      width: 100%;
+      height: 100%;
+      border: none;
+      background: white;
+    `;
+    
+    closeButton.onclick = () => {
+      document.body.removeChild(iframeContainer);
+      config.onClose();
+    };
+    
+    iframeWrapper.appendChild(iframe);
+    iframeWrapper.appendChild(closeButton);
+    iframeContainer.appendChild(iframeWrapper);
+    document.body.appendChild(iframeContainer);
 
-    console.log("Popup window created:", !!paymentWindow);
-
-    if (!paymentWindow) {
-      // Fallback: Direct redirect in same window
-      console.log("New tab blocked, redirecting in same window...");
-      const userConfirmed = confirm(
-        "Payment window was blocked. Click OK to continue to payment page (you'll return here after payment)."
-      );
-      
-      if (userConfirmed) {
-        // Store return URL and payment reference
-        localStorage.setItem('payment_reference', data.data.reference);
-        localStorage.setItem('payment_return_url', window.location.href);
-        
-        // Redirect to payment
-        window.location.href = data.data.authorization_url;
-      } else {
-        config.onClose();
-      }
-      return;
-    }
+    console.log("Inline payment iframe created successfully");
 
     // Step 3: Monitor payment completion
     console.log("Step 3: Monitoring payment completion...");
     
-    // Check for payment completion every 2 seconds
+    // Check for payment completion every 3 seconds
     const checkPayment = setInterval(async () => {
       try {
-        // Check if window is closed
-        if (paymentWindow.closed) {
-          console.log("Payment window closed, verifying payment...");
+        // Check if iframe container still exists
+        const container = document.getElementById('paystack-iframe-container');
+        if (!container) {
+          console.log("Payment iframe closed, verifying payment...");
           clearInterval(checkPayment);
           window.removeEventListener('message', messageListener);
           
           // Wait a moment for any redirects to complete, then verify
           setTimeout(async () => {
-            console.log("Verifying payment after window closed...");
+            console.log("Verifying payment after iframe closed...");
             await verifyAndCompletePayment({ ...config, reference: data.data.reference });
           }, 2000);
           
@@ -139,8 +188,9 @@ export const initializeCSPBypassPayment = async (config: PaymentConfig) => {
             console.log("Payment verified via periodic check!");
             clearInterval(checkPayment);
             window.removeEventListener('message', messageListener);
-            if (paymentWindow && !paymentWindow.closed) {
-              paymentWindow.close();
+            const container = document.getElementById('paystack-iframe-container');
+            if (container) {
+              document.body.removeChild(container);
             }
             await verifyAndCompletePayment({ ...config, reference: data.data.reference });
             return;
@@ -152,14 +202,15 @@ export const initializeCSPBypassPayment = async (config: PaymentConfig) => {
       } catch (error) {
         console.log("Payment check error (continuing monitoring):", error);
       }
-    }, 2000);
+    }, 3000);
 
     // Timeout after 10 minutes
     setTimeout(() => {
-      if (!paymentWindow.closed) {
+      const container = document.getElementById('paystack-iframe-container');
+      if (container) {
         clearInterval(checkPayment);
-        console.log("Payment timeout - closing window");
-        paymentWindow.close();
+        console.log("Payment timeout - closing iframe");
+        document.body.removeChild(container);
         config.onClose();
       }
     }, 600000);

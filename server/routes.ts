@@ -317,8 +317,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         </div>
         
         <script>
-          // Notify parent window of payment completion
-          if (window.opener) {
+          // Notify parent window of payment completion (for both popup and iframe)
+          if (window.parent && window.parent !== window) {
+            // We're in an iframe
+            window.parent.postMessage({
+              type: 'PAYMENT_COMPLETED',
+              reference: '${paymentReference}',
+              status: 'success'
+            }, window.location.origin);
+          } else if (window.opener) {
+            // We're in a popup
             window.opener.postMessage({
               type: 'PAYMENT_COMPLETED',
               reference: '${paymentReference}',
@@ -330,7 +338,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               window.close();
             }, 2000);
           } else {
-            // If no parent window, redirect to wallet
+            // Fallback: redirect to wallet
             setTimeout(() => {
               window.location.href = '/wallet?payment=success&reference=${paymentReference}';
             }, 3000);
