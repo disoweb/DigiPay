@@ -71,7 +71,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           email: email,
           amount: amountInKobo,
           currency: 'NGN',
-          callback_url: 'https://digipay.replit.app/wallet?payment=success',
+          callback_url: `${req.protocol}://${req.get('host')}/payment-callback`,
           metadata: {
             user_id: req.user.id,
             source: 'wallet_deposit'
@@ -216,6 +216,73 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Payment callback endpoint for handling successful payments
+  app.get("/payment-callback", (req, res) => {
+    const { reference, trxref } = req.query;
+    const paymentReference = reference || trxref;
+    
+    console.log("Payment callback received:", { reference, trxref, paymentReference });
+    
+    // Send HTML that communicates back to parent window and then redirects
+    res.send(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Payment Completed</title>
+        <meta charset="utf-8">
+        <style>
+          body { 
+            font-family: Arial, sans-serif; 
+            text-align: center; 
+            padding: 50px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+          }
+          .container {
+            background: white;
+            color: #333;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            max-width: 400px;
+            margin: 0 auto;
+          }
+          .success { color: #28a745; font-size: 24px; margin-bottom: 20px; }
+          .loading { color: #6c757d; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="success">✅ Payment Completed!</div>
+          <p class="loading">Updating your balance...</p>
+          <p><small>This window will close automatically</small></p>
+        </div>
+        
+        <script>
+          // Notify parent window of payment completion
+          if (window.opener) {
+            window.opener.postMessage({
+              type: 'PAYMENT_COMPLETED',
+              reference: '${paymentReference}',
+              status: 'success'
+            }, window.location.origin);
+            
+            // Close this window after a short delay
+            setTimeout(() => {
+              window.close();
+            }, 2000);
+          } else {
+            // If no parent window, redirect to wallet
+            setTimeout(() => {
+              window.location.href = '/wallet?payment=success&reference=${paymentReference}';
+            }, 3000);
+          }
+        </script>
+      </body>
+      </html>
+    `);
+  });
+
   console.log("✅ CSP-bypass payment endpoints registered - NO CONFLICTS");
 
   // Setup JWT auth AFTER payment endpoints are registered  

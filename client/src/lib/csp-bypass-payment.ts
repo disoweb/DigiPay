@@ -78,7 +78,7 @@ export const initializeCSPBypassPayment = async (config: PaymentConfig) => {
       
       if (userConfirmed) {
         // Store return URL and payment reference
-        localStorage.setItem('payment_reference', config.reference);
+        localStorage.setItem('payment_reference', data.data.reference);
         localStorage.setItem('payment_return_url', window.location.href);
         
         // Redirect to payment
@@ -92,24 +92,22 @@ export const initializeCSPBypassPayment = async (config: PaymentConfig) => {
     // Step 3: Monitor payment completion
     console.log("Step 3: Monitoring payment completion...");
     
-    // Check for payment completion every 2 seconds
+    // Check for payment completion every 3 seconds
     const checkPayment = setInterval(async () => {
       try {
         // Check if window is closed
         if (paymentWindow.closed) {
           console.log("Payment window closed, verifying payment...");
           clearInterval(checkPayment);
+          window.removeEventListener('message', messageListener);
           
           // Wait a moment for any redirects to complete
           setTimeout(async () => {
-            await verifyAndCompletePayment(config);
+            await verifyAndCompletePayment({ ...config, reference: data.data.reference });
           }, 2000);
           
           return;
         }
-
-        // Also try to verify payment periodically (in case window doesn't close)
-        await verifyPayment(config.reference);
         
       } catch (error) {
         console.log("Payment check error (continuing monitoring):", error);

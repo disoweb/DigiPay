@@ -56,6 +56,9 @@ A peer-to-peer cryptocurrency trading platform enabling direct trading between u
   - **AMOUNT FIX**: Payment verification now uses actual Paystack transaction amount instead of hardcoded values
   - **TRANSACTION HISTORY**: Fixed missing transaction records - deposits now properly recorded in database
   - **BALANCE CALCULATION**: Fixed balance updates to use actual payment amounts from Paystack API verification
+  - **POPUP COMMUNICATION**: Fixed payment popup window communication with parent window using postMessage API
+  - **CALLBACK SYSTEM**: Implemented proper payment callback endpoint to handle successful payments and notify parent window
+  - **WINDOW MESSAGING**: Added message listener to handle payment completion events from popup window
 - **2025-06-25**: Resolved Paystack payment system issue with comprehensive debugging and fallback implementation
   - Root cause identified: Replit's deployment infrastructure enforces CSP headers that block external scripts
   - Implemented HTML meta CSP tag to override restrictions and allow Paystack domains
