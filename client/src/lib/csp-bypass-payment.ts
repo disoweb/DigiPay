@@ -59,8 +59,30 @@ export const initializeCSPBypassPayment = async (config: PaymentConfig) => {
       throw new Error("Invalid payment initialization response");
     }
 
-    // Step 2: Open payment in popup window (better for monitoring)
+    // Step 2: Open payment in popup window with message listener setup
     console.log("Opening Paystack checkout window...");
+    
+    // Listen for messages from the payment callback page
+    const messageListener = (event: MessageEvent) => {
+      if (event.origin !== window.location.origin) return;
+      
+      console.log("Message received from payment window:", event.data);
+      
+      if (event.data.type === 'PAYMENT_COMPLETED') {
+        console.log("Payment completion message received, processing...");
+        clearInterval(checkPayment);
+        window.removeEventListener('message', messageListener);
+        
+        // Verify payment immediately
+        setTimeout(async () => {
+          await verifyAndCompletePayment({ ...config, reference: event.data.reference });
+        }, 1000);
+      }
+    };
+    
+    window.addEventListener('message', messageListener);
+    console.log("Message listener added for payment completion");
+    
     const paymentWindow = window.open(
       data.data.authorization_url,
       'paystack_checkout',
@@ -92,7 +114,7 @@ export const initializeCSPBypassPayment = async (config: PaymentConfig) => {
     // Step 3: Monitor payment completion
     console.log("Step 3: Monitoring payment completion...");
     
-    // Check for payment completion every 3 seconds
+    // Check for payment completion every 2 seconds
     const checkPayment = setInterval(async () => {
       try {
         // Check if window is closed
@@ -101,18 +123,36 @@ export const initializeCSPBypassPayment = async (config: PaymentConfig) => {
           clearInterval(checkPayment);
           window.removeEventListener('message', messageListener);
           
-          // Wait a moment for any redirects to complete
+          // Wait a moment for any redirects to complete, then verify
           setTimeout(async () => {
+            console.log("Verifying payment after window closed...");
             await verifyAndCompletePayment({ ...config, reference: data.data.reference });
           }, 2000);
           
           return;
         }
+
+        // Also periodically try to verify payment in case the message system fails
+        try {
+          const isPaymentSuccessful = await verifyPayment(data.data.reference);
+          if (isPaymentSuccessful) {
+            console.log("Payment verified via periodic check!");
+            clearInterval(checkPayment);
+            window.removeEventListener('message', messageListener);
+            if (paymentWindow && !paymentWindow.closed) {
+              paymentWindow.close();
+            }
+            await verifyAndCompletePayment({ ...config, reference: data.data.reference });
+            return;
+          }
+        } catch (verifyError) {
+          console.log("Periodic verification check failed:", verifyError);
+        }
         
       } catch (error) {
         console.log("Payment check error (continuing monitoring):", error);
       }
-    }, 3000);
+    }, 2000);
 
     // Timeout after 10 minutes
     setTimeout(() => {
