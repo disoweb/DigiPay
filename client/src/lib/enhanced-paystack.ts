@@ -277,12 +277,12 @@ export const initializeEnhancedPaystack = async (config: PaystackConfig) => {
 
     if (!window.PaystackPop) {
       console.error("PaystackPop not available after script load - CSP is blocking scripts");
-      console.log("Activating fallback payment system...");
+      console.log("🔄 Activating fallback payment system...");
       
       // Import and use fallback system immediately
       const { createPaystackFallback } = await import('./paystack-fallback');
       window.PaystackPop = createPaystackFallback();
-      console.log("Fallback PaystackPop created successfully");
+      console.log("✅ Fallback PaystackPop created successfully");
     }
 
     console.log("PaystackPop available, setting up payment...");
