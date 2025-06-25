@@ -414,7 +414,7 @@ export function DepositModal({ open, onOpenChange }: DepositModalProps) {
       }}
     >
       <DialogContent 
-        className="w-[95vw] max-w-md mx-auto max-h-[90vh] overflow-y-auto"
+        className="w-[90vw] max-w-sm mx-auto max-h-[90vh] overflow-y-auto"
         onEscapeKeyDown={(e) => {
           if (isProcessing) {
             e.preventDefault();

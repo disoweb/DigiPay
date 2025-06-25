@@ -300,7 +300,7 @@ export function EnhancedDepositModal({ open, onOpenChange, user }: EnhancedDepos
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md w-full max-w-[95vw] mx-auto">
+      <DialogContent className="sm:max-w-sm w-full max-w-[90vw] mx-auto">
         <DialogHeader className="space-y-4">
           <div className="flex items-center justify-center">
             {getStepIcon(paymentStep)}
