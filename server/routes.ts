@@ -88,9 +88,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       const paystackData = await paystackResponse.json();
+      console.log("Paystack API response status:", paystackResponse.status);
       console.log("Paystack API response:", paystackData);
 
-      if (!paystackData.status) {
+      if (!paystackResponse.ok || !paystackData.status) {
+        console.error("Paystack API error:", paystackData);
         throw new Error(paystackData.message || 'Paystack initialization failed');
       }
       
@@ -104,7 +106,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error) {
       console.error("Payment initialization error:", error);
-      res.status(500).json({ success: false, message: "Payment initialization failed" });
+      console.error("Error details:", error.message);
+      res.status(500).json({ 
+        success: false, 
+        message: "Payment initialization failed",
+        error: error.message 
+      });
     }
   });
 
