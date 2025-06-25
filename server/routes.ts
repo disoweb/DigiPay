@@ -86,7 +86,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/payments/verify", authenticateToken, async (req: any, res: Response) => {
+  app.post("/api/payments/verify", (req: any, res: Response, next: NextFunction) => {
+    console.log("💳 Payment verification endpoint hit");
+    console.log("Auth header:", req.headers.authorization ? "Present" : "Missing");
+    console.log("Body:", req.body);
+    
+    authenticateToken(req, res, next);
+  }, async (req: any, res: Response) => {
     try {
       const { reference } = req.body;
       console.log("Payment verification request:", reference, "by user:", req.user?.id);

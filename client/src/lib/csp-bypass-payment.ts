@@ -134,11 +134,12 @@ export const initializeCSPBypassPayment = async (config: PaymentConfig) => {
 
 const verifyPayment = async (reference: string) => {
   try {
+    const token = localStorage.getItem('digipay_token');
     const response = await fetch('/api/payments/verify', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
+        'Authorization': `Bearer ${token}`
       },
       body: JSON.stringify({ reference })
     });
@@ -155,11 +156,12 @@ const verifyAndCompletePayment = async (config: PaymentConfig) => {
   try {
     console.log("Verifying payment completion...");
     
+    const token = localStorage.getItem('digipay_token');
     const response = await fetch('/api/payments/verify', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
+        'Authorization': `Bearer ${token}`
       },
       body: JSON.stringify({ reference: config.reference })
     });
@@ -204,10 +206,12 @@ export const checkReturnPayment = () => {
 
 const verifyReturnPayment = async (reference: string, returnUrl?: string) => {
   try {
+    const token = localStorage.getItem('digipay_token');
     const response = await fetch('/api/payments/verify', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
         'Authorization': `Bearer ${localStorage.getItem('token')}`
       },
       body: JSON.stringify({ reference })

@@ -1,0 +1,70 @@
+index-BTHs4n69.js:453 No auth token found
+index-BTHs4n69.js:453 No user, redirecting to auth
+inpage.js:1 [ChromeTransport] connect error: Error: MetaMask extension not found
+    at inpage.js:1:16512
+index-BTHs4n69.js:453 Login success, storing token
+index-BTHs4n69.js:502 WebSocket connected for real-time balance updates
+index-BTHs4n69.js:502 WebSocket message received: {type: 'connection_established', data: {…}}
+index-BTHs4n69.js:502 WebSocket message received: {type: 'connected', userId: 1, authenticated: true}
+index-BTHs4n69.js:497 Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+(anonymous) @ index-BTHs4n69.js:497
+Pc @ index-BTHs4n69.js:40
+Sa @ index-BTHs4n69.js:40
+R2 @ index-BTHs4n69.js:40
+br @ index-BTHs4n69.js:40
+Ff @ index-BTHs4n69.js:40
+yr @ index-BTHs4n69.js:38
+(anonymous) @ index-BTHs4n69.js:40
+index-BTHs4n69.js:502 Payment initialization - using CSP-bypass system only
+index-BTHs4n69.js:502 🚀 USING CSP-BYPASS PAYMENT SYSTEM - NO SCRIPT LOADING
+index-BTHs4n69.js:502 This will open Paystack checkout in a popup window
+index-BTHs4n69.js:502 CSP-Bypass Payment: Starting secure payment flow
+index-BTHs4n69.js:502 Initializing payment...
+index-BTHs4n69.js:502 === CLIENT PAYMENT DEBUG ===
+index-BTHs4n69.js:502 Auth token available: true
+index-BTHs4n69.js:502 Token length: 227
+index-BTHs4n69.js:502 Token first 20 chars: eyJhbGciOiJIUzI1NiIs...
+index-BTHs4n69.js:502 Payment data: {amount: 5000, email: 'cyfer33@gmail.com', reference: 'dep_1750838630615_1'}
+index-BTHs4n69.js:502 About to make request to: /api/payments/initialize
+index-BTHs4n69.js:502 ============================
+index-BTHs4n69.js:502 Payment API response status: 200
+index-BTHs4n69.js:502 Payment API response data: {success: true, data: {…}}
+index-BTHs4n69.js:502 Opening Paystack checkout window...
+index-BTHs4n69.js:502 Popup window created: true
+index-BTHs4n69.js:502 Step 3: Monitoring payment completion...
+index-BTHs4n69.js:502 Paystack payment initialized successfully
+index-BTHs4n69.js:502 Payment window closed, verifying payment...
+index-BTHs4n69.js:502 Verifying payment completion...
+index-BTHs4n69.js:502 
+            
+            
+           POST https://digipay.replit.app/api/payments/verify 403 (Forbidden)
+zP @ index-BTHs4n69.js:502
+(anonymous) @ index-BTHs4n69.js:502
+setTimeout
+(anonymous) @ index-BTHs4n69.js:502
+setInterval
+$P @ index-BTHs4n69.js:502
+await in $P
+b @ index-BTHs4n69.js:502
+onSuccess @ index-BTHs4n69.js:502
+execute @ index-BTHs4n69.js:48
+await in execute
+mutate @ index-BTHs4n69.js:48
+(anonymous) @ index-BTHs4n69.js:48
+C @ index-BTHs4n69.js:502
+Qb @ index-BTHs4n69.js:37
+Xb @ index-BTHs4n69.js:37
+Zb @ index-BTHs4n69.js:37
+sf @ index-BTHs4n69.js:37
+c0 @ index-BTHs4n69.js:37
+(anonymous) @ index-BTHs4n69.js:37
+yh @ index-BTHs4n69.js:40
+Fg @ index-BTHs4n69.js:37
+Rd @ index-BTHs4n69.js:37
+qm @ index-BTHs4n69.js:37
+x1 @ index-BTHs4n69.js:37
+index-BTHs4n69.js:502 Payment verification response: {error: 'Invalid or expired token'}
+index-BTHs4n69.js:502 ❌ Payment verification failed or cancelled
+index-BTHs4n69.js:502 CSP-Bypass payment cancelled or failed
+index-BTHs4n69.js:502 WebSocket message received: {type: 'pong'}
