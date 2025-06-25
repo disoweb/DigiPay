@@ -144,6 +144,8 @@ export function EnhancedDepositModal({ open, onOpenChange, user }: EnhancedDepos
         toast({
           title: "Payment Successful!",
           description: `₦${parseFloat(amount).toLocaleString()} added to your wallet instantly`,
+          className: "border-green-200 bg-green-50 text-green-800",
+          duration: 5000,
         });
 
         // Auto-close modal after success without page refresh

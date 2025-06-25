@@ -98,14 +98,8 @@ export function useRealtimeBalance() {
               queryClient.invalidateQueries({ queryKey: ["/api/user"] });
               queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
               
-              // Show notification based on transaction type
-              if (data.lastTransaction?.type === 'deposit') {
-                toast({
-                  title: "Deposit Successful!",
-                  description: `₦${parseFloat(data.depositAmount).toLocaleString()} credited to your wallet`,
-                  className: "border-green-200 bg-green-50 text-green-800",
-                });
-              } else if (data.lastTransaction?.type === 'trade_completion') {
+              // Remove the problematic green toast - let the payment modal handle success notifications
+              if (data.lastTransaction?.type === 'trade_completion') {
                 const currency = data.lastTransaction.currency;
                 const amount = parseFloat(data.lastTransaction.amount);
                 toast({
