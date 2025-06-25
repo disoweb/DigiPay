@@ -43,6 +43,12 @@ export function checkPendingPayments(): void {
       if (timeSincePayment < 10 * 60 * 1000) {
         console.log('Found pending payment, verifying in background');
         verifyPaymentInBackground(paymentData.reference);
+        
+        // If this was a preloaded wallet, show success toast
+        if (paymentData.needsPreload) {
+          console.log('Wallet loaded after payment - showing success notification');
+          // Optional: Could trigger a success toast here
+        }
       }
       
       // Clean up pending payment data

@@ -390,8 +390,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           button {
             background: #22C55E; color: white; border: none; padding: 12px 24px;
             border-radius: 8px; font-size: 14px; cursor: pointer; margin-top: 16px;
+            transition: all 0.3s ease;
           }
-          button:hover { background: #16a34a; }
+          button:hover:not(:disabled) { background: #16a34a; }
+          button:disabled {
+            background: #9ca3af; cursor: not-allowed; opacity: 0.7;
+          }
         </style>
       </head>
       <body>
@@ -403,7 +407,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
             Updating your wallet balance...
           </div>
           <div id="actions" style="display: none;">
-            <button onclick="goToWallet()">Go to Wallet</button>
+            <button id="walletBtn" onclick="goToWallet()" disabled>
+              <span id="btnText">Preparing Wallet...</span>
+            </button>
           </div>
         </div>
         
@@ -441,11 +447,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 if (data.success && data.data.status === 'success') {
                   document.getElementById('status').innerHTML = 'Payment successful! ₦' + data.data.amount + ' added to wallet.';
                   document.getElementById('status').className = 'status success';
+                  document.getElementById('actions').style.display = 'block';
                   
-                  // Quick redirect after successful verification
-                  setTimeout(() => {
-                    window.location.href = '/wallet';
-                  }, 1500);
+                  // Preload wallet page in background
+                  preloadWallet();
                 } else {
                   throw new Error(data.message || 'Verification failed');
                 }
@@ -521,6 +526,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
               document.getElementById('status').className = 'status error';
               document.getElementById('actions').style.display = 'block';
             }
+          }
+          
+          let walletPreloaded = false;
+          
+          function preloadWallet() {
+            console.log('Starting wallet preload...');
+            
+            // Create hidden iframe to preload wallet
+            const iframe = document.createElement('iframe');
+            iframe.src = '/wallet';
+            iframe.style.display = 'none';
+            iframe.style.position = 'absolute';
+            iframe.style.width = '100%';
+            iframe.style.height = '100%';
+            
+            iframe.onload = function() {
+              console.log('Wallet preloaded successfully');
+              walletPreloaded = true;
+              
+              // Enable the button and change text
+              const btn = document.getElementById('walletBtn');
+              const btnText = document.getElementById('btnText');
+              btn.disabled = false;
+              btn.style.background = '#22C55E';
+              btn.style.cursor = 'pointer';
+              btnText.textContent = 'View Wallet';
+              
+              // Auto-redirect after wallet is ready (with small delay for UX)
+              setTimeout(() => {
+                if (!document.hidden) {
+                  window.location.href = '/wallet';
+                }
+              }, 2000);
+            };
+            
+            iframe.onerror = function() {
+              console.log('Wallet preload failed, enabling direct navigation');
+              walletPreloaded = true;
+              
+              const btn = document.getElementById('walletBtn');
+              const btnText = document.getElementById('btnText');
+              btn.disabled = false;
+              btn.style.background = '#22C55E';
+              btn.style.cursor = 'pointer';
+              btnText.textContent = 'View Wallet';
+            };
+            
+            document.body.appendChild(iframe);
           }
           
           function goToWallet() {
