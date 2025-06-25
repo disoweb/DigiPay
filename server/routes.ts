@@ -164,23 +164,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Get actual amount from Paystack (convert from kobo to naira)
       const actualAmount = verifyData.data.amount / 100;
-      console.log("Actual payment amount:", actualAmount, "NGN");
+      console.log(`CRITICAL CHECK: Actual payment amount: ${actualAmount} NGN`);
+      console.log(`CRITICAL CHECK: Current user balance: ${req.user.nairaBalance} NGN`);
       
-      // Check if this transaction already exists to prevent double crediting
+      // CRITICAL: Check if transaction already processed using paystack_ref to prevent duplicate crediting
       let existingTransaction = null;
       try {
-        existingTransaction = await storage.getTransactionByReference(reference);
+        existingTransaction = await storage.getTransactionByPaystackRef(reference);
       } catch (dbError) {
         console.error("Database error checking existing transaction:", dbError);
-        // Continue with processing since we can't verify if it exists
       }
       
       if (existingTransaction) {
-        console.log("Transaction already processed:", reference);
+        console.log(`DUPLICATE PREVENTION: Transaction ${reference} already exists with amount ${existingTransaction.amount}`);
         return res.json({
           success: true,
           data: {
-            status: 'success',
+            status: 'already_processed',
+            message: 'Payment already processed - preventing duplicate credit',
+            amount: existingTransaction.amount,
+            balance: req.user.nairaBalance
+          }
+        });
+      }
+      
+      // Additional safety check - look for recent similar transactions
+      const recentTransactions = await storage.getTransactionsByUser(req.user.id);
+      const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+      const duplicateCheck = recentTransactions.find(t => 
+        t.type === 'deposit' && 
+        t.amount === actualAmount.toString() && 
+        t.createdAt && new Date(t.createdAt) > fiveMinutesAgo
+      );
+      
+      if (duplicateCheck) {
+        console.log(`DUPLICATE PREVENTION: Similar transaction found within 5 minutes - amount: ${actualAmount}`);
+        return res.json({
+          success: true,
+          data: {
+            status: 'duplicate_detected',
             reference: reference,
             amount: parseFloat(existingTransaction.amount),
             message: 'Payment already processed'
