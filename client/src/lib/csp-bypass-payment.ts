@@ -67,12 +67,11 @@ export const initializeCSPBypassPayment = async (config: PaymentConfig) => {
       localStorage.setItem('pending_payment_reference', data.data.reference);
       localStorage.setItem('pending_payment_amount', (config.amount / 100).toString());
       
-      // Store payment details for success callback and preloading
+      // Store payment details for success callback
       sessionStorage.setItem('payment_processing', JSON.stringify({
         reference: data.data.reference,
         amount: config.amount / 100,
-        timestamp: Date.now(),
-        needsPreload: true
+        timestamp: Date.now()
       }));
       
       // Redirect directly to Paystack without modifying the URL

@@ -390,12 +390,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           button {
             background: #22C55E; color: white; border: none; padding: 12px 24px;
             border-radius: 8px; font-size: 14px; cursor: pointer; margin-top: 16px;
-            transition: all 0.3s ease;
           }
-          button:hover:not(:disabled) { background: #16a34a; }
-          button:disabled {
-            background: #9ca3af; cursor: not-allowed; opacity: 0.7;
-          }
+          button:hover { background: #16a34a; }
         </style>
       </head>
       <body>
@@ -407,12 +403,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             Updating your wallet balance...
           </div>
           <div id="actions" style="display: none;">
-            <button id="walletBtn" onclick="goToWallet()" disabled>
-              <span id="btnText">Preparing Wallet...</span>
-            </button>
-            <p style="margin-top: 10px; font-size: 14px; color: #666;">
-              Your payment was successful. Click "View Wallet" when ready to see your updated balance.
-            </p>
+            <button onclick="goToWallet()">Go to Wallet</button>
           </div>
         </div>
         
@@ -450,12 +441,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 if (data.success && data.data.status === 'success') {
                   document.getElementById('status').innerHTML = 'Payment successful! ₦' + data.data.amount + ' added to wallet.';
                   document.getElementById('status').className = 'status success';
-                  document.getElementById('actions').style.display = 'block';
                   
-                  // Start preparing wallet navigation
+                  // Quick redirect after successful verification
                   setTimeout(() => {
-                    preloadWallet();
-                  }, 500);
+                    window.location.href = '/wallet';
+                  }, 1500);
                 } else {
                   throw new Error(data.message || 'Verification failed');
                 }
@@ -531,44 +521,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
               document.getElementById('status').className = 'status error';
               document.getElementById('actions').style.display = 'block';
             }
-          }
-          
-          let walletReady = false;
-          
-          function preloadWallet() {
-            console.log('Preparing wallet navigation...');
-            
-            // Preload wallet resources in background
-            fetch('/wallet', { 
-              method: 'GET',
-              headers: {
-                'Authorization': 'Bearer ' + localStorage.getItem('digipay_token')
-              }
-            }).then(() => {
-              console.log('Wallet resources preloaded');
-              walletReady = true;
-              
-              // Enable the button and change text
-              const btn = document.getElementById('walletBtn');
-              const btnText = document.getElementById('btnText');
-              btn.disabled = false;
-              btn.style.background = '#22C55E';
-              btn.style.cursor = 'pointer';
-              btnText.textContent = 'View Wallet';
-              
-              // Show manual option - NO automatic redirect
-              console.log('Wallet ready - manual navigation enabled');
-            }).catch(() => {
-              console.log('Wallet preload completed, enabling navigation');
-              walletReady = true;
-              
-              const btn = document.getElementById('walletBtn');
-              const btnText = document.getElementById('btnText');
-              btn.disabled = false;
-              btn.style.background = '#22C55E';
-              btn.style.cursor = 'pointer';
-              btnText.textContent = 'View Wallet';
-            });
           }
           
           function goToWallet() {
