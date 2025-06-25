@@ -145,23 +145,42 @@ export function EnhancedDepositModal({ open, onOpenChange, user }: EnhancedDepos
         `;
         document.body.appendChild(processingOverlay);
         
-        // Remove overlay after balance updates
+        // Remove overlay after balance updates and ensure wallet is interactive
         setTimeout(() => {
           const overlay = document.getElementById('payment-processing-overlay');
           if (overlay) {
             overlay.remove();
           }
-        }, 3000);
+          
+          // Force remove any CSS properties that might be blocking interaction
+          document.body.style.removeProperty('overflow');
+          document.body.style.removeProperty('position');
+          document.body.style.removeProperty('pointer-events');
+          document.documentElement.style.removeProperty('overflow');
+          document.documentElement.style.removeProperty('position');
+          document.documentElement.style.removeProperty('pointer-events');
+          
+          // Remove any paystack classes that might interfere
+          document.body.classList.remove('paystack-open');
+          document.documentElement.classList.remove('paystack-open');
+          
+          // Force a reflow to ensure styles are applied immediately
+          document.body.offsetHeight;
+          
+          console.log('Payment processing complete - wallet should be fully interactive');
+        }, 2500);
         
         // Force immediate balance refresh - WebSocket should handle this but ensure UI updates
         setTimeout(() => {
           queryClient.invalidateQueries({ queryKey: ["/api/user"] });
           queryClient.refetchQueries({ queryKey: ["/api/user"] });
           queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
-        }, 500);
+        }, 1000);
         
-        // Remove paystack scroll lock to prevent freezing
+        // Remove paystack scroll lock and any blocking styles immediately
         document.body.classList.remove('paystack-open');
+        document.body.style.removeProperty('overflow');
+        document.body.style.removeProperty('position');
         
         toast({
           title: "Payment Successful!",
