@@ -73,29 +73,32 @@ export const initializeCSPBypassPayment = async (config: PaymentConfig) => {
         clearInterval(checkPayment);
         window.removeEventListener('message', messageListener);
         
-        // Show loading indicator immediately during callback processing
+        // INSTANTLY show loading indicator - no blank page
         const container = document.getElementById('paystack-iframe-container');
         if (container) {
-          // Clear all content first
-          container.innerHTML = '';
-          
-          const callbackLoadingDiv = document.createElement('div');
-          callbackLoadingDiv.style.cssText = `
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(255, 255, 255, 0.98);
-            z-index: 1001;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 16px;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            border-radius: 12px;
-          `;
+          // Get the iframe wrapper that has the modal dimensions
+          const iframeWrapper = container.querySelector('[data-payment-iframe-wrapper]');
+          if (iframeWrapper) {
+            // Clear iframe wrapper content immediately
+            iframeWrapper.innerHTML = '';
+            
+            const callbackLoadingDiv = document.createElement('div');
+            callbackLoadingDiv.style.cssText = `
+              position: absolute;
+              top: 0;
+              left: 0;
+              width: 100%;
+              height: 100%;
+              background: white;
+              z-index: 1001;
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              justify-content: center;
+              gap: 16px;
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+              border-radius: 12px;
+            `;
           callbackLoadingDiv.innerHTML = `
             <div style="width: 32px; height: 32px; border: 3px solid #e0e7ff; border-top: 3px solid #10b981; border-radius: 50%; animation: spin 1s linear infinite;"></div>
             <div style="text-align: center;">
@@ -110,8 +113,9 @@ export const initializeCSPBypassPayment = async (config: PaymentConfig) => {
             </style>
           `;
           
-          // Replace all container content with loading indicator
-          container.appendChild(callbackLoadingDiv);
+            // Add loading indicator to iframe wrapper immediately
+            iframeWrapper.appendChild(callbackLoadingDiv);
+          }
         }
         
         // Start verification immediately - no delays at all
