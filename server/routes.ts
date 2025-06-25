@@ -236,12 +236,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
           });
 
+          let messageSent = false;
           wsServer.clients.forEach((client: any) => {
             if (client.readyState === 1 && client.userId === req.user.id) { // WebSocket.OPEN = 1
               client.send(updateMessage);
-              console.log("✅ Real-time balance update sent via WebSocket");
+              messageSent = true;
+              console.log("✅ Real-time balance update sent via WebSocket to user", req.user.id);
             }
           });
+          
+          if (!messageSent) {
+            console.log("⚠️ No active WebSocket connections found for user", req.user.id);
+          }
         } else {
           console.log("⚠️ WebSocket server not available for real-time updates");
         }
