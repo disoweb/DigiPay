@@ -13,7 +13,7 @@ interface PaymentConfig {
 
 export const initializeCSPBypassPayment = async (config: PaymentConfig) => {
   console.log("CSP-Bypass Payment: Starting secure payment flow");
-  
+
   try {
     // Step 1: Initialize payment via our API
     console.log("Initializing payment...");
@@ -33,7 +33,7 @@ export const initializeCSPBypassPayment = async (config: PaymentConfig) => {
     });
     console.log("About to make request to:", '/api/payments/initialize');
     console.log("============================");
-    
+
     const response = await fetch('/api/payments/initialize', {
       method: 'POST',
       headers: {
@@ -50,7 +50,7 @@ export const initializeCSPBypassPayment = async (config: PaymentConfig) => {
     const data = await response.json();
     console.log("Payment API response status:", response.status);
     console.log("Payment API response data:", data);
-    
+
     if (!response.ok) {
       throw new Error(`Payment API Error: ${response.status} - ${data.message || data.error || 'Unknown error'}`);
     }
@@ -61,63 +61,61 @@ export const initializeCSPBypassPayment = async (config: PaymentConfig) => {
 
     // Step 2: Open payment in popup window with message listener setup
     console.log("Opening Paystack checkout window...");
-    
+
     // Listen for messages from the payment callback page
     const messageListener = (event: MessageEvent) => {
       if (event.origin !== window.location.origin) return;
-      
+
       console.log("Message received from payment window:", event.data);
-      
+
       if (event.data.type === 'PAYMENT_COMPLETED') {
         console.log("Payment completion message received, processing...");
         clearInterval(checkPayment);
         window.removeEventListener('message', messageListener);
-        
-        // CRITICAL: Prevent any possible iframe refresh or blank page by immediate replacement
 
+        // Create loading indicator first
+        const callbackLoadingDiv = document.createElement('div');
+        callbackLoadingDiv.style.cssText = `
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: white;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 1001;
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        `;
+        callbackLoadingDiv.innerHTML = `
+          <div style="display: flex; align-items: center; gap: 12px; padding: 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+            <div style="width: 20px; height: 20px; border: 2px solid #e0e7ff; border-top: 2px solid #10b981; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+            <span style="color: #374151;">Processing payment...</span>
+          </div>
+          <style>
+            @keyframes spin {
+              0% { transform: rotate(0deg); }
+              100% { transform: rotate(360deg); }
+            }
+          </style>
+        `;
+
+        // Add loading indicator first, then hide iframe
         const container = document.getElementById('paystack-iframe-container');
         if (container) {
           // Get the iframe wrapper that has the modal dimensions
           const iframeWrapper = container.querySelector('[data-payment-iframe-wrapper]');
           if (iframeWrapper) {
-            // IMMEDIATELY hide iframe and show loading - prevent any blank frame
+            iframeWrapper.appendChild(callbackLoadingDiv);
+
             const iframe = iframeWrapper.querySelector('iframe');
             if (iframe) {
               iframe.style.display = 'none';
             }
-            
-            const callbackLoadingDiv = document.createElement('div');
-            callbackLoadingDiv.style.cssText = `
-              position: absolute;
-              top: 50%;
-              left: 50%;
-              transform: translate(-50%, -50%);
-              background: white;
-              padding: 20px;
-              border-radius: 8px;
-              box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-              z-index: 1000;
-              display: flex;
-              align-items: center;
-              gap: 12px;
-              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            `;
-          callbackLoadingDiv.innerHTML = `
-            <div style="width: 20px; height: 20px; border: 2px solid #e0e7ff; border-top: 2px solid #10b981; border-radius: 50%; animation: spin 1s linear infinite;"></div>
-            <span style="color: #374151;">Processing payment...</span>
-            <style>
-              @keyframes spin {
-                0% { transform: rotate(0deg); }
-                100% { transform: rotate(360deg); }
-              }
-            </style>
-          `;
-          
-            // Add loading indicator to iframe wrapper immediately
-            iframeWrapper.appendChild(callbackLoadingDiv);
           }
         }
-        
+
         // Start verification immediately - no delays at all
         verifyAndCompletePayment({ ...config, reference: event.data.reference }).then(() => {
           // Close immediately after verification completes
@@ -128,10 +126,10 @@ export const initializeCSPBypassPayment = async (config: PaymentConfig) => {
         });
       }
     };
-    
+
     window.addEventListener('message', messageListener);
     console.log("Message listener added for payment completion");
-    
+
     // Create inline iframe container instead of popup
     const iframeContainer = document.createElement('div');
     iframeContainer.id = 'paystack-iframe-container';
@@ -149,7 +147,7 @@ export const initializeCSPBypassPayment = async (config: PaymentConfig) => {
       padding: 20px;
       box-sizing: border-box;
     `;
-    
+
     const iframeWrapper = document.createElement('div');
     iframeWrapper.style.cssText = `
       position: relative;
@@ -161,7 +159,7 @@ export const initializeCSPBypassPayment = async (config: PaymentConfig) => {
       overflow: hidden;
       box-shadow: 0 20px 60px rgba(0,0,0,0.5);
     `;
-    
+
     const closeButton = document.createElement('button');
     closeButton.innerHTML = '×';
     closeButton.style.cssText = `
@@ -181,7 +179,7 @@ export const initializeCSPBypassPayment = async (config: PaymentConfig) => {
       justify-content: center;
       box-shadow: 0 2px 10px rgba(0,0,0,0.2);
     `;
-    
+
     const iframe = document.createElement('iframe');
     iframe.src = data.data.authorization_url;
     iframe.style.cssText = `
@@ -190,7 +188,7 @@ export const initializeCSPBypassPayment = async (config: PaymentConfig) => {
       border: none;
       background: white;
     `;
-    
+
     // Add loading indicator while iframe loads
     const loadingDiv = document.createElement('div');
     loadingDiv.style.cssText = `
@@ -218,7 +216,7 @@ export const initializeCSPBypassPayment = async (config: PaymentConfig) => {
         }
       </style>
     `;
-    
+
     // Remove loading indicator when iframe loads
     iframe.onload = () => {
       setTimeout(() => {
@@ -227,15 +225,15 @@ export const initializeCSPBypassPayment = async (config: PaymentConfig) => {
         }
       }, 1000);
     };
-    
+
     closeButton.onclick = () => {
       document.body.removeChild(iframeContainer);
       config.onClose();
     };
-    
+
     // Add data attribute for easy selection
     iframeWrapper.setAttribute('data-payment-iframe-wrapper', 'true');
-    
+
     iframeWrapper.appendChild(iframe);
     iframeWrapper.appendChild(closeButton);
     iframeWrapper.appendChild(loadingDiv);
@@ -246,7 +244,7 @@ export const initializeCSPBypassPayment = async (config: PaymentConfig) => {
 
     // Step 3: Monitor payment completion
     console.log("Step 3: Monitoring payment completion...");
-    
+
     // Check for payment completion every 3 seconds
     const checkPayment = setInterval(async () => {
       try {
@@ -256,19 +254,19 @@ export const initializeCSPBypassPayment = async (config: PaymentConfig) => {
           console.log("Payment iframe closed, verifying payment...");
           clearInterval(checkPayment);
           window.removeEventListener('message', messageListener);
-          
+
           // Wait a moment for any redirects to complete, then verify
           setTimeout(async () => {
             console.log("Verifying payment after iframe closed...");
             await verifyAndCompletePayment({ ...config, reference: data.data.reference });
           }, 2000);
-          
+
           return;
         }
 
         // DISABLED: Periodic verification to prevent duplicate processing
         // Payment verification is handled only via message system and manual verification
-        
+
       } catch (error) {
         console.log("Payment check error (continuing monitoring):", error);
       }
@@ -314,7 +312,7 @@ const verifyPayment = async (reference: string) => {
 const verifyAndCompletePayment = async (config: PaymentConfig) => {
   try {
     console.log("Verifying payment completion...");
-    
+
     const token = localStorage.getItem('digipay_token');
     const response = await fetch('/api/payments/verify', {
       method: 'POST',
@@ -350,14 +348,14 @@ export const checkReturnPayment = () => {
   const urlParams = new URLSearchParams(window.location.search);
   const reference = urlParams.get('reference') || localStorage.getItem('payment_reference');
   const returnUrl = localStorage.getItem('payment_return_url');
-  
+
   if (reference && window.location.search.includes('reference')) {
     console.log("Payment return detected, verifying...");
-    
+
     // Clean up stored data
     localStorage.removeItem('payment_reference');
     localStorage.removeItem('payment_return_url');
-    
+
     // Verify payment and show result
     verifyReturnPayment(reference, returnUrl);
   }
@@ -376,10 +374,10 @@ const verifyReturnPayment = async (reference: string, returnUrl?: string) => {
     });
 
     const data = await response.json();
-    
+
     if (data.success) {
       alert("Payment successful! Your deposit will be processed shortly.");
-      
+
       // Redirect back to original page if available
       if (returnUrl && returnUrl !== window.location.href) {
         window.location.href = returnUrl;

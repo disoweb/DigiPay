@@ -194,9 +194,12 @@ export function EnhancedDepositModal({ open, onOpenChange, user }: EnhancedDepos
         callback: (response: any) => {
           console.log("CSP-Bypass payment callback received:", response);
           if (response.status === 'success') {
+            // Immediately set verifying state to prevent blank page
             setPaymentStep('verifying');
+            setIsProcessing(true);
             if (!hasVerifiedRef.current) {
               hasVerifiedRef.current = true;
+              // Start verification immediately without any delay
               verifyPaymentMutation.mutate(response.reference);
             }
           } else {
