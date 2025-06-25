@@ -39,41 +39,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }, async (req: any, res: Response) => {
     try {
       console.log("🔍 Full request body:", JSON.stringify(req.body, null, 2));
-      const { amount, email, reference } = req.body;
-      console.log("💳 Extracted fields:", { amount, email, reference, userId: req.user?.id });
-      console.log("💳 Field types:", { 
-        amount: typeof amount, 
-        email: typeof email, 
-        reference: typeof reference 
-      });
+      const { amount, email } = req.body;
+      console.log("💳 Extracted fields:", { amount, email, userId: req.user?.id });
       
       if (!req.user) {
         console.log("❌ No authenticated user found");
         return res.status(401).json({ success: false, message: "Authentication required" });
       }
 
-      if (!amount || !email || !reference) {
+      if (!amount || !email) {
         console.log("❌ Missing fields validation failed:");
         console.log("  - amount:", amount, "present:", !!amount);
         console.log("  - email:", email, "present:", !!email);  
-        console.log("  - reference:", reference, "present:", !!reference);
         return res.status(400).json({ 
           success: false, 
-          message: "Missing required fields", 
-          debug: { amount: !!amount, email: !!email, reference: !!reference }
-        });
-      }
-      
-      // Check if this reference already exists in our database
-      const existingTransaction = await storage.getTransactionByReference(reference);
-      if (existingTransaction) {
-        console.log("Reference already exists in database, generating new one");
-        const newReference = `dep_${req.user.id}_${Date.now()}_${Math.floor(Math.random() * 1000000)}`;
-        console.log("New reference:", newReference);
-        return res.json({
-          success: false,
-          message: "Reference conflict, please retry",
-          newReference: newReference
+          message: "Missing required fields: amount and email"
         });
       }
 
@@ -90,7 +70,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         body: JSON.stringify({
           email: email,
           amount: amountInKobo,
-          reference: reference,
           currency: 'NGN',
           callback_url: 'https://digipay.replit.app/wallet?payment=success',
           metadata: {
