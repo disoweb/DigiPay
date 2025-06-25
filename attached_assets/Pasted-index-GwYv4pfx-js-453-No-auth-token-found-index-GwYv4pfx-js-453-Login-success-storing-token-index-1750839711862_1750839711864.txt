@@ -1,0 +1,37 @@
+index-GwYv4pfx.js:453 No auth token found
+index-GwYv4pfx.js:453 Login success, storing token
+index-GwYv4pfx.js:502 WebSocket connected for real-time balance updates
+index-GwYv4pfx.js:502 WebSocket message received: {type: 'connection_established', data: {…}}
+index-GwYv4pfx.js:502 WebSocket message received: {type: 'connected', userId: 1, authenticated: true}
+index-GwYv4pfx.js:497 Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+(anonymous) @ index-GwYv4pfx.js:497
+Pc @ index-GwYv4pfx.js:40
+Sa @ index-GwYv4pfx.js:40
+R2 @ index-GwYv4pfx.js:40
+br @ index-GwYv4pfx.js:40
+Ff @ index-GwYv4pfx.js:40
+yr @ index-GwYv4pfx.js:38
+(anonymous) @ index-GwYv4pfx.js:40
+index-GwYv4pfx.js:502 Payment initialization - using CSP-bypass system only
+index-GwYv4pfx.js:502 🚀 USING CSP-BYPASS PAYMENT SYSTEM - NO SCRIPT LOADING
+index-GwYv4pfx.js:502 This will open Paystack checkout in a popup window
+index-GwYv4pfx.js:502 CSP-Bypass Payment: Starting secure payment flow
+index-GwYv4pfx.js:502 Initializing payment...
+index-GwYv4pfx.js:502 === CLIENT PAYMENT DEBUG ===
+index-GwYv4pfx.js:502 Auth token available: true
+index-GwYv4pfx.js:502 Token length: 227
+index-GwYv4pfx.js:502 Token first 20 chars: eyJhbGciOiJIUzI1NiIs...
+index-GwYv4pfx.js:502 Payment data: {amount: 1000, email: 'cyfer33@gmail.com', reference: 'dep_1750839671181_1'}
+index-GwYv4pfx.js:502 About to make request to: /api/payments/initialize
+index-GwYv4pfx.js:502 ============================
+index-GwYv4pfx.js:502 Payment API response status: 200
+index-GwYv4pfx.js:502 Payment API response data: {success: true, data: {…}}
+index-GwYv4pfx.js:502 Opening Paystack checkout window...
+index-GwYv4pfx.js:502 Popup window created: true
+index-GwYv4pfx.js:502 Step 3: Monitoring payment completion...
+index-GwYv4pfx.js:502 Paystack payment initialized successfully
+index-GwYv4pfx.js:502 Payment window closed, verifying payment...
+index-GwYv4pfx.js:502 Verifying payment completion...
+index-GwYv4pfx.js:502 Payment verification response: {success: true, data: {…}}
+index-GwYv4pfx.js:502 ✅ Payment verified successfully!
+index-GwYv4pfx.js:502 CSP-Bypass payment callback received: {status: 'success', reference: 'dep_1750839671181_1', transaction: 'dep_1750839671181_1'}

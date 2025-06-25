@@ -64,20 +64,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      // Create Paystack checkout URL with proper parameters
-      const publicKey = process.env.PAYSTACK_PUBLIC_KEY || 'pk_test_b8a2df1674987e25bebaa75dcadd31ce36e5fb5b';
+      // Initialize transaction with Paystack API
+      const paystackSecretKey = process.env.PAYSTACK_SECRET_KEY || 'sk_test_7c30d4c30302ab01124b5593a498326ff37000f1';
       const amountInKobo = Math.round(amount * 100);
       
-      const paystackUrl = `https://checkout.paystack.com/v2/checkout?public_key=${publicKey}&amount=${amountInKobo}&email=${encodeURIComponent(email)}&reference=${reference}&currency=NGN&callback_url=${encodeURIComponent('https://digipay.replit.app/wallet?payment=success')}`;
-      
-      console.log("Paystack URL generated:", paystackUrl);
+      const paystackResponse = await fetch('https://api.paystack.co/transaction/initialize', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${paystackSecretKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          email: email,
+          amount: amountInKobo,
+          reference: reference,
+          currency: 'NGN',
+          callback_url: 'https://digipay.replit.app/wallet?payment=success',
+          metadata: {
+            user_id: req.user.id,
+            source: 'wallet_deposit'
+          }
+        })
+      });
+
+      const paystackData = await paystackResponse.json();
+      console.log("Paystack API response:", paystackData);
+
+      if (!paystackData.status) {
+        throw new Error(paystackData.message || 'Paystack initialization failed');
+      }
       
       res.json({
         success: true,
         data: {
-          authorization_url: paystackUrl,
-          access_code: reference,
-          reference: reference
+          authorization_url: paystackData.data.authorization_url,
+          access_code: paystackData.data.access_code,
+          reference: paystackData.data.reference
         }
       });
     } catch (error) {
