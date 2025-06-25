@@ -93,7 +93,6 @@ export function EnhancedDepositModal({ open, onOpenChange, user }: EnhancedDepos
       });
       if (!res.ok) {
         const errorData = await res.json();
-
         throw new Error(errorData.message || 'Payment initialization failed');
       }
       return res.json();

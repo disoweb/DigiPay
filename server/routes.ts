@@ -140,10 +140,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const verifyData = await verifyResponse.json();
       console.log("Paystack verification response:", verifyData);
       
-      if (!verifyData.status || verifyData.data.status !== 'success') {
+      if (!verifyData.status) {
         return res.status(400).json({ 
           success: false, 
-          message: "Payment verification failed or payment not successful" 
+          message: "Payment verification failed - invalid response from Paystack" 
+        });
+      }
+      
+      if (verifyData.data.status !== 'success') {
+        const statusMessages = {
+          'abandoned': 'Payment was not completed. Please try again.',
+          'failed': 'Payment failed. Please check your card details and try again.',
+          'ongoing': 'Payment is still being processed. Please wait.',
+          'pending': 'Payment is pending. Please wait for confirmation.'
+        };
+        
+        return res.status(400).json({ 
+          success: false, 
+          message: statusMessages[verifyData.data.status] || `Payment ${verifyData.data.status}. Please try again.`,
+          paymentStatus: verifyData.data.status
         });
       }
       
