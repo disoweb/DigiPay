@@ -12,6 +12,8 @@ export const initializeFallbackPayment = async (config: FallbackPaymentConfig) =
   console.log("Initializing fallback payment system...");
   
   try {
+    console.log("Fallback payment: Initializing direct Paystack API call...");
+    
     // Try direct API call to initialize payment
     const response = await fetch('/api/payments/initialize', {
       method: 'POST',
@@ -25,6 +27,8 @@ export const initializeFallbackPayment = async (config: FallbackPaymentConfig) =
         reference: config.reference
       })
     });
+
+    console.log("Fallback payment: API response status:", response.status);
 
     if (!response.ok) {
       throw new Error('Failed to initialize payment');
