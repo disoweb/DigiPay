@@ -103,7 +103,9 @@ export function EnhancedDepositModal({ open, onOpenChange, user }: EnhancedDepos
       });
     },
     onSuccess: () => {
+      // Immediate state transition
       setStep('success');
+      setIsLoading(false);
 
       // Refresh balance immediately
       queryClient.invalidateQueries({ queryKey: ["/api/user"] });
@@ -115,10 +117,10 @@ export function EnhancedDepositModal({ open, onOpenChange, user }: EnhancedDepos
         className: "border-green-200 bg-green-50 text-green-800",
       });
 
-      // Auto-close after 2 seconds
+      // Auto-close after 2.5 seconds to show success state
       setTimeout(() => {
         onOpenChange(false);
-      }, 2000);
+      }, 2500);
     },
     onError: (error: any) => {
       processingRef.current = false;

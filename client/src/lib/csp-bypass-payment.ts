@@ -150,36 +150,39 @@ export const initializeCSPBypassPayment = async (config: PaymentConfig) => {
         clearInterval(checkPayment);
         window.removeEventListener('message', messageListener);
 
-        // Show verification loading
+        // Hide iframe and show immediate success verification
         iframe.style.display = 'none';
         loading.innerHTML = `
-          <div style="width: 20px; height: 20px; border: 2px solid #e0e7ff; border-top: 2px solid #10b981; border-radius: 50%; animation: spin 1s linear infinite;"></div>
-          <span style="color: #374151;">Verifying payment...</span>
+          <div style="width: 24px; height: 24px; border: 3px solid #e0e7ff; border-top: 3px solid #10b981; border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
+          <span style="color: #10b981; font-weight: 600;">Payment Successful! Completing...</span>
         `;
         loading.style.display = 'flex';
 
-        // Verify and complete
+        // Verify and complete immediately without delay
         verifyPayment(config, event.data.reference).then(() => {
-          document.body.removeChild(container);
+          // Remove container immediately after verification
+          setTimeout(() => {
+            if (document.getElementById('paystack-payment-container')) {
+              document.body.removeChild(container);
+            }
+          }, 100);
         });
       }
     };
 
     window.addEventListener('message', messageListener);
 
-    // Check for window close every 3 seconds
+    // Check for window close every 2 seconds
     const checkPayment = setInterval(async () => {
       const currentContainer = document.getElementById('paystack-payment-container');
       if (!currentContainer) {
         clearInterval(checkPayment);
         window.removeEventListener('message', messageListener);
 
-        // Verify payment after close
-        setTimeout(() => {
-          verifyPayment(config, data.data.reference);
-        }, 1000);
+        // Verify payment immediately after close
+        verifyPayment(config, data.data.reference);
       }
-    }, 3000);
+    }, 2000);
 
     // Timeout after 10 minutes
     setTimeout(() => {
@@ -213,6 +216,7 @@ const verifyPayment = async (config: PaymentConfig, reference: string) => {
     const data = await response.json();
 
     if (data.success && data.data?.status === 'success') {
+      // Immediate callback without delay
       config.callback({
         status: 'success',
         reference: reference,
