@@ -167,7 +167,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Actual payment amount:", actualAmount, "NGN");
       
       // Check if this transaction already exists to prevent double crediting
-      const existingTransaction = await storage.getTransactionByReference(reference);
+      let existingTransaction = null;
+      try {
+        existingTransaction = await storage.getTransactionByReference(reference);
+      } catch (dbError) {
+        console.error("Database error checking existing transaction:", dbError);
+        // Continue with processing since we can't verify if it exists
+      }
+      
       if (existingTransaction) {
         console.log("Transaction already processed:", reference);
         return res.json({
@@ -182,25 +189,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Create transaction record with actual amount
-      await storage.createTransaction({
-        userId: req.user.id,
-        type: 'deposit',
-        amount: actualAmount.toString(),
-        status: 'completed',
-        reference: reference,
-        paymentMethod: 'paystack',
-        description: `Wallet deposit via Paystack - ₦${actualAmount.toLocaleString()}`
-      });
+      try {
+        await storage.createTransaction({
+          userId: req.user.id,
+          type: 'deposit',
+          amount: actualAmount.toString(),
+          status: 'completed',
+          reference: reference,
+          paymentMethod: 'paystack',
+          description: `Wallet deposit via Paystack - ₦${actualAmount.toLocaleString()}`
+        });
+        console.log("✅ Transaction record created successfully");
+      } catch (createError) {
+        console.error("Error creating transaction record:", createError);
+        // Continue with balance update even if transaction record fails
+      }
       
       // Update user balance with actual amount
-      const currentBalance = parseFloat(req.user.nairaBalance || '0');
-      const newBalance = currentBalance + actualAmount;
-      
-      await storage.updateUserBalance(req.user.id, {
-        nairaBalance: newBalance.toString()
-      });
-      
-      console.log(`✅ Balance updated: ₦${currentBalance.toLocaleString()} + ₦${actualAmount.toLocaleString()} = ₦${newBalance.toLocaleString()}`);
+      try {
+        const currentBalance = parseFloat(req.user.nairaBalance || '0');
+        const newBalance = currentBalance + actualAmount;
+        
+        await storage.updateUserBalance(req.user.id, {
+          nairaBalance: newBalance.toString()
+        });
+        
+        console.log(`✅ Balance updated: ₦${currentBalance.toLocaleString()} + ₦${actualAmount.toLocaleString()} = ₦${newBalance.toLocaleString()}`);
+      } catch (balanceError) {
+        console.error("Error updating user balance:", balanceError);
+        return res.status(500).json({ 
+          success: false, 
+          message: "Payment verified but balance update failed. Please contact support." 
+        });
+      }
       
       res.json({
         success: true,
