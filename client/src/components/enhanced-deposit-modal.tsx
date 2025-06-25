@@ -149,102 +149,41 @@ export function EnhancedDepositModal({ open, onOpenChange, user }: EnhancedDepos
         throw new Error("User email not available. Please refresh and try again.");
       }
 
-      // Wait for Paystack to be available
-      let attempts = 0;
-      while (!window.PaystackPop && attempts < 30) {
-        await new Promise(resolve => setTimeout(resolve, 100));
-        attempts++;
-      }
+      console.log("Initializing Paystack payment with data:", paystackData);
       
-      if (!window.PaystackPop) {
-        console.error("Paystack not available after waiting");
-        throw new Error("Payment system loading failed. Please refresh the page and try again.");
-      }
-
-      console.log("Setting up Paystack payment with reference:", paystackData.reference);
-
-      // Use direct Paystack popup without custom wrapper
-      const handler = window.PaystackPop.setup({
+      // Use the enhanced Paystack initialization with proper error handling
+      await initializeEnhancedPaystack({
         key: PAYSTACK_PUBLIC_KEY,
         email: user.email,
-        amount: parseFloat(amount) * 100,
-        currency: "NGN",
+        amount: parseFloat(amount) * 100, // Convert to kobo
+        currency: 'NGN',
         reference: paystackData.reference,
-        channels: ['card', 'bank', 'ussd', 'mobile_money', 'qr'],
-        metadata: {
-          source: 'mobile_deposit',
-          userId: user.id.toString()
-        },
-        callback: function(response: any) {
-          console.log("Payment completed:", response);
-          
-          if (hasVerifiedRef.current) {
-            console.log("Already processing verification");
-            return;
-          }
-          
-          if (response.status === "success") {
-            hasVerifiedRef.current = true;
+        channels: getMobileOptimizedChannels(),
+        callback: (response: any) => {
+          console.log("Payment callback received:", response);
+          if (response.status === 'success') {
             setPaymentStep('verifying');
-            
-            // Immediate verification for better UX
-            verificationTimeoutRef.current = setTimeout(async () => {
-              try {
-                await verifyPaymentMutation.mutateAsync(response.reference);
-              } catch (error) {
-                console.error("Verification failed:", error);
-                hasVerifiedRef.current = false;
-                setPaymentStep('error');
-                setErrorMessage("Payment verification failed");
-              }
-            }, 300); // Immediate verification for instant crediting
+            if (!hasVerifiedRef.current) {
+              hasVerifiedRef.current = true;
+              verifyPaymentMutation.mutate(response.reference);
+            }
           } else {
-            console.log("Payment not successful:", response.status);
-            setIsProcessing(false);
             setPaymentStep('error');
-            setErrorMessage("Payment was not completed");
+            setErrorMessage('Payment was not completed successfully');
           }
         },
-        onClose: function() {
-          console.log("Payment popup closed");
-          // Always remove scroll lock when payment closes
+        onClose: () => {
+          console.log("Payment modal closed by user");
           document.body.classList.remove('paystack-open');
-          if (!hasVerifiedRef.current) {
-            setIsProcessing(false);
+          if (paymentStep === 'processing') {
             setPaymentStep('amount');
+            setErrorMessage('Payment was cancelled');
           }
+          setIsProcessing(false);
         }
       });
-
-      // Ensure iframe is properly positioned and clickable with multiple checks
-      const ensureClickability = () => {
-        const iframes = document.querySelectorAll('iframe[src*="paystack"], iframe[src*="checkout.paystack.com"]');
-        const overlays = document.querySelectorAll('div[id*="paystack"], div[class*="paystack"]');
-        
-        [...iframes, ...overlays].forEach((element: any) => {
-          element.style.zIndex = '2147483647';
-          element.style.pointerEvents = 'auto';
-          element.style.position = 'fixed';
-          if (element.tagName === 'IFRAME') {
-            element.style.top = '0';
-            element.style.left = '0';
-            element.style.width = '100vw';
-            element.style.height = '100vh';
-            element.style.border = 'none';
-          }
-        });
-        
-        // Add class to body to prevent scrolling
-        document.body.classList.add('paystack-open');
-      };
       
-      // Run immediately and also with delays to catch dynamically loaded content
-      ensureClickability();
-      setTimeout(ensureClickability, 100);
-      setTimeout(ensureClickability, 500);
-      setTimeout(ensureClickability, 1000);
-
-      handler.openIframe();
+      console.log("Paystack payment initialized successfully");
 
     } catch (error: any) {
       console.error("Paystack error:", error);
