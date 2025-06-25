@@ -11,16 +11,44 @@ app.set('trust proxy', true);
 // Cookie parser middleware
 app.use(cookieParser());
 
-// Security headers and CSP configuration
+// Security headers and CSP configuration with Paystack compatibility
 app.use((req, res, next) => {
-  // Temporarily disable CSP for Paystack compatibility
-  // TODO: Re-enable with proper configuration once Paystack is working
+  // Configure CSP to allow Paystack domains specifically
+  const cspPolicy = [
+    "default-src 'self'",
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.paystack.co https://checkout.paystack.com",
+    "frame-src 'self' https://checkout.paystack.com https://standard.paystack.co",
+    "connect-src 'self' https://api.paystack.co https://checkout.paystack.com",
+    "style-src 'self' 'unsafe-inline' https://checkout.paystack.com",
+    "img-src 'self' data: https: blob:",
+    "font-src 'self' data: https:",
+    "media-src 'self' blob:",
+    "object-src 'none'",
+    "base-uri 'self'",
+    "form-action 'self'"
+  ].join('; ');
+
   if (process.env.NODE_ENV === 'production') {
-    console.log('Production mode: CSP disabled for Paystack compatibility');
-    // Remove CSP header entirely to allow Paystack scripts
-    res.removeHeader('Content-Security-Policy');
+    console.log('Production mode: CSP configured for Paystack compatibility');
+    res.setHeader('Content-Security-Policy', cspPolicy);
+    // Additional production security headers
+    res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
   } else {
-    console.log('Development mode: No CSP restrictions');
+    console.log('Development mode: Relaxed CSP for development');
+    // More relaxed CSP for development
+    const devCspPolicy = [
+      "default-src 'self' 'unsafe-inline' 'unsafe-eval'",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.paystack.co https://checkout.paystack.com",
+      "frame-src 'self' https://checkout.paystack.com https://standard.paystack.co",
+      "connect-src 'self' https://api.paystack.co https://checkout.paystack.com ws: wss:",
+      "style-src 'self' 'unsafe-inline'",
+      "img-src 'self' data: https: blob:",
+      "font-src 'self' data: https:",
+      "media-src 'self' blob:"
+    ].join('; ');
+    res.setHeader('Content-Security-Policy', devCspPolicy);
   }
   
   // CORS headers for development

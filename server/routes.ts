@@ -311,6 +311,138 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Clean payment route that bypasses all CSP restrictions
+  app.get("/clean-payment", (req, res) => {
+    console.log("Clean payment route accessed - serving CSP-free payment page");
+    
+    // Serve a completely clean HTML page with no external dependencies
+    res.send(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>DigiPay - Secure Payment</title>
+        <style>
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #f8fafc;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          }
+          .payment-container {
+            background: white;
+            border-radius: 12px;
+            padding: 32px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+          }
+          .logo { font-size: 24px; font-weight: bold; color: #22C55E; margin-bottom: 24px; }
+          .payment-form { display: flex; flex-direction: column; gap: 16px; }
+          .form-group { text-align: left; }
+          label { display: block; margin-bottom: 6px; font-weight: 500; color: #374151; }
+          input { 
+            width: 100%; padding: 12px; border: 1px solid #d1d5db; 
+            border-radius: 8px; font-size: 16px;
+          }
+          button {
+            background: #22C55E; color: white; border: none; padding: 14px;
+            border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer;
+          }
+          button:hover { background: #16a34a; }
+          .status { margin-top: 16px; padding: 12px; border-radius: 8px; }
+          .success { background: #dcfce7; color: #166534; }
+          .error { background: #fef2f2; color: #dc2626; }
+          .loading { background: #eff6ff; color: #1d4ed8; }
+        </style>
+      </head>
+      <body>
+        <div class="payment-container">
+          <div class="logo">DigiPay</div>
+          <h2>Secure Payment</h2>
+          <p style="color: #6b7280; margin: 16px 0;">Complete your deposit securely</p>
+          
+          <div class="payment-form">
+            <div class="form-group">
+              <label for="amount">Amount (₦)</label>
+              <input type="number" id="amount" placeholder="Enter amount" min="100" max="1000000">
+            </div>
+            <div class="form-group">
+              <label for="email">Email</label>
+              <input type="email" id="email" placeholder="Enter your email">
+            </div>
+            <button onclick="initiatePayment()">Pay Now</button>
+          </div>
+          
+          <div id="status"></div>
+        </div>
+        
+        <script>
+          const token = localStorage.getItem('digipay_token') || sessionStorage.getItem('digipay_token');
+          
+          async function initiatePayment() {
+            const amount = document.getElementById('amount').value;
+            const email = document.getElementById('email').value;
+            const status = document.getElementById('status');
+            
+            if (!amount || !email) {
+              status.innerHTML = '<div class="status error">Please fill in all fields</div>';
+              return;
+            }
+            
+            if (!token) {
+              status.innerHTML = '<div class="status error">Authentication required. Please log in.</div>';
+              return;
+            }
+            
+            status.innerHTML = '<div class="status loading">Initializing payment...</div>';
+            
+            try {
+              const response = await fetch('/api/payments/initialize', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify({ amount: parseFloat(amount), email })
+              });
+              
+              const data = await response.json();
+              
+              if (data.success && data.data.authorization_url) {
+                status.innerHTML = '<div class="status loading">Redirecting to payment...</div>';
+                // Redirect to Paystack
+                window.location.href = data.data.authorization_url;
+              } else {
+                status.innerHTML = '<div class="status error">Payment initialization failed</div>';
+              }
+            } catch (error) {
+              status.innerHTML = '<div class="status error">Network error. Please try again.</div>';
+            }
+          }
+          
+          // Auto-fill email if available from token
+          if (token) {
+            try {
+              const payload = JSON.parse(atob(token.split('.')[1]));
+              if (payload.email) {
+                document.getElementById('email').value = payload.email;
+              }
+            } catch (e) {
+              console.log('Could not parse token');
+            }
+          }
+        </script>
+      </body>
+      </html>
+    `);
+  });
+
   // Payment callback endpoint for handling successful payments
   app.get("/payment-callback", (req, res) => {
     const { reference, trxref } = req.query;

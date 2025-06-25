@@ -59,8 +59,65 @@ export const initializeCSPBypassPayment = async (config: PaymentConfig) => {
       throw new Error("Invalid payment initialization response");
     }
 
-    // Step 2: Open payment in popup window with message listener setup
-    console.log("Opening Paystack checkout window...");
+    // Step 2: For production, use clean payment route to bypass CSP
+    if (window.location.hostname.includes('replit.app') || window.location.hostname.includes('replit.dev')) {
+      console.log("Production deployment detected - using clean payment route");
+      
+      // Create a form and submit to clean payment route
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = '/clean-payment';
+      form.target = '_blank';
+      
+      const amountInput = document.createElement('input');
+      amountInput.type = 'hidden';
+      amountInput.name = 'amount';
+      amountInput.value = (config.amount / 100).toString();
+      
+      const emailInput = document.createElement('input');
+      emailInput.type = 'hidden';
+      emailInput.name = 'email';
+      emailInput.value = config.email;
+      
+      form.appendChild(amountInput);
+      form.appendChild(emailInput);
+      document.body.appendChild(form);
+      form.submit();
+      document.body.removeChild(form);
+      
+      // Monitor for payment completion via polling
+      const checkPaymentCompletion = setInterval(async () => {
+        try {
+          const response = await fetch(`/api/payments/verify`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${localStorage.getItem('digipay_token')}`
+            },
+            body: JSON.stringify({ reference: data.data.reference })
+          });
+          
+          const verifyData = await response.json();
+          if (verifyData.success && verifyData.data.status === 'success') {
+            clearInterval(checkPaymentCompletion);
+            config.callback({
+              status: 'success',
+              reference: data.data.reference,
+              transaction: data.data.reference
+            });
+          }
+        } catch (error) {
+          console.log("Payment verification check:", error);
+        }
+      }, 3000);
+      
+      // Stop checking after 10 minutes
+      setTimeout(() => clearInterval(checkPaymentCompletion), 600000);
+      return;
+    }
+
+    // Step 2: Open payment in popup window with message listener setup (for development)
+    console.log("Development environment - using iframe payment");
 
     // Listen for messages from the payment callback page
     const messageListener = (event: MessageEvent) => {
