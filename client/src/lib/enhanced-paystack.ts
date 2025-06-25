@@ -51,8 +51,23 @@ export const loadPaystackScript = (): Promise<void> => {
     }
 
     const env = detectEnvironment();
+    console.log("=== PAYSTACK SCRIPT LOADING DEBUG ===");
     console.log("Environment detection:", env);
-    console.log("Loading Paystack script...");
+    console.log("Starting Paystack script loading process...");
+    
+    // Log current document state
+    console.log("Document state:");
+    console.log("  - readyState:", document.readyState);
+    console.log("  - URL:", document.URL);
+    console.log("  - domain:", document.domain);
+    console.log("  - referrer:", document.referrer);
+    
+    // Check existing scripts
+    const existingPaystackScripts = Array.from(document.querySelectorAll('script[src*="paystack"]'));
+    console.log("Existing Paystack scripts before loading:", existingPaystackScripts.length);
+    existingPaystackScripts.forEach((script, i) => {
+      console.log(`  Script ${i + 1}:`, script.src, script.readyState || 'unknown state');
+    });
     
     // Remove any existing Paystack scripts first
     const existingScripts = document.querySelectorAll('script[src*="paystack"]');
@@ -79,7 +94,9 @@ export const loadPaystackScript = (): Promise<void> => {
       }
 
       const scriptUrl = loadStrategies[strategyIndex];
-      console.log(`Trying Paystack strategy ${strategyIndex + 1}: ${scriptUrl}`);
+      console.log(`\n--- STRATEGY ${strategyIndex + 1} ATTEMPT ---`);
+      console.log(`URL: ${scriptUrl}`);
+      console.log(`Timestamp: ${new Date().toISOString()}`);
       
       const script = document.createElement('script');
       script.src = scriptUrl;
@@ -87,48 +104,130 @@ export const loadPaystackScript = (): Promise<void> => {
       script.defer = false;
       script.crossOrigin = 'anonymous';
       
+      // Add comprehensive event logging
+      script.addEventListener('loadstart', () => console.log(`Strategy ${strategyIndex + 1}: Script loading started`));
+      script.addEventListener('progress', (e) => console.log(`Strategy ${strategyIndex + 1}: Loading progress`, e));
+      script.addEventListener('loadend', () => console.log(`Strategy ${strategyIndex + 1}: Script loading ended`));
+      
+      console.log(`Strategy ${strategyIndex + 1}: Script element created with properties:`, {
+        src: script.src,
+        async: script.async,
+        defer: script.defer,
+        crossOrigin: script.crossOrigin,
+        type: script.type
+      });
+      
       script.onload = () => {
-        console.log(`Paystack script loaded from ${scriptUrl}, checking availability...`);
-        console.log("Document readyState:", document.readyState);
-        console.log("All scripts in head:", Array.from(document.head.querySelectorAll('script')).map(s => s.src || 'inline'));
+        console.log(`\n✓ SCRIPT LOADED: Strategy ${strategyIndex + 1} from ${scriptUrl}`);
+        console.log(`Load timestamp: ${new Date().toISOString()}`);
+        console.log("Post-load document state:", document.readyState);
+        
+        // Comprehensive window object analysis
+        console.log("Window object analysis:");
+        console.log("  - window.PaystackPop:", typeof window.PaystackPop, window.PaystackPop);
+        console.log("  - window.Paystack:", typeof (window as any).Paystack, (window as any).Paystack);
+        console.log("  - window.paystack:", typeof (window as any).paystack, (window as any).paystack);
+        
+        // Check all possible Paystack-related properties
+        const paystackProps = Object.keys(window).filter(key => 
+          key.toLowerCase().includes('paystack')
+        );
+        console.log("  - All Paystack-related window properties:", paystackProps);
+        
+        console.log("Script element analysis:");
+        console.log("  - Script readyState:", script.readyState);
+        console.log("  - Script in DOM:", document.contains(script));
+        console.log("  - All scripts count:", document.querySelectorAll('script').length);
         
         // Wait for PaystackPop to be available
         let attempts = 0;
+        const maxAttempts = 50;
+        
         const checkAvailability = () => {
           if (resolved) return;
           
-          console.log(`Attempt ${attempts + 1}: Checking PaystackPop availability...`);
-          console.log("window.PaystackPop:", window.PaystackPop);
-          console.log("window.Paystack:", (window as any).Paystack);
+          attempts++;
+          console.log(`\n--- AVAILABILITY CHECK ${attempts}/${maxAttempts} ---`);
+          console.log(`Timestamp: ${new Date().toISOString()}`);
+          console.log("Checking for PaystackPop...");
+          
+          // Check multiple possible objects
+          const checks = {
+            'window.PaystackPop': window.PaystackPop,
+            'window.Paystack': (window as any).Paystack,
+            'window.paystack': (window as any).paystack,
+            'window.PayStack': (window as any).PayStack,
+            'window.PAYSTACK': (window as any).PAYSTACK
+          };
+          
+          Object.entries(checks).forEach(([name, obj]) => {
+            console.log(`  ${name}:`, typeof obj, obj);
+            if (obj && typeof obj === 'object') {
+              console.log(`    ${name} properties:`, Object.keys(obj));
+            }
+          });
           
           if (window.PaystackPop) {
-            console.log("PaystackPop is ready!");
+            console.log("✓ PaystackPop found and ready!");
             resolved = true;
             resolve();
           } else if ((window as any).Paystack && (window as any).Paystack.pop) {
-            // Alternative Paystack object structure
-            console.log("Found alternative Paystack.pop structure");
+            console.log("✓ Found alternative Paystack.pop structure");
             (window as any).PaystackPop = (window as any).Paystack;
             resolved = true;
             resolve();
-          } else if (attempts < 50) {
-            attempts++;
+          } else if ((window as any).paystack && typeof (window as any).paystack.setup === 'function') {
+            console.log("✓ Found lowercase paystack with setup method");
+            (window as any).PaystackPop = (window as any).paystack;
+            resolved = true;
+            resolve();
+          } else if (attempts < maxAttempts) {
+            console.log(`✗ PaystackPop not ready yet, attempt ${attempts}/${maxAttempts}`);
             setTimeout(checkAvailability, 200);
           } else {
-            console.warn(`Strategy ${strategyIndex + 1} loaded script but PaystackPop not available after 50 attempts`);
+            console.error(`✗ Strategy ${strategyIndex + 1} FAILED: PaystackPop not available after ${maxAttempts} attempts`);
+            console.error("Final window state:", {
+              PaystackPop: typeof window.PaystackPop,
+              Paystack: typeof (window as any).Paystack,
+              paystack: typeof (window as any).paystack,
+              allPaystackProps: Object.keys(window).filter(k => k.toLowerCase().includes('paystack'))
+            });
             strategyIndex++;
             tryLoadStrategy();
           }
         };
         
-        // Start checking immediately and also wait a bit
+        // Start checking immediately and also wait a bit for slower networks
         checkAvailability();
         setTimeout(checkAvailability, 500);
+        setTimeout(checkAvailability, 1000);
       };
       
       script.onerror = (error) => {
-        console.warn(`Strategy ${strategyIndex + 1} failed:`, error);
+        console.error(`\n✗ SCRIPT ERROR: Strategy ${strategyIndex + 1} failed`);
+        console.error(`URL: ${scriptUrl}`);
+        console.error(`Error timestamp: ${new Date().toISOString()}`);
+        console.error(`Error details:`, error);
+        console.error(`Error event:`, {
+          type: error.type,
+          target: error.target,
+          message: error.message || 'No message',
+          filename: (error as any).filename || 'No filename',
+          lineno: (error as any).lineno || 'No line number'
+        });
+        
+        // Check if this is a network error or CSP error
+        if (error.type === 'error') {
+          console.error("This appears to be a network or CSP blocking error");
+          
+          // Try to determine the cause
+          fetch(scriptUrl, { method: 'HEAD', mode: 'no-cors' })
+            .then(() => console.error("Network connectivity OK - likely CSP blocking"))
+            .catch(e => console.error("Network connectivity issue:", e));
+        }
+        
         strategyIndex++;
+        console.log(`Moving to strategy ${strategyIndex + 1}...`);
         tryLoadStrategy();
       };
       
