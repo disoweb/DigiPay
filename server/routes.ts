@@ -64,6 +64,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
+      // Check if this reference already exists in our database
+      const existingTransaction = await storage.getTransactionByReference(reference);
+      if (existingTransaction) {
+        console.log("Reference already exists in database, generating new one");
+        const newReference = `dep_${req.user.id}_${Date.now()}_${Math.floor(Math.random() * 1000000)}`;
+        console.log("New reference:", newReference);
+        return res.json({
+          success: false,
+          message: "Reference conflict, please retry",
+          newReference: newReference
+        });
+      }
+
       // Initialize transaction with Paystack API
       const paystackSecretKey = process.env.PAYSTACK_SECRET_KEY || 'sk_test_7c30d4c30302ab01124b5593a498326ff37000f1';
       const amountInKobo = Math.round(amount * 100);

@@ -83,7 +83,7 @@ export function EnhancedDepositModal({ open, onOpenChange, user }: EnhancedDepos
   // Initialize payment mutation
   const initializePaymentMutation = useMutation({
     mutationFn: async (amount: number) => {
-      const reference = `dep_${Date.now()}_${user.id}_${Math.random().toString(36).substr(2, 9)}`;
+      const reference = `dep_${user.id}_${Date.now()}_${Math.floor(Math.random() * 1000000)}`;
       const res = await apiRequest("POST", "/api/payments/initialize", { 
         amount: amount,
         email: user.email,
@@ -95,6 +95,24 @@ export function EnhancedDepositModal({ open, onOpenChange, user }: EnhancedDepos
       });
       if (!res.ok) {
         const errorData = await res.json();
+        if (errorData.newReference) {
+          // Retry with new reference
+          console.log("Retrying with new reference:", errorData.newReference);
+          const retryRes = await apiRequest("POST", "/api/payments/initialize", { 
+            amount: amount,
+            email: user.email,
+            reference: errorData.newReference,
+            metadata: {
+              source: 'wallet_deposit',
+              timestamp: Date.now()
+            }
+          });
+          if (!retryRes.ok) {
+            const retryErrorData = await retryRes.json();
+            throw new Error(retryErrorData.message || 'Payment initialization failed');
+          }
+          return retryRes.json();
+        }
         throw new Error(errorData.message || 'Payment initialization failed');
       }
       return res.json();
