@@ -81,19 +81,20 @@ export const initializeCSPBypassPayment = async (config: PaymentConfig) => {
           
           const callbackLoadingDiv = document.createElement('div');
           callbackLoadingDiv.style.cssText = `
-            position: fixed;
+            position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
             background: rgba(255, 255, 255, 0.98);
-            z-index: 10000;
+            z-index: 1001;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             gap: 16px;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            border-radius: 12px;
           `;
           callbackLoadingDiv.innerHTML = `
             <div style="width: 32px; height: 32px; border: 3px solid #e0e7ff; border-top: 3px solid #10b981; border-radius: 50%; animation: spin 1s linear infinite;"></div>

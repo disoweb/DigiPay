@@ -86,6 +86,7 @@ A peer-to-peer cryptocurrency trading platform enabling direct trading between u
   - **FEE TRANSPARENCY**: Added clear warning about Paystack transaction fees to inform users of actual credited amounts
   - **CALLBACK LOADING**: Added loading indicator during payment callback phase when returning from Paystack to app
   - **INSTANT CALLBACK**: Fixed empty page flash by showing callback loading indicator immediately without delay
+  - **MODAL BOUNDARIES**: Updated callback loading to stay within payment modal instead of covering entire screen
 - **2025-06-25**: Resolved Paystack payment system issue with comprehensive debugging and fallback implementation
   - Root cause identified: Replit's deployment infrastructure enforces CSP headers that block external scripts
   - Implemented HTML meta CSP tag to override restrictions and allow Paystack domains
