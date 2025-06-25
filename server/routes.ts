@@ -204,7 +204,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           data: {
             status: 'duplicate_detected',
             reference: reference,
-            amount: parseFloat(existingTransaction.amount),
+            amount: duplicateCheck.amount,
             message: 'Payment already processed'
           }
         });

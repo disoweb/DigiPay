@@ -222,14 +222,15 @@ export class EnhancedPaystackService {
       const paymentData = response.data.data;
       
       if (paymentData.status === 'success') {
-        // Auto-credit user balance immediately
-        const balanceUpdated = await this.creditUserBalance(reference, paymentData);
+        // DISABLED: Auto-credit functionality to prevent duplicate crediting
+        // The main /api/payments/verify endpoint handles all crediting
+        console.log('Enhanced Paystack service: Payment successful but crediting disabled to prevent duplicates');
         
         return {
           success: true,
           data: paymentData,
-          message: 'Payment verified and balance updated automatically',
-          balanceUpdated
+          message: 'Payment verified - crediting handled by main endpoint',
+          balanceUpdated: false
         };
       }
 

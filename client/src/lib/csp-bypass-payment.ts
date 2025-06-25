@@ -181,23 +181,8 @@ export const initializeCSPBypassPayment = async (config: PaymentConfig) => {
           return;
         }
 
-        // Also periodically try to verify payment in case the message system fails
-        try {
-          const isPaymentSuccessful = await verifyPayment(data.data.reference);
-          if (isPaymentSuccessful) {
-            console.log("Payment verified via periodic check!");
-            clearInterval(checkPayment);
-            window.removeEventListener('message', messageListener);
-            const container = document.getElementById('paystack-iframe-container');
-            if (container) {
-              document.body.removeChild(container);
-            }
-            await verifyAndCompletePayment({ ...config, reference: data.data.reference });
-            return;
-          }
-        } catch (verifyError) {
-          console.log("Periodic verification check failed:", verifyError);
-        }
+        // DISABLED: Periodic verification to prevent duplicate processing
+        // Payment verification is handled only via message system and manual verification
         
       } catch (error) {
         console.log("Payment check error (continuing monitoring):", error);
