@@ -108,6 +108,9 @@ A peer-to-peer cryptocurrency trading platform enabling direct trading between u
   - **CALLBACK FIX**: Fixed payment callback URL to use /payment-success route for proper balance updates and transaction logging
   - **MODAL DIMENSIONS**: Updated payment success page to match deposit modal dimensions (max-w-sm, 90vw) for consistent UI
   - **POPUP INTEGRATION**: Enhanced payment success page to communicate with parent window and auto-close when opened as popup
+  - **CRITICAL BUG FIX**: Fixed "newBalance is not defined" error in payment verification endpoint that was causing 500 errors
+  - **VARIABLE SCOPE FIX**: Properly declared newBalance variable in payment verification to prevent scope issues
+  - **VERIFICATION COMPLETE**: Payment verification now works correctly - deposits process successfully with proper balance updates
 - **2025-06-25**: Resolved Paystack payment system issue with comprehensive debugging and fallback implementation
   - Root cause identified: Replit's deployment infrastructure enforces CSP headers that block external scripts
   - Implemented HTML meta CSP tag to override restrictions and allow Paystack domains

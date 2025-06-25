@@ -254,9 +254,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Update user balance with actual amount
+      let newBalance;
       try {
         const currentBalance = parseFloat(currentUser.nairaBalance || '0');
-        const newBalance = currentBalance + actualAmount;
+        newBalance = currentBalance + actualAmount;
         
         await storage.updateUserBalance(req.user.id, {
           nairaBalance: newBalance.toString()
@@ -314,8 +315,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           status: 'success',
           reference: reference,
           amount: actualAmount,
-          newBalance: newBalance.toString(),
-          previousBalance: currentBalance.toString()
+          newBalance: newBalance ? newBalance.toString() : "0",
+          previousBalance: currentUser.nairaBalance || "0"
         }
       });
     } catch (error) {
