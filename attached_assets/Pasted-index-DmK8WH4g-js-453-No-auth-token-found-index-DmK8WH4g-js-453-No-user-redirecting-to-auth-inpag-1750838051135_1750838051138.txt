@@ -1,0 +1,94 @@
+index-DmK8WH4g.js:453 No auth token found
+index-DmK8WH4g.js:453 No user, redirecting to auth
+inpage.js:1 [ChromeTransport] connect error: Error: MetaMask extension not found
+    at inpage.js:1:16512
+index-DmK8WH4g.js:453 Login success, storing token
+index-DmK8WH4g.js:502 WebSocket connected for real-time balance updates
+index-DmK8WH4g.js:502 WebSocket message received: {type: 'connection_established', data: {…}}
+index-DmK8WH4g.js:502 WebSocket message received: {type: 'connected', userId: 1, authenticated: true}
+index-DmK8WH4g.js:497 Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+(anonymous) @ index-DmK8WH4g.js:497
+Pc @ index-DmK8WH4g.js:40
+Sa @ index-DmK8WH4g.js:40
+R2 @ index-DmK8WH4g.js:40
+br @ index-DmK8WH4g.js:40
+Ff @ index-DmK8WH4g.js:40
+yr @ index-DmK8WH4g.js:38
+(anonymous) @ index-DmK8WH4g.js:40
+index-DmK8WH4g.js:502 Payment initialization - using CSP-bypass system only
+index-DmK8WH4g.js:502 🚀 USING CSP-BYPASS PAYMENT SYSTEM - NO SCRIPT LOADING
+index-DmK8WH4g.js:502 This will open Paystack checkout in a popup window
+index-DmK8WH4g.js:502 CSP-Bypass Payment: Starting secure payment flow
+index-DmK8WH4g.js:502 Initializing payment...
+index-DmK8WH4g.js:502 
+            
+            
+           POST https://digipay.replit.app/api/payments/initialize 403 (Forbidden)
+$P @ index-DmK8WH4g.js:502
+b @ index-DmK8WH4g.js:502
+onSuccess @ index-DmK8WH4g.js:502
+execute @ index-DmK8WH4g.js:48
+await in execute
+mutate @ index-DmK8WH4g.js:48
+(anonymous) @ index-DmK8WH4g.js:48
+C @ index-DmK8WH4g.js:502
+Qb @ index-DmK8WH4g.js:37
+Xb @ index-DmK8WH4g.js:37
+Zb @ index-DmK8WH4g.js:37
+sf @ index-DmK8WH4g.js:37
+c0 @ index-DmK8WH4g.js:37
+(anonymous) @ index-DmK8WH4g.js:37
+yh @ index-DmK8WH4g.js:40
+Fg @ index-DmK8WH4g.js:37
+Rd @ index-DmK8WH4g.js:37
+qm @ index-DmK8WH4g.js:37
+x1 @ index-DmK8WH4g.js:37
+index-DmK8WH4g.js:502 CSP-Bypass Payment Error: Error: API Error: 403
+    at $P (index-DmK8WH4g.js:502:23872)
+    at async b (index-DmK8WH4g.js:502:31150)
+    at async Object.onSuccess (index-DmK8WH4g.js:502:29800)
+    at async Yp.execute (index-DmK8WH4g.js:48:20567)
+$P @ index-DmK8WH4g.js:502
+await in $P
+b @ index-DmK8WH4g.js:502
+onSuccess @ index-DmK8WH4g.js:502
+execute @ index-DmK8WH4g.js:48
+await in execute
+mutate @ index-DmK8WH4g.js:48
+(anonymous) @ index-DmK8WH4g.js:48
+C @ index-DmK8WH4g.js:502
+Qb @ index-DmK8WH4g.js:37
+Xb @ index-DmK8WH4g.js:37
+Zb @ index-DmK8WH4g.js:37
+sf @ index-DmK8WH4g.js:37
+c0 @ index-DmK8WH4g.js:37
+(anonymous) @ index-DmK8WH4g.js:37
+yh @ index-DmK8WH4g.js:40
+Fg @ index-DmK8WH4g.js:37
+Rd @ index-DmK8WH4g.js:37
+qm @ index-DmK8WH4g.js:37
+x1 @ index-DmK8WH4g.js:37
+index-DmK8WH4g.js:502 Paystack error: Error: API Error: 403
+    at $P (index-DmK8WH4g.js:502:23872)
+    at async b (index-DmK8WH4g.js:502:31150)
+    at async Object.onSuccess (index-DmK8WH4g.js:502:29800)
+    at async Yp.execute (index-DmK8WH4g.js:48:20567)
+b @ index-DmK8WH4g.js:502
+await in b
+onSuccess @ index-DmK8WH4g.js:502
+execute @ index-DmK8WH4g.js:48
+await in execute
+mutate @ index-DmK8WH4g.js:48
+(anonymous) @ index-DmK8WH4g.js:48
+C @ index-DmK8WH4g.js:502
+Qb @ index-DmK8WH4g.js:37
+Xb @ index-DmK8WH4g.js:37
+Zb @ index-DmK8WH4g.js:37
+sf @ index-DmK8WH4g.js:37
+c0 @ index-DmK8WH4g.js:37
+(anonymous) @ index-DmK8WH4g.js:37
+yh @ index-DmK8WH4g.js:40
+Fg @ index-DmK8WH4g.js:37
+Rd @ index-DmK8WH4g.js:37
+qm @ index-DmK8WH4g.js:37
+x1 @ index-DmK8WH4g.js:37

@@ -31,15 +31,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // ONLY CSP-bypass payment endpoint - all others removed to prevent conflicts
   app.post("/api/payments/initialize", (req: any, res: Response, next: NextFunction) => {
-    console.log("🚀🚀🚀 CSP-BYPASS PAYMENT ENDPOINT HIT! 🚀🚀🚀");
-    console.log("=== PAYMENT INITIALIZATION DEBUG ===");
-    console.log("URL:", req.url);
-    console.log("Path:", req.path);
-    console.log("Method:", req.method);
-    console.log("User agent:", req.get('user-agent'));
-    console.log("Authorization header present:", !!req.headers.authorization);
-    console.log("Request body:", JSON.stringify(req.body, null, 2));
-    console.log("=====================================");
+    console.log("💳 Payment endpoint hit");
+    console.log("Auth header:", req.headers.authorization ? "Present" : "Missing");
+    console.log("Body:", req.body);
     
     authenticateToken(req, res, next);
   }, async (req: any, res: Response) => {

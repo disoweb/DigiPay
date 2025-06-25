@@ -17,12 +17,15 @@ export const initializeCSPBypassPayment = async (config: PaymentConfig) => {
   try {
     // Step 1: Initialize payment via our API
     console.log("Initializing payment...");
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('digipay_token');
     console.log("=== CLIENT PAYMENT DEBUG ===");
     console.log("Auth token available:", !!token);
     console.log("Token length:", token?.length || 0);
     console.log("Token first 20 chars:", token ? token.substring(0, 20) + "..." : 'none');
-    console.log("Full token for debugging:", token);
+    if (!token) {
+      console.error("❌ No authentication token found! User needs to log in.");
+      throw new Error("Authentication required");
+    }
     console.log("Payment data:", {
       amount: config.amount / 100,
       email: config.email,
