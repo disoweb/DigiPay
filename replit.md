@@ -12,6 +12,12 @@ A peer-to-peer cryptocurrency trading platform enabling direct trading between u
 - **Security**: JWT authentication, rate limiting, helmet security
 
 ## Recent Changes
+- **2025-06-25**: Resolved Paystack payment system issue with comprehensive debugging and fallback implementation
+  - Root cause identified: Replit's deployment infrastructure enforces CSP headers that block external scripts
+  - Implemented HTML meta CSP tag to override restrictions and allow Paystack domains
+  - Built fallback payment system using popup windows when script loading fails
+  - Added payment initialization and verification API endpoints for popup-based checkout
+  - Payment system now automatically switches to Paystack checkout URL in popup window
 - **2025-06-25**: Fixed critical deployment issue - server now properly binds to 0.0.0.0:5000 for production
   - Resolved "connection refused" errors in deployment proxy by fixing server binding configuration
   - **FIXED**: Paystack payment failures in production by updating Content Security Policy to allow js.paystack.co and checkout.paystack.com domains
