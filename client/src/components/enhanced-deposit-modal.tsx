@@ -83,7 +83,7 @@ export function EnhancedDepositModal({ open, onOpenChange, user }: EnhancedDepos
   // Initialize payment mutation
   const initializePaymentMutation = useMutation({
     mutationFn: async (amount: number) => {
-      const reference = `dep_${Date.now()}_${user.id}`;
+      const reference = `dep_${Date.now()}_${user.id}_${Math.random().toString(36).substr(2, 9)}`;
       const res = await apiRequest("POST", "/api/payments/initialize", { 
         amount: amount,
         email: user.email,
