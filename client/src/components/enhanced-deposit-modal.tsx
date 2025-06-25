@@ -131,6 +131,28 @@ export function EnhancedDepositModal({ open, onOpenChange, user }: EnhancedDepos
       if (data.success) {
         setPaymentStep('success');
         
+        // Add a brief processing state to prevent wallet interaction
+        const processingOverlay = document.createElement('div');
+        processingOverlay.id = 'payment-processing-overlay';
+        processingOverlay.className = 'fixed inset-0 bg-black/30 backdrop-blur-sm z-50 flex items-center justify-center';
+        processingOverlay.innerHTML = `
+          <div class="bg-white dark:bg-slate-800 rounded-lg p-6 shadow-lg border border-slate-200 dark:border-slate-700">
+            <div class="flex items-center space-x-3">
+              <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-green-600"></div>
+              <span class="text-slate-900 dark:text-white font-medium">Updating balance...</span>
+            </div>
+          </div>
+        `;
+        document.body.appendChild(processingOverlay);
+        
+        // Remove overlay after balance updates
+        setTimeout(() => {
+          const overlay = document.getElementById('payment-processing-overlay');
+          if (overlay) {
+            overlay.remove();
+          }
+        }, 3000);
+        
         // Force immediate balance refresh - WebSocket should handle this but ensure UI updates
         setTimeout(() => {
           queryClient.invalidateQueries({ queryKey: ["/api/user"] });
