@@ -13,21 +13,22 @@ app.use(cookieParser());
 
 // Security headers and CSP configuration
 app.use((req, res, next) => {
-  // Only apply CSP in production, disable in development for Vite
-  if (process.env.NODE_ENV === 'production') {
-    res.setHeader(
-      'Content-Security-Policy',
-      "default-src 'self'; " +
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.paystack.co https://checkout.paystack.com https://*.paystack.co https://*.paystack.com; " +
-      "style-src 'self' 'unsafe-inline' https://js.paystack.co https://checkout.paystack.com https://*.paystack.co https://*.paystack.com; " +
-      "connect-src 'self' ws: wss: https: https://api.paystack.co https://checkout.paystack.com https://*.paystack.co https://*.paystack.com; " +
-      "frame-src 'self' https://checkout.paystack.com https://js.paystack.co https://*.paystack.co https://*.paystack.com; " +
-      "img-src 'self' data: https: https://checkout.paystack.com https://*.paystack.co https://*.paystack.com; " +
-      "font-src 'self' data: https:; " +
-      "object-src 'none'; " +
-      "base-uri 'self';"
-    );
-  }
+  // Apply CSP headers for both production and development
+  const cspHeader = 
+    "default-src 'self'; " +
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.paystack.co https://checkout.paystack.com https://*.paystack.co https://*.paystack.com https://replit.com; " +
+    "script-src-elem 'self' 'unsafe-inline' https://js.paystack.co https://checkout.paystack.com https://*.paystack.co https://*.paystack.com https://replit.com; " +
+    "style-src 'self' 'unsafe-inline' https://js.paystack.co https://checkout.paystack.com https://*.paystack.co https://*.paystack.com; " +
+    "style-src-elem 'self' 'unsafe-inline' https://js.paystack.co https://checkout.paystack.com https://*.paystack.co https://*.paystack.com; " +
+    "connect-src 'self' ws: wss: https: https://api.paystack.co https://checkout.paystack.com https://*.paystack.co https://*.paystack.com; " +
+    "frame-src 'self' https://checkout.paystack.com https://js.paystack.co https://*.paystack.co https://*.paystack.com; " +
+    "img-src 'self' data: https: https://checkout.paystack.com https://*.paystack.co https://*.paystack.com; " +
+    "font-src 'self' data: https:; " +
+    "object-src 'none'; " +
+    "base-uri 'self';";
+  
+  res.setHeader('Content-Security-Policy', cspHeader);
+  console.log('CSP Header set:', cspHeader);
   
   // CORS headers for development
   if (process.env.NODE_ENV === 'development') {
