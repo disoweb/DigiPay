@@ -175,72 +175,8 @@ export function EnhancedDepositModal({ open, onOpenChange, user }: EnhancedDepos
         throw new Error("User email not available. Please refresh and try again.");
       }
 
-      console.log("=== COMPREHENSIVE PAYSTACK DEBUG START ===");
-      console.log("1. Environment Check:");
-      console.log("   - NODE_ENV:", process.env.NODE_ENV);
-      console.log("   - User agent:", navigator.userAgent);
-      console.log("   - Current URL:", window.location.href);
-      console.log("   - Protocol:", window.location.protocol);
-      console.log("   - Hostname:", window.location.hostname);
-      console.log("   - Port:", window.location.port);
-      
-      console.log("2. Browser Capabilities:");
-      console.log("   - Fetch available:", typeof fetch !== 'undefined');
-      console.log("   - LocalStorage available:", typeof localStorage !== 'undefined');
-      console.log("   - CORS support:", typeof XMLHttpRequest !== 'undefined');
-      console.log("   - Module support:", 'noModule' in HTMLScriptElement.prototype);
-      console.log("   - Is mobile:", /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
-      
-      console.log("3. Paystack Configuration:");
-      console.log("   - Amount:", amount);
-      console.log("   - User email:", user.email);
-      console.log("   - Paystack data:", paystackData);
-      console.log("   - Public key (first 8 chars):", PAYSTACK_PUBLIC_KEY.substring(0, 8));
-      
-      console.log("4. Current Window State:");
-      console.log("   - Window.PaystackPop available:", !!window.PaystackPop);
-      console.log("   - Window.Paystack available:", !!(window as any).Paystack);
-      console.log("   - Window.paystack available:", !!(window as any).paystack);
-      console.log("   - Document readyState:", document.readyState);
-      
-      console.log("5. Script Analysis:");
-      const allScripts = Array.from(document.querySelectorAll('script'));
-      console.log("   - Total scripts in document:", allScripts.length);
-      const paystackScripts = allScripts.filter(s => s.src && s.src.includes('paystack'));
-      console.log("   - Paystack scripts found:", paystackScripts.length);
-      paystackScripts.forEach((script, i) => {
-        console.log(`   - Paystack script ${i + 1}:`, {
-          src: script.src,
-          loaded: script.readyState || 'unknown',
-          async: script.async,
-          defer: script.defer,
-          crossOrigin: script.crossOrigin
-        });
-      });
-      
-      console.log("6. Network & CSP Test:");
-      if (window.location.hostname.includes('replit') || process.env.NODE_ENV === 'production') {
-        console.log("   - Production/Deployed environment detected");
-        
-        // Test network connectivity to Paystack
-        fetch('https://js.paystack.co/v1/inline.js', { method: 'HEAD', mode: 'no-cors' })
-          .then(() => console.log("   - ✓ Network connectivity to Paystack confirmed"))
-          .catch(e => console.error("   - ✗ Network connectivity to Paystack failed:", e));
-          
-        // Test CSP by attempting script injection
-        try {
-          const testScript = document.createElement('script');
-          testScript.src = 'https://js.paystack.co/test-csp.js';
-          testScript.onload = () => console.log("   - ✓ CSP allows Paystack scripts");
-          testScript.onerror = (e) => console.error("   - ✗ CSP may be blocking Paystack scripts:", e);
-          document.head.appendChild(testScript);
-          setTimeout(() => testScript.remove(), 2000);
-        } catch (e) {
-          console.error("   - ✗ Script injection test failed (CSP violation):", e);
-        }
-      } else {
-        console.log("   - Development environment detected");
-      }
+      // Removed comprehensive debug logging to reduce console noise
+      console.log("Payment initialization - using CSP-bypass system only");
       
       console.log("🚀 USING CSP-BYPASS PAYMENT SYSTEM - NO SCRIPT LOADING");
       console.log("This will open Paystack checkout in a popup window");

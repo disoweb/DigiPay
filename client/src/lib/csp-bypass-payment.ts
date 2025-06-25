@@ -12,13 +12,11 @@ interface PaymentConfig {
 }
 
 export const initializeCSPBypassPayment = async (config: PaymentConfig) => {
-  console.log("=== CSP-BYPASS PAYMENT SYSTEM ACTIVATED ===");
-  console.log("This system bypasses ALL CSP restrictions by using direct URL redirects");
-  console.log("No external scripts will be loaded - completely CSP-safe");
+  console.log("CSP-Bypass Payment: Starting secure payment flow");
   
   try {
     // Step 1: Initialize payment via our API
-    console.log("STEP 1: Calling payment initialization API...");
+    console.log("Initializing payment...");
     const response = await fetch('/api/payments/initialize', {
       method: 'POST',
       headers: {
@@ -44,8 +42,7 @@ export const initializeCSPBypassPayment = async (config: PaymentConfig) => {
     }
 
     // Step 2: Open payment in popup window (better for monitoring)
-    console.log("STEP 2: Opening Paystack checkout in popup window...");
-    console.log("Payment URL:", data.data.authorization_url);
+    console.log("Opening Paystack checkout window...");
     const paymentWindow = window.open(
       data.data.authorization_url,
       'paystack_checkout',
