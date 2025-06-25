@@ -71,7 +71,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           email: email,
           amount: amountInKobo,
           currency: 'NGN',
-          callback_url: `${req.protocol}://${req.get('host')}/payment-callback`,
+          callback_url: `${req.protocol}://${req.get('host')}/payment-success`,
           metadata: {
             user_id: req.user.id,
             source: 'wallet_deposit'
@@ -345,10 +345,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .container {
             background: white;
             border-radius: 12px;
-            padding: 48px 32px;
+            padding: 32px;
             box-shadow: 0 10px 40px rgba(0,0,0,0.1);
-            width: 100%;
-            max-width: 500px;
+            width: 90vw;
+            max-width: 384px;
             text-align: center;
           }
           .logo { font-size: 24px; font-weight: bold; color: #22C55E; margin-bottom: 24px; }
@@ -433,10 +433,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 localStorage.removeItem('pending_payment_reference');
                 localStorage.removeItem('pending_payment_amount');
                 
-                // Auto-redirect after 3 seconds
-                setTimeout(() => {
-                  window.location.href = '/wallet';
-                }, 3000);
+                // Check if opened in popup/new window, close it and refresh parent
+                if (window.opener) {
+                  // Send success message to parent window
+                  window.opener.postMessage({
+                    type: 'payment_success',
+                    amount: data.data.amount,
+                    reference: reference
+                  }, window.opener.location.origin);
+                  
+                  // Close this window after 2 seconds
+                  setTimeout(() => {
+                    window.close();
+                  }, 2000);
+                } else {
+                  // Auto-redirect after 3 seconds for direct navigation
+                  setTimeout(() => {
+                    window.location.href = '/wallet';
+                  }, 3000);
+                }
               } else {
                 document.getElementById('status').innerHTML = 
                   'Payment verification failed. Please contact support if amount was deducted.';

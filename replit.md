@@ -105,6 +105,9 @@ A peer-to-peer cryptocurrency trading platform enabling direct trading between u
   - **DIRECT REDIRECT SOLUTION**: Replaced iframe/popup approach with direct window redirect to Paystack for production deployments
   - **PAYMENT SUCCESS PAGE**: Created dedicated payment verification page that handles Paystack returns and confirms deposits
   - **SEAMLESS FLOW**: Production payment now uses: Deposit Modal → Paystack Redirect → Payment Success → Auto Return to Wallet
+  - **CALLBACK FIX**: Fixed payment callback URL to use /payment-success route for proper balance updates and transaction logging
+  - **MODAL DIMENSIONS**: Updated payment success page to match deposit modal dimensions (max-w-sm, 90vw) for consistent UI
+  - **POPUP INTEGRATION**: Enhanced payment success page to communicate with parent window and auto-close when opened as popup
 - **2025-06-25**: Resolved Paystack payment system issue with comprehensive debugging and fallback implementation
   - Root cause identified: Replit's deployment infrastructure enforces CSP headers that block external scripts
   - Implemented HTML meta CSP tag to override restrictions and allow Paystack domains
