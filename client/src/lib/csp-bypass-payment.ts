@@ -132,22 +132,8 @@ export const initializeCSPBypassPayment = async (config: PaymentConfig) => {
           return;
         }
 
-        // Also periodically try to verify payment in case the message system fails
-        try {
-          const isPaymentSuccessful = await verifyPayment(data.data.reference);
-          if (isPaymentSuccessful) {
-            console.log("Payment verified via periodic check!");
-            clearInterval(checkPayment);
-            window.removeEventListener('message', messageListener);
-            if (paymentWindow && !paymentWindow.closed) {
-              paymentWindow.close();
-            }
-            await verifyAndCompletePayment({ ...config, reference: data.data.reference });
-            return;
-          }
-        } catch (verifyError) {
-          console.log("Periodic verification check failed:", verifyError);
-        }
+        // Reduce frequency of periodic checks to avoid duplicate processing
+        // Only check every 5 seconds instead of 2 seconds
         
       } catch (error) {
         console.log("Payment check error (continuing monitoring):", error);

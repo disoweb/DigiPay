@@ -182,7 +182,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           data: {
             status: 'success',
             reference: reference,
-            amount: actualAmount,
+            amount: parseFloat(existingTransaction.amount),
             message: 'Payment already processed'
           }
         });
@@ -215,6 +215,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
         
         console.log(`✅ Balance updated: ₦${currentBalance.toLocaleString()} + ₦${actualAmount.toLocaleString()} = ₦${newBalance.toLocaleString()}`);
+        
+        // Send real-time balance update via WebSocket
+        const io = req.app.get('io');
+        if (io) {
+          io.to(`user_${req.user.id}`).emit('balance_updated', {
+            userId: req.user.id,
+            nairaBalance: newBalance.toString(),
+            usdtBalance: req.user.usdtBalance || '0',
+            previousBalance: currentBalance.toString(),
+            lastTransaction: {
+              type: 'deposit',
+              amount: actualAmount.toString(),
+              status: 'completed',
+              method: 'paystack',
+              reference: reference
+            }
+          });
+          console.log("✅ Real-time balance update sent via WebSocket");
+        }
+        
       } catch (balanceError) {
         console.error("Error updating user balance:", balanceError);
         return res.status(500).json({ 
