@@ -184,14 +184,13 @@ export function EnhancedDepositModal({ open, onOpenChange, user }: EnhancedDepos
       console.log("🚀 USING CSP-BYPASS PAYMENT SYSTEM - NO SCRIPT LOADING");
       console.log("This will open Paystack checkout in a popup window");
       
-      // Use CSP-Bypass payment system with embedded container
+      // Use CSP-Bypass payment system instead of enhanced paystack
       await initializeCSPBypassPayment({
         key: PAYSTACK_PUBLIC_KEY,
         email: user.email,
         amount: parseFloat(amount) * 100, // Convert to kobo
         currency: 'NGN',
         reference: paystackData.reference,
-        containerId: 'embedded-payment-container', // Enable embedded mode
         callback: (response: any) => {
           console.log("CSP-Bypass payment callback received:", response);
           if (response.status === 'success') {
@@ -429,33 +428,24 @@ export function EnhancedDepositModal({ open, onOpenChange, user }: EnhancedDepos
             </form>
           )}
 
-          {/* Processing Step - Embedded Payment */}
+          {/* Processing Step */}
           {paymentStep === 'processing' && (
-            <div className="space-y-4">
-              <div className="text-center py-4">
-                <h3 className="text-lg font-semibold mb-2">Complete Your Payment</h3>
-                <p className="text-gray-600 text-sm">Enter your card details below to complete the deposit of ₦{parseFloat(amount || '0').toLocaleString()}</p>
+            <div className="text-center space-y-4">
+              <div className="flex justify-center">
+                <Loader2 className="h-12 w-12 text-blue-600 animate-spin" />
               </div>
-              
-              {/* Embedded payment container */}
-              <div 
-                id="embedded-payment-container" 
-                className="w-full min-h-[600px] border border-gray-200 rounded-lg overflow-hidden bg-white"
-              >
-                <div className="text-center py-8">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                  <p className="text-gray-600">Loading payment form...</p>
-                </div>
+              <div>
+                <h3 className="font-semibold text-lg">Redirecting to Payment</h3>
+                <p className="text-gray-600">
+                  Please complete your payment of ₦{parseFloat(amount || '0').toLocaleString()} securely with Paystack
+                </p>
               </div>
-              
-              <div className="text-center">
-                <button
-                  onClick={() => setPaymentStep('amount')}
-                  className="text-gray-500 hover:text-gray-700 text-sm underline"
-                >
-                  Cancel Payment
-                </button>
-              </div>
+              <Alert>
+                <Shield className="h-4 w-4" />
+                <AlertDescription>
+                  Do not close this window. You'll be redirected back automatically after payment.
+                </AlertDescription>
+              </Alert>
             </div>
           )}
 
