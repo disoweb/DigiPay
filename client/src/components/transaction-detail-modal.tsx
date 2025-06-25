@@ -67,7 +67,22 @@ export function TransactionDetailModal({ transaction, isOpen, onClose }: Transac
             {/* Amount and Status - Compact */}
             <div className="text-center py-4 bg-gray-50 rounded-lg">
               <div className="text-2xl font-bold mb-1">
-                ₦{parseFloat(transaction.amount).toLocaleString()}
+                {(() => {
+                  const amount = transaction.amount || "0";
+                  
+                  // Handle swap transactions with formatted amounts
+                  if (amount.includes("NGN")) {
+                    return amount; // Already formatted
+                  } else if (amount.includes("USDT")) {
+                    return amount.replace("USDT", "").trim() + " USDT";
+                  } else if (amount.includes("$")) {
+                    return amount;
+                  } else {
+                    // Parse numeric amount and format as NGN
+                    const numericAmount = parseFloat(amount.replace(/[^0-9.-]/g, ''));
+                    return isNaN(numericAmount) ? amount : `₦${numericAmount.toLocaleString()}`;
+                  }
+                })()}
               </div>
               <Badge
                 className={`px-2 py-1 text-xs rounded-full border ${getStatusColor(transaction.status)}`}

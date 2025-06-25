@@ -583,18 +583,21 @@ export default function Wallet() {
                               const amount = transaction.amount || "0";
                               const sign = transaction.type === "deposit" ? "+" : "-";
                               
-                              // Check if amount already contains currency symbols
-                              if (amount.includes("USDT")) {
-                                // Replace USDT with $ and position it correctly
-                                const numericAmount = amount.replace(" USDT", "").replace("USDT", "");
-                                return `${sign}$${numericAmount}`;
+                              // Handle swap transactions and other formatted amounts
+                              if (amount.includes("NGN") || amount.includes("USDT")) {
+                                // For swap transactions, show the full formatted amount
+                                return amount;
                               } else if (amount.includes("$")) {
                                 return `${sign}${amount}`;
                               } else if (amount.includes("₦")) {
                                 return `${sign}${amount}`;
                               } else {
-                                // Default to NGN formatting for legacy amounts
-                                return `${sign}₦${parseFloat(amount).toLocaleString()}`;
+                                // Parse numeric amount safely
+                                const numericAmount = parseFloat(amount.replace(/[^0-9.-]/g, ''));
+                                if (isNaN(numericAmount)) {
+                                  return amount; // Return original if can't parse
+                                }
+                                return `${sign}₦${numericAmount.toLocaleString()}`;
                               }
                             })()}
                           </p>

@@ -120,6 +120,8 @@ A peer-to-peer cryptocurrency trading platform enabling direct trading between u
   - **UI IMPROVEMENTS**: Reduced modal text sizes, spacing, and simplified layout for better mobile experience
   - **JSX SYNTAX FIX**: Fixed JSX closing tag error in transaction detail modal preventing application startup
   - **COMPONENT REBUILD**: Recreated transaction modal with proper mobile-optimized layout and clean syntax
+  - **SWAP DISPLAY FIX**: Fixed "NaN" display issue for swap transactions by improving amount parsing logic
+  - **AMOUNT FORMATTING**: Enhanced transaction amount display to handle formatted amounts with currency symbols properly
 - **2025-06-25**: Resolved Paystack payment system issue with comprehensive debugging and fallback implementation
   - Root cause identified: Replit's deployment infrastructure enforces CSP headers that block external scripts
   - Implemented HTML meta CSP tag to override restrictions and allow Paystack domains
