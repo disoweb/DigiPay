@@ -311,18 +311,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Clean payment route that bypasses all CSP restrictions
-  app.get("/clean-payment", (req, res) => {
-    console.log("Clean payment route accessed - serving CSP-free payment page");
+  // Payment success callback route for handling Paystack returns
+  app.get("/payment-success", (req, res) => {
+    const { reference, trxref } = req.query;
+    const paymentReference = reference || trxref;
     
-    // Serve a completely clean HTML page with no external dependencies
+    console.log("Payment success callback received:", { reference, trxref, paymentReference });
+    
+    // Send HTML page that verifies payment and redirects back to wallet
     res.send(`
       <!DOCTYPE html>
       <html>
       <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>DigiPay - Secure Payment</title>
+        <title>DigiPay - Payment Processing</title>
         <style>
           * { margin: 0; padding: 0; box-sizing: border-box; }
           body { 
@@ -333,110 +336,119 @@ export async function registerRoutes(app: Express): Promise<Server> {
             align-items: center;
             justify-content: center;
           }
-          .payment-container {
+          .container {
             background: white;
             border-radius: 12px;
-            padding: 32px;
+            padding: 48px 32px;
             box-shadow: 0 10px 40px rgba(0,0,0,0.1);
             width: 100%;
             max-width: 500px;
             text-align: center;
           }
           .logo { font-size: 24px; font-weight: bold; color: #22C55E; margin-bottom: 24px; }
-          .payment-form { display: flex; flex-direction: column; gap: 16px; }
-          .form-group { text-align: left; }
-          label { display: block; margin-bottom: 6px; font-weight: 500; color: #374151; }
-          input { 
-            width: 100%; padding: 12px; border: 1px solid #d1d5db; 
-            border-radius: 8px; font-size: 16px;
+          .spinner {
+            border: 3px solid #f3f4f6;
+            border-top: 3px solid #22C55E;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
           }
-          button {
-            background: #22C55E; color: white; border: none; padding: 14px;
-            border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer;
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
           }
-          button:hover { background: #16a34a; }
-          .status { margin-top: 16px; padding: 12px; border-radius: 8px; }
+          .status { margin: 20px 0; padding: 16px; border-radius: 8px; }
           .success { background: #dcfce7; color: #166534; }
           .error { background: #fef2f2; color: #dc2626; }
           .loading { background: #eff6ff; color: #1d4ed8; }
+          button {
+            background: #22C55E; color: white; border: none; padding: 12px 24px;
+            border-radius: 8px; font-size: 14px; cursor: pointer; margin-top: 16px;
+          }
+          button:hover { background: #16a34a; }
         </style>
       </head>
       <body>
-        <div class="payment-container">
+        <div class="container">
           <div class="logo">DigiPay</div>
-          <h2>Secure Payment</h2>
-          <p style="color: #6b7280; margin: 16px 0;">Complete your deposit securely</p>
-          
-          <div class="payment-form">
-            <div class="form-group">
-              <label for="amount">Amount (₦)</label>
-              <input type="number" id="amount" placeholder="Enter amount" min="100" max="1000000">
-            </div>
-            <div class="form-group">
-              <label for="email">Email</label>
-              <input type="email" id="email" placeholder="Enter your email">
-            </div>
-            <button onclick="initiatePayment()">Pay Now</button>
+          <h2>Processing Your Payment</h2>
+          <div class="spinner"></div>
+          <div id="status" class="status loading">
+            Verifying your payment with Paystack...
           </div>
-          
-          <div id="status"></div>
+          <div id="actions" style="display: none;">
+            <button onclick="goToWallet()">Go to Wallet</button>
+          </div>
         </div>
         
         <script>
+          const reference = '${paymentReference}';
           const token = localStorage.getItem('digipay_token') || sessionStorage.getItem('digipay_token');
           
-          async function initiatePayment() {
-            const amount = document.getElementById('amount').value;
-            const email = document.getElementById('email').value;
-            const status = document.getElementById('status');
-            
-            if (!amount || !email) {
-              status.innerHTML = '<div class="status error">Please fill in all fields</div>';
+          async function verifyPayment() {
+            if (!reference) {
+              document.getElementById('status').innerHTML = 'No payment reference found';
+              document.getElementById('status').className = 'status error';
               return;
             }
             
             if (!token) {
-              status.innerHTML = '<div class="status error">Authentication required. Please log in.</div>';
+              document.getElementById('status').innerHTML = 'Authentication required. Please log in again.';
+              document.getElementById('status').className = 'status error';
+              setTimeout(() => {
+                window.location.href = '/auth';
+              }, 2000);
               return;
             }
             
-            status.innerHTML = '<div class="status loading">Initializing payment...</div>';
-            
             try {
-              const response = await fetch('/api/payments/initialize', {
+              const response = await fetch('/api/payments/verify', {
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json',
                   'Authorization': 'Bearer ' + token
                 },
-                body: JSON.stringify({ amount: parseFloat(amount), email })
+                body: JSON.stringify({ reference })
               });
               
               const data = await response.json();
               
-              if (data.success && data.data.authorization_url) {
-                status.innerHTML = '<div class="status loading">Redirecting to payment...</div>';
-                // Redirect to Paystack
-                window.location.href = data.data.authorization_url;
+              if (data.success && data.data.status === 'success') {
+                document.getElementById('status').innerHTML = 
+                  'Payment successful! ₦' + data.data.amount + ' has been added to your wallet.';
+                document.getElementById('status').className = 'status success';
+                document.getElementById('actions').style.display = 'block';
+                
+                // Clean up pending payment data
+                localStorage.removeItem('pending_payment_reference');
+                localStorage.removeItem('pending_payment_amount');
+                
+                // Auto-redirect after 3 seconds
+                setTimeout(() => {
+                  window.location.href = '/wallet';
+                }, 3000);
               } else {
-                status.innerHTML = '<div class="status error">Payment initialization failed</div>';
+                document.getElementById('status').innerHTML = 
+                  'Payment verification failed. Please contact support if amount was deducted.';
+                document.getElementById('status').className = 'status error';
+                document.getElementById('actions').style.display = 'block';
               }
             } catch (error) {
-              status.innerHTML = '<div class="status error">Network error. Please try again.</div>';
+              document.getElementById('status').innerHTML = 
+                'Unable to verify payment. Please check your connection and try again.';
+              document.getElementById('status').className = 'status error';
+              document.getElementById('actions').style.display = 'block';
             }
           }
           
-          // Auto-fill email if available from token
-          if (token) {
-            try {
-              const payload = JSON.parse(atob(token.split('.')[1]));
-              if (payload.email) {
-                document.getElementById('email').value = payload.email;
-              }
-            } catch (e) {
-              console.log('Could not parse token');
-            }
+          function goToWallet() {
+            window.location.href = '/wallet';
           }
+          
+          // Start verification immediately
+          verifyPayment();
         </script>
       </body>
       </html>

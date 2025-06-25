@@ -59,60 +59,23 @@ export const initializeCSPBypassPayment = async (config: PaymentConfig) => {
       throw new Error("Invalid payment initialization response");
     }
 
-    // Step 2: For production, use clean payment route to bypass CSP
+    // Step 2: For production, redirect directly to Paystack
     if (window.location.hostname.includes('replit.app') || window.location.hostname.includes('replit.dev')) {
-      console.log("Production deployment detected - using clean payment route");
+      console.log("Production deployment detected - using direct redirect to Paystack");
       
-      // Create a form and submit to clean payment route
-      const form = document.createElement('form');
-      form.method = 'POST';
-      form.action = '/clean-payment';
-      form.target = '_blank';
+      // Store payment reference for verification after return
+      localStorage.setItem('pending_payment_reference', data.data.reference);
+      localStorage.setItem('pending_payment_amount', (config.amount / 100).toString());
       
-      const amountInput = document.createElement('input');
-      amountInput.type = 'hidden';
-      amountInput.name = 'amount';
-      amountInput.value = (config.amount / 100).toString();
+      // Set up callback URL that includes our reference
+      const callbackUrl = `${window.location.origin}/payment-success?reference=${data.data.reference}`;
       
-      const emailInput = document.createElement('input');
-      emailInput.type = 'hidden';
-      emailInput.name = 'email';
-      emailInput.value = config.email;
+      // Redirect directly to Paystack with callback
+      const paystackUrl = `${data.data.authorization_url}&callback_url=${encodeURIComponent(callbackUrl)}`;
+      console.log("Redirecting to Paystack:", paystackUrl);
       
-      form.appendChild(amountInput);
-      form.appendChild(emailInput);
-      document.body.appendChild(form);
-      form.submit();
-      document.body.removeChild(form);
-      
-      // Monitor for payment completion via polling
-      const checkPaymentCompletion = setInterval(async () => {
-        try {
-          const response = await fetch(`/api/payments/verify`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${localStorage.getItem('digipay_token')}`
-            },
-            body: JSON.stringify({ reference: data.data.reference })
-          });
-          
-          const verifyData = await response.json();
-          if (verifyData.success && verifyData.data.status === 'success') {
-            clearInterval(checkPaymentCompletion);
-            config.callback({
-              status: 'success',
-              reference: data.data.reference,
-              transaction: data.data.reference
-            });
-          }
-        } catch (error) {
-          console.log("Payment verification check:", error);
-        }
-      }, 3000);
-      
-      // Stop checking after 10 minutes
-      setTimeout(() => clearInterval(checkPaymentCompletion), 600000);
+      // Use window.location.href for immediate redirect
+      window.location.href = paystackUrl;
       return;
     }
 
