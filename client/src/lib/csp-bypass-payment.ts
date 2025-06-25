@@ -83,6 +83,65 @@ export const initializeCSPBypassPayment = async (config: PaymentConfig) => {
     window.addEventListener('message', messageListener);
     console.log("Message listener added for payment completion");
     
+    // Check if embedded container is provided
+    if (config.containerId) {
+      const container = document.getElementById(config.containerId);
+      if (container) {
+        console.log("Embedding payment form in container:", config.containerId);
+        
+        // Create iframe for embedded payment
+        const iframe = document.createElement('iframe');
+        iframe.src = data.data.authorization_url;
+        iframe.style.cssText = `
+          width: 100%;
+          height: 600px;
+          border: none;
+          border-radius: 8px;
+        `;
+        iframe.id = 'paystack-embedded-frame';
+        
+        // Clear container and add iframe
+        container.innerHTML = '';
+        container.appendChild(iframe);
+        
+        // Enhanced monitoring for embedded iframe
+        const checkEmbeddedPayment = setInterval(async () => {
+          try {
+            console.log('Checking embedded payment status...');
+            const response = await fetch('/api/payments/verify', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('digipay_token')}`
+              },
+              body: JSON.stringify({ reference: data.data.reference })
+            });
+            
+            const result = await response.json();
+            if (result.success) {
+              clearInterval(checkEmbeddedPayment);
+              window.removeEventListener('message', messageListener);
+              console.log('Embedded payment verified!');
+              config.onSuccess(data.data.reference);
+              return;
+            }
+          } catch (e) {
+            console.log('Embedded payment check error:', e);
+          }
+        }, 2000);
+        
+        // Cleanup after 10 minutes
+        setTimeout(() => {
+          clearInterval(checkEmbeddedPayment);
+          window.removeEventListener('message', messageListener);
+          console.log('Embedded payment timeout');
+        }, 10 * 60 * 1000);
+        
+        return;
+      }
+    }
+
+    // Fallback to popup if no container specified
     const paymentWindow = window.open(
       data.data.authorization_url,
       'paystack_checkout',

@@ -72,7 +72,7 @@ A peer-to-peer cryptocurrency trading platform enabling direct trading between u
   - **PAYMENT SUCCESS**: Confirmed payment system working - single transaction per payment with proper duplicate prevention
   - **WEBSOCKET ENHANCEMENT**: Enhanced real-time balance update handling with immediate cache refresh and user notifications
   - **TOAST FIX**: Removed duplicate green toast notification with NaN values - keeping only the payment modal success toast with correct amount
-  - **INLINE PAYMENT**: Modified Paystack integration to use inline iframe instead of popup window for better UX
+  - **EMBEDDED PAYMENT**: Implemented fully embedded Paystack payment form within deposit modal - no popups or new windows
 - **2025-06-25**: Resolved Paystack payment system issue with comprehensive debugging and fallback implementation
   - Root cause identified: Replit's deployment infrastructure enforces CSP headers that block external scripts
   - Implemented HTML meta CSP tag to override restrictions and allow Paystack domains
