@@ -18,11 +18,11 @@ app.use((req, res, next) => {
     res.setHeader(
       'Content-Security-Policy',
       "default-src 'self'; " +
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.paystack.co https://checkout.paystack.com; " +
-      "style-src 'self' 'unsafe-inline' https://js.paystack.co https://checkout.paystack.com; " +
-      "connect-src 'self' ws: wss: https: https://api.paystack.co https://checkout.paystack.com; " +
-      "frame-src 'self' https://checkout.paystack.com https://js.paystack.co; " +
-      "img-src 'self' data: https: https://checkout.paystack.com; " +
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.paystack.co https://checkout.paystack.com https://*.paystack.co https://*.paystack.com; " +
+      "style-src 'self' 'unsafe-inline' https://js.paystack.co https://checkout.paystack.com https://*.paystack.co https://*.paystack.com; " +
+      "connect-src 'self' ws: wss: https: https://api.paystack.co https://checkout.paystack.com https://*.paystack.co https://*.paystack.com; " +
+      "frame-src 'self' https://checkout.paystack.com https://js.paystack.co https://*.paystack.co https://*.paystack.com; " +
+      "img-src 'self' data: https: https://checkout.paystack.com https://*.paystack.co https://*.paystack.com; " +
       "font-src 'self' data: https:; " +
       "object-src 'none'; " +
       "base-uri 'self';"

@@ -23,6 +23,24 @@ declare global {
   }
 }
 
+export const detectEnvironment = () => {
+  const isProduction = window.location.hostname.includes('.replit.app') || process.env.NODE_ENV === 'production';
+  const isDevelopment = window.location.hostname.includes('localhost') || window.location.hostname.includes('127.0.0.1') || window.location.port === '5000';
+  
+  return {
+    isProduction,
+    isDevelopment,
+    hostname: window.location.hostname,
+    protocol: window.location.protocol,
+    userAgent: navigator.userAgent,
+    supports: {
+      fetch: typeof fetch !== 'undefined',
+      modules: 'noModule' in HTMLScriptElement.prototype,
+      cors: typeof XMLHttpRequest !== 'undefined'
+    }
+  };
+};
+
 export const loadPaystackScript = (): Promise<void> => {
   return new Promise((resolve, reject) => {
     // Check if Paystack is already available
@@ -32,6 +50,8 @@ export const loadPaystackScript = (): Promise<void> => {
       return;
     }
 
+    const env = detectEnvironment();
+    console.log("Environment detection:", env);
     console.log("Loading Paystack script...");
     
     // Remove any existing Paystack scripts first
@@ -41,6 +61,7 @@ export const loadPaystackScript = (): Promise<void> => {
     // Multiple loading strategies for production robustness
     const loadStrategies = [
       'https://js.paystack.co/v1/inline.js',
+      'https://js.paystack.co/v2/inline.js',
       'https://checkout.paystack.com/assets/js/inline.js'
     ];
 
@@ -68,27 +89,41 @@ export const loadPaystackScript = (): Promise<void> => {
       
       script.onload = () => {
         console.log(`Paystack script loaded from ${scriptUrl}, checking availability...`);
+        console.log("Document readyState:", document.readyState);
+        console.log("All scripts in head:", Array.from(document.head.querySelectorAll('script')).map(s => s.src || 'inline'));
         
         // Wait for PaystackPop to be available
         let attempts = 0;
         const checkAvailability = () => {
           if (resolved) return;
           
+          console.log(`Attempt ${attempts + 1}: Checking PaystackPop availability...`);
+          console.log("window.PaystackPop:", window.PaystackPop);
+          console.log("window.Paystack:", (window as any).Paystack);
+          
           if (window.PaystackPop) {
-            console.log("Paystack is ready");
+            console.log("PaystackPop is ready!");
             resolved = true;
             resolve();
-          } else if (attempts < 30) {
+          } else if ((window as any).Paystack && (window as any).Paystack.pop) {
+            // Alternative Paystack object structure
+            console.log("Found alternative Paystack.pop structure");
+            (window as any).PaystackPop = (window as any).Paystack;
+            resolved = true;
+            resolve();
+          } else if (attempts < 50) {
             attempts++;
-            setTimeout(checkAvailability, 100);
+            setTimeout(checkAvailability, 200);
           } else {
-            console.warn(`Strategy ${strategyIndex + 1} loaded script but PaystackPop not available`);
+            console.warn(`Strategy ${strategyIndex + 1} loaded script but PaystackPop not available after 50 attempts`);
             strategyIndex++;
             tryLoadStrategy();
           }
         };
         
+        // Start checking immediately and also wait a bit
         checkAvailability();
+        setTimeout(checkAvailability, 500);
       };
       
       script.onerror = (error) => {
@@ -107,16 +142,33 @@ export const loadPaystackScript = (): Promise<void> => {
     setTimeout(() => {
       if (!resolved) {
         console.error("Paystack loading timeout - all strategies failed");
+        console.error("Environment at timeout:", detectEnvironment());
+        console.error("CSP might be blocking scripts. Checking manual initialization...");
+        
+        // Last resort: try manual paystack initialization
+        try {
+          if (typeof (window as any).paystack !== 'undefined') {
+            (window as any).PaystackPop = (window as any).paystack;
+            console.log("Found manual paystack object");
+            resolved = true;
+            resolve();
+            return;
+          }
+        } catch (e) {
+          console.error("Manual paystack check failed:", e);
+        }
+        
         resolved = true;
-        reject(new Error('Payment system loading timeout. Please refresh the page and try again.'));
+        reject(new Error('Payment system unavailable. Please check your internet connection and try again.'));
       }
-    }, 20000);
+    }, 25000);
   });
 };
 
 export const initializeEnhancedPaystack = async (config: PaystackConfig) => {
   console.log("Initializing Paystack payment...");
   console.log("Config:", { ...config, key: config.key.substring(0, 8) + '...' });
+  console.log("Environment:", detectEnvironment());
   
   try {
     // Ensure Paystack is loaded
@@ -126,7 +178,12 @@ export const initializeEnhancedPaystack = async (config: PaystackConfig) => {
 
     if (!window.PaystackPop) {
       console.error("PaystackPop not available after script load");
-      throw new Error("Payment system unavailable. Please refresh the page and try again.");
+      console.log("Attempting fallback payment system...");
+      
+      // Import and use fallback system
+      const { createPaystackFallback } = await import('./paystack-fallback');
+      window.PaystackPop = createPaystackFallback();
+      console.log("Fallback PaystackPop created");
     }
 
     console.log("PaystackPop available, setting up payment...");
