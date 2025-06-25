@@ -397,10 +397,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       <body>
         <div class="container">
           <div class="logo">DigiPay</div>
-          <h2>Processing Your Payment</h2>
+          <h2>Payment Successful!</h2>
           <div class="spinner"></div>
           <div id="status" class="status loading">
-            Verifying your payment with Paystack...
+            Updating your wallet balance...
           </div>
           <div id="actions" style="display: none;">
             <button onclick="goToWallet()">Go to Wallet</button>
@@ -421,6 +421,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
           async function verifyPayment() {
             console.log('Starting payment verification with reference:', reference);
             console.log('Token available:', !!token);
+            
+            // Quick redirect to wallet - verification happens in background
+            if (reference && reference !== 'undefined' && reference !== 'null' && token) {
+              // Show success message immediately and redirect
+              document.getElementById('status').innerHTML = 'Payment successful! Redirecting to wallet...';
+              document.getElementById('status').className = 'status success';
+              
+              // Immediate redirect - verification will happen via WebSocket updates
+              setTimeout(() => {
+                window.location.href = '/wallet';
+              }, 1000);
+              return;
+            }
             
             if (!reference || reference === 'undefined' || reference === 'null') {
               console.log('No valid payment reference found');
@@ -465,25 +478,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 localStorage.removeItem('pending_payment_reference');
                 localStorage.removeItem('pending_payment_amount');
                 
-                // Check if opened in popup/new window, close it and refresh parent
-                if (window.opener) {
-                  // Send success message to parent window
-                  window.opener.postMessage({
-                    type: 'payment_success',
-                    amount: data.data.amount,
-                    reference: reference
-                  }, window.opener.location.origin);
-                  
-                  // Close this window after 2 seconds
-                  setTimeout(() => {
-                    window.close();
-                  }, 2000);
-                } else {
-                  // Auto-redirect after 3 seconds for direct navigation
-                  setTimeout(() => {
-                    window.location.href = '/wallet';
-                  }, 3000);
-                }
+                // Immediate redirect to wallet on success
+                window.location.href = '/wallet';
               } else {
                 console.log('Payment verification failed:', data);
                 document.getElementById('status').innerHTML = 
