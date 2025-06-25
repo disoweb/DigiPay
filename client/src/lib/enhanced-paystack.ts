@@ -38,72 +38,99 @@ export const loadPaystackScript = (): Promise<void> => {
     const existingScripts = document.querySelectorAll('script[src*="paystack"]');
     existingScripts.forEach(script => script.remove());
 
-    // Load script directly - don't rely on HTML preloading
-    const script = document.createElement('script');
-    script.src = 'https://js.paystack.co/v1/inline.js';
-    script.async = true;
-    script.defer = false;
-    
+    // Multiple loading strategies for production robustness
+    const loadStrategies = [
+      'https://js.paystack.co/v1/inline.js',
+      'https://checkout.paystack.com/assets/js/inline.js'
+    ];
+
+    let strategyIndex = 0;
     let resolved = false;
-    
-    script.onload = () => {
-      console.log("Paystack script loaded, checking availability...");
-      
-      // Wait for PaystackPop to be available
-      let attempts = 0;
-      const checkAvailability = () => {
-        if (resolved) return;
-        
-        if (window.PaystackPop) {
-          console.log("Paystack is ready");
+
+    const tryLoadStrategy = () => {
+      if (resolved || strategyIndex >= loadStrategies.length) {
+        if (!resolved) {
+          console.error("All Paystack loading strategies failed");
           resolved = true;
-          resolve();
-        } else if (attempts < 50) {
-          attempts++;
-          setTimeout(checkAvailability, 100);
-        } else {
-          console.error("Paystack script loaded but PaystackPop not available");
-          resolved = true;
-          reject(new Error('Payment system initialization failed'));
+          reject(new Error('Payment system unavailable. Please check your internet connection and try again.'));
         }
+        return;
+      }
+
+      const scriptUrl = loadStrategies[strategyIndex];
+      console.log(`Trying Paystack strategy ${strategyIndex + 1}: ${scriptUrl}`);
+      
+      const script = document.createElement('script');
+      script.src = scriptUrl;
+      script.async = true;
+      script.defer = false;
+      script.crossOrigin = 'anonymous';
+      
+      script.onload = () => {
+        console.log(`Paystack script loaded from ${scriptUrl}, checking availability...`);
+        
+        // Wait for PaystackPop to be available
+        let attempts = 0;
+        const checkAvailability = () => {
+          if (resolved) return;
+          
+          if (window.PaystackPop) {
+            console.log("Paystack is ready");
+            resolved = true;
+            resolve();
+          } else if (attempts < 30) {
+            attempts++;
+            setTimeout(checkAvailability, 100);
+          } else {
+            console.warn(`Strategy ${strategyIndex + 1} loaded script but PaystackPop not available`);
+            strategyIndex++;
+            tryLoadStrategy();
+          }
+        };
+        
+        checkAvailability();
       };
       
-      checkAvailability();
+      script.onerror = (error) => {
+        console.warn(`Strategy ${strategyIndex + 1} failed:`, error);
+        strategyIndex++;
+        tryLoadStrategy();
+      };
+      
+      document.head.appendChild(script);
     };
+
+    // Start with first strategy
+    tryLoadStrategy();
     
-    script.onerror = (error) => {
-      console.error("Failed to load Paystack script:", error);
-      if (!resolved) {
-        resolved = true;
-        reject(new Error('Payment system loading failed'));
-      }
-    };
-    
-    // Timeout fallback
+    // Global timeout fallback
     setTimeout(() => {
       if (!resolved) {
-        console.error("Paystack loading timeout");
+        console.error("Paystack loading timeout - all strategies failed");
         resolved = true;
-        reject(new Error('Payment system loading timeout. Please check your internet connection and try again.'));
+        reject(new Error('Payment system loading timeout. Please refresh the page and try again.'));
       }
-    }, 15000);
-    
-    document.head.appendChild(script);
+    }, 20000);
   });
 };
 
 export const initializeEnhancedPaystack = async (config: PaystackConfig) => {
   console.log("Initializing Paystack payment...");
+  console.log("Config:", { ...config, key: config.key.substring(0, 8) + '...' });
   
   try {
     // Ensure Paystack is loaded
+    console.log("Loading Paystack script...");
     await loadPaystackScript();
     console.log("Paystack script loaded successfully");
 
     if (!window.PaystackPop) {
-      throw new Error("Payment system unavailable. Please refresh the page.");
+      console.error("PaystackPop not available after script load");
+      throw new Error("Payment system unavailable. Please refresh the page and try again.");
     }
 
+    console.log("PaystackPop available, setting up payment...");
+    
     // Setup and open payment with enhanced styling
     const handler = window.PaystackPop.setup({
       key: config.key,
@@ -113,15 +140,26 @@ export const initializeEnhancedPaystack = async (config: PaystackConfig) => {
       reference: config.reference,
       channels: config.channels || ['card', 'bank', 'ussd', 'mobile_money'],
       metadata: config.metadata || {},
-      callback: config.callback,
-      onClose: config.onClose
+      callback: (response: any) => {
+        console.log("Paystack callback triggered:", response);
+        config.callback(response);
+      },
+      onClose: () => {
+        console.log("Paystack onClose triggered");
+        config.onClose();
+      }
     });
     
     console.log("Paystack handler created, opening payment...");
     
+    if (!handler || typeof handler.openIframe !== 'function') {
+      console.error("Invalid handler returned from Paystack setup");
+      throw new Error("Payment initialization failed. Please try again.");
+    }
+    
     // Open iframe and ensure it's clickable
     handler.openIframe();
-    console.log("Payment iframe opened");
+    console.log("Payment iframe opened successfully");
   } catch (error) {
     console.error("Paystack initialization error:", error);
     throw error;

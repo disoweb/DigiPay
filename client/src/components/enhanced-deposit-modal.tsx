@@ -149,7 +149,29 @@ export function EnhancedDepositModal({ open, onOpenChange, user }: EnhancedDepos
         throw new Error("User email not available. Please refresh and try again.");
       }
 
-      console.log("Initializing Paystack payment with data:", paystackData);
+      console.log("=== PAYSTACK DEBUG START ===");
+      console.log("Environment:", process.env.NODE_ENV);
+      console.log("User agent:", navigator.userAgent);
+      console.log("Current URL:", window.location.href);
+      console.log("Paystack data:", paystackData);
+      console.log("Window.PaystackPop available:", !!window.PaystackPop);
+      
+      // Check if we're in production and log CSP info
+      if (process.env.NODE_ENV === 'production') {
+        console.log("Production mode detected - checking CSP headers");
+        
+        // Try to detect CSP issues
+        try {
+          const testScript = document.createElement('script');
+          testScript.src = 'https://js.paystack.co/test.js';
+          testScript.onload = () => console.log("Test script loaded successfully");
+          testScript.onerror = (e) => console.error("Test script failed:", e);
+          document.head.appendChild(testScript);
+          setTimeout(() => testScript.remove(), 1000);
+        } catch (e) {
+          console.error("CSP test failed:", e);
+        }
+      }
       
       // Use the enhanced Paystack initialization with proper error handling
       await initializeEnhancedPaystack({
