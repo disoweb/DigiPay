@@ -73,18 +73,21 @@ export const initializeCSPBypassPayment = async (config: PaymentConfig) => {
         clearInterval(checkPayment);
         window.removeEventListener('message', messageListener);
         
-        // Show loading indicator during callback processing
+        // Show loading indicator immediately during callback processing
         const container = document.getElementById('paystack-iframe-container');
         if (container) {
+          // Clear all content first
+          container.innerHTML = '';
+          
           const callbackLoadingDiv = document.createElement('div');
           callbackLoadingDiv.style.cssText = `
-            position: absolute;
+            position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(255, 255, 255, 0.95);
-            z-index: 1001;
+            background: rgba(255, 255, 255, 0.98);
+            z-index: 10000;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -106,25 +109,22 @@ export const initializeCSPBypassPayment = async (config: PaymentConfig) => {
             </style>
           `;
           
-          // Add loading indicator to container
+          // Replace all container content with loading indicator
           container.appendChild(callbackLoadingDiv);
-          
-          // Remove iframe content but keep container for loading indicator
-          const iframe = container.querySelector('iframe');
-          if (iframe) {
-            iframe.style.display = 'none';
-          }
         }
         
-        setTimeout(async () => {
+        // Start verification immediately without setTimeout delay
+        (async () => {
           await verifyAndCompletePayment({ ...config, reference: event.data.reference });
           
-          // Close the entire container after verification
-          const finalContainer = document.getElementById('paystack-iframe-container');
-          if (finalContainer) {
-            document.body.removeChild(finalContainer);
-          }
-        }, 1500);
+          // Show success message briefly before closing
+          setTimeout(() => {
+            const finalContainer = document.getElementById('paystack-iframe-container');
+            if (finalContainer) {
+              document.body.removeChild(finalContainer);
+            }
+          }, 1000);
+        })();
       }
     };
     
