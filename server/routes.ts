@@ -129,6 +129,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Verify payment with Paystack API
       const paystackSecretKey = process.env.PAYSTACK_SECRET_KEY || 'sk_test_7c30d4c30302ab01124b5593a498326ff37000f1';
       
+      console.log("🌐 Making Paystack verification request...");
       const verifyResponse = await fetch(`https://api.paystack.co/transaction/verify/${reference}`, {
         method: 'GET',
         headers: {
@@ -137,8 +138,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       });
       
+      console.log("📡 Paystack response status:", verifyResponse.status);
+      
+      if (!verifyResponse.ok) {
+        console.log("❌ Paystack API error, status:", verifyResponse.status);
+        const errorText = await verifyResponse.text();
+        console.log("❌ Paystack error details:", errorText);
+        return res.status(500).json({ 
+          success: false, 
+          message: `Paystack API error: ${verifyResponse.status}`
+        });
+      }
+      
       const verifyData = await verifyResponse.json();
-      console.log("Paystack verification response:", verifyData);
+      console.log("✅ Paystack verification response:", JSON.stringify(verifyData, null, 2));
       
       if (!verifyData.status) {
         return res.status(400).json({ 
@@ -306,8 +319,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       });
     } catch (error) {
-      console.error("Payment verification error:", error);
-      res.status(500).json({ success: false, message: "Payment verification failed" });
+      console.error("💥 Payment verification error:", error);
+      console.error("💥 Error stack:", error.stack);
+      res.status(500).json({ 
+        success: false, 
+        message: "Payment verification failed: " + (error.message || "Unknown error")
+      });
     }
   });
   
