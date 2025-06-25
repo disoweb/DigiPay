@@ -73,15 +73,58 @@ export const initializeCSPBypassPayment = async (config: PaymentConfig) => {
         clearInterval(checkPayment);
         window.removeEventListener('message', messageListener);
         
-        // Close iframe and verify payment immediately
+        // Show loading indicator during callback processing
         const container = document.getElementById('paystack-iframe-container');
         if (container) {
-          document.body.removeChild(container);
+          const callbackLoadingDiv = document.createElement('div');
+          callbackLoadingDiv.style.cssText = `
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            z-index: 1001;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+          `;
+          callbackLoadingDiv.innerHTML = `
+            <div style="width: 32px; height: 32px; border: 3px solid #e0e7ff; border-top: 3px solid #10b981; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+            <div style="text-align: center;">
+              <div style="color: #374151; font-size: 16px; font-weight: 500; margin-bottom: 4px;">Processing Payment...</div>
+              <div style="color: #6b7280; font-size: 14px;">Returning to your wallet</div>
+            </div>
+            <style>
+              @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+              }
+            </style>
+          `;
+          
+          // Add loading indicator to container
+          container.appendChild(callbackLoadingDiv);
+          
+          // Remove iframe content but keep container for loading indicator
+          const iframe = container.querySelector('iframe');
+          if (iframe) {
+            iframe.style.display = 'none';
+          }
         }
         
         setTimeout(async () => {
           await verifyAndCompletePayment({ ...config, reference: event.data.reference });
-        }, 1000);
+          
+          // Close the entire container after verification
+          const finalContainer = document.getElementById('paystack-iframe-container');
+          if (finalContainer) {
+            document.body.removeChild(finalContainer);
+          }
+        }, 1500);
       }
     };
     
@@ -188,6 +231,9 @@ export const initializeCSPBypassPayment = async (config: PaymentConfig) => {
       document.body.removeChild(iframeContainer);
       config.onClose();
     };
+    
+    // Add data attribute for easy selection
+    iframeWrapper.setAttribute('data-payment-iframe-wrapper', 'true');
     
     iframeWrapper.appendChild(iframe);
     iframeWrapper.appendChild(closeButton);
