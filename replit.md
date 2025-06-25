@@ -13,11 +13,12 @@ A peer-to-peer cryptocurrency trading platform enabling direct trading between u
 
 ## Recent Changes
 - **2025-06-25**: Fixed critical deployment issue - server now properly binds to 0.0.0.0:5000 for production
-  - Resolved Paystack payment integration failures in deployed environment
-  - Enhanced error handling with better fallback mechanisms for script loading
-  - Improved build process reliability and removed duplicate storage methods
-  - Fixed "Payment system not ready" errors with enhanced script loading logic
-  - Production build now generates correctly with 133.5kb bundle size
+  - Resolved "connection refused" errors in deployment proxy by fixing server binding configuration
+  - Enhanced Paystack payment integration with improved script loading and error handling
+  - Removed duplicate payment initialization code causing conflicts in modal
+  - Added proper cleanup for payment modal states and better timeout management
+  - Production server build optimized to 133.5kb bundle with working API endpoints
+  - Fixed server configuration to properly serve both development and production environments
 - **2025-06-24**: Enhanced animations with dynamic hero text rotation and refined user experience
   - Removed entrance animations from hero section for immediate content visibility
   - Added dynamic text rotation for hero subtitle cycling through: "Complete Security", "Complete Confidence", "Complete Trust"
