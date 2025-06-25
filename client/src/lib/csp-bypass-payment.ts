@@ -114,18 +114,14 @@ export const initializeCSPBypassPayment = async (config: PaymentConfig) => {
           container.appendChild(callbackLoadingDiv);
         }
         
-        // Start verification immediately without setTimeout delay
-        (async () => {
-          await verifyAndCompletePayment({ ...config, reference: event.data.reference });
-          
-          // Show success message briefly before closing
-          setTimeout(() => {
-            const finalContainer = document.getElementById('paystack-iframe-container');
-            if (finalContainer) {
-              document.body.removeChild(finalContainer);
-            }
-          }, 1000);
-        })();
+        // Start verification immediately - no delays at all
+        verifyAndCompletePayment({ ...config, reference: event.data.reference }).then(() => {
+          // Close immediately after verification completes
+          const finalContainer = document.getElementById('paystack-iframe-container');
+          if (finalContainer) {
+            document.body.removeChild(finalContainer);
+          }
+        });
       }
     };
     
