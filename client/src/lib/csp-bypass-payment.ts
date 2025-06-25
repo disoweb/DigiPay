@@ -73,38 +73,38 @@ export const initializeCSPBypassPayment = async (config: PaymentConfig) => {
         clearInterval(checkPayment);
         window.removeEventListener('message', messageListener);
         
-        // INSTANTLY show loading indicator - no blank page
+        // CRITICAL: Prevent any possible iframe refresh or blank page by immediate replacement
+
         const container = document.getElementById('paystack-iframe-container');
         if (container) {
           // Get the iframe wrapper that has the modal dimensions
           const iframeWrapper = container.querySelector('[data-payment-iframe-wrapper]');
           if (iframeWrapper) {
-            // Clear iframe wrapper content immediately
-            iframeWrapper.innerHTML = '';
+            // IMMEDIATELY hide iframe and show loading - prevent any blank frame
+            const iframe = iframeWrapper.querySelector('iframe');
+            if (iframe) {
+              iframe.style.display = 'none';
+            }
             
             const callbackLoadingDiv = document.createElement('div');
             callbackLoadingDiv.style.cssText = `
               position: absolute;
-              top: 0;
-              left: 0;
-              width: 100%;
-              height: 100%;
+              top: 50%;
+              left: 50%;
+              transform: translate(-50%, -50%);
               background: white;
-              z-index: 1001;
+              padding: 20px;
+              border-radius: 8px;
+              box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+              z-index: 1000;
               display: flex;
-              flex-direction: column;
               align-items: center;
-              justify-content: center;
-              gap: 16px;
+              gap: 12px;
               font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-              border-radius: 12px;
             `;
           callbackLoadingDiv.innerHTML = `
-            <div style="width: 32px; height: 32px; border: 3px solid #e0e7ff; border-top: 3px solid #10b981; border-radius: 50%; animation: spin 1s linear infinite;"></div>
-            <div style="text-align: center;">
-              <div style="color: #374151; font-size: 16px; font-weight: 500; margin-bottom: 4px;">Processing Payment...</div>
-              <div style="color: #6b7280; font-size: 14px;">Returning to your wallet</div>
-            </div>
+            <div style="width: 20px; height: 20px; border: 2px solid #e0e7ff; border-top: 2px solid #10b981; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+            <span style="color: #374151;">Processing payment...</span>
             <style>
               @keyframes spin {
                 0% { transform: rotate(0deg); }
