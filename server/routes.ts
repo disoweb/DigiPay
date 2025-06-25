@@ -195,9 +195,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           type: 'deposit',
           amount: actualAmount.toString(),
           status: 'completed',
-          reference: reference,
+          paystackRef: reference,
           paymentMethod: 'paystack',
-          description: `Wallet deposit via Paystack - ₦${actualAmount.toLocaleString()}`
+          adminNotes: `Wallet deposit via Paystack - ₦${actualAmount.toLocaleString()}`
         });
         console.log("✅ Transaction record created successfully");
       } catch (createError) {
@@ -217,9 +217,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log(`✅ Balance updated: ₦${currentBalance.toLocaleString()} + ₦${actualAmount.toLocaleString()} = ₦${newBalance.toLocaleString()}`);
         
         // Send real-time balance update via WebSocket
-        const io = req.app.get('io');
-        if (io) {
-          io.to(`user_${req.user.id}`).emit('balance_updated', {
+        const wsServer = (global as any).wsServer;
+        if (wsServer && wsServer.clients) {
+          console.log(`Broadcasting balance update to ${wsServer.clients.size} connected clients`);
+          
+          const updateMessage = JSON.stringify({
+            type: 'balance_updated',
             userId: req.user.id,
             nairaBalance: newBalance.toString(),
             usdtBalance: req.user.usdtBalance || '0',
@@ -232,7 +235,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
               reference: reference
             }
           });
-          console.log("✅ Real-time balance update sent via WebSocket");
+
+          wsServer.clients.forEach((client: any) => {
+            if (client.readyState === 1 && client.userId === req.user.id) { // WebSocket.OPEN = 1
+              client.send(updateMessage);
+              console.log("✅ Real-time balance update sent via WebSocket");
+            }
+          });
+        } else {
+          console.log("⚠️ WebSocket server not available for real-time updates");
         }
         
       } catch (balanceError) {

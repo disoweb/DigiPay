@@ -920,23 +920,12 @@ export class DatabaseStorage implements IStorage {
     try {
       const result = await db.select()
         .from(transactions)
-        .where(eq(transactions.reference, reference))
+        .where(eq(transactions.paystackRef, reference))
         .limit(1);
       return result[0] || null;
     } catch (error) {
       console.error("Error getting transaction by reference:", error);
-      
-      // Try alternative query using paystackRef column if reference column doesn't exist
-      try {
-        const result = await db.select()
-          .from(transactions)
-          .where(eq(transactions.paystackRef, reference))
-          .limit(1);
-        return result[0] || null;
-      } catch (fallbackError) {
-        console.error("Fallback query also failed:", fallbackError);
-        return null;
-      }
+      return null;
     }
   }
 

@@ -132,8 +132,22 @@ export const initializeCSPBypassPayment = async (config: PaymentConfig) => {
           return;
         }
 
-        // Reduce frequency of periodic checks to avoid duplicate processing
-        // Only check every 5 seconds instead of 2 seconds
+        // Also periodically try to verify payment in case the message system fails
+        try {
+          const isPaymentSuccessful = await verifyPayment(data.data.reference);
+          if (isPaymentSuccessful) {
+            console.log("Payment verified via periodic check!");
+            clearInterval(checkPayment);
+            window.removeEventListener('message', messageListener);
+            if (paymentWindow && !paymentWindow.closed) {
+              paymentWindow.close();
+            }
+            await verifyAndCompletePayment({ ...config, reference: data.data.reference });
+            return;
+          }
+        } catch (verifyError) {
+          console.log("Periodic verification check failed:", verifyError);
+        }
         
       } catch (error) {
         console.log("Payment check error (continuing monitoring):", error);
@@ -235,8 +249,7 @@ const verifyReturnPayment = async (reference: string, returnUrl?: string) => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
+        'Authorization': `Bearer ${token || localStorage.getItem('token')}`
       },
       body: JSON.stringify({ reference })
     });
