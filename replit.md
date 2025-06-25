@@ -12,6 +12,12 @@ A peer-to-peer cryptocurrency trading platform enabling direct trading between u
 - **Security**: JWT authentication, rate limiting, helmet security
 
 ## Recent Changes
+- **2025-06-25**: Fixed critical deployment issue - server now properly binds to 0.0.0.0:5000 for production
+  - Resolved Paystack payment integration failures in deployed environment
+  - Enhanced error handling with better fallback mechanisms for script loading
+  - Improved build process reliability and removed duplicate storage methods
+  - Fixed "Payment system not ready" errors with enhanced script loading logic
+  - Production build now generates correctly with 133.5kb bundle size
 - **2025-06-24**: Enhanced animations with dynamic hero text rotation and refined user experience
   - Removed entrance animations from hero section for immediate content visibility
   - Added dynamic text rotation for hero subtitle cycling through: "Complete Security", "Complete Confidence", "Complete Trust"

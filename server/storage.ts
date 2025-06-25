@@ -974,16 +974,7 @@ export class DatabaseStorage implements IStorage {
     return result[0] || null;
   }
 
-  async deleteTransactionByReference(reference: string): Promise<void> {
-    await db.delete(transactions)
-      .where(eq(transactions.paystackRef, reference));
-  }
 
-  async updateUserBalance(userId: number, balances: { nairaBalance?: string; usdtBalance?: string }): Promise<void> {
-    await db.update(users)
-      .set(balances)
-      .where(eq(users.id, userId));
-  }
 
   async getTransaction(id: number): Promise<Transaction | undefined> {
     const [transaction] = await db.select().from(transactions).where(eq(transactions.id, id));
