@@ -17,11 +17,14 @@ export const initializeCSPBypassPayment = async (config: PaymentConfig) => {
   try {
     // Step 1: Initialize payment via our API
     console.log("Initializing payment...");
+    const token = localStorage.getItem('token');
+    console.log("Auth token available:", !!token, token ? `(length: ${token.length})` : 'none');
+    
     const response = await fetch('/api/payments/initialize', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
+        'Authorization': `Bearer ${token}`
       },
       body: JSON.stringify({
         amount: config.amount / 100, // Convert from kobo to naira
@@ -30,12 +33,13 @@ export const initializeCSPBypassPayment = async (config: PaymentConfig) => {
       })
     });
 
-    if (!response.ok) {
-      throw new Error(`API Error: ${response.status}`);
-    }
-
     const data = await response.json();
-    console.log("Payment API Response:", data);
+    console.log("Payment API response status:", response.status);
+    console.log("Payment API response data:", data);
+    
+    if (!response.ok) {
+      throw new Error(`Payment API Error: ${response.status} - ${data.message || data.error || 'Unknown error'}`);
+    }
 
     if (!data.success || !data.data?.authorization_url) {
       throw new Error("Invalid payment initialization response");

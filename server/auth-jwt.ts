@@ -65,13 +65,15 @@ export function authenticateToken(req: Request, res: Response, next: NextFunctio
   const authHeader = req.headers.authorization;
   const token = req.cookies?.token || (authHeader && authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null);
 
+  console.log("Auth check for", req.path, "- Token present:", !!token, "Header:", !!authHeader);
+
   if (!token) {
     return res.status(401).json({ error: "Access token required" });
   }
 
   jwt.verify(token, JWT_SECRET, async (err: any, decoded: any) => {
     if (err) {
-      console.log("JWT verification error:", err.message);
+      console.log("JWT verification error for", req.path, ":", err.message);
       return res.status(403).json({ error: "Invalid or expired token" });
     }
 
@@ -82,6 +84,7 @@ export function authenticateToken(req: Request, res: Response, next: NextFunctio
         return res.status(401).json({ error: "User not found" });
       }
       req.user = user;
+      console.log("Auth success - User", user.id, "accessing", req.path);
       next();
     } catch (error) {
       console.log("User lookup error:", error);
