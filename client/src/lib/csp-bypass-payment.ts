@@ -201,6 +201,38 @@ export const initializeCSPBypassPayment = async (config: PaymentConfig) => {
       background: white;
     `;
 
+    // Create a permanent overlay that shows loading during any potential transitions
+    const transitionOverlay = document.createElement('div');
+    transitionOverlay.id = 'payment-transition-overlay';
+    transitionOverlay.style.cssText = `
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: white;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      z-index: 10003;
+      border-radius: 12px;
+    `;
+    transitionOverlay.innerHTML = `
+      <div style="margin-bottom: 20px;">
+        <div style="width: 48px; height: 48px; border: 4px solid #f3f3f3; border-top: 4px solid #22C55E; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+      </div>
+      <div style="font-size: 18px; font-weight: 600; color: #22C55E; margin-bottom: 10px;">Payment Successful!</div>
+      <div style="font-size: 15px; color: #666; text-align: center; max-width: 280px;">Processing your deposit and updating your balance...</div>
+      <style>
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      </style>
+    `;
+
     // Add loading indicator while iframe loads
     const loadingDiv = document.createElement('div');
     loadingDiv.style.cssText = `
@@ -229,14 +261,7 @@ export const initializeCSPBypassPayment = async (config: PaymentConfig) => {
       </style>
     `;
 
-    // Remove loading indicator when iframe loads
-    iframe.onload = () => {
-      setTimeout(() => {
-        if (loadingDiv.parentNode) {
-          loadingDiv.parentNode.removeChild(loadingDiv);
-        }
-      }, 1000);
-    };
+    // This will be replaced by the enhanced onload handler below
 
     closeButton.onclick = () => {
       document.body.removeChild(iframeContainer);
@@ -249,15 +274,62 @@ export const initializeCSPBypassPayment = async (config: PaymentConfig) => {
     iframeWrapper.appendChild(iframe);
     iframeWrapper.appendChild(closeButton);
     iframeWrapper.appendChild(loadingDiv);
+    iframeWrapper.appendChild(transitionOverlay); // Add permanent overlay
     iframeContainer.appendChild(iframeWrapper);
     document.body.appendChild(iframeContainer);
 
     console.log("Inline payment iframe created successfully");
 
+    // AGGRESSIVE blank state prevention - monitor iframe content changes
+    let blankStateCheckInterval: NodeJS.Timeout;
+    const startBlankStateMonitoring = () => {
+      blankStateCheckInterval = setInterval(() => {
+        try {
+          // Check for Paystack success indicators in the iframe
+          if (iframe.contentDocument) {
+            const body = iframe.contentDocument.body;
+            if (body) {
+              const bodyText = body.textContent || '';
+              const bodyHTML = body.innerHTML || '';
+              
+              // Check for success indicators or blank/white content
+              if (bodyText.toLowerCase().includes('success') || 
+                  bodyText.toLowerCase().includes('complete') ||
+                  bodyText.toLowerCase().includes('approved') ||
+                  bodyText.toLowerCase().includes('thank') ||
+                  bodyHTML.trim().length < 50 ||  // Very little content = potential blank state
+                  body.children.length < 2) {    // Very few elements = likely success page
+                
+                console.log("SUCCESS or BLANK STATE detected in iframe content - activating overlay IMMEDIATELY");
+                clearInterval(blankStateCheckInterval);
+                showCallbackLoading(iframeWrapper);
+                
+                // Trigger verification without delay
+                verifyAndCompletePayment({ ...config, reference: data.data.reference });
+                return;
+              }
+            }
+          }
+        } catch (e) {
+          // Cross-origin restrictions are normal, continue monitoring
+        }
+      }, 200); // Check every 200ms for very responsive detection
+    };
+
+    // Start monitoring after iframe loads
+    iframe.onload = () => {
+      setTimeout(() => {
+        if (loadingDiv.parentNode) {
+          loadingDiv.parentNode.removeChild(loadingDiv);
+        }
+        startBlankStateMonitoring();
+      }, 1000);
+    };
+
     // Step 3: Monitor payment completion
     console.log("Step 3: Monitoring payment completion...");
 
-    // Check for payment completion every 3 seconds
+    // Enhanced payment monitoring with blank state detection
     const checkPayment = setInterval(async () => {
       try {
         // Check if iframe container still exists
@@ -265,6 +337,9 @@ export const initializeCSPBypassPayment = async (config: PaymentConfig) => {
         if (!container) {
           console.log("Payment iframe closed, verifying payment...");
           clearInterval(checkPayment);
+          if (blankStateCheckInterval) {
+            clearInterval(blankStateCheckInterval);
+          }
           window.removeEventListener('message', messageListener);
 
           // Show loading immediately before verification
@@ -277,18 +352,38 @@ export const initializeCSPBypassPayment = async (config: PaymentConfig) => {
           setTimeout(async () => {
             console.log("Verifying payment after iframe closed...");
             await verifyAndCompletePayment({ ...config, reference: data.data.reference });
-          }, 1000);
+          }, 500);
 
           return;
         }
 
-        // DISABLED: Periodic verification to prevent duplicate processing
-        // Payment verification is handled only via message system and manual verification
+        // Check for potential success redirects that might cause blank states
+        try {
+          if (iframe.contentWindow && iframe.contentWindow.location) {
+            const currentUrl = iframe.contentWindow.location.href;
+            if (currentUrl.includes('success') || currentUrl.includes('callback') || 
+                currentUrl.includes('complete') || currentUrl.includes('return')) {
+              console.log("Success URL detected, showing loading immediately");
+              showCallbackLoading(iframeWrapper);
+              clearInterval(checkPayment);
+              if (blankStateCheckInterval) {
+                clearInterval(blankStateCheckInterval);
+              }
+              
+              // Trigger verification
+              setTimeout(async () => {
+                await verifyAndCompletePayment({ ...config, reference: data.data.reference });
+              }, 200);
+            }
+          }
+        } catch (e) {
+          // Cross-origin restrictions prevent URL access - this is normal
+        }
 
       } catch (error) {
         console.log("Payment check error (continuing monitoring):", error);
       }
-    }, 3000);
+    }, 1000);
 
     // Timeout after 10 minutes
     setTimeout(() => {
@@ -369,61 +464,49 @@ const verifyAndCompletePayment = async (config: PaymentConfig) => {
   }
 };
 
-// Show callback loading to prevent blank state during payment verification
+// Show callback loading using the permanent overlay system
 const showCallbackLoading = (iframeWrapper: HTMLElement) => {
-  console.log("Showing callback loading indicator - IMMEDIATE display");
+  console.log("Activating payment transition overlay - INSTANT display");
   
-  // CRITICAL: Hide iframe content INSTANTLY and replace with loading
-  const iframe = iframeWrapper.querySelector('iframe');
-  if (iframe) {
-    // Set iframe to completely transparent/hidden immediately
-    iframe.style.cssText = `
+  // Use the permanent overlay that's already in the DOM
+  const overlay = iframeWrapper.querySelector('#payment-transition-overlay') as HTMLElement;
+  if (overlay) {
+    overlay.style.display = 'flex';
+    console.log("Transition overlay activated - no blank state possible");
+  } else {
+    // Fallback: create overlay if not found
+    const fallbackOverlay = document.createElement('div');
+    fallbackOverlay.style.cssText = `
       position: absolute;
-      top: -9999px;
-      left: -9999px;
-      width: 1px;
-      height: 1px;
-      opacity: 0;
-      pointer-events: none;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      z-index: 10003;
+      border-radius: 12px;
     `;
+    fallbackOverlay.innerHTML = `
+      <div style="margin-bottom: 20px;">
+        <div style="width: 48px; height: 48px; border: 4px solid #f3f3f3; border-top: 4px solid #22C55E; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+      </div>
+      <div style="font-size: 18px; font-weight: 600; color: #22C55E; margin-bottom: 10px;">Payment Successful!</div>
+      <div style="font-size: 15px; color: #666; text-align: center;">Processing your deposit...</div>
+      <style>
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      </style>
+    `;
+    iframeWrapper.appendChild(fallbackOverlay);
+    console.log("Fallback overlay created and displayed");
   }
-  
-  // Create callback loading overlay that fills entire iframe space
-  const callbackLoading = document.createElement('div');
-  callbackLoading.style.cssText = `
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: white;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    z-index: 10002;
-    border-radius: 12px;
-  `;
-  
-  callbackLoading.innerHTML = `
-    <div style="margin-bottom: 20px;">
-      <div style="width: 48px; height: 48px; border: 4px solid #f3f3f3; border-top: 4px solid #22C55E; border-radius: 50%; animation: spin 1s linear infinite;"></div>
-    </div>
-    <div style="font-size: 18px; font-weight: 600; color: #22C55E; margin-bottom: 10px;">Payment Successful!</div>
-    <div style="font-size: 15px; color: #666; text-align: center; max-width: 280px;">Processing your deposit and updating your balance...</div>
-    <style>
-      @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-      }
-    </style>
-  `;
-  
-  // Insert at the beginning to ensure it covers everything
-  iframeWrapper.insertBefore(callbackLoading, iframeWrapper.firstChild);
-  
-  console.log("Full-screen callback loading displayed - no blank state possible");
 };
 
 // Check for returning payment on page load
