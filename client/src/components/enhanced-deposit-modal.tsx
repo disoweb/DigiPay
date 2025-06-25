@@ -212,6 +212,8 @@ export function EnhancedDepositModal({ open, onOpenChange, user }: EnhancedDepos
             setErrorMessage('Payment was cancelled');
           }
           setIsProcessing(false);
+          // Force close modal when payment is cancelled
+          onOpenChange(false);
         }
       });
       

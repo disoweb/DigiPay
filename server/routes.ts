@@ -199,13 +199,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (duplicateCheck) {
         console.log(`DUPLICATE PREVENTION: Similar transaction found within 5 minutes - amount: ${actualAmount}`);
+        
+        // Send real-time balance update via WebSocket for duplicate detection
+        const wsServer = (global as any).wsServer;
+        if (wsServer && wsServer.clients) {
+          const updateMessage = JSON.stringify({
+            type: 'balance_updated',
+            userId: req.user.id,
+            nairaBalance: req.user.nairaBalance,
+            usdtBalance: req.user.usdtBalance || '0',
+            previousBalance: req.user.nairaBalance,
+            lastTransaction: {
+              type: 'deposit',
+              amount: duplicateCheck.amount,
+              status: 'completed',
+              method: 'paystack',
+              reference: reference
+            }
+          });
+
+          wsServer.clients.forEach((client: any) => {
+            if (client.readyState === 1 && client.userId === req.user.id) {
+              client.send(updateMessage);
+              console.log("✅ Real-time balance update sent for duplicate detection");
+            }
+          });
+        }
+        
         return res.json({
           success: true,
           data: {
-            status: 'duplicate_detected',
+            status: 'success', // Change to success so modal closes properly
             reference: reference,
-            amount: duplicateCheck.amount,
-            message: 'Payment already processed'
+            amount: parseFloat(duplicateCheck.amount),
+            message: 'Payment already processed - balance unchanged'
           }
         });
       }

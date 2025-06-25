@@ -243,7 +243,7 @@ const verifyAndCompletePayment = async (config: PaymentConfig) => {
     const data = await response.json();
     console.log("Payment verification response:", data);
 
-    if (data.success && data.data?.status === 'success') {
+    if (data.success && (data.data?.status === 'success' || data.data?.status === 'duplicate_detected')) {
       console.log("✅ Payment verified successfully!");
       config.callback({
         status: 'success',
