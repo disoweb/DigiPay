@@ -332,17 +332,7 @@ export function EnhancedDepositModal({ open, onOpenChange, user }: EnhancedDepos
           {/* Amount Input Step */}
           {paymentStep === 'amount' && (
             <form onSubmit={handleSubmit} className="space-y-6">
-              <Card className="border-blue-100 bg-blue-50/50">
-                <CardContent className="p-4">
-                  <div className="flex items-start space-x-3">
-                    <Shield className="h-5 w-5 text-blue-600 mt-0.5" />
-                    <div className="text-sm text-blue-800">
-                      <p className="font-medium">Secure Payment by Paystack</p>
-                      <p className="text-blue-600">Your payment is protected with bank-level security</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+
 
               <div className="space-y-4">
                 <div>
@@ -388,30 +378,7 @@ export function EnhancedDepositModal({ open, onOpenChange, user }: EnhancedDepos
                 </div>
               </div>
 
-              {/* Payment methods preview */}
-              <Card>
-                <CardContent className="p-4">
-                  <h4 className="font-medium mb-3">Available Payment Options</h4>
-                  <div className="grid grid-cols-2 gap-2 text-sm">
-                    <div className="flex items-center space-x-2">
-                      <CreditCard className="h-4 w-4 text-gray-600" />
-                      <span>Debit Cards</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Smartphone className="h-4 w-4 text-gray-600" />
-                      <span>Bank Transfer</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <span className="text-xs bg-gray-100 px-1 rounded">USSD</span>
-                      <span>USSD Codes</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <span className="text-xs bg-gray-100 px-1 rounded">QR</span>
-                      <span>QR Payment</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+
 
               <Button
                 type="submit"

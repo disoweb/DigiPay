@@ -91,6 +91,7 @@ A peer-to-peer cryptocurrency trading platform enabling direct trading between u
   - **MODAL FIX**: Fixed callback loading to use iframe wrapper dimensions instead of full screen, eliminates blank page flash
   - **IDENTICAL DIMENSIONS**: Callback loading now has exact same styling and dimensions as initial loading indicator
   - **BLANK PAGE ELIMINATION**: Fixed by immediately hiding iframe before showing callback loading instead of clearing content
+  - **UI CLEANUP**: Removed redundant payment information sections ("Secure Payment by Paystack" and "Payment Options") to streamline deposit form
 - **2025-06-25**: Resolved Paystack payment system issue with comprehensive debugging and fallback implementation
   - Root cause identified: Replit's deployment infrastructure enforces CSP headers that block external scripts
   - Implemented HTML meta CSP tag to override restrictions and allow Paystack domains
