@@ -122,32 +122,77 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ success: false, message: "Authentication required" });
       }
       
-      // For now, simulate successful verification
-      // In production, you would verify with Paystack API using secret key
-      const amount = 5000; // This should come from the actual payment verification
+      if (!reference) {
+        return res.status(400).json({ success: false, message: "Payment reference is required" });
+      }
       
-      // Create transaction record
+      // Verify payment with Paystack API
+      const paystackSecretKey = process.env.PAYSTACK_SECRET_KEY || 'sk_test_7c30d4c30302ab01124b5593a498326ff37000f1';
+      
+      const verifyResponse = await fetch(`https://api.paystack.co/transaction/verify/${reference}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${paystackSecretKey}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      const verifyData = await verifyResponse.json();
+      console.log("Paystack verification response:", verifyData);
+      
+      if (!verifyData.status || verifyData.data.status !== 'success') {
+        return res.status(400).json({ 
+          success: false, 
+          message: "Payment verification failed or payment not successful" 
+        });
+      }
+      
+      // Get actual amount from Paystack (convert from kobo to naira)
+      const actualAmount = verifyData.data.amount / 100;
+      console.log("Actual payment amount:", actualAmount, "NGN");
+      
+      // Check if this transaction already exists to prevent double crediting
+      const existingTransaction = await storage.getTransactionByReference(reference);
+      if (existingTransaction) {
+        console.log("Transaction already processed:", reference);
+        return res.json({
+          success: true,
+          data: {
+            status: 'success',
+            reference: reference,
+            amount: actualAmount,
+            message: 'Payment already processed'
+          }
+        });
+      }
+      
+      // Create transaction record with actual amount
       await storage.createTransaction({
         userId: req.user.id,
         type: 'deposit',
-        amount: amount.toString(),
+        amount: actualAmount.toString(),
         status: 'completed',
         reference: reference,
         paymentMethod: 'paystack',
-        description: `Wallet deposit via Paystack - ${reference}`
+        description: `Wallet deposit via Paystack - ₦${actualAmount.toLocaleString()}`
       });
       
-      // Update user balance
+      // Update user balance with actual amount
+      const currentBalance = parseFloat(req.user.nairaBalance || '0');
+      const newBalance = currentBalance + actualAmount;
+      
       await storage.updateUserBalance(req.user.id, {
-        nairaBalance: (parseFloat(req.user.nairaBalance || '0') + amount).toString()
+        nairaBalance: newBalance.toString()
       });
+      
+      console.log(`✅ Balance updated: ₦${currentBalance.toLocaleString()} + ₦${actualAmount.toLocaleString()} = ₦${newBalance.toLocaleString()}`);
       
       res.json({
         success: true,
         data: {
           status: 'success',
           reference: reference,
-          amount: amount
+          amount: actualAmount
         }
       });
     } catch (error) {

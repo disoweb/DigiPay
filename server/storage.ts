@@ -919,7 +919,7 @@ export class DatabaseStorage implements IStorage {
   async getTransactionByReference(reference: string): Promise<Transaction | null> {
     const result = await db.select()
       .from(transactions)
-      .where(eq(transactions.paystackRef, reference))
+      .where(eq(transactions.reference, reference))
       .limit(1);
     return result[0] || null;
   }
