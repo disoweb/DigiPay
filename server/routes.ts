@@ -167,7 +167,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`CRITICAL CHECK: Actual payment amount: ${actualAmount} NGN`);
       console.log(`CRITICAL CHECK: Current user balance: ${req.user.nairaBalance} NGN`);
       
-      // CRITICAL: Check if transaction already processed using paystack_ref to prevent duplicate crediting
+      // Check if this exact Paystack reference has already been processed
       let existingTransaction = null;
       try {
         existingTransaction = await storage.getTransactionByPaystackRef(reference);
@@ -175,32 +175,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.error("Database error checking existing transaction:", dbError);
       }
       
-      if (existingTransaction) {
-        console.log(`DUPLICATE PREVENTION: Transaction ${reference} already exists with amount ${existingTransaction.amount}`);
-        return res.json({
-          success: true,
-          data: {
-            status: 'already_processed',
-            message: 'Payment already processed - preventing duplicate credit',
-            amount: existingTransaction.amount,
-            balance: req.user.nairaBalance
-          }
-        });
-      }
-      
-      // Additional safety check - look for recent similar transactions
-      const recentTransactions = await storage.getTransactionsByUser(req.user.id);
-      const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
-      const duplicateCheck = recentTransactions.find(t => 
-        t.type === 'deposit' && 
-        t.amount === actualAmount.toString() && 
-        t.createdAt && new Date(t.createdAt) > fiveMinutesAgo
-      );
-      
-      if (duplicateCheck) {
-        console.log(`DUPLICATE PREVENTION: Similar transaction found within 5 minutes - amount: ${actualAmount}`);
+      if (existingTransaction && existingTransaction.status === 'completed') {
+        console.log(`DUPLICATE PREVENTION: Transaction ${reference} already completed with amount ${existingTransaction.amount}`);
         
-        // Send real-time balance update via WebSocket for duplicate detection
+        // Send real-time update with current balance
         const wsServer = (global as any).wsServer;
         if (wsServer && wsServer.clients) {
           const updateMessage = JSON.stringify({
@@ -211,7 +189,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             previousBalance: req.user.nairaBalance,
             lastTransaction: {
               type: 'deposit',
-              amount: duplicateCheck.amount,
+              amount: existingTransaction.amount,
               status: 'completed',
               method: 'paystack',
               reference: reference
@@ -221,7 +199,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           wsServer.clients.forEach((client: any) => {
             if (client.readyState === 1 && client.userId === req.user.id) {
               client.send(updateMessage);
-              console.log("✅ Real-time balance update sent for duplicate detection");
             }
           });
         }
@@ -229,12 +206,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.json({
           success: true,
           data: {
-            status: 'success', // Change to success so modal closes properly
+            status: 'success',
             reference: reference,
-            amount: parseFloat(duplicateCheck.amount),
+            amount: actualAmount,
             message: 'Payment already processed - balance unchanged'
           }
         });
+      }
+      
+      // Process the payment - create transaction and update balance
+      console.log(`PROCESSING NEW PAYMENT: Reference ${reference}, Amount: ₦${actualAmount}`);
+      
+      // Get fresh user data for accurate balance calculation
+      const currentUser = await storage.getUser(req.user.id);
+      if (!currentUser) {
+        return res.status(404).json({ success: false, message: "User not found" });
       }
       
       // Create transaction record with actual amount
@@ -256,7 +242,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Update user balance with actual amount
       try {
-        const currentBalance = parseFloat(req.user.nairaBalance || '0');
+        const currentBalance = parseFloat(currentUser.nairaBalance || '0');
         const newBalance = currentBalance + actualAmount;
         
         await storage.updateUserBalance(req.user.id, {
@@ -314,7 +300,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         data: {
           status: 'success',
           reference: reference,
-          amount: actualAmount
+          amount: actualAmount,
+          newBalance: newBalance.toString(),
+          previousBalance: currentBalance.toString()
         }
       });
     } catch (error) {
