@@ -316,6 +316,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const { reference, trxref } = req.query;
     const paymentReference = reference || trxref;
     
+    // If no reference in query, try to get it from Paystack callback format
+    let finalReference = paymentReference;
+    if (!finalReference && req.query.reference) {
+      finalReference = req.query.reference;
+    }
+    
     console.log("Payment success callback received:", { reference, trxref, paymentReference });
     
     // Send HTML page that verifies payment and redirects back to wallet
@@ -384,7 +390,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         </div>
         
         <script>
-          const reference = '${paymentReference}';
+          // Get reference from URL parameters if not provided
+          const urlParams = new URLSearchParams(window.location.search);
+          let reference = '${finalReference}' || urlParams.get('reference') || urlParams.get('trxref');
           const token = localStorage.getItem('digipay_token') || sessionStorage.getItem('digipay_token');
           
           async function verifyPayment() {

@@ -67,15 +67,11 @@ export const initializeCSPBypassPayment = async (config: PaymentConfig) => {
       localStorage.setItem('pending_payment_reference', data.data.reference);
       localStorage.setItem('pending_payment_amount', (config.amount / 100).toString());
       
-      // Set up callback URL that includes our reference
-      const callbackUrl = `${window.location.origin}/payment-success?reference=${data.data.reference}`;
-      
-      // Redirect directly to Paystack with callback
-      const paystackUrl = `${data.data.authorization_url}&callback_url=${encodeURIComponent(callbackUrl)}`;
-      console.log("Redirecting to Paystack:", paystackUrl);
+      // Redirect directly to Paystack without modifying the URL
+      console.log("Redirecting to Paystack:", data.data.authorization_url);
       
       // Use window.location.href for immediate redirect
-      window.location.href = paystackUrl;
+      window.location.href = data.data.authorization_url;
       return;
     }
 
