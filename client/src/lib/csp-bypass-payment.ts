@@ -123,7 +123,7 @@ export const initializeCSPBypassPayment = async (config: PaymentConfig) => {
               clearInterval(checkEmbeddedPayment);
               window.removeEventListener('message', messageListener);
               console.log('Embedded payment verified!');
-              config.onSuccess(data.data.reference);
+              config.callback({ status: 'success', reference: data.data.reference });
               return;
             }
           } catch (e) {
