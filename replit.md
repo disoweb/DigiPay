@@ -35,6 +35,7 @@ A peer-to-peer cryptocurrency trading platform enabling direct trading between u
   - **VERIFIED**: Payment endpoint tested successfully in deployed environment - returns 200 status
   - **CONFIRMED**: CSP-bypass system generates valid Paystack checkout URLs in production
   - **TOKEN FIX**: Corrected authentication token mismatch between payment system and main app (digipay_token)
+  - **VALIDATION FIX**: Fixed missing required fields error by ensuring frontend sends amount, email, and reference
 - **2025-06-25**: Resolved Paystack payment system issue with comprehensive debugging and fallback implementation
   - Root cause identified: Replit's deployment infrastructure enforces CSP headers that block external scripts
   - Implemented HTML meta CSP tag to override restrictions and allow Paystack domains

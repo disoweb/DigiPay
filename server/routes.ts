@@ -39,14 +39,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }, async (req: any, res: Response) => {
     try {
       const { amount, email, reference } = req.body;
-      console.log("🎉 CSP-bypass payment initialization SUCCESS:", { amount, email, reference, userId: req.user?.id });
+      console.log("💳 Payment data received:", { amount, email, reference, userId: req.user?.id });
       
       if (!req.user) {
+        console.log("❌ No authenticated user found");
         return res.status(401).json({ success: false, message: "Authentication required" });
       }
-      
+
       if (!amount || !email || !reference) {
-        return res.status(400).json({ success: false, message: "Missing required fields" });
+        console.log("❌ Missing fields:", { amount: !!amount, email: !!email, reference: !!reference });
+        return res.status(400).json({ success: false, message: "Missing required fields: amount, email, reference" });
       }
       
       // Create Paystack checkout URL with proper parameters
