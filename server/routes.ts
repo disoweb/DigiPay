@@ -31,12 +31,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // CSP-bypass payment endpoints - enhanced with proper authentication and real Paystack integration
   app.post("/api/payments/initialize", (req: any, res: Response, next: NextFunction) => {
-    console.log("🚀🚀🚀 PAYMENT ENDPOINT HIT - WORKING! 🚀🚀🚀");
+    console.log("🚀🚀🚀 CSP-BYPASS PAYMENT ENDPOINT HIT! 🚀🚀🚀");
     console.log("=== PAYMENT INITIALIZATION DEBUG ===");
     console.log("URL:", req.url);
     console.log("Path:", req.path);
     console.log("Method:", req.method);
-    console.log("Authorization header:", req.headers.authorization?.substring(0, 30) + "...");
+    console.log("User agent:", req.get('user-agent'));
+    console.log("Authorization header present:", !!req.headers.authorization);
     console.log("Request body:", JSON.stringify(req.body, null, 2));
     console.log("=====================================");
     
@@ -121,8 +122,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   console.log("✅ Payment endpoints registered");
 
-  // Setup JWT auth AFTER payment endpoints are registered
+  // Setup JWT auth AFTER payment endpoints are registered  
+  console.log("🔐 Setting up JWT auth...");
   setupJWTAuth(app);
+  console.log("✅ JWT auth setup complete");
 
   // User routes - MUST be first to avoid frontend route conflict
   app.get("/api/user", authenticateToken, async (req, res) => {
