@@ -1,4 +1,5 @@
-// Simplified CSP-Bypass Payment System
+
+// Ultra-Streamlined CSP-Bypass Payment System
 interface PaymentConfig {
   key: string;
   email: string;
@@ -33,17 +34,17 @@ export const initializeCSPBypassPayment = async (config: PaymentConfig) => {
       throw new Error(data.message || "Payment initialization failed");
     }
 
-    // Create payment container
-    const container = document.createElement('div');
-    container.id = 'paystack-payment-container';
-    container.style.cssText = `
+    // Create seamless payment overlay
+    const overlay = document.createElement('div');
+    overlay.id = 'paystack-payment-overlay';
+    overlay.style.cssText = `
       position: fixed;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0,0,0,0.8);
-      z-index: 9999;
+      background: rgba(0,0,0,0.95);
+      z-index: 999999;
       display: flex;
       justify-content: center;
       align-items: center;
@@ -51,42 +52,61 @@ export const initializeCSPBypassPayment = async (config: PaymentConfig) => {
       box-sizing: border-box;
     `;
 
-    const wrapper = document.createElement('div');
-    wrapper.style.cssText = `
+    const container = document.createElement('div');
+    container.style.cssText = `
       position: relative;
       width: 100%;
-      max-width: 450px;
-      height: 80vh;
-      max-height: 600px;
+      max-width: 420px;
+      height: 85vh;
+      max-height: 650px;
       background: white;
-      border-radius: 12px;
+      border-radius: 16px;
       overflow: hidden;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+      box-shadow: 0 25px 80px rgba(0,0,0,0.6);
+      transform: scale(0.95);
+      opacity: 0;
+      transition: all 0.3s ease;
     `;
+
+    // Animate in
+    setTimeout(() => {
+      container.style.transform = 'scale(1)';
+      container.style.opacity = '1';
+    }, 50);
 
     // Close button
     const closeBtn = document.createElement('button');
     closeBtn.innerHTML = '×';
     closeBtn.style.cssText = `
       position: absolute;
-      top: 15px;
-      right: 15px;
-      background: rgba(255,255,255,0.9);
+      top: 16px;
+      right: 16px;
+      background: rgba(255,255,255,0.95);
       border: none;
-      font-size: 24px;
+      font-size: 28px;
+      font-weight: 300;
       cursor: pointer;
       border-radius: 50%;
-      width: 35px;
-      height: 35px;
-      z-index: 10001;
+      width: 40px;
+      height: 40px;
+      z-index: 1000001;
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+      transition: all 0.2s ease;
     `;
+    closeBtn.onmouseover = () => closeBtn.style.background = 'rgba(255,255,255,1)';
+    closeBtn.onmouseout = () => closeBtn.style.background = 'rgba(255,255,255,0.95)';
     closeBtn.onclick = () => {
-      document.body.removeChild(container);
-      config.onClose();
+      container.style.transform = 'scale(0.95)';
+      container.style.opacity = '0';
+      setTimeout(() => {
+        if (document.body.contains(overlay)) {
+          document.body.removeChild(overlay);
+        }
+        config.onClose();
+      }, 200);
     };
 
     // Payment iframe
@@ -97,50 +117,42 @@ export const initializeCSPBypassPayment = async (config: PaymentConfig) => {
       height: 100%;
       border: none;
       background: white;
+      border-radius: 16px;
     `;
 
-    // Loading indicator
-    const loading = document.createElement('div');
-    loading.style.cssText = `
+    // Completion indicator (hidden initially)
+    const completionOverlay = document.createElement('div');
+    completionOverlay.style.cssText = `
       position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: white;
-      padding: 20px;
-      border-radius: 8px;
-      display: flex;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #10b981, #059669);
+      display: none;
+      flex-direction: column;
+      justify-content: center;
       align-items: center;
-      gap: 12px;
+      color: white;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
       z-index: 1000;
+      border-radius: 16px;
     `;
-    loading.innerHTML = `
-      <div style="width: 20px; height: 20px; border: 2px solid #e0e7ff; border-top: 2px solid #3b82f6; border-radius: 50%; animation: spin 1s linear infinite;"></div>
-      <span style="color: #374151;">Loading payment...</span>
-      <style>
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-      </style>
+    completionOverlay.innerHTML = `
+      <div style="text-align: center;">
+        <div style="width: 80px; height: 80px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px;">
+          <div style="font-size: 40px;">✓</div>
+        </div>
+        <h3 style="margin: 0 0 12px; font-size: 24px; font-weight: 600;">Payment Successful!</h3>
+        <p style="margin: 0; font-size: 16px; opacity: 0.9;">Processing completion...</p>
+      </div>
     `;
 
-    // Remove loading when iframe loads
-    iframe.onload = () => {
-      setTimeout(() => {
-        if (loading.parentNode) {
-          loading.parentNode.removeChild(loading);
-        }
-      }, 800);
-    };
-
-    wrapper.appendChild(iframe);
-    wrapper.appendChild(closeBtn);
-    wrapper.appendChild(loading);
-    container.appendChild(wrapper);
-    document.body.appendChild(container);
+    container.appendChild(iframe);
+    container.appendChild(closeBtn);
+    container.appendChild(completionOverlay);
+    overlay.appendChild(container);
+    document.body.appendChild(overlay);
 
     // Listen for payment completion
     const messageListener = (event: MessageEvent) => {
@@ -150,50 +162,55 @@ export const initializeCSPBypassPayment = async (config: PaymentConfig) => {
         clearInterval(checkPayment);
         window.removeEventListener('message', messageListener);
 
-        // Hide iframe and show immediate success verification
+        // Immediately show success state
         iframe.style.display = 'none';
-        loading.innerHTML = `
-          <div style="width: 24px; height: 24px; border: 3px solid #e0e7ff; border-top: 3px solid #10b981; border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
-          <span style="color: #10b981; font-weight: 600;">Payment Successful! Completing...</span>
-        `;
-        loading.style.display = 'flex';
+        completionOverlay.style.display = 'flex';
+        closeBtn.style.display = 'none';
 
-        // Verify and complete immediately without delay
+        // Verify payment and complete
         verifyPayment(config, event.data.reference).then(() => {
-          // Remove container immediately after verification
+          // Quick success animation then close
           setTimeout(() => {
-            if (document.getElementById('paystack-payment-container')) {
-              document.body.removeChild(container);
-            }
-          }, 100);
+            container.style.transform = 'scale(1.05)';
+            container.style.opacity = '0';
+            setTimeout(() => {
+              if (document.body.contains(overlay)) {
+                document.body.removeChild(overlay);
+              }
+            }, 300);
+          }, 1200);
         });
       }
     };
 
     window.addEventListener('message', messageListener);
 
-    // Check for window close every 2 seconds
+    // Check for completion every 1.5 seconds
     const checkPayment = setInterval(async () => {
-      const currentContainer = document.getElementById('paystack-payment-container');
-      if (!currentContainer) {
+      const currentOverlay = document.getElementById('paystack-payment-overlay');
+      if (!currentOverlay) {
         clearInterval(checkPayment);
         window.removeEventListener('message', messageListener);
-
-        // Verify payment immediately after close
         verifyPayment(config, data.data.reference);
       }
-    }, 2000);
+    }, 1500);
 
-    // Timeout after 10 minutes
+    // Auto-timeout after 8 minutes
     setTimeout(() => {
-      const currentContainer = document.getElementById('paystack-payment-container');
-      if (currentContainer) {
+      const currentOverlay = document.getElementById('paystack-payment-overlay');
+      if (currentOverlay) {
         clearInterval(checkPayment);
         window.removeEventListener('message', messageListener);
-        document.body.removeChild(currentContainer);
-        config.onClose();
+        container.style.transform = 'scale(0.95)';
+        container.style.opacity = '0';
+        setTimeout(() => {
+          if (document.body.contains(overlay)) {
+            document.body.removeChild(overlay);
+          }
+          config.onClose();
+        }, 200);
       }
-    }, 600000);
+    }, 480000);
 
   } catch (error) {
     console.error("Payment Error:", error);
@@ -216,7 +233,6 @@ const verifyPayment = async (config: PaymentConfig, reference: string) => {
     const data = await response.json();
 
     if (data.success && data.data?.status === 'success') {
-      // Immediate callback without delay
       config.callback({
         status: 'success',
         reference: reference,

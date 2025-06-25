@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -19,12 +20,12 @@ interface EnhancedDepositModalProps {
   user: any;
 }
 
-type PaymentStep = 'input' | 'paying' | 'success';
+type PaymentStep = 'input' | 'success';
 
 export function EnhancedDepositModal({ open, onOpenChange, user }: EnhancedDepositModalProps) {
   const [amount, setAmount] = useState("");
   const [step, setStep] = useState<PaymentStep>('input');
-  const [isLoading, setIsLoading] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -35,16 +36,17 @@ export function EnhancedDepositModal({ open, onOpenChange, user }: EnhancedDepos
     if (open) {
       setStep('input');
       setAmount("");
-      setIsLoading(false);
+      setIsProcessing(false);
       processingRef.current = false;
     }
   }, [open]);
 
-  // Payment mutation - handles both initialization and verification
+  // Streamlined payment mutation
   const paymentMutation = useMutation({
     mutationFn: async (depositAmount: number) => {
       if (processingRef.current) return;
       processingRef.current = true;
+      setIsProcessing(true);
 
       // Initialize payment
       const initRes = await apiRequest("POST", "/api/payments/initialize", { 
@@ -63,7 +65,7 @@ export function EnhancedDepositModal({ open, onOpenChange, user }: EnhancedDepos
         throw new Error('Invalid payment response');
       }
 
-      // Open payment window
+      // Open seamless payment flow
       return new Promise((resolve, reject) => {
         initializeCSPBypassPayment({
           key: PAYSTACK_PUBLIC_KEY,
@@ -74,7 +76,7 @@ export function EnhancedDepositModal({ open, onOpenChange, user }: EnhancedDepos
           callback: async (response: any) => {
             if (response.status === 'success') {
               try {
-                // Verify payment immediately
+                // Verify payment
                 const verifyRes = await apiRequest("POST", "/api/payments/verify", { 
                   reference: response.reference 
                 });
@@ -94,20 +96,17 @@ export function EnhancedDepositModal({ open, onOpenChange, user }: EnhancedDepos
           },
           onClose: () => {
             processingRef.current = false;
-            if (step === 'paying') {
-              setStep('input');
-              setIsLoading(false);
-            }
+            setIsProcessing(false);
           }
         });
       });
     },
     onSuccess: () => {
-      // Immediate state transition
+      processingRef.current = false;
+      setIsProcessing(false);
       setStep('success');
-      setIsLoading(false);
 
-      // Refresh balance immediately
+      // Refresh data immediately
       queryClient.invalidateQueries({ queryKey: ["/api/user"] });
       queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
 
@@ -117,15 +116,14 @@ export function EnhancedDepositModal({ open, onOpenChange, user }: EnhancedDepos
         className: "border-green-200 bg-green-50 text-green-800",
       });
 
-      // Auto-close after 2.5 seconds to show success state
+      // Auto-close after showing success
       setTimeout(() => {
         onOpenChange(false);
-      }, 2500);
+      }, 2000);
     },
     onError: (error: any) => {
       processingRef.current = false;
-      setStep('input');
-      setIsLoading(false);
+      setIsProcessing(false);
 
       toast({
         title: "Payment Failed",
@@ -150,8 +148,6 @@ export function EnhancedDepositModal({ open, onOpenChange, user }: EnhancedDepos
       return;
     }
 
-    setStep('paying');
-    setIsLoading(true);
     paymentMutation.mutate(depositAmount);
   };
 
@@ -161,12 +157,10 @@ export function EnhancedDepositModal({ open, onOpenChange, user }: EnhancedDepos
         <DialogHeader className="space-y-3">
           <div className="flex items-center justify-center">
             {step === 'input' && <CreditCard className="h-8 w-8 text-blue-600" />}
-            {step === 'paying' && <Loader2 className="h-8 w-8 text-blue-600 animate-spin" />}
             {step === 'success' && <CheckCircle className="h-8 w-8 text-green-600" />}
           </div>
           <DialogTitle className="text-center text-xl font-semibold">
             {step === 'input' && 'Add Money'}
-            {step === 'paying' && 'Complete Payment'}
             {step === 'success' && 'Success!'}
           </DialogTitle>
         </DialogHeader>
@@ -207,6 +201,7 @@ export function EnhancedDepositModal({ open, onOpenChange, user }: EnhancedDepos
                       max="1000000"
                       step="0.01"
                       required
+                      disabled={isProcessing}
                     />
                   </div>
                   <p className="text-sm text-gray-500 mt-1">
@@ -224,6 +219,7 @@ export function EnhancedDepositModal({ open, onOpenChange, user }: EnhancedDepos
                       size="sm"
                       onClick={() => setAmount(quickAmount.toString())}
                       className="h-10"
+                      disabled={isProcessing}
                     >
                       ₦{quickAmount.toLocaleString()}
                     </Button>
@@ -258,46 +254,31 @@ export function EnhancedDepositModal({ open, onOpenChange, user }: EnhancedDepos
                 <Button
                   type="submit"
                   className="w-full h-12 text-base font-medium"
-                  disabled={!amount || parseFloat(amount) < 100 || isLoading}
+                  disabled={!amount || parseFloat(amount) < 100 || isProcessing}
                 >
-                  {isLoading ? (
+                  {isProcessing ? (
                     <>
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Setting up...
+                      Processing Payment...
                     </>
                   ) : (
                     <>
-                      Continue
+                      Continue to Payment
                       <ArrowRight className="h-4 w-4 ml-2" />
                     </>
                   )}
                 </Button>
               </form>
-            </>
-          )}
 
-          {/* Paying Step */}
-          {step === 'paying' && (
-            <div className="text-center space-y-4 py-8">
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-                <Loader2 className="h-12 w-12 text-blue-600 mx-auto mb-4 animate-spin" />
-                <h3 className="text-blue-800 font-bold text-lg mb-2">
-                  Complete Payment
-                </h3>
-                <p className="text-blue-700 text-base mb-2">
-                  ₦{parseFloat(amount || '0').toLocaleString()}
-                </p>
-                <p className="text-blue-600 text-sm">
-                  Secure payment window opened
-                </p>
-              </div>
-              <Alert>
-                <Shield className="h-4 w-4" />
-                <AlertDescription>
-                  Complete your payment in the secure Paystack window. Do not close this dialog.
-                </AlertDescription>
-              </Alert>
-            </div>
+              {isProcessing && (
+                <Alert className="border-blue-200 bg-blue-50">
+                  <Shield className="h-4 w-4" />
+                  <AlertDescription className="text-blue-800">
+                    Payment window will open in a secure overlay. Complete your payment to continue.
+                  </AlertDescription>
+                </Alert>
+              )}
+            </>
           )}
 
           {/* Success Step */}
