@@ -614,28 +614,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Paystack webhook for automatic transaction processing
+  // DISABLED: Paystack webhook to prevent automatic duplicate processing
   app.post("/api/paystack/webhook", express.raw({type: 'application/json'}), async (req, res) => {
-    try {
-      const signature = req.headers['x-paystack-signature'] as string;
-      
-      if (!signature) {
-        console.warn('Webhook received without signature');
-        return res.status(400).send('Missing signature');
-      }
-
-      // Parse the raw body
-      const payload = JSON.parse(req.body.toString());
-      
-      await enhancedPaystackService.handleWebhook(payload, signature);
-      
-      console.log('Webhook processed successfully:', payload.event);
-      res.status(200).send('OK');
-      
-    } catch (error: any) {
-      console.error('Webhook processing error:', error.message);
-      res.status(400).send(error.message || 'Webhook processing failed');
-    }
+    console.log('WEBHOOK DISABLED: Paystack webhook called but disabled to prevent duplicate crediting');
+    console.log('Webhook payload:', req.body.toString());
+    res.status(200).send('Webhook disabled - payments processed via manual verification only');
   });
 
   // Check username availability
