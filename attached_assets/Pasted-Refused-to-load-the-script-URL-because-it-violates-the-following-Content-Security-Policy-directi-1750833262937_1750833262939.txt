@@ -1,0 +1,185 @@
+Refused to load the script '<URL>' because it violates the following Content Security Policy directive: "script-src 'self' 'unsafe-inline' 'unsafe-eval'". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback.
+
+digipay.replit.app/:1  Refused to load the script 'https://js.paystack.co/v1/inline.js' because it violates the following Content Security Policy directive: "script-src 'self' 'unsafe-inline' 'unsafe-eval'". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback.
+
+digipay.replit.app/:1  Refused to load the script 'https://replit.com/public/js/replit-dev-banner.js' because it violates the following Content Security Policy directive: "script-src 'self' 'unsafe-inline' 'unsafe-eval'". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback.
+
+index-BUYWjaFr.js:506  Refused to load the script 'https://js.paystack.co/test-csp.js' because it violates the following Content Security Policy directive: "script-src 'self' 'unsafe-inline' 'unsafe-eval'". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback.
+
+p @ index-BUYWjaFr.js:506
+index-BUYWjaFr.js:506  Refused to load the script 'https://js.paystack.co/v1/inline.js' because it violates the following Content Security Policy directive: "script-src 'self' 'unsafe-inline' 'unsafe-eval'". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback.
+
+c @ index-BUYWjaFr.js:506
+index-BUYWjaFr.js:506  Refused to load the script 'https://js.paystack.co/v2/inline.js' because it violates the following Content Security Policy directive: "script-src 'self' 'unsafe-inline' 'unsafe-eval'". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback.
+
+c @ index-BUYWjaFr.js:506
+index-BUYWjaFr.js:506  Refused to load the script 'https://checkout.paystack.com/assets/js/inline.js' because it violates the following Content Security Policy directive: "script-src 'self' 'unsafe-inline' 'unsafe-eval'". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback.
+
+c @ index-BUYWjaFr.js:506
+index-BUYWjaFr.js:453 No auth token found
+api/auth/login:1 
+            
+            
+            Failed to load resource: net::ERR_INTERNET_DISCONNECTED
+index-BUYWjaFr.js:453  API request error: TypeError: Failed to fetch
+    at se (index-BUYWjaFr.js:453:23635)
+    at Object.mutationFn (index-BUYWjaFr.js:453:25956)
+    at Object.fn (index-BUYWjaFr.js:48:19653)
+    at y (index-BUYWjaFr.js:48:10079)
+    at Object.start (index-BUYWjaFr.js:48:10538)
+    at Jp.execute (index-BUYWjaFr.js:48:20458)
+se @ index-BUYWjaFr.js:453
+index-BUYWjaFr.js:453  Login error: TypeError: Failed to fetch
+    at se (index-BUYWjaFr.js:453:23635)
+    at Object.mutationFn (index-BUYWjaFr.js:453:25956)
+    at Object.fn (index-BUYWjaFr.js:48:19653)
+    at y (index-BUYWjaFr.js:48:10079)
+    at Object.start (index-BUYWjaFr.js:48:10538)
+    at Jp.execute (index-BUYWjaFr.js:48:20458)
+mutationFn @ index-BUYWjaFr.js:453
+index-BUYWjaFr.js:453  Login mutation error: TypeError: Failed to fetch
+    at se (index-BUYWjaFr.js:453:23635)
+    at Object.mutationFn (index-BUYWjaFr.js:453:25956)
+    at Object.fn (index-BUYWjaFr.js:48:19653)
+    at y (index-BUYWjaFr.js:48:10079)
+    at Object.start (index-BUYWjaFr.js:48:10538)
+    at Jp.execute (index-BUYWjaFr.js:48:20458)
+onError @ index-BUYWjaFr.js:453
+index-BUYWjaFr.js:453 Login success, storing token
+index-BUYWjaFr.js:497  Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+(anonymous) @ index-BUYWjaFr.js:497
+index-BUYWjaFr.js:502 WebSocket connected for real-time balance updates
+index-BUYWjaFr.js:502 WebSocket message received: Object
+index-BUYWjaFr.js:502 WebSocket message received: Object
+index-BUYWjaFr.js:506 === COMPREHENSIVE PAYSTACK DEBUG START ===
+index-BUYWjaFr.js:506 1. Environment Check:
+index-BUYWjaFr.js:506    - NODE_ENV: production
+index-BUYWjaFr.js:506    - User agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 Edg/137.0.0.0
+index-BUYWjaFr.js:506    - Current URL: https://digipay.replit.app/wallet
+index-BUYWjaFr.js:506    - Protocol: https:
+index-BUYWjaFr.js:506    - Hostname: digipay.replit.app
+index-BUYWjaFr.js:506    - Port: 
+index-BUYWjaFr.js:506 2. Browser Capabilities:
+index-BUYWjaFr.js:506    - Fetch available: true
+index-BUYWjaFr.js:506    - LocalStorage available: true
+index-BUYWjaFr.js:506    - CORS support: true
+index-BUYWjaFr.js:506    - Module support: true
+index-BUYWjaFr.js:506    - Is mobile: false
+index-BUYWjaFr.js:506 3. Paystack Configuration:
+index-BUYWjaFr.js:506    - Amount: 8500
+index-BUYWjaFr.js:506    - User email: cyfer33@gmail.com
+index-BUYWjaFr.js:506    - Paystack data: Object
+index-BUYWjaFr.js:506    - Public key (first 8 chars): pk_test_
+index-BUYWjaFr.js:506 4. Current Window State:
+index-BUYWjaFr.js:506    - Window.PaystackPop available: false
+index-BUYWjaFr.js:506    - Window.Paystack available: false
+index-BUYWjaFr.js:506    - Window.paystack available: false
+index-BUYWjaFr.js:506    - Document readyState: complete
+index-BUYWjaFr.js:506 5. Script Analysis:
+index-BUYWjaFr.js:506    - Total scripts in document: 3
+index-BUYWjaFr.js:506    - Paystack scripts found: 1
+index-BUYWjaFr.js:506    - Paystack script 1: Object
+index-BUYWjaFr.js:506 6. Network & CSP Test:
+index-BUYWjaFr.js:506    - Production/Deployed environment detected
+index-BUYWjaFr.js:506 Initializing Paystack payment...
+index-BUYWjaFr.js:506 Config: Object
+index-BUYWjaFr.js:506 Environment: Object
+index-BUYWjaFr.js:506 Loading Paystack script...
+index-BUYWjaFr.js:502 === PAYSTACK SCRIPT LOADING DEBUG ===
+index-BUYWjaFr.js:502 Environment detection: Object
+index-BUYWjaFr.js:502 Starting Paystack script loading process...
+index-BUYWjaFr.js:502 Document state:
+index-BUYWjaFr.js:502   - readyState: complete
+index-BUYWjaFr.js:502   - URL: https://digipay.replit.app/wallet
+index-BUYWjaFr.js:502   - domain: digipay.replit.app
+index-BUYWjaFr.js:502   - referrer: 
+index-BUYWjaFr.js:502 Existing Paystack scripts before loading: 2
+index-BUYWjaFr.js:502   Script 1: https://js.paystack.co/v1/inline.js unknown state
+index-BUYWjaFr.js:502   Script 2: https://js.paystack.co/test-csp.js unknown state
+index-BUYWjaFr.js:502 
+--- STRATEGY 1 ATTEMPT ---
+index-BUYWjaFr.js:503 URL: https://js.paystack.co/v1/inline.js
+index-BUYWjaFr.js:503 Timestamp: 2025-06-25T06:26:04.899Z
+index-BUYWjaFr.js:503 Strategy 1: Script element created with properties: Object
+index-BUYWjaFr.js:506     - ✗ CSP may be blocking Paystack scripts: Event
+M.onerror @ index-BUYWjaFr.js:506
+index-BUYWjaFr.js:505  
+✗ SCRIPT ERROR: Strategy 1 failed
+m.onerror @ index-BUYWjaFr.js:505
+index-BUYWjaFr.js:506  URL: https://js.paystack.co/v1/inline.js
+m.onerror @ index-BUYWjaFr.js:506
+index-BUYWjaFr.js:506  Error timestamp: 2025-06-25T06:26:04.945Z
+m.onerror @ index-BUYWjaFr.js:506
+index-BUYWjaFr.js:506  Error details: Event
+m.onerror @ index-BUYWjaFr.js:506
+index-BUYWjaFr.js:506  Error event: Object
+m.onerror @ index-BUYWjaFr.js:506
+index-BUYWjaFr.js:506  This appears to be a network or CSP blocking error
+m.onerror @ index-BUYWjaFr.js:506
+index-BUYWjaFr.js:506 Moving to strategy 2...
+index-BUYWjaFr.js:502 
+--- STRATEGY 2 ATTEMPT ---
+index-BUYWjaFr.js:503 URL: https://js.paystack.co/v2/inline.js
+index-BUYWjaFr.js:503 Timestamp: 2025-06-25T06:26:04.947Z
+index-BUYWjaFr.js:503 Strategy 2: Script element created with properties: Object
+index-BUYWjaFr.js:505  
+✗ SCRIPT ERROR: Strategy 2 failed
+m.onerror @ index-BUYWjaFr.js:505
+index-BUYWjaFr.js:506  URL: https://js.paystack.co/v2/inline.js
+m.onerror @ index-BUYWjaFr.js:506
+index-BUYWjaFr.js:506  Error timestamp: 2025-06-25T06:26:04.954Z
+m.onerror @ index-BUYWjaFr.js:506
+index-BUYWjaFr.js:506  Error details: Event
+m.onerror @ index-BUYWjaFr.js:506
+index-BUYWjaFr.js:506  Error event: Object
+m.onerror @ index-BUYWjaFr.js:506
+index-BUYWjaFr.js:506  This appears to be a network or CSP blocking error
+m.onerror @ index-BUYWjaFr.js:506
+index-BUYWjaFr.js:506 Moving to strategy 3...
+index-BUYWjaFr.js:502 
+--- STRATEGY 3 ATTEMPT ---
+index-BUYWjaFr.js:503 URL: https://checkout.paystack.com/assets/js/inline.js
+index-BUYWjaFr.js:503 Timestamp: 2025-06-25T06:26:04.955Z
+index-BUYWjaFr.js:503 Strategy 3: Script element created with properties: Object
+index-BUYWjaFr.js:505  
+✗ SCRIPT ERROR: Strategy 3 failed
+m.onerror @ index-BUYWjaFr.js:505
+index-BUYWjaFr.js:506  URL: https://checkout.paystack.com/assets/js/inline.js
+m.onerror @ index-BUYWjaFr.js:506
+index-BUYWjaFr.js:506  Error timestamp: 2025-06-25T06:26:04.956Z
+m.onerror @ index-BUYWjaFr.js:506
+index-BUYWjaFr.js:506  Error details: Event
+m.onerror @ index-BUYWjaFr.js:506
+index-BUYWjaFr.js:506  Error event: Object
+m.onerror @ index-BUYWjaFr.js:506
+index-BUYWjaFr.js:506  This appears to be a network or CSP blocking error
+m.onerror @ index-BUYWjaFr.js:506
+index-BUYWjaFr.js:506 Moving to strategy 4...
+index-BUYWjaFr.js:502  All Paystack loading strategies failed
+c @ index-BUYWjaFr.js:502
+index-BUYWjaFr.js:506  Paystack initialization error: Error: Payment system unavailable. Please check your internet connection and try again.
+    at c (index-BUYWjaFr.js:502:25766)
+    at m.onerror (index-BUYWjaFr.js:506:632)
+W3 @ index-BUYWjaFr.js:506
+index-BUYWjaFr.js:506  Paystack error: Error: Payment system unavailable. Please check your internet connection and try again.
+    at c (index-BUYWjaFr.js:502:25766)
+    at m.onerror (index-BUYWjaFr.js:506:632)
+p @ index-BUYWjaFr.js:506
+index-BUYWjaFr.js:506  Network connectivity OK - likely CSP blocking
+(anonymous) @ index-BUYWjaFr.js:506
+index-BUYWjaFr.js:506    - ✓ Network connectivity to Paystack confirmed
+index-BUYWjaFr.js:506  Network connectivity OK - likely CSP blocking
+(anonymous) @ index-BUYWjaFr.js:506
+checkout.paystack.com/assets/js/inline.js:1 
+            
+            
+            Failed to load resource: the server responded with a status of 403 ()
+index-BUYWjaFr.js:506  Network connectivity OK - likely CSP blocking
+(anonymous) @ index-BUYWjaFr.js:506
+[NEW] Explain Console errors by using Copilot in Edge: click
+         
+         to explain an error. 
+        Learn more
+        Don't show again
+index-BUYWjaFr.js:502 WebSocket message received: {type: 'pong'}
+index-BUYWjaFr.js:502 WebSocket message received: {type: 'pong'}
