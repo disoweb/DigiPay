@@ -390,19 +390,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
         </div>
         
         <script>
-          // Get reference from URL parameters if not provided
+          // Get reference from URL parameters
           const urlParams = new URLSearchParams(window.location.search);
-          let reference = '${finalReference}' || urlParams.get('reference') || urlParams.get('trxref');
+          let reference = urlParams.get('reference') || urlParams.get('trxref') || '${finalReference}';
+          
+          console.log('Payment success page loaded');
+          console.log('URL search params:', window.location.search);
+          console.log('Extracted reference:', reference);
+          
           const token = localStorage.getItem('digipay_token') || sessionStorage.getItem('digipay_token');
           
           async function verifyPayment() {
-            if (!reference) {
-              document.getElementById('status').innerHTML = 'No payment reference found';
+            console.log('Starting payment verification with reference:', reference);
+            console.log('Token available:', !!token);
+            
+            if (!reference || reference === 'undefined' || reference === 'null') {
+              console.log('No valid payment reference found');
+              document.getElementById('status').innerHTML = 'No payment reference found. Please try again.';
               document.getElementById('status').className = 'status error';
+              document.getElementById('actions').style.display = 'block';
               return;
             }
             
             if (!token) {
+              console.log('No authentication token found');
               document.getElementById('status').innerHTML = 'Authentication required. Please log in again.';
               document.getElementById('status').className = 'status error';
               setTimeout(() => {
@@ -412,6 +423,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
             
             try {
+              console.log('Making verification request for reference:', reference);
               const response = await fetch('/api/payments/verify', {
                 method: 'POST',
                 headers: {
@@ -421,7 +433,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 body: JSON.stringify({ reference })
               });
               
+              console.log('Verification response status:', response.status);
               const data = await response.json();
+              console.log('Verification response data:', data);
               
               if (data.success && data.data.status === 'success') {
                 document.getElementById('status').innerHTML = 
@@ -453,14 +467,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   }, 3000);
                 }
               } else {
+                console.log('Payment verification failed:', data);
                 document.getElementById('status').innerHTML = 
-                  'Payment verification failed. Please contact support if amount was deducted.';
+                  'Payment verification failed: ' + (data.message || 'Unknown error') + 
+                  '. Please contact support if amount was deducted.';
                 document.getElementById('status').className = 'status error';
                 document.getElementById('actions').style.display = 'block';
               }
             } catch (error) {
+              console.error('Payment verification error:', error);
               document.getElementById('status').innerHTML = 
-                'Unable to verify payment. Please check your connection and try again.';
+                'Unable to verify payment: ' + error.message + '. Please contact support if amount was deducted.';
               document.getElementById('status').className = 'status error';
               document.getElementById('actions').style.display = 'block';
             }
