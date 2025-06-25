@@ -378,8 +378,6 @@ export function EnhancedDepositModal({ open, onOpenChange, user }: EnhancedDepos
                 </div>
               </div>
 
-
-
               <Button
                 type="submit"
                 className="w-full h-12 text-base font-medium"

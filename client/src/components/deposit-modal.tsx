@@ -358,23 +358,7 @@ export function DepositModal({ open, onOpenChange }: DepositModalProps) {
               </Card>
             )}
 
-            {/* Payment Method Info */}
-            <Card className="bg-blue-50 border-blue-200">
-              <CardContent className="p-4">
-                <div className="flex items-start gap-3">
-                  <div className="p-2 bg-blue-100 rounded-lg flex-shrink-0">
-                    <CreditCard className="h-4 w-4 text-blue-600" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <h4 className="font-medium text-blue-900 text-sm mb-1">Secure Payment via Paystack</h4>
-                    <p className="text-xs text-blue-700 leading-relaxed">
-                      Support for cards, bank transfers, USSD, and mobile money. 
-                      Bank-grade security with instant processing.
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+
 
             <Alert className="border-green-200 bg-green-50">
               <AlertCircle className="h-4 w-4 text-green-600" />
