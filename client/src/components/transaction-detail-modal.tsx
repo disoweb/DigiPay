@@ -1,10 +1,19 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Copy, TrendingUp, TrendingDown, Calendar, Hash, DollarSign, Clock } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import type { Transaction } from "@shared/schema";
+import { TrendingUp, TrendingDown, Hash, Calendar, User, CreditCard, DollarSign, Copy } from "lucide-react";
+
+interface Transaction {
+  id: number;
+  amount: string;
+  type: string;
+  status: string;
+  createdAt: string;
+  paystackRef?: string;
+  paymentMethod?: string;
+  adminNotes?: string;
+}
 
 interface TransactionDetailModalProps {
   transaction: Transaction | null;
@@ -25,17 +34,6 @@ export function TransactionDetailModal({ transaction, isOpen, onClose }: Transac
     });
   };
 
-  const formatDate = (dateString: string | Date) => {
-    return new Date(dateString).toLocaleString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit'
-    });
-  };
-
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'completed':
@@ -52,156 +50,121 @@ export function TransactionDetailModal({ transaction, isOpen, onClose }: Transac
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md mx-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+      <DialogContent className="w-[90vw] max-w-sm mx-auto max-h-[85vh] overflow-hidden flex flex-col">
+        <DialogHeader className="shrink-0 pb-3">
+          <DialogTitle className="flex items-center gap-2 text-base">
             {transaction.type === "deposit" ? (
-              <TrendingUp className="h-5 w-5 text-green-600" />
+              <TrendingUp className="h-4 w-4 text-green-600" />
             ) : (
-              <TrendingDown className="h-5 w-5 text-red-600" />
+              <TrendingDown className="h-4 w-4 text-red-600" />
             )}
             Transaction Details
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4">
-          {/* Transaction Type and Amount */}
-          <Card>
-            <CardContent className="p-4">
-              <div className="text-center">
-                <div className={`inline-flex items-center gap-2 p-3 rounded-full ${
-                  transaction.type === "deposit" ? "bg-green-100" : "bg-red-100"
-                }`}>
-                  {transaction.type === "deposit" ? (
-                    <TrendingUp className="h-6 w-6 text-green-600" />
-                  ) : (
-                    <TrendingDown className="h-6 w-6 text-red-600" />
-                  )}
-                </div>
-                <h3 className="font-semibold text-lg mt-2 capitalize">
-                  {transaction.type}
-                </h3>
-                <p className={`text-2xl font-bold mt-1 ${
-                  transaction.type === "deposit" ? "text-green-600" : "text-red-600"
-                }`}>
-                  {transaction.type === "deposit" ? "+" : "-"}₦{parseFloat(transaction.amount).toLocaleString()}
-                </p>
-                <Badge className={getStatusColor(transaction.status)} variant="outline">
-                  {transaction.status.toUpperCase()}
-                </Badge>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Transaction Details */}
+        <div className="flex-1 overflow-y-auto">
           <div className="space-y-3">
-            <div className="flex items-center justify-between py-2 border-b">
-              <div className="flex items-center gap-2 text-gray-600">
-                <Hash className="h-4 w-4" />
-                <span className="text-sm">Transaction ID</span>
+            {/* Amount and Status - Compact */}
+            <div className="text-center py-4 bg-gray-50 rounded-lg">
+              <div className="text-2xl font-bold mb-1">
+                ₦{parseFloat(transaction.amount).toLocaleString()}
               </div>
-              <div className="flex items-center gap-2">
-                <span className="font-mono text-sm">#{transaction.id}</span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => copyToClipboard(transaction.id.toString(), "Transaction ID")}
-                  className="h-6 w-6 p-0"
-                >
-                  <Copy className="h-3 w-3" />
-                </Button>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between py-2 border-b">
-              <div className="flex items-center gap-2 text-gray-600">
-                <Calendar className="h-4 w-4" />
-                <span className="text-sm">Date & Time</span>
-              </div>
-              <span className="text-sm font-medium">
-                {formatDate(transaction.createdAt)}
-              </span>
-            </div>
-
-            <div className="flex items-center justify-between py-2 border-b">
-              <div className="flex items-center gap-2 text-gray-600">
-                <DollarSign className="h-4 w-4" />
-                <span className="text-sm">Amount</span>
-              </div>
-              <span className="text-sm font-medium">
-                {(() => {
-                  const amount = transaction.amount || "0";
-                  // Check if amount already contains currency symbols
-                  if (amount.includes("USDT")) {
-                    // Replace USDT with $ and position it correctly
-                    const numericAmount = amount.replace(" USDT", "").replace("USDT", "");
-                    return `$${numericAmount}`;
-                  } else if (amount.includes("$") || amount.includes("₦")) {
-                    return amount;
-                  } else {
-                    // Default to NGN formatting for legacy amounts
-                    return `₦${parseFloat(amount).toLocaleString()}`;
-                  }
-                })()}
-              </span>
-            </div>
-
-            <div className="flex items-center justify-between py-2 border-b">
-              <div className="flex items-center gap-2 text-gray-600">
-                <Clock className="h-4 w-4" />
-                <span className="text-sm">Status</span>
-              </div>
-              <Badge className={getStatusColor(transaction.status)} variant="outline">
+              <Badge
+                className={`px-2 py-1 text-xs rounded-full border ${getStatusColor(transaction.status)}`}
+              >
                 {transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1)}
               </Badge>
             </div>
 
-            {transaction.paystackRef && (
-              <div className="flex items-center justify-between py-2 border-b">
+            {/* Transaction Information - Compact */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between py-1.5 border-b">
                 <div className="flex items-center gap-2 text-gray-600">
-                  <Hash className="h-4 w-4" />
-                  <span className="text-sm">Payment Reference</span>
+                  <Hash className="h-3 w-3" />
+                  <span className="text-xs">ID</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="font-mono text-xs truncate max-w-[120px]">
-                    {transaction.paystackRef}
-                  </span>
+                <div className="flex items-center gap-1">
+                  <span className="text-xs font-medium">#{transaction.id}</span>
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => copyToClipboard(transaction.paystackRef || "", "Payment Reference")}
-                    className="h-6 w-6 p-0"
+                    onClick={() => copyToClipboard(transaction.id.toString(), "Transaction ID")}
+                    className="h-5 w-5 p-0 hover:bg-gray-100"
                   >
-                    <Copy className="h-3 w-3" />
+                    <Copy className="h-2.5 w-2.5" />
                   </Button>
                 </div>
               </div>
-            )}
 
-            {transaction.paymentMethod && (
-              <div className="flex items-center justify-between py-2 border-b">
+              <div className="flex items-center justify-between py-1.5 border-b">
                 <div className="flex items-center gap-2 text-gray-600">
-                  <DollarSign className="h-4 w-4" />
-                  <span className="text-sm">Payment Method</span>
+                  <Calendar className="h-3 w-3" />
+                  <span className="text-xs">Date</span>
                 </div>
-                <span className="text-sm font-medium capitalize">
-                  {transaction.paymentMethod.replace('_', ' ')}
+                <span className="text-xs font-medium text-right">
+                  {new Date(transaction.createdAt).toLocaleDateString()}
                 </span>
               </div>
-            )}
 
-            {transaction.adminNotes && (
-              <div className="py-2">
-                <div className="text-gray-600 text-sm mb-1">Admin Notes:</div>
-                <div className="text-sm bg-gray-50 p-2 rounded">
-                  {transaction.adminNotes}
+              <div className="flex items-center justify-between py-1.5 border-b">
+                <div className="flex items-center gap-2 text-gray-600">
+                  <User className="h-3 w-3" />
+                  <span className="text-xs">Type</span>
                 </div>
+                <span className="text-xs font-medium capitalize">
+                  {transaction.type}
+                </span>
               </div>
-            )}
-          </div>
 
-          {/* Action Button */}
-          <Button onClick={onClose} className="w-full">
+              {transaction.paystackRef && (
+                <div className="flex items-center justify-between py-1.5 border-b">
+                  <div className="flex items-center gap-2 text-gray-600">
+                    <CreditCard className="h-3 w-3" />
+                    <span className="text-xs">Ref</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <span className="text-xs font-medium font-mono">
+                      {transaction.paystackRef.slice(-8)}
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => copyToClipboard(transaction.paystackRef!, "Payment Reference")}
+                      className="h-5 w-5 p-0 hover:bg-gray-100"
+                    >
+                      <Copy className="h-2.5 w-2.5" />
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {transaction.paymentMethod && (
+                <div className="flex items-center justify-between py-1.5 border-b">
+                  <div className="flex items-center gap-2 text-gray-600">
+                    <DollarSign className="h-3 w-3" />
+                    <span className="text-xs">Method</span>
+                  </div>
+                  <span className="text-xs font-medium capitalize">
+                    {transaction.paymentMethod.replace('_', ' ')}
+                  </span>
+                </div>
+              )}
+
+              {transaction.adminNotes && (
+                <div className="py-1.5">
+                  <div className="text-gray-600 text-xs mb-1">Notes:</div>
+                  <div className="text-xs bg-gray-50 p-2 rounded">
+                    {transaction.adminNotes}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Action Button */}
+        <div className="shrink-0 pt-3 border-t">
+          <Button onClick={onClose} className="w-full h-9 text-sm">
             Close
           </Button>
         </div>

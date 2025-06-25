@@ -422,7 +422,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             console.log('Starting payment verification with reference:', reference);
             console.log('Token available:', !!token);
             
-            // Streamlined verification with quick redirect
+            // Proper verification with balance update
             if (reference && reference !== 'undefined' && reference !== 'null' && token) {
               try {
                 console.log('Making verification request for reference:', reference);
@@ -439,7 +439,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 console.log('Verification response data:', data);
                 
                 if (data.success && data.data.status === 'success') {
-                  document.getElementById('status').innerHTML = 'Payment successful! ₦' + data.data.amount + ' added to wallet.';
+                  document.getElementById('status').innerHTML = 'Payment successful! ₦' + data.data.amount.toLocaleString() + ' added to wallet.';
                   document.getElementById('status').className = 'status success';
                   
                   // Quick redirect after successful verification
