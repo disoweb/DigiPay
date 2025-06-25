@@ -61,33 +61,53 @@ function generateToken(user: SelectUser): string {
 }
 
 export function authenticateToken(req: Request, res: Response, next: NextFunction) {
+  console.log("🔐 AUTHENTICATION DEBUG START");
+  console.log("Path:", req.path);
+  console.log("Method:", req.method);
+  
   // Try to get token from cookie first, then Authorization header
   const authHeader = req.headers.authorization;
-  const token = req.cookies?.token || (authHeader && authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null);
+  const cookieToken = req.cookies?.token;
+  const bearerToken = authHeader && authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+  const token = cookieToken || bearerToken;
 
-  console.log("Auth check for", req.path, "- Token present:", !!token, "Header:", !!authHeader);
+  console.log("Auth header raw:", authHeader);
+  console.log("Cookie token present:", !!cookieToken);
+  console.log("Bearer token present:", !!bearerToken);
+  console.log("Final token selected:", !!token);
+  console.log("Token length:", token?.length || 0);
 
   if (!token) {
+    console.log("❌ NO TOKEN - Returning 401");
     return res.status(401).json({ error: "Access token required" });
   }
 
+  console.log("🔑 Verifying JWT token...");
   jwt.verify(token, JWT_SECRET, async (err: any, decoded: any) => {
     if (err) {
-      console.log("JWT verification error for", req.path, ":", err.message);
+      console.log("❌ JWT VERIFICATION FAILED for", req.path);
+      console.log("Error:", err.message);
+      console.log("Error name:", err.name);
+      console.log("Token first 20 chars:", token.substring(0, 20) + "...");
+      console.log("JWT_SECRET present:", !!JWT_SECRET);
       return res.status(403).json({ error: "Invalid or expired token" });
     }
+
+    console.log("✅ JWT verification successful");
+    console.log("Decoded payload:", decoded);
 
     try {
       const user = await storage.getUser(decoded.userId);
       if (!user) {
-        console.log("User not found for ID:", decoded.userId);
+        console.log("❌ User not found for ID:", decoded.userId);
         return res.status(401).json({ error: "User not found" });
       }
       req.user = user;
-      console.log("Auth success - User", user.id, "accessing", req.path);
+      console.log("✅ Authentication complete - User", user.id, "accessing", req.path);
+      console.log("🔐 AUTHENTICATION DEBUG END\n");
       next();
     } catch (error) {
-      console.log("User lookup error:", error);
+      console.log("❌ Database error during user lookup:", error);
       return res.status(500).json({ error: "Authentication error" });
     }
   });

@@ -28,10 +28,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   setupJWTAuth(app);
 
   // CSP-bypass payment endpoints - enhanced with proper authentication and real Paystack integration
-  app.post("/api/payments/initialize", authenticateToken, async (req: any, res: Response) => {
+  app.post("/api/payments/initialize", (req: any, res: Response, next: NextFunction) => {
+    console.log("=== PAYMENT INITIALIZATION DEBUG ===");
+    console.log("Headers:", JSON.stringify(req.headers, null, 2));
+    console.log("Body:", JSON.stringify(req.body, null, 2));
+    console.log("Cookies:", JSON.stringify(req.cookies, null, 2));
+    console.log("Raw authorization header:", req.headers.authorization);
+    console.log("=====================================");
+    
+    authenticateToken(req, res, next);
+  }, async (req: any, res: Response) => {
     try {
       const { amount, email, reference } = req.body;
-      console.log("CSP-bypass payment initialization:", { amount, email, reference, userId: req.user?.id });
+      console.log("CSP-bypass payment initialization SUCCESS:", { amount, email, reference, userId: req.user?.id });
       
       if (!req.user) {
         return res.status(401).json({ success: false, message: "Authentication required" });

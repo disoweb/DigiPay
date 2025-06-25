@@ -18,7 +18,16 @@ export const initializeCSPBypassPayment = async (config: PaymentConfig) => {
     // Step 1: Initialize payment via our API
     console.log("Initializing payment...");
     const token = localStorage.getItem('token');
-    console.log("Auth token available:", !!token, token ? `(length: ${token.length})` : 'none');
+    console.log("=== CLIENT PAYMENT DEBUG ===");
+    console.log("Auth token available:", !!token);
+    console.log("Token length:", token?.length || 0);
+    console.log("Token first 20 chars:", token ? token.substring(0, 20) + "..." : 'none');
+    console.log("Payment data:", {
+      amount: config.amount / 100,
+      email: config.email,
+      reference: config.reference
+    });
+    console.log("============================");
     
     const response = await fetch('/api/payments/initialize', {
       method: 'POST',
