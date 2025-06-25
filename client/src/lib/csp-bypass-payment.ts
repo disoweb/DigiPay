@@ -256,7 +256,7 @@ const verifyAndCompletePayment = async (config: PaymentConfig) => {
     }
   } catch (error) {
     console.error("Payment verification error:", error);
-    config.onClose();
+    config.onClose?.();
   }
 };
 

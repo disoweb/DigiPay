@@ -151,7 +151,7 @@ export function EnhancedDepositModal({ open, onOpenChange, user }: EnhancedDepos
         // Auto-close modal after success without page refresh
         setTimeout(() => {
           onOpenChange(false);
-        }, 2000);
+        }, 1500);
       } else {
         throw new Error(data.message || 'Payment verification failed');
       }

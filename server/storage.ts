@@ -929,6 +929,32 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  async getTransactionByPaystackRef(paystackRef: string): Promise<Transaction | null> {
+    try {
+      const result = await db.select()
+        .from(transactions)
+        .where(eq(transactions.paystackRef, paystackRef))
+        .limit(1);
+      return result[0] || null;
+    } catch (error) {
+      console.error("Error getting transaction by paystack ref:", error);
+      return null;
+    }
+  }
+
+  async getTransactionsByUser(userId: number): Promise<Transaction[]> {
+    try {
+      const result = await db.select()
+        .from(transactions)
+        .where(eq(transactions.userId, userId))
+        .orderBy(desc(transactions.createdAt));
+      return result;
+    } catch (error) {
+      console.error("Error getting transactions by user:", error);
+      return [];
+    }
+  }
+
   async getExchangeRates(): Promise<ExchangeRate[]> {
     return await db.select().from(exchangeRates).where(eq(exchangeRates.isActive, true));
   }
